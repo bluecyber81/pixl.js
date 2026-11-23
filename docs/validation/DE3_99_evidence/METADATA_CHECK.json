@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "board": "LCD",
+  "version": "2.22.0-DE3.99",
+  "counter": 672,
+  "checked": [
+    "release metadata top level",
+    "nested application download",
+    "DFU offer",
+    "both exact signed ZIP copies",
+    "canonical release build SourceID/BIN/version/counter"
+  ],
+  "releaseInfoSHA256": "87c80e947af48ab9beebdff37f4e697b9e42a58294126860d1365102f7894c85"
+}

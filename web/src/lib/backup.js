@@ -274,8 +274,11 @@ async function packZip(entries, date, checkpoint, signal, compression, makeContr
  * On PackedFS a caller can supply a session-bound mount and generation token.
  * An equal token before and after reading covers contents and metadata for E:.
  * Other backends use a second directory listing.
+ * Optional readFilesBatch/readFileDigestsBatch receive [{path,size}] and a
+ * fresh {revision}; return equally ordered [{path,size,bytes|sha256}] only after
+ * complete success, or null when unsupported. Errors must reject, never null.
  */
-export async function createBackup({ rootPath, readDirectory, readFile, readFileDigest, readRawMetadata, readStorageRevision, onProgress, signal,
+export async function createBackup({ rootPath, readDirectory, readFile, readFileDigest, readFilesBatch, readFileDigestsBatch, readRawMetadata, readStorageRevision, onProgress, signal,
   firmwareVersion = '', preserveLegacyNames = false, deviceKey, checkpointState, storedBackup, previousArchive,
   compression = 'store', exporterVersion, readTransportStats, progressIntervalMs = 0 }) {
   if (typeof preserveLegacyNames !== 'boolean') fail('BACKUP_API', 'Invalid name preservation option.')
@@ -288,6 +291,7 @@ export async function createBackup({ rootPath, readDirectory, readFile, readFile
       (readTransportStats != null && typeof readTransportStats !== 'function') ||
       !Number.isSafeInteger(progressIntervalMs) || progressIntervalMs < 0 || progressIntervalMs > 1000) fail('BACKUP_API', 'Invalid backup export options.')
   if (readFileDigest !== undefined && typeof readFileDigest !== 'function') fail('BACKUP_API', 'Invalid digest reader.')
+  if ([readFilesBatch, readFileDigestsBatch].some(reader => reader !== undefined && typeof reader !== 'function')) fail('BACKUP_API', 'Invalid small-file batch reader.')
   if (readStorageRevision !== undefined && typeof readStorageRevision !== 'function') fail('BACKUP_API', 'Invalid storage revision reader.')
   if (readRawMetadata !== undefined && (typeof readRawMetadata !== 'function' || checkpointState != null || storedBackup != null || previousArchive != null)) fail('BACKUP_API', 'Raw migration backups require fresh reads without a resume checkpoint.')
   let previousFiles = null, readPrevious = null
@@ -313,7 +317,7 @@ export async function createBackup({ rootPath, readDirectory, readFile, readFile
     resume.busy = true
   }
   try {
-    const result = await buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, readStorageRevision, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup,
+    const result = await buildBackup({ root, readDirectory, readFile, readFileDigest, readFilesBatch, readFileDigestsBatch, readRawMetadata, readStorageRevision, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup,
       previousFiles, readPrevious, compression, exporterVersion, readTransportStats, progressIntervalMs })
     // A returned Blob owns its bytes. Keep no second resumable copy after success.
     if (resume) { resume.entries.clear(); resume.bytes = 0 }
@@ -323,7 +327,7 @@ export async function createBackup({ rootPath, readDirectory, readFile, readFile
   }
 }
 
-async function buildBackup({ root, readDirectory, readFile, readFileDigest, readRawMetadata, readStorageRevision, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup,
+async function buildBackup({ root, readDirectory, readFile, readFileDigest, readFilesBatch, readFileDigestsBatch, readRawMetadata, readStorageRevision, onProgress, signal, firmwareVersion, preserveLegacyNames, resume, storedBackup,
   previousFiles, readPrevious, compression, exporterVersion, readTransportStats, progressIntervalMs }) {
   const started = new Date()
   const snapshots = [], records = [], zipEntries = [], checksums = []
@@ -420,7 +424,115 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
       }
     }
   }
-  for (const record of records) {
+  // A batch is staged completely before any member can enter the resumable
+  // cache. Only small PackedFS files under one freshly observed revision use it.
+  const preparedFiles = new Map()
+  let canBatchRead = !!readFilesBatch, canBatchDigest = !!readFileDigestsBatch
+  const small = record => record.type === 'file' && record.sourcePath.startsWith('E:/') && record.size <= 572
+  function batchCandidates(start) {
+    const selected = []
+    let requestBytes = 10 // mode, count, u64 revision
+    for (let index = start; index < records.length; ++index) {
+      const record = records[index]
+      if (record.type === 'directory') continue
+      const size = 4 + encoder.encode(record.sourcePath).length
+      if (!small(record) || selected.length === 4 || requestBytes + size > 243) break
+      selected.push(record); requestBytes += size
+    }
+    return selected
+  }
+  function checkedBatch(value, requested, digest) {
+    if (!Array.isArray(value) || value.length !== requested.length) fail('BACKUP_BATCH', 'Incomplete small-file batch response.')
+    return value.map((entry, index) => {
+      const expected = requested[index]
+      if (!entry || entry.path !== expected.path || entry.size !== expected.size) fail('BACKUP_BATCH', 'Small-file batch identity or order changed.')
+      if (digest) {
+        if (typeof entry.sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(entry.sha256)) fail('BACKUP_DIGEST', 'Invalid batched SHA-256 response.')
+        return entry.sha256
+      }
+      const bytes = bytesOf(entry.bytes)
+      if (bytes.byteLength !== expected.size) fail('BACKUP_SIZE', 'A batched file size changed or its read was incomplete.')
+      return new Uint8Array(bytes)
+    })
+  }
+  async function prepareSmallBatch(start) {
+    if (readRawMetadata || initialRevision === null || !(canBatchRead || canBatchDigest)) return false
+    const candidates = batchCandidates(start)
+    if (candidates.length < 2) return false
+    const staged = []
+    for (const record of candidates) {
+      checkpoint()
+      const identity = storedBackup || resume ? fileIdentity(record) : null
+      const cached = storedBackup ? await storedBackup.get(record.sourcePath, identity, record.size) : resume?.entries.get(record.sourcePath)
+      checkpoint()
+      if (storedBackup && cached && await sha256(cached.bytes) !== cached.sha256) fail('STORED_BACKUP_CORRUPT', 'Stored backup bytes failed SHA-256 verification.')
+      checkpoint()
+      const previous = previousFiles?.get(record.sourcePath)
+      staged.push({record, identity, cached, previous, digest:null, saveCheckpoint:false,
+        needsDigest:!!(cached || previous && previous.size === record.size && (readFileDigest || canBatchDigest))})
+    }
+    const descriptors = entries => entries.map(({record}) => ({path:record.sourcePath, size:record.size}))
+    const digestEntries = staged.filter(entry => entry.needsDigest)
+    if (canBatchDigest && digestEntries.length >= 2) {
+      const requested = descriptors(digestEntries)
+      const result = await readFileDigestsBatch(requested, {revision:initialRevision})
+      checkpoint()
+      // Capability absence is the only fallback. Reject failed exchanges.
+      if (result === null) { canBatchRead = canBatchDigest = false; return false }
+      const values = checkedBatch(result, requested, true)
+      values.forEach((value, index) => { digestEntries[index].digest = value })
+      operations.digestReplies += values.length
+    } else for (const entry of digestEntries) {
+      entry.digest = readFileDigest ? await readFileDigest(entry.record.sourcePath, entry.record.size) : null
+      checkpoint()
+      if (entry.digest !== null && (typeof entry.digest !== 'string' || !/^[a-f0-9]{64}$/u.test(entry.digest))) fail('BACKUP_DIGEST', 'Invalid SHA-256 response while resuming a backup.')
+      if (entry.digest !== null) ++operations.digestReplies
+    }
+    for (const entry of staged) {
+      if (entry.cached && entry.digest !== entry.cached.sha256) {
+        if (resume) { resume.entries.delete(entry.record.sourcePath); resume.bytes -= entry.cached.bytes.length }
+        entry.cached = undefined
+      }
+      if (!entry.cached && entry.digest && entry.previous?.size === entry.record.size && entry.digest === entry.previous.sha256) {
+        entry.cached = {identity:entry.identity, bytes:readPrevious(entry.record.sourcePath), sha256:entry.digest}
+        entry.saveCheckpoint = true
+        ++operations.previousZipFiles
+      }
+      entry.reused = !!entry.cached
+    }
+    const fresh = staged.filter(entry => !entry.cached)
+    let batchBytes = null
+    if (canBatchRead && fresh.length >= 2) {
+      const requested = descriptors(fresh)
+      const result = await readFilesBatch(requested, {revision:initialRevision})
+      checkpoint()
+      if (result === null) {
+        canBatchRead = canBatchDigest = false
+        // On a capability-negative fresh run, preserve the original per-file
+        // cancellation/progress boundary. No file data has been fetched yet.
+        if (!digestEntries.length) return false
+      } else batchBytes = checkedBatch(result, requested, false)
+    }
+    for (let index = 0; index < fresh.length; ++index) {
+      checkpoint()
+      const entry = fresh[index]
+      ++operations.fileReads
+      const result = batchBytes ? batchBytes[index] : await readFile(entry.record.sourcePath, {maxBytes:entry.record.size})
+      checkpoint()
+      const bytes = new Uint8Array(bytesOf(result))
+      if (bytes.byteLength !== entry.record.size) fail('BACKUP_SIZE', 'A file size changed or its read was incomplete.')
+      const hash = await sha256(bytes)
+      checkpoint()
+      if (entry.digest !== null && hash !== entry.digest) fail('BACKUP_CHANGED', 'File contents changed between device checksum and file read.')
+      entry.cached = {identity:entry.identity, bytes, sha256:hash}
+      entry.saveCheckpoint = true
+    }
+    checkpoint()
+    for (const entry of staged) preparedFiles.set(entry.record.sourcePath, entry)
+    return true
+  }
+  for (let recordIndex = 0; recordIndex < records.length; ++recordIndex) {
+    const record = records[recordIndex]
     checkpoint()
     if (readRawMetadata) {
       ++operations.rawMetadataReads
@@ -432,13 +544,17 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
       continue
     }
     progress('reading', record.sourcePath); checkpoint()
-    const identity = storedBackup || resume ? fileIdentity(record) : null
-    let cached = storedBackup ? await storedBackup.get(record.sourcePath, identity, record.size) : resume?.entries.get(record.sourcePath)
-    let saveCheckpoint = false
+    if (!preparedFiles.has(record.sourcePath) && small(record)) await prepareSmallBatch(recordIndex)
+    checkpoint()
+    const prepared = preparedFiles.get(record.sourcePath)
+    preparedFiles.delete(record.sourcePath)
+    const identity = prepared ? prepared.identity : storedBackup || resume ? fileIdentity(record) : null
+    let cached = prepared ? prepared.cached : storedBackup ? await storedBackup.get(record.sourcePath, identity, record.size) : resume?.entries.get(record.sourcePath)
+    let saveCheckpoint = prepared?.saveCheckpoint || false
     checkpoint()
     const previous = previousFiles?.get(record.sourcePath)
     let digest = null
-    if (cached || (previous && previous.size === record.size && readFileDigest)) {
+    if (!prepared && (cached || (previous && previous.size === record.size && readFileDigest))) {
       // Browser storage is mutable. Check its bytes as well as the current device.
       if (storedBackup && cached && await sha256(cached.bytes) !== cached.sha256) fail('STORED_BACKUP_CORRUPT', 'Stored backup bytes failed SHA-256 verification.')
       digest = readFileDigest ? await readFileDigest(record.sourcePath, record.size) : null
@@ -459,7 +575,7 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
       }
     }
     if (cached) {
-      ++reusedFiles; reusedBytes += cached.bytes.length
+      if (!prepared || prepared.reused) { ++reusedFiles; reusedBytes += cached.bytes.length }
     } else {
       let highWater = 0
       ++operations.fileReads

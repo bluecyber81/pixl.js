@@ -1,0 +1,365 @@
+{
+  "schema": 1,
+  "date": "2026-11-21",
+  "board": "LCD",
+  "displayController": "ST7567",
+  "firmwareVersion": "2.22.0-DE3.97",
+  "applicationCounter": 670,
+  "testLabel": "TEST1",
+  "status": "software-signature-z21-qualified-test1",
+  "hardwareAcceptance": "pending",
+  "deviceAccess": false,
+  "sourceBranch": "test/lcd-de397-app670-test1",
+  "sourceCommit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+  "localProductionCommit": "91364b0b349905bc09351b5b151bf271b03ab850",
+  "productionTree": "2eb76b42aab5a19a6ea90aa371365ced0d238f00",
+  "sourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+  "productionInputCount": 709,
+  "applicationBytes": 363888,
+  "applicationSha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+  "engineSha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+  "storageFormat": "PFS1",
+  "migrationRequired": false,
+  "applicationOnly": {
+    "intendedFile": "fw/releases/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+    "exists": true,
+    "sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+    "bytes": 364489,
+    "signatureVerified": true,
+    "containsBootloader": false,
+    "containsSoftDevice": false,
+    "hardwareVersion": 52,
+    "softDeviceRequirements": [
+      294
+    ],
+    "z21AcceptanceVerified": true
+  },
+  "signing": {
+    "status": "completed-and-verified",
+    "action": "Signed the unchanged App670 application and verified its signature, negative controls and actual Z21 ARM acceptance.",
+    "sourceRepository": "solosky/pixl.js",
+    "sourceCommit": "5521e315b62afe25289ce656e536202f7df8f89a",
+    "publicPointMatchesZ21": true,
+    "reason": "The user explicitly authorized signing in the current chat; the signed package and Z21 checks are complete.",
+    "noBypassAttempted": true,
+    "privateKeyIncludedInDistribution": false,
+    "previousAutomaticReviewBlock": "Automatic approval review requires explicit authorization in the current transcript for this external credential source. Retrieved earlier permission was not accepted by that gate.",
+    "authorization": "User explicitly confirmed signing twice in the current chat after the automatic-review block; source public point independently verified.",
+    "temporaryKeyDeletedReported": true,
+    "signatureVerified": true,
+    "negativeSignatureControlsPassed": 3
+  },
+  "reproducibility": {
+    "schema": 1,
+    "observedAt": "2026-11-21T15:33:12.651526+00:00",
+    "version": "2.22.0-DE3.97",
+    "counter": 670,
+    "board": "LCD",
+    "testLabel": "TEST1",
+    "localProductionCommit": "91364b0b349905bc09351b5b151bf271b03ab850",
+    "productionCommit": "d34ecb44fa058a149b58de2dcbffbb751c015864",
+    "productionTree": "2eb76b42aab5a19a6ea90aa371365ced0d238f00",
+    "sourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+    "engineSha256": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+    "independentBuilds": 2,
+    "sameFiles": {
+      "pixljs.bin": true,
+      "pixljs.hex": true,
+      "production-inputs.json": true
+    },
+    "binaryBytes": 363888,
+    "binarySha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+    "hexSha256": "46b7a099814c7d7feeafcf7807dbb16e914d5ad16e954e5c98d35c8b5a928eb5",
+    "linkerBudget": {
+      "binary_bytes": 363888,
+      "linker_flash_used_bytes": 363900,
+      "observed": {
+        "flash_reserve_bytes": 8836,
+        "heap_stack_gap_bytes": 1688,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    },
+    "deviceAccess": false,
+    "passed": true,
+    "limits": [
+      "ELF/map/debug source paths differ between isolated build directories.",
+      "Two matching application builds do not constitute a hardware or radio test."
+    ],
+    "engineHeaderVerified": true
+  },
+  "validation": {
+    "fullFirmwareSuites": {
+      "executed": 183,
+      "passed": 183,
+      "sourcesUnchanged": true,
+      "unit": "test scripts"
+    },
+    "linkedArmCheckers": {
+      "executed": 13,
+      "passed": 13
+    },
+    "buildPreflightUnitTests": 7,
+    "batchHost": {
+      "successfulRequests": 132,
+      "rejectedRequests": 744,
+      "allocationFailuresInjected": 18,
+      "norReadFailuresInjected": 320,
+      "lifecycleCases": 157,
+      "nativeAndArm32Passed": true,
+      "asanUbsanPassed": true,
+      "leakSanitizer": false,
+      "retainedAllocatedBytes": 0
+    },
+    "crcActualArmComparisons": 216,
+    "crcMountNativeTests": 6,
+    "crcMountSanitizerTests": 6,
+    "linkedPfsLayoutCases": 4,
+    "crossMountPhases": 6,
+    "crossMountSyntheticEntries": 1208,
+    "signedApplicationPackage": {
+      "passed": true,
+      "signatureVerified": true,
+      "negativeControlsPassed": 3,
+      "applicationOnly": true
+    },
+    "z21ApplicationAcceptance": {
+      "passed": true,
+      "actualArmSignatureHashCrcCases": 7,
+      "signedInitAcceptanceCases": 2,
+      "previousApplicationCounter": 669,
+      "bootloaderCounter": 21,
+      "softDeviceFwid": 294,
+      "hardwareAcceptance": "pending"
+    }
+  },
+  "resources": {
+    "maximumBatchFiles": 4,
+    "maximumSmallFileBytes": 572,
+    "maximumBatchRequestBytes": 243,
+    "maxRequestedReadHeapBytes": 2289,
+    "maxRequestedDigestHeapBytes": 701,
+    "linkedReadHeapDeltaIncludingAllocatorBytes": 2296,
+    "addedStaticRamBytes": 0,
+    "existingSmallReadStateBytes": 12,
+    "flashGrowthFromApp669Bytes": 576,
+    "flashReserveBytes": 8836,
+    "minimumFlashReserveBytes": 8192,
+    "heapStackGapBytes": 1688,
+    "minimumHeapStackGapBytes": 1536,
+    "reservedStackBytes": 8192
+  },
+  "changes": [
+    "Revision-bound READ/SHA-256 batches of up to four small files with complete staging before the first response byte.",
+    "Existing PXSC, single-file wire format, save/discard, storage pins, GC and publication rules retained.",
+    "CRC loops remove a per-byte branch without more RAM or a larger lookup table.",
+    "Retained App669 diagnostic profiles and explicit baseline-OFF radio experiment.",
+    "Build preflight rejects a stale generated PackedFS engine identity before compilation."
+  ],
+  "measurementLimits": [
+    "No physical App670 device or RF throughput test has occurred.",
+    "Fewer ARM instructions are not a measured startup-time improvement.",
+    "Short benchmark timing includes browser/transport scheduling and fixed pass order; it is not a full backup.",
+    "WNR retains the final response and TX-completion gate; physical event ordering remains a device test.",
+    "The direct modeled batch stack depth is not a whole firmware/interrupt watermark.",
+    "Z21 signature/hash/CRC and signed-init acceptance execute actual bootloader ARM code with simulated memory/flash/radio; physical App670 installation remains pending."
+  ],
+  "releaseGatesPending": [
+    "Web binding to real OTA bytes, full signed-package integration and test-path publication."
+  ],
+  "deviceTestsPending": [
+    "Install the signed App670 package on the matching LCD/Z21/S112 device.",
+    "Run the bounded read-only single/batch/single comparison and export its report.",
+    "Export a diagnostic after restart to observe the startup profile.",
+    "Observe settings save/discard/persistence and ordinary longer operation."
+  ],
+  "fullBackupPolicy": "The completed App669 OFF backup remains valid evidence. No further complete OFF/ON/OFF backups are required for the bounded App670 comparison.",
+  "nextNormalBuild": "After evaluating hardware observations, select useful changes and create a later higher-counter normal build.",
+  "evidence": {
+    "ARM/AES_M4.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/AES_M4.log",
+      "sha256": "3654cbf2e3fb067a0a2f00afc5c43d808fa10f35cb9f71a9ff18c4d05858b5d1"
+    },
+    "ARM/BATCH_READ.json": {
+      "path": "DE3_97_TEST1_evidence/ARM/BATCH_READ.json",
+      "sha256": "b62b10992ba037af1c53c7486b0709882565c8ece56954356b28efe47083a191"
+    },
+    "ARM/BATCH_READ.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/BATCH_READ.log",
+      "sha256": "b62b10992ba037af1c53c7486b0709882565c8ece56954356b28efe47083a191"
+    },
+    "ARM/BLE_LINK.json": {
+      "path": "DE3_97_TEST1_evidence/ARM/BLE_LINK.json",
+      "sha256": "d6726236e3c5dadad385252f827d38ce4d6c215a5ebd924094b065be65127571"
+    },
+    "ARM/BLE_LINK.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/BLE_LINK.log",
+      "sha256": "3fa5b61a7b293e54a2d4086834db6bffe5a78b58618f72cc655cf5d427f0d36b"
+    },
+    "ARM/BUILD_FAULT.json": {
+      "path": "DE3_97_TEST1_evidence/ARM/BUILD_FAULT.json",
+      "sha256": "b4905329c4c57005e9309b2ab661e446cadd0b7710be8bbef13da4c604fa0b60"
+    },
+    "ARM/BUILD_FAULT.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/BUILD_FAULT.log",
+      "sha256": "9c622b75ea484ce6168ad2bc9e66c56c359266ce95dedd1613c60131ff1f7f0e"
+    },
+    "ARM/CHAMELEON_SAVE_SCREEN.json": {
+      "path": "DE3_97_TEST1_evidence/ARM/CHAMELEON_SAVE_SCREEN.json",
+      "sha256": "23cd1cd6dae2d93e410292f49dece3d4da60d602d9539ca7972afda2b6467fe9"
+    },
+    "ARM/CHAMELEON_SAVE_SCREEN.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/CHAMELEON_SAVE_SCREEN.log",
+      "sha256": "23cd1cd6dae2d93e410292f49dece3d4da60d602d9539ca7972afda2b6467fe9"
+    },
+    "ARM/DISPLAY_PROFILE.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/DISPLAY_PROFILE.log",
+      "sha256": "dc26270b22897cc794697e743d2902f6a628b979441d29cba54f1ff93b5bef86"
+    },
+    "ARM/EVENT_EXTENSION.json": {
+      "path": "DE3_97_TEST1_evidence/ARM/EVENT_EXTENSION.json",
+      "sha256": "e616fea497d4dd273ef2745dd515afab80a41cc490b7cbb86c4750583f936cb4"
+    },
+    "ARM/EVENT_EXTENSION.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/EVENT_EXTENSION.log",
+      "sha256": "40030973d74fc8cb848d5041d28667720608f6f7fb99af8ab3531d94afed9e46"
+    },
+    "ARM/FIRST_MENU.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/FIRST_MENU.log",
+      "sha256": "d4024ecbdf4b2f8d8bc2ca326cf6ddb65e9fea464c10c2363c84c87cef8fa7f9"
+    },
+    "ARM/FLASH_JEDEC.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/FLASH_JEDEC.log",
+      "sha256": "4451f004e90c5a5a4e2263507009cfb8f11c858e99dbf8b9eafbe45d4f3623ca"
+    },
+    "ARM/LCD_DEVICE_TEST.json": {
+      "path": "DE3_97_TEST1_evidence/ARM/LCD_DEVICE_TEST.json",
+      "sha256": "8f4cd5255d5f6dc9fb9232da995d088e05b087567dd5dea7f290d6bee5ef5339"
+    },
+    "ARM/LCD_DEVICE_TEST.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/LCD_DEVICE_TEST.log",
+      "sha256": "8f4cd5255d5f6dc9fb9232da995d088e05b087567dd5dea7f290d6bee5ef5339"
+    },
+    "ARM/LCD_GAME_ROTATION.json": {
+      "path": "DE3_97_TEST1_evidence/ARM/LCD_GAME_ROTATION.json",
+      "sha256": "3059b706a86f16067e2c5919d422cc95343bf60140d318cc9da0916c82ce9d53"
+    },
+    "ARM/LCD_GAME_ROTATION.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/LCD_GAME_ROTATION.log",
+      "sha256": "71b8863a9099b48415ec30f91cf235f1742446f4f8aab4ea1dda7def09f5f401"
+    },
+    "ARM/LINKED_CHECKS.json": {
+      "path": "DE3_97_TEST1_evidence/ARM/LINKED_CHECKS.json",
+      "sha256": "be633757ec43f3123246a0e32492fc2ce1c533fa0f58d4e8e2a39a6290222378"
+    },
+    "ARM/SHA256_HMAC.json": {
+      "path": "DE3_97_TEST1_evidence/ARM/SHA256_HMAC.json",
+      "sha256": "9e2ccdd91f95efee9a4eeb4b9d2c1a5568cd200f2347d845882732d1a2e563e0"
+    },
+    "ARM/SHA256_HMAC.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/SHA256_HMAC.log",
+      "sha256": "67be4d951f6c23acf105d4149b7918c91735f2fe8d77ed189d7f400628914b98"
+    },
+    "ARM/STACK_WATERMARK.log": {
+      "path": "DE3_97_TEST1_evidence/ARM/STACK_WATERMARK.log",
+      "sha256": "de48e363daa09a5372d5f3290d48e1e7419e4825839630f10aa6f2d63ec90953"
+    },
+    "BATCH_HOST_ARM32.json": {
+      "path": "DE3_97_TEST1_evidence/BATCH_HOST_ARM32.json",
+      "sha256": "d3899b59bf00a3cdc15f14f0a5511fede9ff5df46d8b5d1b75c1de84e8b216ca"
+    },
+    "BATCH_HOST_ASAN.json": {
+      "path": "DE3_97_TEST1_evidence/BATCH_HOST_ASAN.json",
+      "sha256": "2c80e84242f27aec2513aeadbfd4a1fbab504e9e994d44df020bf9d9808d928e"
+    },
+    "BUILD_1.json": {
+      "path": "DE3_97_TEST1_evidence/BUILD_1.json",
+      "sha256": "1bde5ec1152260ff88b7619ad431f3c1d2f3313a54205c5e368bb5b111389836"
+    },
+    "BUILD_2.json": {
+      "path": "DE3_97_TEST1_evidence/BUILD_2.json",
+      "sha256": "4c399fcd04404324cd4fd4d85d42661827d755d30a444144553f369de35142f2"
+    },
+    "BUILD_PAIR.json": {
+      "path": "DE3_97_TEST1_evidence/BUILD_PAIR.json",
+      "sha256": "f31e5e6c09f6a7f5a32cb3ddf2895493a7365e375f3d9efb3e4aac321eac7b3c"
+    },
+    "BUILD_PREFLIGHT.json": {
+      "path": "DE3_97_TEST1_evidence/BUILD_PREFLIGHT.json",
+      "sha256": "444efd776a83e17e75de2cc5df46738734a048d8d07986882befc65505b4ccd4"
+    },
+    "CRC_ARM_COMPARISON.json": {
+      "path": "DE3_97_TEST1_evidence/CRC_ARM_COMPARISON.json",
+      "sha256": "f15616df77a0588d1f27e38f9bf468ac6d8b742b619dd8181e288e1de832d7ce"
+    },
+    "ENGINE_IDENTITY.json": {
+      "path": "DE3_97_TEST1_evidence/ENGINE_IDENTITY.json",
+      "sha256": "7a85df349e35670e0518ecb787bddecab08fde50110f8ea5e67878a8c3d08784"
+    },
+    "FULL_TESTS.json": {
+      "path": "DE3_97_TEST1_evidence/FULL_TESTS.json",
+      "sha256": "95e666b36722d643a001e1f905e3adb1bcb4aa78ed79d6522d241e79ebb2ba82"
+    },
+    "FULL_TESTS.log": {
+      "path": "DE3_97_TEST1_evidence/FULL_TESTS.log",
+      "sha256": "814717561573bcf85185f0aa96b6029cc17befd6ab1a9fdcdc264af07d3494c4"
+    },
+    "FULL_TESTS_ENVIRONMENT.json": {
+      "path": "DE3_97_TEST1_evidence/FULL_TESTS_ENVIRONMENT.json",
+      "sha256": "5969a227e3e1e72584683a77716a93b97a25d12d3c75c43f5e9d42d6b1caa7bb"
+    },
+    "INITIAL_BINDING_GATE_FAILURE.json": {
+      "path": "DE3_97_TEST1_evidence/INITIAL_BINDING_GATE_FAILURE.json",
+      "sha256": "6c1de98004f196d7ba95cc65d3a03403df79a32207ab517824d88cf018788d0b"
+    },
+    "PFS_CROSS_MOUNT.json": {
+      "path": "DE3_97_TEST1_evidence/PFS_CROSS_MOUNT.json",
+      "sha256": "0ff97f0d368881619ea3ac81cee81f3130b1db524e0addf69481ac01b19858ae"
+    },
+    "PRODUCTION_INPUTS.json": {
+      "path": "DE3_97_TEST1_evidence/PRODUCTION_INPUTS.json",
+      "sha256": "68578d27f183ff97f5399d5c962ceaf2491c20a667e533c0134bb89962993832"
+    },
+    "STACK_USAGE.json": {
+      "path": "DE3_97_TEST1_evidence/STACK_USAGE.json",
+      "sha256": "6683d25ebce496362bf8779b235b4885a536bd4438aaf1d0bca2da2aac171897"
+    },
+    "STORAGE_CRC_REVIEW.json": {
+      "path": "DE3_97_TEST1_evidence/STORAGE_CRC_REVIEW.json",
+      "sha256": "e2a3c3627a95cfd30dc83f20c7b5f69555017afdc67e9d688f726a7de234bdc8"
+    },
+    "OTA_VERIFICATION.json": {
+      "path": "DE3_97_TEST1_evidence/OTA_VERIFICATION.json",
+      "sha256": "64ae144fee8969096a1b14d36e36c1ff437572de182f907b56482834c43d0d7a"
+    },
+    "Z21_APPLICATION_VERIFICATION.json": {
+      "path": "DE3_97_TEST1_evidence/Z21_APPLICATION_VERIFICATION.json",
+      "sha256": "dd3ae570cef23dbe02cfe248708fe980ba8e69bd6aaec8336a3e5c2e5537936b"
+    },
+    "Z21/VERIFIER_DERIVATION.json": {
+      "path": "DE3_97_TEST1_evidence/Z21/VERIFIER_DERIVATION.json",
+      "sha256": "447484c0578aedccebdc4ae39a37eb2831065f6f7a589df0dfff2bc18608034a"
+    },
+    "Z21/Z21_APP670_CRYPTO.json": {
+      "path": "DE3_97_TEST1_evidence/Z21/Z21_APP670_CRYPTO.json",
+      "sha256": "176b47cda1ea5c70853f42842ed94f48e303bf43ad64b6d4f26a5c2c336bed0c"
+    },
+    "Z21/Z21_APP670_INIT_ACCEPTANCE.json": {
+      "path": "DE3_97_TEST1_evidence/Z21/Z21_APP670_INIT_ACCEPTANCE.json",
+      "sha256": "08c1ceea1e3c2aa0b49c79d8506d943f0ccb3e9605d21c066dea3f9a1f992245"
+    },
+    "Z21/Z21_APPLICATION_VERIFICATION.log": {
+      "path": "DE3_97_TEST1_evidence/Z21/Z21_APPLICATION_VERIFICATION.log",
+      "sha256": "6483a0dd25c2f279e285347ce28519d247786084f12127176cac91540a44c3d7"
+    },
+    "Z21/verify_z21_app670.py": {
+      "path": "DE3_97_TEST1_evidence/Z21/verify_z21_app670.py",
+      "sha256": "37eab0ea935387c51ac807fcdd11bbba245f1fd93d047bdef733cb3985ad0e05"
+    }
+  },
+  "webDeployment": "pending"
+}

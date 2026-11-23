@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "engineSha256": "a0d15c28160774dd83ba80a71e8aad61fb41cd7ae0209eeec5486be7ea00d7a2",
+  "wasmSha256": "91ca3ef469ea6ecfca1dc18c80ad39d60977fc591b823274324c516bb7024548",
+  "sourceFiles": {
+    "core/packed_fs.c": "7344507cb46786e658c2a2a7d704c0f543d235806e3d365b511c317623270702",
+    "core/packed_fs.h": "9f22cecd8bff4ea4a5a9f48c0c009e6fc5e32cd59594cfb82340eb5d35779fbb",
+    "littlefs/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+    "littlefs/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+    "littlefs/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+    "littlefs/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3",
+    "sim/capacity_simulator.c": "64e01259a25dd1a03e03a9764edb3f3125b69bfe88b3b02ee6039a09a4fa4679",
+    "sim/minilib.c": "f077daf9974d26eb268789c3a7f84c0b2c605669805aa92899e53d8929012e27",
+    "sim/freestanding/string.h": "893d3290c17fb201ee7b93a6e5fab20abdfb88f6b3cb8ae82ce419167cc0d169",
+    "sim/freestanding/inttypes.h": "c99d8fe419f5d60f116f2703cef920c88c2641baf0afebe13beeff8b52b7f1d0",
+    "packed_identity.py": "1ac063efdda46af531e8b64b474bbd0e85b8bf1db4b69025cae8de9304202dee",
+    "sim/sim_identity.h": "1f78641009d5611fe8b2e5047a1114bd8bfe2c121d27bd0ebdfefaf02f46982c"
+  },
+  "compiler": "clang 23.1.4",
+  "defines": [
+    "LFS_NO_ASSERT",
+    "LFS_NO_DEBUG",
+    "LFS_NO_ERROR",
+    "LFS_NO_MALLOC",
+    "LFS_NO_WARN"
+  ],
+  "exports": [
+    "begin",
+    "path_buffer",
+    "metadata_buffer",
+    "archive_buffer",
+    "engine_identity_buffer",
+    "add",
+    "finish",
+    "used_blocks",
+    "peak_used_blocks",
+    "total_blocks",
+    "block_size",
+    "verified_entries",
+    "core_heap_peak_bytes",
+    "simulator_phase"
+  ]
+}

@@ -1,0 +1,17 @@
+✔ /: resources stay under the explicit build base, independent of page and worker paths (2.466793ms)
+✔ /: query and fragment figure links work without server rewrites and retain fixed destinations (0.849823ms)
+✔ /pixl.js/: resources stay under the explicit build base, independent of page and worker paths (0.163687ms)
+✔ /pixl.js/: query and fragment figure links work without server rewrites and retain fixed destinations (0.433514ms)
+✔ deployment helpers reject external roots, traversal, query injection and encoded separators (0.601849ms)
+✔ capacity URL validation stays exact and precedes fetching for every base-looking injection (2.895971ms)
+✔ firmware presentation rejects filenames that could escape the build location (0.913218ms)
+✔ production entry points use the common resolver and pass query/hash to the fixed-ID router (9.370112ms)
+✔ the rendered DE/EN footer offers the matching Web and LCD release assets on root and Pages (123.035588ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 317.976865

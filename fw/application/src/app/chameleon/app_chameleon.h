@@ -16,6 +16,13 @@ typedef enum {
     APP_CHAMELEON_ID_EDIT_TYPE_ATS,
 } app_chameleon_id_edit_type_t;
 
+typedef enum {
+    CHAMELEON_SAVE_ERROR,
+    CHAMELEON_DISCARD_NO,
+    CHAMELEON_DISCARD_YES,
+    CHAMELEON_DISCARD_EXIT
+} chameleon_discard_state_t;
+
 typedef struct {
     chameleon_view_t *p_chameleon_view;
     mui_list_view_t *p_list_view;
@@ -31,6 +38,10 @@ typedef struct {
     bool initialized;
     /* Embedded error view preserves existing dialogs and needs no error-time allocation. */
     mui_view_t save_error_view;
+    chameleon_discard_state_t discard_state;
+    bool save_error_drawn;
+    /* One-shot continuation owned by this app, never by a list item/editor. */
+    bool import_return_pending;
     uint32_t exit_view_id;
     bool exit_paused, exit_prepared, exit_resume_nfc;
     bool retry_slot_count; /* count in RAM; card already saved and NFC paused */

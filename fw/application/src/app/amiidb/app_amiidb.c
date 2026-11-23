@@ -151,8 +151,8 @@ void app_amiidb_on_kill(mini_app_inst_t *p_app_inst) {
         app_amiidb_save_cache(p_app_handle, p_app_inst->p_retain_data, current_scene_id);
     else if (p_app_inst->p_retain_data)
         memset(p_app_inst->p_retain_data, 0, CACHEDATASIZE);
-    /* App3 reconstructs generated tags or reloads persisted slots. Never retain
-     * their plaintext contents in the common App2 tag cache. */
+    /* Discard the previous shared copy. During sleep main.c replaces it with
+     * the prepared emulator tag and CRC-binds it to this App3 snapshot. */
     memset(&(cache_get_data()->ntag), 0, sizeof(ntag_t));
 
     /* Stop scene-owned timers/callbacks while all views and app data are alive. */

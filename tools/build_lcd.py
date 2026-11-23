@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "fw/scripts"))
 from application_budget import check_budget
+from packed_identity import identity as packed_identity
 from production_id import fingerprint, source_hashes
 
 
@@ -45,7 +46,8 @@ def build_identity(root, mode, version, counter):
     header = root / "fw/application/src/version.inc.h"
     content = header.read_text(encoding="utf-8")
     values = dict(re.findall(r"^#define\s+(\w+)\s+([^\r\n]+)$", content, re.M))
-    preview = json.loads((root / "RELEASE_INFO.json").read_bytes()).get("firmware_preview")
+    release = json.loads((root / "RELEASE_INFO.json").read_bytes())
+    preview = release.get("firmware_preview")
     if mode == "preview" or (mode == "candidate" and preview):
         if not preview:
             raise ValueError("No firmware preview is recorded in RELEASE_INFO.json.")
@@ -60,6 +62,19 @@ def build_identity(root, mode, version, counter):
     if mode in ("release", "candidate"):
         if version is not None or counter is not None:
             raise ValueError("Release identity is fixed; --version/--counter are for development mode.")
+        if release.get("firmware_channel") == "normal":
+            version, counter = release.get("version"), release.get("counter")
+            if (release.get("board") != "LCD" or not isinstance(version, str)
+                    or not re.fullmatch(r"2\.22\.0-DE[0-9]+\.[0-9]+", version)
+                    or type(counter) is not int or not RELEASE_COUNTER < counter <= 0xffffffff
+                    or values.get("VERSION") != json.dumps(version)
+                    or release.get("version_header_sha256") != sha256(header)):
+                raise ValueError("Normal LCD release metadata must bind the newer version, counter and exact header.")
+            if mode == "release" and any(not isinstance(release.get(field), str)
+                    or not re.fullmatch(r"[0-9a-f]{64}", release[field])
+                    for field in ("application_sha256", "production_source_id_sha256")):
+                raise ValueError("Normal release mode requires qualified application and production-source hashes.")
+            return version, counter, sha256(header)
         expected = {"GIT_COMMIT": '"unknown"', "GIT_BRANCH": '"codex/lcd-de389-app662"',
                     "GIT_BRANCH_NUM": '"n/a"', "VERSION": json.dumps(RELEASE_VERSION),
                     "BUILD_DIRTY": "1", "BUILD_DIRTY_KNOWN": "0",
@@ -74,6 +89,38 @@ def build_identity(root, mode, version, counter):
     if values.get("VERSION") != json.dumps(version):
         raise ValueError("First update VERSION in your development source version.inc.h to match --version.")
     return version, counter, sha256(header)
+
+
+def check_packed_identity(root):
+    """Refuse stale generated identity without changing any production input."""
+    core = root / "fw/application/src/mod/vfs"
+    header = core / "vfs_packed_identity.h"
+    try:
+        _, expected = packed_identity(core, root / "fw/components/littlefs")
+    except AssertionError as exc:
+        raise ValueError("PackedFS layout identity preflight failed: " + str(exc)) from exc
+    content = header.read_text(encoding="utf-8")
+    definitions = {}
+    for name, value in re.findall(
+            r"^\s*#define\s+(PIXL_PACKED_ENGINE_SHA256(?:_BYTES)?)\s+([^\r\n]+)$", content, re.M):
+        definitions.setdefault(name, []).append(value.strip())
+    wrong = []
+    text_name = "PIXL_PACKED_ENGINE_SHA256"
+    byte_name = text_name + "_BYTES"
+    if definitions.get(text_name) != [json.dumps(expected)]:
+        wrong.append(text_name)
+    byte_values = definitions.get(byte_name, [])
+    byte_match = re.fullmatch(r"\{\s*(0x[0-9a-fA-F]{2}(?:\s*,\s*0x[0-9a-fA-F]{2}){31})\s*\}",
+                             byte_values[0]) if len(byte_values) == 1 else None
+    if byte_match is None or bytes(int(token.strip(), 16) for token in byte_match[1].split(",")).hex() != expected:
+        wrong.append(byte_name)
+    if wrong:
+        raise ValueError("PackedFS engine identity preflight failed: " + ", ".join(wrong) +
+                         " missing, malformed, duplicated or stale in " + str(header) +
+                         ". Expected SHA-256: " + expected +
+                         ". Regenerate with fw/scripts/packed_identity.py and review the header before building.")
+    return {"engine_sha256": expected, "header_sha256": sha256(header),
+            "both_header_representations_verified": True}
 
 
 def archive_filter(info):
@@ -193,6 +240,7 @@ def main(argv=None):
             args.mode = "preview" if release_info.get("firmware_preview") else "release"
         preview = release_info.get("firmware_preview") if args.mode == "preview" else None
         version, counter, header_hash = build_identity(root, args.mode, args.version, args.counter)
+        packed_engine = check_packed_identity(root)
         if args.backend == "docker" and shutil.which("docker") is None:
             raise RuntimeError("Docker CLI is required. Install/configure it separately; this helper installs nothing.")
         # --pull never below prevents an implicit network download. Fetch this
@@ -203,7 +251,9 @@ def main(argv=None):
         override = root / "tools/sdk-overrides/nrf_nvic.h"
         if sha256(override) != NVIC_AFTER_SHA256:
             raise RuntimeError("The checked Nordic DRGN-10613 header override is missing or changed.")
-        default_build = "build/lcd-preview" if preview else "build/lcd-de389"
+        normal_release = release_info.get("firmware_channel") == "normal"
+        default_build = ("build/lcd-preview" if preview else
+                         "build/lcd-release" if normal_release else "build/lcd-de389")
         destination = Path(os.path.abspath(args.output if args.output else root / default_build))
         if destination.resolve() != destination:
             raise RuntimeError("Output must not resolve through a symlink or junction.")
@@ -216,11 +266,13 @@ def main(argv=None):
                   "network": "none" if args.backend == "docker" else "no downloads performed",
                   "signed": False, "device_access": False,
                   "version_header_sha256": header_hash,
+                  "packed_engine_identity": packed_engine,
                   "sdk_header_override": {"path": "components/softdevice/s112/headers/nrf_nvic.h",
                                           "before_sha256": NVIC_BEFORE_SHA256,
                                           "after_sha256": NVIC_AFTER_SHA256},
                   "expected_bin_sha256": (preview["application_sha256"] if preview else
-                                          RELEASE_BIN_SHA256 if args.mode == "release" else None)}
+                                          (release_info["application_sha256"] if normal_release else RELEASE_BIN_SHA256)
+                                          if args.mode == "release" else None)}
         with tempfile.TemporaryDirectory(prefix="allmiibo-lcd-") as temp_name:
             temp = Path(temp_name)
             if "," in str(temp):
@@ -282,7 +334,9 @@ cp fw/_build/production-inputs.json fw/_build/pixljs.bin fw/_build/pixljs.hex fw
             record["matches_expected_binary"] = hashes["pixljs.bin"] == expected if expected else None
             if preview and (hashes["pixljs.bin"] != preview["application_sha256"] or source_id != preview["source_id"]):
                 raise RuntimeError("Preview binary SHA-256 or source ID differs from RELEASE_INFO.json.")
-            if args.mode == "release" and not matches:
+            if args.mode == "release" and normal_release and source_id != release_info["production_source_id_sha256"]:
+                raise RuntimeError("Normal release production-source ID differs from RELEASE_INFO.json.")
+            if args.mode == "release" and not record["matches_expected_binary"]:
                 raise RuntimeError("Release binary SHA-256 mismatch; no firmware artifacts exported. See build.log.")
             if args.stack_report:
                 if args.backend == "docker":

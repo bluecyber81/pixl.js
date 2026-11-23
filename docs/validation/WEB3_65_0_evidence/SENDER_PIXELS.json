@@ -1,0 +1,1037 @@
+{
+  "schema": 1,
+  "date": "2026-11-23",
+  "board": "LCD/ST7567",
+  "webBranch": "web-app675",
+  "renderer": "@napi-rs/canvas 0.1.100; pure Node library, no browser automation",
+  "reference": "Source pixels explicitly permuted for rotation; native-size rotated canvas then independently fitted/cropped/scaled.",
+  "cPath": "Actual player_parse_header + u8g2_DrawXBM/u8g2_DrawHXBM from current firmware; final pixel primitive is a host raster sink.",
+  "hardwareTest": false,
+  "canvasRoundingTolerance": 1,
+  "canvasRoundingExplanation": "Skia interpolation can round rotated scaling versus exact native-pixel pre-rotation by one grey code value. Geometry requires every channel within one value; all crop cases additionally require exact black/white bits. C decoding must match every actual converted source pixel without tolerance.",
+  "sourceHashes": {
+    "playerHeader": "f84c66342ec0281ec634783c0976209d4e27c0df7b853a2b503885efc674b1a3",
+    "playerView": "09313da829f70cbbdd485d9e099f7a305faf5db51eb51e87c4f648667bc05464",
+    "bitmap": "6503fd8f844a2e39bfbe899cbc594495924262e1fa0bd70885dd2e980e35c3ed",
+    "webMedia": "235b91c29cab6bbe000e6e047597097608960c27c5177e56bf3f8bb54cae3134",
+    "webEncoder": "2766c60bb24d53186c5ebf0857530e20cbec70d51651968129f3ad54a18fd98b",
+    "webExport": "dc6f0877167cfbd79ace3d8c2ebe161dd9204a8fbae80e8b9501673696d8dc81"
+  },
+  "caseCount": 144,
+  "exportBytes": 147472,
+  "negativeControls": {
+    "bitOrderDetected": true,
+    "polarityDetected": true
+  },
+  "cases": [
+    {
+      "name": "128x64/fit/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/fit/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/fit/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/fit/90/threshold",
+      "rgbaDifferent": 15,
+      "maxChannelDifference": 1,
+      "bitDifferences": 5,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/fit/90/inverse",
+      "rgbaDifferent": 15,
+      "maxChannelDifference": 1,
+      "bitDifferences": 5,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/fit/90/bayer",
+      "rgbaDifferent": 15,
+      "maxChannelDifference": 1,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/fit/180/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/fit/180/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/fit/180/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/fit/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/fit/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/fit/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/90/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/90/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/90/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/180/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/180/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/180/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/crop/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/90/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/90/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/90/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/180/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/180/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/180/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x64/stretch/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/90/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/90/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/90/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/180/threshold",
+      "rgbaDifferent": 27,
+      "maxChannelDifference": 1,
+      "bitDifferences": 9,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/180/inverse",
+      "rgbaDifferent": 27,
+      "maxChannelDifference": 1,
+      "bitDifferences": 9,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/180/bayer",
+      "rgbaDifferent": 27,
+      "maxChannelDifference": 1,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/fit/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/90/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/90/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/90/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/180/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/180/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/180/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/crop/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/90/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/90/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/90/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/180/threshold",
+      "rgbaDifferent": 9,
+      "maxChannelDifference": 1,
+      "bitDifferences": 3,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/180/inverse",
+      "rgbaDifferent": 9,
+      "maxChannelDifference": 1,
+      "bitDifferences": 3,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/180/bayer",
+      "rgbaDifferent": 9,
+      "maxChannelDifference": 1,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "192x128/stretch/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/90/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/90/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/90/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/180/threshold",
+      "rgbaDifferent": 18,
+      "maxChannelDifference": 1,
+      "bitDifferences": 6,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/180/inverse",
+      "rgbaDifferent": 18,
+      "maxChannelDifference": 1,
+      "bitDifferences": 6,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/180/bayer",
+      "rgbaDifferent": 18,
+      "maxChannelDifference": 1,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/fit/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/90/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/90/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/90/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/180/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/180/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/180/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/crop/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/90/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/90/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/90/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/180/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/180/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/180/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "128x256/stretch/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/90/threshold",
+      "rgbaDifferent": 6,
+      "maxChannelDifference": 1,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/90/inverse",
+      "rgbaDifferent": 6,
+      "maxChannelDifference": 1,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/90/bayer",
+      "rgbaDifferent": 6,
+      "maxChannelDifference": 1,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/180/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/180/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/180/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/fit/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/90/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/90/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/90/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/180/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/180/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/180/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/crop/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/0/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/0/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/0/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/90/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/90/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/90/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/180/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/180/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/180/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/270/threshold",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/270/inverse",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    },
+    {
+      "name": "137x91/stretch/270/bayer",
+      "rgbaDifferent": 0,
+      "maxChannelDifference": 0,
+      "bitDifferences": 0,
+      "cPixelDifferences": 0
+    }
+  ],
+  "passed": true
+}

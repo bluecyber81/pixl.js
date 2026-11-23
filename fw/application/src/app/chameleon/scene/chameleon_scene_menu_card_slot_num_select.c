@@ -1,5 +1,6 @@
 #include "app_chameleon.h"
 #include "chameleon_scene.h"
+#include "fds_utils.h"
 
 #include "mini_app_launcher.h"
 #include "mini_app_registry.h"
@@ -20,6 +21,7 @@ void chameleon_scene_menu_card_slot_num_select_on_event(mui_list_view_event_t ev
     app_chameleon_t *app = p_list_view->user_data;
     switch (p_item->icon) {
     case ICON_DATA: {
+        chameleon_save_begin();
         if (!tag_helper_set_slot_num((uint8_t)(uintptr_t)p_item->user_data, &app->retry_slot_count)) {
             if (tag_helper_get_active_tag_type() != TAG_TYPE_UNDEFINED && !tag_emulation_active_data_ready())
                 app_chameleon_show_load_error(app);
@@ -39,25 +41,17 @@ void chameleon_scene_menu_card_slot_num_select_on_event(mui_list_view_event_t ev
 void chameleon_scene_menu_card_slot_num_select_on_enter(void *user_data) {
     app_chameleon_t *app = user_data;
 
-    // 只添加 8、20、50 三个选项
-    mui_list_view_add_item_ext(app->p_list_view, ICON_DATA, "8", NULL, (void *)(uintptr_t)8);
-    mui_list_view_add_item_ext(app->p_list_view, ICON_DATA, "20", NULL, (void *)(uintptr_t)20);
-    mui_list_view_add_item_ext(app->p_list_view, ICON_DATA, "50", NULL, (void *)(uintptr_t)50);
-
-    mui_list_view_add_item(app->p_list_view, ICON_BACK, _T(MAIN_RETURN), NULL_USER_DATA);
-
-    // 设置当前选择的选项
-    settings_data_t *settings = settings_get_data();
-    // 需要根据设置的值设置当前选中的选项
-    if (settings->chameleon_slot_num == 8) {
-        mui_list_view_set_focus(app->p_list_view, 0);
-    } else if (settings->chameleon_slot_num == 20) {
-        mui_list_view_set_focus(app->p_list_view, 1);
-    } else if (settings->chameleon_slot_num == 50) {
-        mui_list_view_set_focus(app->p_list_view, 2);
-    }else{
-        mui_list_view_set_focus(app->p_list_view, 0);
+    static const uint8_t counts[] = {8, 20, 50};
+    uint8_t current = settings_get_data()->chameleon_slot_num;
+    size_t focus = 0;
+    for (size_t i = 0; i < ARRAY_SIZE(counts); ++i) {
+        char name[4];
+        snprintf(name, sizeof(name), "%u", (unsigned)counts[i]);
+        mui_list_view_add_item_ext(app->p_list_view, ICON_DATA, name, NULL, (void *)(uintptr_t)counts[i]);
+        if (current == counts[i]) focus = i;
     }
+    mui_list_view_add_item(app->p_list_view, ICON_BACK, _T(MAIN_RETURN), NULL_USER_DATA);
+    mui_list_view_set_focus(app->p_list_view, focus);
     mui_list_view_set_scroll_offset(app->p_list_view, 0);
     mui_list_view_set_selected_cb(app->p_list_view, chameleon_scene_menu_card_slot_num_select_on_event);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, CHAMELEON_VIEW_ID_LIST);

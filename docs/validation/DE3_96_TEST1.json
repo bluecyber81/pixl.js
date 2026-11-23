@@ -1,0 +1,199 @@
+{
+  "schema": 1,
+  "date": "2026-11-21",
+  "board": "LCD",
+  "displayController": "ST7567",
+  "firmwareVersion": "2.22.0-DE3.96",
+  "applicationCounter": 669,
+  "testLabel": "TEST1",
+  "status": "experimental-signed-application-qualified",
+  "hardwareAcceptance": "pending",
+  "deviceAccess": false,
+  "sourceBranch": "test/lcd-de396-app669-test1",
+  "sourceCommit": "feb6c58ad14998f31aef07dc84d8dc0732e32ede",
+  "localProductionCommit": "6243a79875e8e84e2d24cd7de07111b718dd6131",
+  "productionTree": "933cb36f17e6fb5f1bfb10eec3e56f11e9c70c4f",
+  "sourceId": "dea06409b9ff20a12f446a7baed683b6442573ed427c5dc87cd4bed2885df858",
+  "productionInputCount": 709,
+  "applicationBytes": 363312,
+  "applicationSha256": "32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80",
+  "engineSha256": "3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d",
+  "storageFormat": "PFS1",
+  "migrationRequired": false,
+  "applicationOnly": {
+    "file": "fw/releases/Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip",
+    "bytes": 363913,
+    "sha256": "021d1a35b00b6cb344702c48df609060e51b55bcecaa9781071d1bcd87829b1f",
+    "signatureVerified": true,
+    "negativeControlsPassed": 3,
+    "containsBootloader": false,
+    "containsSoftDevice": false,
+    "hardwareVersion": 52,
+    "softDeviceRequirements": [
+      294
+    ],
+    "bootValidation": "GENERATED_CRC"
+  },
+  "reproducibility": {
+    "schema": 1,
+    "observedAt": "2026-11-21T13:08:55.985824+00:00",
+    "version": "2.22.0-DE3.96",
+    "counter": 669,
+    "board": "LCD",
+    "testLabel": "TEST1",
+    "localProductionCommit": "6243a79875e8e84e2d24cd7de07111b718dd6131",
+    "sourceId": "dea06409b9ff20a12f446a7baed683b6442573ed427c5dc87cd4bed2885df858",
+    "engineSha256": "3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d",
+    "independentBuilds": 2,
+    "sameFiles": {
+      "pixljs.bin": true,
+      "pixljs.hex": true,
+      "production-inputs.json": true
+    },
+    "binaryBytes": 363312,
+    "binarySha256": "32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80",
+    "hexSha256": "c33de6298f9a8b0226bf57603555e4e61218482b65e1b8cf0695ae6f60966ec8",
+    "linkerBudget": {
+      "binary_bytes": 363312,
+      "linker_flash_used_bytes": 363324,
+      "observed": {
+        "flash_reserve_bytes": 9412,
+        "heap_stack_gap_bytes": 1688,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    },
+    "deviceAccess": false,
+    "passed": true,
+    "limits": [
+      "ELF/map/debug source paths differ between isolated build directories.",
+      "Two matching application builds do not constitute a hardware or radio test."
+    ]
+  },
+  "validation": {
+    "fullFirmwareSuites": {
+      "executed": 182,
+      "passed": 182,
+      "sourcesUnchanged": true,
+      "unit": "test scripts"
+    },
+    "linkedArmCheckers": {
+      "executed": 12,
+      "passed": 12
+    },
+    "bleEventHost": {
+      "cases": 14,
+      "negativeControls": 5,
+      "sanitizers": [
+        "ASan",
+        "UBSan"
+      ],
+      "leakSanitizer": false
+    },
+    "storageHost": {
+      "suites": 3,
+      "sanitizers": [
+        "ASan",
+        "UBSan"
+      ],
+      "legacyMountSuite": 1,
+      "legacySpiCases": 17
+    },
+    "linkedPfsLayoutCases": 4,
+    "crossMountCases": 6,
+    "crossMountSyntheticEntries": 1208,
+    "z21CryptoCrcCases": 7,
+    "z21SignedInitCases": 2
+  },
+  "features": [
+    "RAM-only PackedFS cleanup and pinned-reader status (PXGC v1).",
+    "Startup profiling (PXST v5) with cached RTC metrics for wait/read/CRC and inclusive index pass.",
+    "Explicit reversible global S112 event-length-extension experiment (MTUD v3 / EVT!). Baseline OFF after stack initialization; reconnect preserves the successful global setting.",
+    "No setting mutation from diagnostic queries. Existing legacy protocol responses preserved."
+  ],
+  "measurementLimits": [
+    "No physical device, radio throughput or timing validation occurred.",
+    "Event-extension API status and nominal event length are not proof of actual scheduled airtime or throughput.",
+    "Mount RTC regions include timing overhead and interrupts; index time overlaps flash and CRC.",
+    "GC counts are handles and completed collector results, not guaranteed reclaimable bytes.",
+    "WASM capacity simulation omits LCD test instrumentation and is not a firmware RAM measurement."
+  ],
+  "deviceTestsPending": [
+    "Install App669 on existing LCD/Z21/S112, restart and export diagnostic.",
+    "512-byte self-test with one exclusive manager session; compare fresh free space before/after cleanup.",
+    "Fresh complete backup of the same folder with extension OFF, ON, OFF; no resume/reuse; compare measured phases, actual bytes and errors.",
+    "Reconnect preserves global option; reboot returns OFF.",
+    "Settings change/save/discard and normal menu use, later longer-run diagnosis."
+  ],
+  "nextNormalBuild": "After device results, select confirmed improvements and issue a later higher-counter normal build with experiments removed or disabled; never claim downgrade support.",
+  "evidence": {
+    "BUILD_PAIR.json": {
+      "path": "DE3_96_TEST1_evidence/BUILD_PAIR.json",
+      "sha256": "d1aed42a3757e2bdad847e94278c53aa6432dd68133b9d96b2f0c9702aba8bd1"
+    },
+    "BUILD_1.json": {
+      "path": "DE3_96_TEST1_evidence/BUILD_1.json",
+      "sha256": "9e536a129608f4bdfbdceede635eb23bc6edaf48adbc5f6f6e5d3423e0a5d6b6"
+    },
+    "BUILD_2.json": {
+      "path": "DE3_96_TEST1_evidence/BUILD_2.json",
+      "sha256": "6a74a2cd0d565656862f9a3cf9f3b9294135f1601adc5c9fecbe1282abc4f8fb"
+    },
+    "PRODUCTION_INPUTS.json": {
+      "path": "DE3_96_TEST1_evidence/PRODUCTION_INPUTS.json",
+      "sha256": "b393615f7a53d24d468ec946e5279eaf24595eb2771b76a457414816bda671f6"
+    },
+    "FULL_TESTS.json": {
+      "path": "DE3_96_TEST1_evidence/FULL_TESTS.json",
+      "sha256": "d17bd15b8d2225171518f162c98366f238d7215cb1651b1ab7b512c86f076241"
+    },
+    "LINKED_CHECKS.json": {
+      "path": "DE3_96_TEST1_evidence/LINKED_CHECKS.json",
+      "sha256": "3c054f4cccf6977c21f0083260d32dbff57c731f4c6f5d0daee07670bbeb2a47"
+    },
+    "BLE_EVENT_HOST.json": {
+      "path": "DE3_96_TEST1_evidence/BLE_EVENT_HOST.json",
+      "sha256": "479b333f1b0428c206130a2a713e595ca42db38dcc61e36e7069da1c97e978d1"
+    },
+    "BLE_EVENT_ASAN.json": {
+      "path": "DE3_96_TEST1_evidence/BLE_EVENT_ASAN.json",
+      "sha256": "67ded719289263ca0a286b81dc98aa90bfed94e1c95ab93f3693f84f49001285"
+    },
+    "BLE_EVENT_ARM.json": {
+      "path": "DE3_96_TEST1_evidence/BLE_EVENT_ARM.json",
+      "sha256": "f9cc10a5163a7a5f1776b76ba77321770a8271e60afb70eb3a04ea1e843c6afb"
+    },
+    "OTA_VERIFICATION.json": {
+      "path": "DE3_96_TEST1_evidence/OTA_VERIFICATION.json",
+      "sha256": "c1251388061053d1813df8f2315ccd94a0ddf191bb5202d96d62e0cb2fa2aadb"
+    },
+    "Z21_CRYPTO.json": {
+      "path": "DE3_96_TEST1_evidence/Z21_CRYPTO.json",
+      "sha256": "b8f8cecdbf1cffa227f36f5352b07dc70a831425a4e903d61dc46ce7ac03dd13"
+    },
+    "Z21_INIT_ACCEPTANCE.json": {
+      "path": "DE3_96_TEST1_evidence/Z21_INIT_ACCEPTANCE.json",
+      "sha256": "a777ea53078bd87c1bab4b748b6cdfd0dd12a1ce40e54899e399f56c78f0037e"
+    },
+    "Z21_VERIFIER_DERIVATION.json": {
+      "path": "DE3_96_TEST1_evidence/Z21_VERIFIER_DERIVATION.json",
+      "sha256": "163c3f91608f54d07b45c866b70cac558773a77b62c6c8e459c14d30da039ca8"
+    },
+    "verify_z21_app669.py": {
+      "path": "DE3_96_TEST1_evidence/verify_z21_app669.py",
+      "sha256": "81d5426fc0a0118d0e54366b9915f516a566b4884cf9e7f86495c913ae73f885"
+    },
+    "PFS_LAYOUT.json": {
+      "path": "DE3_96_TEST1_evidence/PFS_LAYOUT.json",
+      "sha256": "13df7aa16f8a608148754cccaf994cacb73276cd0b005816acaa47b10821df29"
+    },
+    "PFS_CROSS_MOUNT.json": {
+      "path": "DE3_96_TEST1_evidence/PFS_CROSS_MOUNT.json",
+      "sha256": "32f7ac70eba63d660c7e5c67be95145b068aa596225f846fa0d484f5cc99a89c"
+    }
+  }
+}

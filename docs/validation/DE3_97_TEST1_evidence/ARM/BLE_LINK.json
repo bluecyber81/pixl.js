@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "device_access": false,
+  "sourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe",
+  "binSha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+  "cases": [
+    "null_short_and_uninitialized_buffer",
+    "registered_legacy_mtud_v1_read",
+    "linked_v2_phy_event_wire_and_buffer_guards",
+    "selected_7_5ms_parameter_event",
+    "stale_other_handle_ignored",
+    "failed_phy_does_not_replace_known_values",
+    "mode_and_transfer_idle_flags",
+    "malformed_and_nonrequest_events",
+    "disconnected_unknown_sentinels"
+  ],
+  "linkStateBytes": 24,
+  "scope": "Linked release Cortex-M4 code, seeded GATT/GAP RAM, real update/serializer/critical paths. No radio/IRQ timing."
+}

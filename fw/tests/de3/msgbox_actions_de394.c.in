@@ -1,0 +1,180 @@
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include "string_id.h"
+extern const char *const lang_de_DE[], *const lang_en_US[];
+static const char *const *strings;
+#define _T(id) strings[_L_##id]
+typedef struct {char value[192];} test_string_t;
+typedef test_string_t string_t[1];
+static void string_init(string_t s){s->value[0]=0;}
+static void string_reset(string_t s){s->value[0]=0;}
+static void string_clear(string_t s){s->value[0]=0;}
+static void string_set_str(string_t s,const char *p){assert(p&&strlen(p)<sizeof(s->value));strcpy(s->value,p);}
+static size_t string_size(const string_t s){return strlen(s->value);}
+static const char *string_get_cstr(const string_t s){return s->value;}
+typedef struct {u8g2_t font;uint8_t width,height;} mui_canvas_t;
+typedef struct {uint8_t key,type;} mui_input_event_t;
+enum {INPUT_KEY_LEFT,INPUT_KEY_CENTER,INPUT_KEY_RIGHT};
+enum {INPUT_TYPE_SHORT,INPUT_TYPE_LONG,INPUT_TYPE_PRESS,INPUT_TYPE_RELEASE,INPUT_TYPE_REPEAT};
+typedef struct mui_view_s mui_view_t;
+struct mui_view_s {
+    void *user_data;
+    void (*draw_cb)(mui_view_t*,mui_canvas_t*);
+    void (*input_cb)(mui_view_t*,mui_input_event_t*);
+    void (*enter_cb)(mui_view_t*);
+    void (*exit_cb)(mui_view_t*);
+};
+static void *mui_mem_malloc(size_t n){return malloc(n);}
+static void mui_mem_free(void *p){free(p);}
+static mui_view_t *mui_view_create(void){return calloc(1,sizeof(mui_view_t));}
+@HEADER@
+
+typedef struct {unsigned x,y,w,h;const char *text;} drawn_button_t;
+static drawn_button_t buttons[3];
+static unsigned button_count,body_y,body_height,header_count;
+static unsigned flushes,boundaries,queued_keys,callbacks,retries,backs,discards,denials;
+static bool inject_during_flush,fence_input_after_frame;
+typedef struct {mui_canvas_t canvas;uint8_t screen_width,screen_height;} mui_t;
+typedef struct {unsigned id,arg_int;void *arg_ptr;} mui_event_t;
+enum {MUI_EVENT_ID_INPUT};
+typedef unsigned bsp_btn_event_t;
+enum {BSP_BTN_EVENT_PRESSED,BSP_BTN_EVENT_RELEASED,BSP_BTN_EVENT_SHORT,BSP_BTN_EVENT_LONG,BSP_BTN_EVENT_REPEAT};
+#define BUTTONS_NUMBER 3
+#define NRF_LOG_DEBUG(...) ((void)0)
+static struct {bool swap_buttons;} settings;
+#define settings_get_data() (&settings)
+static mui_t *active_ui;
+static mui_msg_box_t *active_box;
+static mui_t *mui(void){return active_ui;}
+static void mui_post(mui_t *m,mui_event_t *event);
+static void ble_remote_local_activity(void){}
+@PHYSICAL@
+static void mui_canvas_set_font(mui_canvas_t *c,const uint8_t *f){u8g2_SetFont(&c->font,f);}
+static unsigned mui_canvas_current_font_height(mui_canvas_t *c){return u8g2_GetMaxCharHeight(&c->font);}
+static unsigned mui_canvas_get_width(mui_canvas_t *c){return c->width;}
+static unsigned mui_canvas_get_height(mui_canvas_t *c){return c->height;}
+static unsigned mui_canvas_get_utf8_width(mui_canvas_t *c,const char *s){return u8g2_GetUTF8Width(&c->font,s);}
+static void mui_canvas_set_draw_color(mui_canvas_t *c,unsigned color){}
+static void mui_canvas_draw_box(mui_canvas_t *c,unsigned x,unsigned y,unsigned w,unsigned h){assert(x+w<=c->width&&y+h<=c->height);}
+static void mui_canvas_draw_utf8(mui_canvas_t *c,unsigned x,unsigned y,const char *s){
+    assert(x+mui_canvas_get_utf8_width(c,s)<=c->width);assert(y<=c->height);header_count++;
+}
+static void mui_element_autowrap_text(mui_canvas_t *c,unsigned x,unsigned y,unsigned w,unsigned h,const char *s){
+    body_y=y;body_height=h;
+    assert(x+w<=c->width&&y+h<=c->height);
+}
+static void mui_element_button(mui_canvas_t *c,unsigned x,unsigned y,const char *s,unsigned selected){
+    assert(button_count<3);
+    unsigned w=mui_canvas_get_utf8_width(c,s)+4, h=mui_canvas_current_font_height(c)+2;
+    assert(x+w<=c->width&&y+2+h<=c->height);
+    buttons[button_count++]=(drawn_button_t){x,y+2,w,h,s};
+}
+static void mui_canvas_set_frame(mui_canvas_t *c,unsigned x,unsigned y,unsigned w,unsigned h){assert(!x&&!y);}
+static void mui_draw_mem_mon(mui_canvas_t *c){}
+static void mui_canvas_flush(mui_canvas_t *c){flushes++;if(inject_during_flush)queued_keys+=3;}
+static void mui_input_modal_boundary(void){assert(flushes);physical_modal_boundary();queued_keys=0;boundaries++;}
+@POST_FRAME@
+@VIEW@
+
+/* The production UI applies this same current-context gate before dispatching
+ * a physical SHORT to the active view. Hardware/FIFO timing is modelled. */
+static void mui_post(mui_t *m,mui_event_t *event){
+    if(mui_input_event_is_current(event)){
+        mui_input_event_t input={(uint8_t)(event->arg_int&255),(uint8_t)(event->arg_int>>8)};
+        active_box->p_view->input_cb(active_box->p_view,&input);
+    }
+}
+
+static void input(mui_msg_box_t *box,unsigned key){mui_input_event_t e={key,INPUT_TYPE_SHORT};box->p_view->input_cb(box->p_view,&e);}
+static void paint(mui_msg_box_t *box,mui_t *ui){
+    button_count=header_count=0;
+    box->p_view->draw_cb(box->p_view,&ui->canvas);
+    mui_buffer_flush(ui);
+    assert(header_count==1);
+    for(unsigned i=0;i<button_count;i++){
+        drawn_button_t a=buttons[i];assert(a.y>=mui_canvas_current_font_height(&ui->canvas)+1);
+        if(body_height)assert(body_y+body_height<=a.y);
+        for(unsigned j=0;j<i;j++){
+            drawn_button_t b=buttons[j];
+            assert(a.x+a.w<=b.x||b.x+b.w<=a.x||a.y+a.h<=b.y||b.y+b.h<=a.y);
+        }
+    }
+}
+static void show_error(mui_msg_box_t *box);
+static void confirm(mui_msg_box_event_t action,mui_msg_box_t *box){
+    callbacks++;
+    if(action==MUI_MSG_BOX_EVENT_SELECT_LEFT)discards++;
+    else {denials++;show_error(box);}
+}
+static void choose(mui_msg_box_event_t action,mui_msg_box_t *box){
+    callbacks++;
+    if(action==MUI_MSG_BOX_EVENT_SELECT_LEFT)retries++;
+    else if(action==MUI_MSG_BOX_EVENT_SELECT_RIGHT)backs++;
+    else{
+        mui_msg_box_set_header(box,_T(DE3_SAVE_FAILED));
+        mui_msg_box_set_message(box,_T(DE3_SAVE_DISCARD_ASK));
+        mui_msg_box_set_btn_text(box,_T(DE3_SAVE_YES_SHORT),NULL,_T(DE3_SAVE_NO_SHORT));
+        mui_msg_box_set_btn_focus(box,MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+        mui_msg_box_set_event_cb(box,confirm);
+    }
+}
+static void show_error(mui_msg_box_t *box){
+    mui_msg_box_set_header(box,_T(DE3_SAVE_FAILED));
+    mui_msg_box_set_message(box,_T(DE3_SAVE_RAM_ONLY));
+    mui_msg_box_set_btn_text(box,_T(DE3_SAVE_RETRY_ACTION),_T(DE3_SAVE_DISCARD_ACTION),_T(BACK));
+    mui_msg_box_set_btn_focus(box,MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+    mui_msg_box_set_event_cb(box,choose);
+}
+int main(void){
+    unsigned layouts=0;
+    for(unsigned language=0;language<2;language++)for(unsigned height=51;height<=64;height+=13){
+        strings=language?lang_en_US:lang_de_DE;
+        mui_t ui={.canvas={.width=128,.height=height},.screen_width=128,.screen_height=height};
+        mui_msg_box_t *box=mui_msg_box_create();assert(box);
+        active_ui=&ui;active_box=box;
+        show_error(box);box->p_view->enter_cb(box->p_view);
+        unsigned called=callbacks;
+        input(box,INPUT_KEY_LEFT);input(box,INPUT_KEY_CENTER);
+        assert(callbacks==called&&box->focus==MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+        inject_during_flush=true;unsigned before=boundaries;
+        paint(box,&ui);inject_during_flush=false;
+        assert(boundaries==before+1&&queued_keys==0&&button_count==3);
+        unsigned initial_body=body_height;
+        if(!language)assert(buttons[1].y<buttons[0].y&&buttons[1].y<buttons[2].y);
+        input(box,INPUT_KEY_LEFT);assert(box->focus==MUI_MSG_BOX_EVENT_SELECT_CENTER);
+        before=boundaries;paint(box,&ui);assert(boundaries==before); /* Just focus, not a new decision. */
+        input(box,INPUT_KEY_CENTER);assert(box->awaiting_frame&&box->focus==MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+        called=callbacks;unsigned discarded=discards;
+        input(box,INPUT_KEY_LEFT);input(box,INPUT_KEY_CENTER);
+        assert(callbacks==called&&discards==discarded); /* Queued gestures cannot confirm unseen content. */
+        inject_during_flush=true;paint(box,&ui);inject_during_flush=false;
+        assert(!queued_keys&&button_count==2&&body_height>0);
+        assert(mui_canvas_get_utf8_width(&ui.canvas,_T(DE3_SAVE_DISCARD_ASK))<=128);
+        input(box,INPUT_KEY_CENTER);assert(discarded==discards&&box->awaiting_frame); /* Default No. */
+        paint(box,&ui);input(box,INPUT_KEY_LEFT);input(box,INPUT_KEY_CENTER);paint(box,&ui);
+        input(box,INPUT_KEY_LEFT);assert(box->focus==MUI_MSG_BOX_EVENT_SELECT_LEFT);
+        input(box,INPUT_KEY_CENTER);assert(discards==discarded+1);
+        show_error(box);paint(box,&ui);input(box,INPUT_KEY_CENTER);assert(backs);
+        /* Existing batch processing changes only its progress caption between
+         * mui_tick calls. A Cancel PRESS spanning those frames must survive. */
+        called=callbacks;unsigned context=mui_input_context_current();
+        mui_input_on_bsp_btn_event(INPUT_KEY_CENTER,BSP_BTN_EVENT_PRESSED);
+        for(unsigned step=0;step<3;step++){
+            mui_msg_box_set_message(box,"Batch progress");paint(box,&ui);
+            assert(mui_input_context_current()==context);
+        }
+        mui_input_on_bsp_btn_event(INPUT_KEY_CENTER,BSP_BTN_EVENT_RELEASED);
+        mui_input_on_bsp_btn_event(INPUT_KEY_CENTER,BSP_BTN_EVENT_SHORT);
+        assert(callbacks==called+1&&box->focus==MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+        /* A retained view must fence again on reentry, even with unchanged labels. */
+        box->p_view->enter_cb(box->p_view);called=callbacks;input(box,INPUT_KEY_CENTER);assert(callbacks==called);
+        paint(box,&ui);
+        mui_msg_box_set_btn_text(box,NULL,_T(BACK),NULL);mui_msg_box_set_btn_focus(box,1);paint(box,&ui);assert(button_count==1);
+        mui_msg_box_reset(box);mui_msg_box_set_header(box,_T(DE3_SAVE_FAILED));paint(box,&ui);assert(button_count==0);
+        printf("LAYOUT %s 128x%u: full actions fit, error body height %u; confirmation visible\n",language?"EN":"DE",height,initial_body);
+        mui_msg_box_free(box);layouts++;
+    }
+    assert(layouts==4&&discards==4&&denials==4);
+    printf("PASS %u real-font layouts, default No, same-view replacement, queued keys, flush fence, progress Cancel and retained reentry\n",layouts);
+}

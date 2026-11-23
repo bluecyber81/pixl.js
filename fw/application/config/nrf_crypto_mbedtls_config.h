@@ -2467,7 +2467,11 @@
  *            it, and considering stronger message digests instead.
  *
  */
+/* LCD only uses SHA-256/HMAC-SHA-256; the generic MD dispatcher would
+ * otherwise retain the unused MD5 implementation in application flash. */
+#if !defined(BOARD_LCD)
 #define MBEDTLS_MD5_C
+#endif
 
 /**
  * \def MBEDTLS_MEMORY_BUFFER_ALLOC_C
@@ -2776,7 +2780,12 @@
  *
  * This module adds support for SHA-384 and SHA-512.
  */
+/* Keep OLED defaults and any explicitly enabled Nordic SHA-512 backend.
+ * The current LCD application only requests SHA-256 digests. */
+#if !defined(BOARD_LCD) || NRF_CRYPTO_BACKEND_MBEDTLS_HASH_SHA512_ENABLED || \
+    NRF_CRYPTO_BACKEND_MBEDTLS_HMAC_SHA512_ENABLED
 #define MBEDTLS_SHA512_C
+#endif
 
 /**
  * \def MBEDTLS_SSL_CACHE_C

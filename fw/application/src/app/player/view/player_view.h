@@ -28,6 +28,9 @@ typedef void (*player_view_event_cb)(player_view_event_t event, player_view_t *p
     bool frame_due;
     bool frame_valid;
     bool play_error;
+    bool loop;
+    bool show_counter;
+    char path[VFS_MAX_PATH_LEN];
     uint8_t* frame_buffer;
     size_t frame_buffer_size;
     void* user_data;

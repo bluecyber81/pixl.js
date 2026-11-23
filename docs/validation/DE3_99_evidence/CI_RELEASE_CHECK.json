@@ -1,0 +1,109 @@
+{
+  "observedUTC": "2026-11-22T13:45:05.710805+00:00",
+  "configurationChecksPassed": true,
+  "githubActionsExecuted": false,
+  "scope": "Targeted release-CI input binding, complete frozen App662/App654 mode suite and unchanged current native stream invocation.",
+  "currentReleaseInput": {
+    "passed": true,
+    "version": "2.22.0-DE3.99",
+    "counter": 672,
+    "otaPath": "fw/releases/Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+    "otaSha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
+    "otaBytes": 364877,
+    "applicationMember": "app_672.bin",
+    "applicationSha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+    "applicationBytes": 364276,
+    "releaseInfoSha256": "36fcdbceaed064826f779cde81cfb5deec4c980954896ff73fcea29c58a978c1",
+    "scope": "Exact release ZIP and payload hash binding; signature verification is a separate application-job gate."
+  },
+  "historicalModeSuite": {
+    "passed": true,
+    "scope": "All four unchanged Z19 stream-mode tests with historical App662/App654 reference ZIPs.",
+    "currentReleaseScope": "The current release ZIP, payload and native stream are checked separately by the workflow.",
+    "references": [
+      {
+        "version": "2.22.0-DE3.89",
+        "counter": 662,
+        "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
+        "ota_sha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab",
+        "application_sha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec"
+      },
+      {
+        "version": "2.22.0-DE3.81",
+        "counter": 654,
+        "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_81_654_NUR_APP.zip",
+        "ota_sha256": "6a7aa822329e5e703e120234e0161f7d0f49576255aba38e601bd8f5fadc5719",
+        "application_sha256": "632c29cb9408bcd390d887db36f81b350b2d514b4252f00e674ceb972293e918"
+      }
+    ],
+    "sourceHashes": {
+      "tests/test_app_stream_modes.py": "d38396a4ecb110944d19bd7773b05a9acfadf3158e8f439b9efd84d752e75a88",
+      "tests/DFU_Stream/check_app_stream.py": "80c5f6674eac91b38589481b92e63d6ecbb1de3e907c23681f3924f6c5bf1fb4",
+      "tests/run_offline.py": "00b3ee2b5ce57587b8376fb225e0d3592f7afba6322fdd5278dbf4fad454d8c0"
+    },
+    "testBindingSha256": "01a391ecc8b60070f8a05f76648879824c795413a32997155ed0dd8845f338e1",
+    "sourceInputsUnchanged": true,
+    "executedTests": 4,
+    "exitCode": 0,
+    "stdout": "BLOCKED Controlled prerequisite unavailable\nBLOCKED Controlled prerequisite unavailable\nBLOCKED Sanitizer control could not start gcc: [Errno 2] No such file or directory: 'gcc'\n",
+    "stderr": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.007s\n\nOK\n",
+    "deviceAccess": false,
+    "nativeDfuStreamExecuted": false
+  },
+  "negativeHashAndManifestChecks": [
+    {
+      "case": "wrong_complete_zip_sha256",
+      "rejected": true,
+      "reason": "Complete OTA ZIP SHA-256 does not match RELEASE_INFO.json.",
+      "noOutputPublished": true
+    },
+    {
+      "case": "wrong_application_sha256",
+      "rejected": true,
+      "reason": "Application payload SHA-256 does not match RELEASE_INFO.json.",
+      "noOutputPublished": true
+    },
+    {
+      "case": "non_application_only_manifest",
+      "rejected": true,
+      "reason": "Expected an application-only OTA manifest.",
+      "noOutputPublished": true
+    }
+  ],
+  "workflowYamlParsed": true,
+  "changedShellStepsSyntaxValid": true,
+  "applicationSignatureGateUnchanged": true,
+  "previousApp654PinnedStreamPreserved": true,
+  "sanitizerAndLeakGatesPreserved": true,
+  "bootloaderBoundFilesUnchanged": true,
+  "verifiedBoundFileCount": 64,
+  "repositoryReleaseInfoUnchangedDuringCheck": true,
+  "localCurrentNativeStream": {
+    "schema": 1,
+    "passed": false,
+    "status": "BLOCKED",
+    "reason": "Sanitizer prerequisites failed; see sanitizer-control.log",
+    "appSha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+    "deviceAccess": false,
+    "sanitizerOptions": {
+      "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+    },
+    "sanitizerControl": "BLOCKED",
+    "leakDetectionEnabled": true,
+    "leakDetectionConfirmed": false,
+    "sanitizerControlLog": "control 0, exit 0\n\ncontrol 1, exit -6\n==11==LeakSanitizer has encountered a fatal error.\n==11==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1\n==11==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)\n"
+  },
+  "limitations": [
+    "The actual GitHub Actions run is not claimed.",
+    "The current Z19 native stream was invoked with the exact default sanitizer gates. Its local result is reported verbatim; no disabled-leak fallback was used.",
+    "Historical mode tests are four CLI/report contracts, not a native DFU or physical-device acceptance."
+  ],
+  "sourceHashes": {
+    ".github/workflows/unsigned-firmware.yml": "e4209fffc54b5d87c1cad19a945dfc920f26d1bd7a5e192355804ca16b1280de",
+    "tools/extract_release_application.py": "722d62693f2cefa0cbd8bd74a7df5df3a2f77a8469d31578ec437ade7dc8686a",
+    "tools/check_z19_stream_modes.py": "225cd056024145e2818f20fa6c5a4e8c543ed02ae7c336f01dd24939ff9d4fe6",
+    "bootloader-z19/TEST_BINDING.json": "01a391ecc8b60070f8a05f76648879824c795413a32997155ed0dd8845f338e1"
+  }
+}

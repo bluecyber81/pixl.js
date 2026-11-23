@@ -1,0 +1,125 @@
+{
+  "passed": true,
+  "device_access": false,
+  "sanitize": true,
+  "sdk_sha256": "73d30f67ed352826c80177cf06a05f516d520d34a1ad67dec96c073e752e6bcb",
+  "cases": [
+    {
+      "variant": "candidate",
+      "suite": "timer",
+      "mode": "init_once",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS init_once\n",
+      "stderr": ""
+    },
+    {
+      "variant": "candidate",
+      "suite": "timer",
+      "mode": "delayed_stop",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS delayed_stop\n",
+      "stderr": ""
+    },
+    {
+      "variant": "candidate",
+      "suite": "timer",
+      "mode": "late_callback",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS late_callback\n",
+      "stderr": ""
+    },
+    {
+      "variant": "candidate",
+      "suite": "timer",
+      "mode": "queued_recreate",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS queued_recreate\n",
+      "stderr": ""
+    },
+    {
+      "variant": "candidate",
+      "suite": "timer",
+      "mode": "competing_view",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS competing_view\n",
+      "stderr": ""
+    },
+    {
+      "variant": "candidate",
+      "suite": "timer",
+      "mode": "start_queue_full",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS start_queue_full\n",
+      "stderr": ""
+    },
+    {
+      "variant": "candidate",
+      "suite": "timer",
+      "mode": "stop_queue_full",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS stop_queue_full\n",
+      "stderr": ""
+    },
+    {
+      "variant": "candidate",
+      "suite": "timer",
+      "mode": "stop_queue_full_recreate",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS stop_queue_full_recreate\n",
+      "stderr": ""
+    },
+    {
+      "variant": "candidate",
+      "suite": "timer",
+      "mode": "irq_teardown",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS irq_teardown\n",
+      "stderr": ""
+    },
+    {
+      "variant": "candidate",
+      "suite": "timer",
+      "mode": "create_failure",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS create_failure\n",
+      "stderr": ""
+    },
+    {
+      "variant": "candidate",
+      "suite": "close",
+      "mode": "close_lifecycles",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS seven player close lifecycles including failed-close abandonment and visible error\n",
+      "stderr": ""
+    },
+    {
+      "variant": "candidate",
+      "suite": "loop",
+      "mode": "loop_lifecycles",
+      "expected_failure": false,
+      "returncode": 0,
+      "stdout": "PASS 21 player loop/counter/path/reopen cases; real player, one frame buffer, no lost allocations\n",
+      "stderr": ""
+    }
+  ],
+  "candidate_source_sha256": {
+    "player_view.c": "09313da829f70cbbdd485d9e099f7a305faf5db51eb51e87c4f648667bc05464",
+    "player_view.h": "d01f6f6b0283d15723f5050b5ba9bca4cdadf63d952a46e432d8ae0aabb64625"
+  },
+  "limits": [
+    "Synthetic FIFO, clock, sortlist and peripherals; real SDK create/start/stop/request/expire bodies.",
+    "Late callback is an adversarial injection; application config dispatches directly in RTC IRQ, not scheduler.",
+    "No device playback, physical IRQ timing, storage fault, RAM watermark, or complete SDK RTC proof."
+  ]
+}

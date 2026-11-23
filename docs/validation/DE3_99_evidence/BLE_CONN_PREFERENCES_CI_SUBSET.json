@@ -1,0 +1,161 @@
+{
+  "device_access": false,
+  "sanitizers": false,
+  "asan_options": null,
+  "source_sha256": "0854f595b3a0a9bcd5d59fda038061e363f68f523c98c51b5d598eb52c992bb5",
+  "pinned_sdk_conn_params_sha256": "ce003b7aea88a24b8c23fe7240794df97071de730b3136165187bdeba7f9ef9e",
+  "limits": [
+    "Actual application and SDK functions; mocked SoftDevice and timer boundaries.",
+    "Valid links with unchanged central parameters are modeled, not observed on a handset.",
+    "No transfer-speed or over-the-air measurement."
+  ],
+  "exit_code": 0,
+  "output": "{\"case\":\"retain_valid_link\",\"intervalMs\":7.50,\"preferred\":false,\"disconnectResult\":0,\"requests\":3,\"disconnectCalls\":0,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"retain_valid_link\",\"intervalMs\":7.50,\"preferred\":false,\"disconnectResult\":8,\"requests\":3,\"disconnectCalls\":0,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"retain_valid_link\",\"intervalMs\":15.00,\"preferred\":false,\"disconnectResult\":0,\"requests\":3,\"disconnectCalls\":0,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"retain_valid_link\",\"intervalMs\":15.00,\"preferred\":false,\"disconnectResult\":8,\"requests\":3,\"disconnectCalls\":0,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"retain_valid_link\",\"intervalMs\":20.00,\"preferred\":true,\"disconnectResult\":0,\"requests\":0,\"disconnectCalls\":0,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"retain_valid_link\",\"intervalMs\":20.00,\"preferred\":true,\"disconnectResult\":8,\"requests\":0,\"disconnectCalls\":0,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"retain_valid_link\",\"intervalMs\":75.00,\"preferred\":true,\"disconnectResult\":0,\"requests\":0,\"disconnectCalls\":0,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"retain_valid_link\",\"intervalMs\":75.00,\"preferred\":true,\"disconnectResult\":8,\"requests\":0,\"disconnectCalls\":0,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"retain_valid_link\",\"intervalMs\":100.00,\"preferred\":false,\"disconnectResult\":0,\"requests\":3,\"disconnectCalls\":0,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"retain_valid_link\",\"intervalMs\":100.00,\"preferred\":false,\"disconnectResult\":8,\"requests\":3,\"disconnectCalls\":0,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"sdk_disconnect_control\",\"intervalMs\":15.00,\"preferred\":false,\"disconnectResult\":0,\"requests\":3,\"disconnectCalls\":1,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"sdk_disconnect_control\",\"intervalMs\":100.00,\"preferred\":false,\"disconnectResult\":0,\"requests\":3,\"disconnectCalls\":1,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"sdk_disconnect_control\",\"intervalMs\":15.00,\"preferred\":false,\"disconnectResult\":8,\"requests\":3,\"disconnectCalls\":1,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"sdk_disconnect_control\",\"intervalMs\":100.00,\"preferred\":false,\"disconnectResult\":8,\"requests\":3,\"disconnectCalls\":1,\"fatalChecks\":0,\"passed\":true}\n{\"case\":\"stale_timer_after_disconnect\",\"passed\":true}\nBLE preference regression: 15/15 cases passed (mocked radio and timers).\n",
+  "cases": [
+    {
+      "case": "retain_valid_link",
+      "intervalMs": 7.5,
+      "preferred": false,
+      "disconnectResult": 0,
+      "requests": 3,
+      "disconnectCalls": 0,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "retain_valid_link",
+      "intervalMs": 7.5,
+      "preferred": false,
+      "disconnectResult": 8,
+      "requests": 3,
+      "disconnectCalls": 0,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "retain_valid_link",
+      "intervalMs": 15.0,
+      "preferred": false,
+      "disconnectResult": 0,
+      "requests": 3,
+      "disconnectCalls": 0,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "retain_valid_link",
+      "intervalMs": 15.0,
+      "preferred": false,
+      "disconnectResult": 8,
+      "requests": 3,
+      "disconnectCalls": 0,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "retain_valid_link",
+      "intervalMs": 20.0,
+      "preferred": true,
+      "disconnectResult": 0,
+      "requests": 0,
+      "disconnectCalls": 0,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "retain_valid_link",
+      "intervalMs": 20.0,
+      "preferred": true,
+      "disconnectResult": 8,
+      "requests": 0,
+      "disconnectCalls": 0,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "retain_valid_link",
+      "intervalMs": 75.0,
+      "preferred": true,
+      "disconnectResult": 0,
+      "requests": 0,
+      "disconnectCalls": 0,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "retain_valid_link",
+      "intervalMs": 75.0,
+      "preferred": true,
+      "disconnectResult": 8,
+      "requests": 0,
+      "disconnectCalls": 0,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "retain_valid_link",
+      "intervalMs": 100.0,
+      "preferred": false,
+      "disconnectResult": 0,
+      "requests": 3,
+      "disconnectCalls": 0,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "retain_valid_link",
+      "intervalMs": 100.0,
+      "preferred": false,
+      "disconnectResult": 8,
+      "requests": 3,
+      "disconnectCalls": 0,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "sdk_disconnect_control",
+      "intervalMs": 15.0,
+      "preferred": false,
+      "disconnectResult": 0,
+      "requests": 3,
+      "disconnectCalls": 1,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "sdk_disconnect_control",
+      "intervalMs": 100.0,
+      "preferred": false,
+      "disconnectResult": 0,
+      "requests": 3,
+      "disconnectCalls": 1,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "sdk_disconnect_control",
+      "intervalMs": 15.0,
+      "preferred": false,
+      "disconnectResult": 8,
+      "requests": 3,
+      "disconnectCalls": 1,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "sdk_disconnect_control",
+      "intervalMs": 100.0,
+      "preferred": false,
+      "disconnectResult": 8,
+      "requests": 3,
+      "disconnectCalls": 1,
+      "fatalChecks": 0,
+      "passed": true
+    },
+    {
+      "case": "stale_timer_after_disconnect",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

@@ -1,0 +1,21 @@
+{
+  "repository": "bluecyber81/pixl.js",
+  "branch": "gh-pages",
+  "publicCommit": "f1d69f020097f21487eef99314fe7da5257b41d7",
+  "tree": "bc1f5f7cc4cf6296a08efab2f16715c5f702e070",
+  "parent": "a70187159ec177c947c931d5dd7e3d1600841492",
+  "localPreparedCommit": "a6c886211d6a4d8cda3b88fb200368dc3c7d5e35",
+  "changedPaths": [
+    "downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+    "downloads/web3.65.0/MANIFEST.json",
+    "downloads/web3.65.0/SHA256SUMS.txt"
+  ],
+  "unchangedProductFiles": 320,
+  "portableBytesUnchanged": true,
+  "sourceArchiveBytes": 21249310,
+  "sourceArchiveSha256": "de82839b8cdc90f7226b1229119ebbd60a1a5cd67deb4c80e0902a640d8c487c",
+  "sourceArchiveBlob": "c504ca28f6c4ef2d8ecaae942887b64b275fbcd1",
+  "sourceArchiveUploadRun": 45198533066,
+  "deploymentVerified": false,
+  "httpFollowupVerified": false
+}

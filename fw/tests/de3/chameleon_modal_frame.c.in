@@ -1,0 +1,104 @@
+/* Production key translation, FIFO, current-context check, modal input/draw
+ * and post-flush fence. Mock LCD transfer can inject keys halfway through. */
+enum {MUI_EVENT_ID_REDRAW,MUI_EVENT_ID_INPUT,MUI_EVENT_ID_ANIM};
+#define BUTTONS_NUMBER 3
+#define NRF_LOG_DEBUG(...) ((void)0)
+#define NRF_LOG_WARNING(...) ((void)0)
+static void app_util_critical_region_enter(uint8_t *nested){*nested=0;}
+static void app_util_critical_region_exit(uint8_t nested){}
+static void mui_nav_diag_post(unsigned key,unsigned type,bool accepted,unsigned count){}
+static void mui_nav_diag_deliver(unsigned key,unsigned type){}
+static unsigned remote_generation;
+static void ble_remote_local_activity(void){remote_generation++;}
+@EVENT_QUEUE@
+static void mui_post(mui_t *m,mui_event_t *e){mui_event_post(&m->event_queue,e);}
+@PHYSICAL@
+static bool fence_input_after_frame;
+@mui_fence_input_after_frame@
+#define mui_canvas_set_frame(...) ((void)0)
+#define mui_draw_mem_mon(c) ((void)0)
+static void (*during_flush)(void);
+static void mui_canvas_flush(mui_canvas_t *c){
+    if(during_flush){void (*hook)(void)=during_flush;during_flush=NULL;hook();}
+}
+@mui_buffer_flush@
+static bool covered;
+static void mui_update_now(mui_t *m){
+    if(covered||!current||!current->p_handle)return;
+    app_chameleon_t *app=current->p_handle;
+    if(app->p_view_dispatcher->p_active_view!=&app->save_error_view)return;
+    app->save_error_view.draw_cb(&app->save_error_view,&m->canvas);
+    mui_buffer_flush(m);
+}
+enum {MINI_APP_ID_STATUS_BAR=100, MINI_APP_ID_DESKTOP,MUI_LAYER_WINDOW,MUI_LAYER_DESKTOP};
+typedef struct port_s {void (*input_cb)(struct port_s*,mui_input_event_t*);} mui_view_port_t;
+static void modal_input(mui_view_port_t *port,mui_input_event_t *e){
+    assert(current&&current->p_handle);
+    app_chameleon_t *app=current->p_handle;
+    mui_view_t *v=app->p_view_dispatcher->p_active_view;
+    if(v&&v->input_cb)v->input_cb(v,e);
+}
+static mui_view_port_t *mui_find_view_port_enabled(mui_t *m,unsigned layer){
+    static mui_view_port_t port={modal_input};
+    return layer==MUI_LAYER_FULLSCREEN?&port:NULL;
+}
+static bool mini_app_launcher_input_blocked(void *launcher){return false;}
+static void mini_app_launcher_run(void *launcher,unsigned app){assert(false);}
+static bool mui_nfc_save_input(mui_t *m,mui_event_t *e){return false;}
+@mui_process_input@
+static void deliver_modal(void *m,mui_event_t *event){
+    assert(event->id==MUI_EVENT_ID_INPUT);
+    mui_process_input(m,event);
+}
+static void key(uint8_t value){
+    mui_input_on_bsp_btn_event(value,BSP_BTN_EVENT_PRESSED);
+    mui_input_on_bsp_btn_event(value,BSP_BTN_EVENT_RELEASED);
+    mui_input_on_bsp_btn_event(value,BSP_BTN_EVENT_SHORT);
+}
+static void fresh(uint8_t value){key(value);mui_event_dispatch(&ui.event_queue);}
+static void keys_during_transfer(void){
+    key(INPUT_KEY_RIGHT);
+    key(INPUT_KEY_CENTER);
+    mui_input_on_bsp_btn_event(INPUT_KEY_CENTER,BSP_BTN_EVENT_PRESSED);
+}
+static void finish_held_key(void){
+    mui_input_on_bsp_btn_event(INPUT_KEY_CENTER,BSP_BTN_EVENT_RELEASED);
+    mui_input_on_bsp_btn_event(INPUT_KEY_CENTER,BSP_BTN_EVENT_SHORT);
+    mui_event_dispatch(&ui.event_queue);
+}
+static void test_modal_gestures(void){
+    mui_event_t ring[MAX_EVENT_MSG];
+    ui.event_queue=(mui_event_queue_t){.events=ring,.dispatcher=deliver_modal,.dispatch_context=&ui};
+    mini_app_inst_t inst;setup(&inst,INVALID_SLOT_INDEX,NFC_TAG_MF1_WRITE_NORMAL);
+    app_chameleon_t *app=inst.p_handle;
+    m_tag_information->memory[4][0]=0x55;
+    data_write_error=VFS_ERR_NOSPC;
+    key(INPUT_KEY_RIGHT);key(INPUT_KEY_RIGHT);key(INPUT_KEY_CENTER);
+    assert(!prepare(&inst,MINI_APP_EXIT_SWITCH));
+    mui_event_dispatch(&ui.event_queue);
+    assert(inst.p_handle==app&&app->discard_state==CHAMELEON_SAVE_ERROR&&m_tag_information->memory[4][0]==0x55);
+    unsigned writes=data_writes;
+    /* Each newly displayed state invalidates queued gestures, including the
+     * release of a key started while its pixels were being transferred. */
+    during_flush=keys_during_transfer;
+    fresh(INPUT_KEY_RIGHT);
+    assert(app->discard_state==CHAMELEON_DISCARD_NO&&app->save_error_drawn);
+    finish_held_key();assert(app->discard_state==CHAMELEON_DISCARD_NO);
+    during_flush=keys_during_transfer;fresh(INPUT_KEY_RIGHT);
+    finish_held_key();assert(inst.p_handle==app&&app->discard_state==CHAMELEON_DISCARD_YES);
+    fresh(INPUT_KEY_LEFT);assert(app->discard_state==CHAMELEON_DISCARD_NO);
+    key(INPUT_KEY_CENTER);key(INPUT_KEY_CENTER);mui_event_dispatch(&ui.event_queue);
+    assert(app->discard_state==CHAMELEON_SAVE_ERROR&&data_writes==writes);
+    /* Retry under a temporarily covered screen. No action before presentation. */
+    covered=true;fresh(INPUT_KEY_CENTER);writes++;
+    assert(!app->save_error_drawn&&data_writes==writes);
+    fresh(INPUT_KEY_RIGHT);assert(app->discard_state==CHAMELEON_SAVE_ERROR);
+    covered=false;
+    mui_input_on_bsp_btn_event(INPUT_KEY_CENTER,BSP_BTN_EVENT_PRESSED);
+    unsigned pending_remote=remote_generation;
+    mui_update_now(&ui);assert(remote_generation!=pending_remote);
+    finish_held_key();assert(data_writes==writes);
+    fresh(INPUT_KEY_RIGHT);fresh(INPUT_KEY_RIGHT);fresh(INPUT_KEY_CENTER);
+    assert(!inst.p_handle&&!live&&disk_byte(0)==0x11&&data_writes==writes);
+    ui.event_queue=(mui_event_queue_t){0};cases++;
+}

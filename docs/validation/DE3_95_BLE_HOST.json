@@ -1,0 +1,117 @@
+{
+  "device_access": false,
+  "sanitizers": false,
+  "sdk_s112_gap_sha256": "0ec9439c9e87a917cfbc65817bd8fb696060b4154919fee0f08ebbfefa84067c",
+  "source_sha256": {
+    "mod/ble/ble_main.c": "4370806a20463e1061fb050530166285dfd0782d7755ac562e43deeff7fc478f",
+    "mod/ble/ble_main.h": "3c43eb9fd86723549866485e5bf1e2153581e9761d0ff7d4a336af06ed7ffaa0",
+    "mod/df/df_proto_info.c": "36b9e96b57b4af2cd77a154ab18936e4afe9aaa146a6934a03f1f7018d0352b6"
+  },
+  "limits": [
+    "Real production functions and S112 types; modeled SoftDevice/timer/GATT boundary.",
+    "Neither successful 2M use on a handset nor increased throughput is established."
+  ],
+  "passed": true,
+  "exit_code": 0,
+  "output": "{\"case\":\"uninitialized_bounds_disconnected_sentinels\",\"passed\":true}\n{\"case\":\"actual_selected_7_5ms_interval_before_nus\",\"passed\":true}\n{\"case\":\"legacy_v1_and_mtu_setting_unchanged\",\"passed\":true}\n{\"case\":\"v2_read_has_no_radio_or_settings_side_effect\",\"passed\":true}\n{\"case\":\"one_2m_request_only_after_ready_and_no_early_success_claim\",\"passed\":true}\n{\"case\":\"effective_phy_from_completed_event\",\"passed\":true}\n{\"case\":\"connection_parameter_update_is_current_not_preferred\",\"passed\":true}\n{\"case\":\"old_handle_events_cannot_overwrite_new_link\",\"passed\":true}\n{\"case\":\"failed_phy_event_preserves_previous_confirmed_phy\",\"passed\":true}\n{\"case\":\"disconnect_clears_current_link_diagnosis\",\"passed\":true}\n{\"case\":\"busy_retry_limit_and_rtc_wrap\",\"passed\":true}\n{\"case\":\"busy_then_successful_1m_fallback_keeps_link\",\"passed\":true}\n{\"case\":\"local_phy_rejection_is_nonfatal_and_not_retried_forever\",\"passed\":true}\n{\"case\":\"already_2m_peer_needs_no_extra_request\",\"passed\":true}\n{\"case\":\"mode_handoff_and_closing_session_gates\",\"passed\":true}\n{\"case\":\"peer_phy_busy_late_reply_never_resets_or_targets_other_handle\",\"passed\":true}\n{\"case\":\"v2_rejects_malformed_selector_length_status_chunk\",\"passed\":true}\n{\"case\":\"v2_is_readonly_while_storage_busy_and_ignores_nonrequest_events\",\"passed\":true}\n{\"case\":\"mtu_and_link_snapshot_share_one_irq_generation\",\"passed\":true}\nWIRE 4d5455440207fa00fa00fa00f700070010000000900102020100000000000000\nPASS 19 link/PHY/wire cases; state 24 B; actual S112 headers; no radio\n",
+  "cases": [
+    {
+      "case": "uninitialized_bounds_disconnected_sentinels",
+      "passed": true
+    },
+    {
+      "case": "actual_selected_7_5ms_interval_before_nus",
+      "passed": true
+    },
+    {
+      "case": "legacy_v1_and_mtu_setting_unchanged",
+      "passed": true
+    },
+    {
+      "case": "v2_read_has_no_radio_or_settings_side_effect",
+      "passed": true
+    },
+    {
+      "case": "one_2m_request_only_after_ready_and_no_early_success_claim",
+      "passed": true
+    },
+    {
+      "case": "effective_phy_from_completed_event",
+      "passed": true
+    },
+    {
+      "case": "connection_parameter_update_is_current_not_preferred",
+      "passed": true
+    },
+    {
+      "case": "old_handle_events_cannot_overwrite_new_link",
+      "passed": true
+    },
+    {
+      "case": "failed_phy_event_preserves_previous_confirmed_phy",
+      "passed": true
+    },
+    {
+      "case": "disconnect_clears_current_link_diagnosis",
+      "passed": true
+    },
+    {
+      "case": "busy_retry_limit_and_rtc_wrap",
+      "passed": true
+    },
+    {
+      "case": "busy_then_successful_1m_fallback_keeps_link",
+      "passed": true
+    },
+    {
+      "case": "local_phy_rejection_is_nonfatal_and_not_retried_forever",
+      "passed": true
+    },
+    {
+      "case": "already_2m_peer_needs_no_extra_request",
+      "passed": true
+    },
+    {
+      "case": "mode_handoff_and_closing_session_gates",
+      "passed": true
+    },
+    {
+      "case": "peer_phy_busy_late_reply_never_resets_or_targets_other_handle",
+      "passed": true
+    },
+    {
+      "case": "v2_rejects_malformed_selector_length_status_chunk",
+      "passed": true
+    },
+    {
+      "case": "v2_is_readonly_while_storage_busy_and_ignores_nonrequest_events",
+      "passed": true
+    },
+    {
+      "case": "mtu_and_link_snapshot_share_one_irq_generation",
+      "passed": true
+    }
+  ],
+  "negative_controls": {
+    "reset_on_peer_busy": {
+      "detected": true,
+      "assertion": "CHECK 277: (err_code)==NRF_SUCCESS"
+    },
+    "extra_busy_retry": {
+      "detected": true,
+      "assertion": "CHECK 505: phy_calls==before+3"
+    },
+    "missing_connect_snapshot": {
+      "detected": true,
+      "assertion": "CHECK 446: response.data[14]==flags"
+    },
+    "trust_failed_phy_fields": {
+      "detected": true,
+      "assertion": "CHECK 491: response.data[22]==2&&response.data[23]==2&&response.data[15]==BLE_HCI_UNSUPPORTED_REMOTE_FEATURE"
+    },
+    "mixed_link_generation": {
+      "detected": true,
+      "assertion": "CHECK 553: response.data[14]&1"
+    }
+  }
+}

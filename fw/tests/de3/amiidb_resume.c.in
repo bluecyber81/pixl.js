@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "m-string.h"
+#include "ntag_def.h"
 #define CACHEDATASIZE 312
 #define VFS_MAX_NAME_LEN 48
 #define VFS_OK 0
@@ -22,7 +23,7 @@ static const db_amiibo_t figures[]={{11,101},{22,202},{33,303},{44,404},{55,505}
 /* ACTUAL_SNAPSHOT */
 /* ACTUAL_SCENE_IDS */
 typedef struct {unsigned count,focus,scroll;} mui_list_view_t;
-typedef struct {unsigned focus;} amiibo_view_t;
+typedef struct {unsigned focus,game_id;} amiibo_view_t;
 typedef struct {void(*enter_cb)(void *);void(*exit_cb)(void *);} mui_scene_t;
 typedef struct {
  unsigned scene_depth,scene_num,default_scene_id;
@@ -39,7 +40,8 @@ typedef struct {
  uint8_t prev_scene_id;
  uint16_t search_page,game_page,game_page_path[8],game_scroll_path[8];
  uint8_t game_focus_path[8],search_game_id;
- bool search_restore_focus;
+ bool search_restore_focus,resume_tag,temporary_tag_changed;
+ ntag_t ntag;
  const db_amiibo_t *result_items[24],*cur_amiibo;
  uint16_t result_count,game_id_path[8];
  uint8_t game_id_index;
@@ -51,11 +53,32 @@ typedef struct {
  uint16_t cur_scroll_offset;
  uint8_t tag_canary[512];
 } app_amiidb_t;
-typedef struct {unsigned amiidb_data_slot_num;} settings_t;
-static settings_t settings={10};
+typedef struct {unsigned amiidb_data_slot_num;bool auto_gen_amiibo;} settings_t;
+typedef settings_t settings_data_t;
+static settings_t settings={.amiidb_data_slot_num=10};
 static settings_t *settings_get_data(void){return &settings;}
 typedef struct {bool is_empty;} amiidb_slot_info_t;
-static unsigned allocations,fail_at,memory_errors,enters,details,checks;
+static unsigned allocations,fail_at,memory_errors,enters,details,checks,generations,reused,slot_reloads;
+#define MINI_APP_ID_AMIIDB 3
+#define NRF_LOG_INFO(...) ((void)0)
+static size_t cache_noinit_size(void){return 0;}
+typedef struct {int32_t enabled;uint32_t id;ntag_t ntag;uint8_t retain_data[CACHEDATASIZE];} cache_data_t;
+static cache_data_t m_cache_data;
+static int32_t m_cache_crc32;
+static cache_data_t *cache_get_data(void){return &m_cache_data;}
+static uint32_t crc32_compute(const uint8_t*p,size_t n,const uint32_t*previous){
+ uint32_t crc=previous?~*previous:~0u;while(n--){crc^=*p++;for(unsigned b=0;b<8;b++)crc=(crc>>1)^((0u-(crc&1u))&0xedb88320u);}return ~crc;
+}
+/* ACTUAL_CACHE_VALIDATE */
+/* ACTUAL_ID */
+static ntag_t active_tag;
+static ntag_t *ntag_emu_get_current_tag(void){return &active_tag;}
+static bool snapshot_tag;
+static unsigned snapshot_changed;
+static void fill_tag(ntag_t *tag,uint8_t pattern,uint32_t head,uint32_t tail){
+ memset(tag,pattern,sizeof(*tag));tag->type=NTAG_215;tag->read_only=true;
+ for(unsigned n=0;n<4;n++){tag->data[84+n]=(uint8_t)(head>>(24-8*n));tag->data[88+n]=(uint8_t)(tail>>(24-8*n));}
+}
 static bool missing_id,missing_page,favorite_exists=true,slot_empty,page_alloc_failure,deny_transition;
 static int favorite_error,slot_error;
 static void *mui_mem_malloc(size_t bytes){if(++allocations==fail_at)return NULL;return malloc(bytes);}
@@ -84,6 +107,36 @@ static int32_t amiidb_api_fav_list_dir(const char *dir,void(*cb)(amiidb_fav_info
 }
 /* ACTUAL_DISPATCHER */
 /* ACTUAL_RESUME */
+typedef unsigned ret_code_t;
+#define NRF_SUCCESS 0
+#define NRF_ERROR_INVALID_DATA 1
+#define NRF_ERROR_NOT_SUPPORTED 2
+#define _T(x) #x
+static bool m_tag_ready,m_active_slot_persist;
+static bool ntag_emu_prepare_change(void){return !deny_transition;}
+static bool ntag_emu_set_tag(const ntag_t *tag){active_tag=*tag;return true;}
+static ret_code_t amiibo_helper_generate_amiibo(uint32_t head,uint32_t tail,ntag_t *tag){generations++;fill_tag(tag,0x33,head,tail);return 0;}
+static void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t *app,const char*message){(void)app;(void)message;assert(false);}
+/* ACTUAL_GENERATE */
+typedef unsigned ntag_event_type_t;
+enum {NTAG_EVENT_TYPE_WRITTEN,NTAG_EVENT_TYPE_READ};
+static uint8_t m_active_slot;
+static int m_amiibo_gen_delay_timer;
+static uint32_t m_generate_generation;
+static unsigned requested_returns;
+#define APP_TIMER_TICKS(n) (n)
+static void app_timer_stop(int t){(void)t;}
+static void app_timer_start(int t,int n,void*p){(void)t;(void)n;(void)p;assert(false);}
+static bool amiibo_helper_is_key_loaded(void){return true;}
+static void mui_update(void*p){(void)p;}
+static int amiidb_api_slot_update(unsigned s,ntag_t*t){(void)s;(void)t;assert(false);return -1;}
+static void ntag_emu_save_failed(void){assert(false);}
+static bool ntag_emu_save_pending(void){return false;}
+static bool ntag_emu_session_used(void){return true;}
+static uint32_t ntag_emu_get_generation(void){return 123;}
+static void amiidb_nfc_return_to_list(void*p){(void)p;assert(false);}
+static void ntag_emu_request_action(void(*cb)(void*),void*p,uint32_t g){assert(cb==amiidb_nfc_return_to_list&&p&&g==123);requested_returns++;}
+/* ACTUAL_CALLBACK */
 
 static bool guard(void){return !deny_transition;}
 static void fixture_enter(void *context){
@@ -99,7 +152,13 @@ static void fixture_enter(void *context){
  }
  if(scene==AMIIDB_SCENE_RECENT)app->result_count=amiidb_recent_copy(app->result_items);
  if(page_alloc_failure && scene!=AMIIDB_SCENE_MAIN){app->result_count=0;app->p_list_view->count=0;}
- if(scene==AMIIDB_SCENE_AMIIBO_DETAIL)details++;
+ if(scene==AMIIDB_SCENE_AMIIBO_DETAIL){
+  details++;
+  if(snapshot_tag){
+   if(app->prev_scene_id==AMIIDB_SCENE_DATA_LIST){slot_reloads++;fill_tag(&app->ntag,0x55,0,0);}
+   else {if(app->resume_tag)reused++;amiidb_scene_amiibo_game_list_generate(app);}
+  }
+ }
 }
 static void fixture_exit(void *context){app_amiidb_t *app=context;app->p_list_view->count=0;}
 static mui_scene_t defs[AMIIDB_SCENE_MAX];
@@ -119,6 +178,14 @@ static app_amiidb_cache_data_t valid_snapshot(unsigned scene,unsigned origin){
  init(&app,&list,&dispatcher,&view);
  string_set_str(app.search_str,"Mario");string_set_str(app.cur_fav_dir,"saved-favorites");
  app.prev_scene_id=origin;app.cur_amiibo=&figures[1];
+ if(snapshot_tag){
+  fill_tag(&app.ntag,0x7b,22,202);active_tag=app.ntag;
+  if(snapshot_changed){
+   active_tag.data[snapshot_changed==2?84:16]^=0x55;m_active_slot_persist=false;
+   ntag_update_cb(NTAG_EVENT_TYPE_WRITTEN,&app,&active_tag);
+   assert(app.temporary_tag_changed&&!memcmp(&app.ntag,&active_tag,sizeof(active_tag)));
+  }
+ }
  app.game_id_index=2;app.game_id_path[1]=1;app.game_id_path[2]=2;
  app.game_page_path[0]=1;app.game_page_path[1]=2;app.game_page_path[2]=3;
  app.game_focus_path[2]=6;app.game_scroll_path[2]=39;
@@ -134,7 +201,7 @@ static app_amiidb_cache_data_t valid_snapshot(unsigned scene,unsigned origin){
  for(unsigned i=0;i<8;i++)assert(bytes.before[i]==0xcd && bytes.after[i]==0xcd);
  app_amiidb_cache_data_t result;memcpy(&result,bytes.data,sizeof(result));
  for(unsigned i=sizeof(result);i<CACHEDATASIZE;i++)assert(bytes.data[i]==0);
- assert(result.magic==APP_AMIIDB_RESUME_MAGIC && result.version==2 && result.fav_page_number==42 && result.size==sizeof(result));
+ assert(result.magic==APP_AMIIDB_RESUME_MAGIC && result.version==3 && result.fav_page_number==42 && result.size==sizeof(result));
  finish(&app);return result;
 }
 static unsigned restore_case(const app_amiidb_cache_data_t *data,unsigned alignment,bool ok,unsigned expected){
@@ -160,9 +227,59 @@ static unsigned restore_case(const app_amiidb_cache_data_t *data,unsigned alignm
  finish(&app);checks++;return list.focus;
 }
 
+
+static void exact_tag_cases(void){
+ snapshot_tag=true;
+ const unsigned parents[]={AMIIDB_SCENE_GAME_LIST,AMIIDB_SCENE_AMIIBO_SEARCH,AMIIDB_SCENE_FAV_LIST,AMIIDB_SCENE_RECENT};
+ for(snapshot_changed=0;snapshot_changed<3;snapshot_changed++)
+ for(unsigned parent=0;parent<4;parent++)for(unsigned kind=0;kind<9;kind++){
+  if(snapshot_changed&&kind==4)continue; /* Changed payload ID is valid only with confirmed WRITE provenance. */
+  app_amiidb_cache_data_t data=valid_snapshot(AMIIDB_SCENE_AMIIBO_DETAIL,parents[parent]);
+  assert(data.retained_tag==1&&data.temporary_tag_changed==(snapshot_changed!=0));ntag_t before=active_tag;
+  memset(&m_cache_data,0,sizeof(m_cache_data));m_cache_data.enabled=1;m_cache_data.id=MINI_APP_ID_AMIIDB;
+  m_cache_data.ntag=before;memcpy(m_cache_data.retain_data,&data,sizeof(data));
+  if(kind==2)m_cache_data.id=2;
+  if(kind==3)m_cache_data.enabled=0;
+  if(kind==4)m_cache_data.ntag.data[84]^=1;
+  if(kind==5)m_cache_data.ntag.type=NTAG_I2C_PLUS_2K;
+  if(kind==6){data.version=2;data.size=296;memcpy(m_cache_data.retain_data,&data,sizeof(data));}
+  if(kind==7){data.retained_tag=0;data.temporary_tag_changed=0;memcpy(m_cache_data.retain_data,&data,sizeof(data));}
+  m_cache_crc32=crc32_compute((uint8_t*)&m_cache_data,sizeof(m_cache_data),NULL);
+  if(kind==1)m_cache_crc32^=1;
+  app_amiidb_t app;mui_list_view_t list;mui_scene_dispatcher_t dispatcher;amiibo_view_t view;init(&app,&list,&dispatcher,&view);
+  unsigned generated=generations,used=reused;
+  assert(app_amiidb_restore_cache(&app,kind==8?(uint8_t*)&data:m_cache_data.retain_data));
+  assert(mui_scene_dispatcher_current_scene(&dispatcher)==AMIIDB_SCENE_AMIIBO_DETAIL);
+  assert(!app.resume_tag);
+  assert(app.temporary_tag_changed==(kind==0&&snapshot_changed!=0));
+  if(kind==0){assert(generations==generated&&reused==used+1);assert(!memcmp(&app.ntag,&before,sizeof(before))&&!memcmp(&active_tag,&before,sizeof(before)));}
+  else {assert(generations==generated+1&&reused==used);assert(memcmp(&app.ntag,&before,sizeof(before)));}
+  unsigned requests=requested_returns;ntag_update_cb(NTAG_EVENT_TYPE_READ,&app,&active_tag);
+  assert(requested_returns==requests+(app.temporary_tag_changed?0u:1u));
+  finish(&app);checks++;
+ }
+ snapshot_changed=0;
+ /* Persisted slots always reload even if a forged current snapshot asks for reuse. */
+ app_amiidb_cache_data_t data=valid_snapshot(AMIIDB_SCENE_AMIIBO_DETAIL,AMIIDB_SCENE_DATA_LIST);
+ assert(!data.retained_tag);data.retained_tag=1;
+ m_cache_data.enabled=1;m_cache_data.id=MINI_APP_ID_AMIIDB;memcpy(m_cache_data.retain_data,&data,sizeof(data));
+ m_cache_crc32=crc32_compute((uint8_t*)&m_cache_data,sizeof(m_cache_data),NULL);
+ app_amiidb_t app;mui_list_view_t list;mui_scene_dispatcher_t dispatcher;amiibo_view_t view;init(&app,&list,&dispatcher,&view);
+ unsigned used=reused,loaded=slot_reloads;assert(app_amiidb_restore_cache(&app,m_cache_data.retain_data));
+ assert(reused==used&&slot_reloads==loaded+1&&!app.resume_tag&&app.ntag.data[16]==0x55);finish(&app);checks++;
+ snapshot_tag=false;
+ app_amiidb_cache_data_t bad=valid_snapshot(AMIIDB_SCENE_AMIIBO_DETAIL,AMIIDB_SCENE_GAME_LIST);
+ bad.temporary_tag_changed=2;restore_case(&bad,0,false,0);
+ bad.temporary_tag_changed=1;bad.retained_tag=0;restore_case(&bad,0,false,0);
+ puts("PASS 103 exact temporary tag/WRITE/ID-WRITE resume, follow-up READ, CRC/owner/identity/legacy/persisted-slot cases; actual callbacks/save/restore/generate C");
+}
+
 int main(void){
  for(unsigned i=0;i<AMIIDB_SCENE_MAX;i++)defs[i]=(mui_scene_t){fixture_enter,fixture_exit};
- _Static_assert(sizeof(app_amiidb_cache_data_t)==296,"Version-1 snapshot ABI changed; review/version before shipping");
+ _Static_assert(sizeof(app_amiidb_cache_data_t)==300,"Version-3 snapshot must fit existing 312-byte cache");
+ _Static_assert(offsetof(app_amiidb_cache_data_t,retained_tag)==296,"Legacy snapshot prefix ABI changed");
+ amiidb_recent_clear();for(unsigned i=5;i>0;i--)amiidb_recent_note(&figures[i-1],i%3);
+ exact_tag_cases();
  amiidb_recent_clear();for(unsigned i=5;i>0;i--)amiidb_recent_note(&figures[i-1],i%3);
  const unsigned targets[]={0,1,2,2,4,5,2,5,8,2,8,11,11,13};
  for(unsigned scene=0;scene<AMIIDB_SCENE_MAX;scene++){
@@ -171,7 +288,7 @@ int main(void){
   for(unsigned alignment=0;alignment<4;alignment++)restore_case(&data,alignment,true,targets[scene]);
  }
  app_amiidb_cache_data_t legacy=valid_snapshot(AMIIDB_SCENE_FAV_LIST,AMIIDB_SCENE_FAV_LIST);
- assert(sizeof(legacy)==296);legacy.version=1;legacy.fav_page_number=0xf1f2;
+ assert(sizeof(legacy)==300);legacy.version=1;legacy.size=296;legacy.fav_page_number=0xf1f2;
  restore_case(&legacy,0,true,AMIIDB_SCENE_FAV_LIST);
  app_amiidb_cache_data_t base=valid_snapshot(AMIIDB_SCENE_AMIIBO_DETAIL_MENU,AMIIDB_SCENE_AMIIBO_SEARCH);
  assert(base.recent_count==5);
@@ -182,7 +299,7 @@ int main(void){
   switch(kind){
    case 0:bad.magic=1;break;
    case 1:bad.version=0;break;
-   case 2:bad.version=3;break;
+   case 2:bad.version=4;break;
    case 3:bad.size--;break;
    case 4:bad.target_scene=AMIIDB_SCENE_MAX;break;
    case 5:bad.target_scene=AMIIDB_SCENE_AMIIBO_DETAIL_MENU;break;
@@ -249,6 +366,6 @@ int main(void){
   }
   finish(&app);finish(&restored);
  }
- printf("PASS %u synthetic restore cases; 296/312-byte pointer-free snapshot; scene normalization, actual history/stack, four byte alignments, legacy/corruption rejection, missing targets and actual checked-allocation failures\n",checks);
+ printf("PASS %u synthetic restore cases; 300/312-byte pointer-free snapshot; scene normalization, actual history/stack, four byte alignments, legacy/corruption rejection, missing targets and actual checked-allocation failures\n",checks);
  return 0;
 }

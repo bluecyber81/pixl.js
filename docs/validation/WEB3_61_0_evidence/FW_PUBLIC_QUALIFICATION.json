@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "repository": "bluecyber81/pixl.js",
+  "branch": "release/lcd-de398-app671",
+  "productionCommit": "7ab8d1343d609ecb5bec93863d60f038583f0ba0",
+  "productionTree": "23ff354cd04e387a0af4e2b0b43823074515a0a9",
+  "qualificationCommit": "a3ae0e4063f1901e9da98f3ff37fd163388eb72a",
+  "qualificationTree": "fe57e0e64b49713df6f59af42408078e36537acf",
+  "localQualificationCommit": "70c71d94e8fd2f7018f7f2be132ec446ec5d475e",
+  "parent": "7ab8d1343d609ecb5bec93863d60f038583f0ba0",
+  "exactLocalTreeVerified": true,
+  "remoteRefReadbackVerified": true,
+  "applicationCounter": 671,
+  "firmwareVersion": "2.22.0-DE3.98",
+  "otaSha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
+  "otaBytes": 364781,
+  "sourcePublished": true,
+  "signedPackagePublishedInSource": true,
+  "webPagesPublication": "pending",
+  "physicalDeviceAcceptance": "pending",
+  "qualificationUrl": "https://github.com/bluecyber81/pixl.js/blob/a3ae0e4063f1901e9da98f3ff37fd163388eb72a/docs/validation/DE3_98.json",
+  "otaPinnedUrl": "https://github.com/bluecyber81/pixl.js/raw/a3ae0e4063f1901e9da98f3ff37fd163388eb72a/fw/releases/Allmiibo_LCD_DE3_98_671_NUR_APP.zip"
+}

@@ -1,0 +1,63 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> allmiibo-web@3.62.0 test:dist
+> node scripts/test-production-build.mjs root
+
+✔ production worker is one self-contained referenced artifact with the tested pinned WASM assets (6.051345ms)
+✔ de399: built worker runs its real WASM and returns the matching engine/application through messages (114.089145ms)
+✔ de399: built worker rejects a server that supplies the other profile's WASM (100.499505ms)
+✔ de398: built worker runs its real WASM and returns the matching engine/application through messages (90.365688ms)
+✔ de398: built worker rejects a server that supplies the other profile's WASM (60.198762ms)
+✔ de397: built worker runs its real WASM and returns the matching engine/application through messages (68.209021ms)
+✔ de397: built worker rejects a server that supplies the other profile's WASM (54.867534ms)
+✔ de396: built worker runs its real WASM and returns the matching engine/application through messages (64.451222ms)
+✔ de396: built worker rejects a server that supplies the other profile's WASM (56.996707ms)
+✔ de395: built worker runs its real WASM and returns the matching engine/application through messages (73.177838ms)
+✔ de395: built worker rejects a server that supplies the other profile's WASM (54.833703ms)
+✔ de394: built worker runs its real WASM and returns the matching engine/application through messages (62.472377ms)
+✔ de394: built worker rejects a server that supplies the other profile's WASM (53.810104ms)
+✔ de393: built worker runs its real WASM and returns the matching engine/application through messages (70.268021ms)
+✔ de393: built worker rejects a server that supplies the other profile's WASM (58.689316ms)
+✔ de392: built worker runs its real WASM and returns the matching engine/application through messages (62.307399ms)
+✔ de392: built worker rejects a server that supplies the other profile's WASM (51.847864ms)
+✔ de391: built worker runs its real WASM and returns the matching engine/application through messages (61.284175ms)
+✔ de391: built worker rejects a server that supplies the other profile's WASM (56.400506ms)
+✔ current: built worker runs its real WASM and returns the matching engine/application through messages (67.840998ms)
+✔ current: built worker rejects a server that supplies the other profile's WASM (57.576455ms)
+✔ de354: built worker runs its real WASM and returns the matching engine/application through messages (57.856482ms)
+✔ de354: built worker rejects a server that supplies the other profile's WASM (50.355605ms)
+✔ de350: built worker runs its real WASM and returns the matching engine/application through messages (61.783039ms)
+✔ de350: built worker rejects a server that supplies the other profile's WASM (57.788097ms)
+✔ de345: built worker runs its real WASM and returns the matching engine/application through messages (76.382008ms)
+✔ de345: built worker rejects a server that supplies the other profile's WASM (81.559685ms)
+✔ de344: built worker runs its real WASM and returns the matching engine/application through messages (124.111208ms)
+✔ de344: built worker rejects a server that supplies the other profile's WASM (54.660659ms)
+✔ previous: built worker runs its real WASM and returns the matching engine/application through messages (59.615692ms)
+✔ previous: built worker rejects a server that supplies the other profile's WASM (58.448817ms)
+✔ legacy: built worker runs its real WASM and returns the matching engine/application through messages (68.611375ms)
+✔ legacy: built worker rejects a server that supplies the other profile's WASM (51.934927ms)
+✔ built worker defaults an omitted profile to current, without selecting legacy implicitly (65.082549ms)
+✔ built worker rejects unknown profiles and raw target injection before any fetch or progress (295.12072ms)
+✔ /: both setup guides have working anchors and bundled destinations (14.66084ms)
+✔ /: production index, lazy chunks and DFU assets resolve to real files inside this deployment (27.485922ms)
+✔ /: real stable firmware loader hashes and parses deployed ZIP without starting Bluetooth (43.9959ms)
+✔ /: real de3.97-lcd-app-test1 firmware loader hashes and parses deployed ZIP without starting Bluetooth (8.391665ms)
+✔ /: real de3.96-lcd-app-test1 firmware loader hashes and parses deployed ZIP without starting Bluetooth (5.535387ms)
+✔ /: real de3.95-lcd-app firmware loader hashes and parses deployed ZIP without starting Bluetooth (5.17024ms)
+✔ /: real de3.94-lcd-app firmware loader hashes and parses deployed ZIP without starting Bluetooth (9.95996ms)
+✔ /: public notices preserve all selected license bytes and explicit matching source downloads (14.68769ms)
+✔ /: the App672 source download resolves to its complete archive and exact firmware binding (40.010852ms)
+✔ /: the App671 source download resolves to its complete archive and exact firmware binding (20.47065ms)
+✔ /: the App670 source download resolves to its complete archive and exact firmware binding (11.183509ms)
+✔ /: the App669 source download resolves to its complete archive and exact firmware binding (10.647881ms)
+✔ /: the App668 source download resolves to its complete archive and exact firmware binding (9.833094ms)
+✔ /: the App667 source download resolves to its complete archive and exact firmware binding (8.060399ms)
+✔ /: static build contains no local server, state, test, dependency tree or collection backup (2.944268ms)
+ℹ tests 50
+ℹ suites 0
+ℹ pass 50
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2634.288044

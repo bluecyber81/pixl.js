@@ -73,6 +73,7 @@
 #include "nrf_gpio.h"
 #include "nrf_log.h"
 #include "settings.h"
+#include "nrf_pwr_mgmt.h"
 
 #include "u8g2.h"
 #include "u8x8.h"
@@ -334,6 +335,34 @@ int8_t mui_u8g2_get_backlight_level(void) {
 }
 
 #endif
+
+/* An open slider owns its live preview. On exit use the latest settings,
+ * which can include a selection confirmed since the late record was read. */
+static bool m_settings_slider;
+static bool m_levels_deferred;
+
+void mui_u8g2_recover_levels(void) {
+    m_levels_deferred = m_settings_slider;
+    if (m_levels_deferred) return;
+    settings_data_t *settings = settings_get_data();
+    mui_u8g2_set_contrast_level(settings->oled_contrast);
+#ifdef LCD_SCREEN
+    uint8_t level = settings->lcd_backlight;
+    m_dimmed = level > 1 && settings_get_lcd_dim() && nrf_pwr_mgmt_dim_window(settings_lcd_dim_idle_seconds());
+    m_backlight_saved = m_dimmed ? (level + 3u) / 4u : level;
+    /* The device test keeps its temporary duty. Its restore (or the normal
+     * foreground retry after a busy PWM) now targets the recovered level. */
+    if (!m_backlight_preview_active) {
+        m_backlight_restore_pending = true;
+        (void)mui_u8g2_backlight_restore();
+    }
+#endif
+}
+
+void mui_u8g2_settings_slider(bool active) {
+    m_settings_slider = active;
+    if (!active && m_levels_deferred) mui_u8g2_recover_levels();
+}
 
 void mui_u8g2_set_contrast_level(uint8_t value) {
     mui_t *p_mui = mui();

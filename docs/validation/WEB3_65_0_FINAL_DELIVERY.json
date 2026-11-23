@@ -1,0 +1,201 @@
+{
+  "schema": 1,
+  "recordedAtUtc": "2026-11-23T15:00:57.547318+00:00",
+  "passed": true,
+  "version": "3.65.0",
+  "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+  "sourceTree": "c17ad0263285ee4e9304908c89bf551e121c2e62",
+  "originalProductQualificationCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "originalProductQualificationTree": "2efcb146aabdbbedd3d717a888f007e91435923c",
+  "sourceCiRun": 45193676314,
+  "webProductTree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+  "pages": {
+    "passed": true,
+    "status": "completed",
+    "conclusion": "success",
+    "runId": 45198958839,
+    "attempt": 1,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45198958839",
+    "commit": "f1d69f020097f21487eef99314fe7da5257b41d7",
+    "tree": "bc1f5f7cc4cf6296a08efab2f16715c5f702e070",
+    "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+    "sourceCiRun": 45193676314,
+    "originalProductQualificationCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+    "createdAtUtc": "2026-11-23T14:52:53Z",
+    "completedAtUtc": "2026-11-23T14:53:45Z",
+    "proof": "docs/validation/WEB3_65_0_FINAL_DELIVERY_evidence/GITHUB_RUN.json",
+    "jobsEvidence": "docs/validation/WEB3_65_0_FINAL_DELIVERY_evidence/GITHUB_JOBS.json",
+    "summary": "docs/validation/WEB3_65_0_FINAL_DELIVERY_evidence/DEPLOYMENT_SUMMARY.json",
+    "changedFiles": 3,
+    "productDistributionFilesUnchanged": 320,
+    "scope": "Actual successful final Pages deployment. Only the separate source ZIP and two download metadata files changed; no new Web product build or UI run is claimed."
+  },
+  "http": {
+    "status": "passed",
+    "passed": true,
+    "pagesCommit": "f1d69f020097f21487eef99314fe7da5257b41d7",
+    "pagesTree": "bc1f5f7cc4cf6296a08efab2f16715c5f702e070",
+    "deploymentRun": 45198958839,
+    "files": 324,
+    "bytes": 50829377,
+    "freshCanonicalFiles": 3,
+    "freshCanonicalBytes": 21254599,
+    "freshHttpRequests": 3,
+    "inheritedCanonicalFiles": 321,
+    "inheritedCanonicalBytes": 29574778,
+    "supersededPriorRecords": 2,
+    "failed": 0,
+    "redirects": 0,
+    "retries": 0,
+    "cacheBustingRequests": 0,
+    "fullyFreshInventory": false,
+    "summary": "docs/validation/WEB3_65_0_FINAL_DELIVERY_evidence/FINAL_COVERAGE_SUMMARY.json",
+    "coverage": "docs/validation/WEB3_65_0_FINAL_DELIVERY_evidence/FINAL_COVERAGE.json",
+    "freshResults": "docs/validation/WEB3_65_0_FINAL_DELIVERY_evidence/HTTP_RESULTS.json",
+    "priorResults": "docs/validation/WEB3_65_0_evidence/HTTP_RESULTS.json",
+    "manifest": "docs/validation/WEB3_65_0_FINAL_DELIVERY_evidence/DELIVERY_MANIFEST.json",
+    "scope": "321 previous canonical HTTP successes are retained only for exactly unchanged Git blobs; the three added/modified files were fetched canonically from the final deployed Pages tree. This is not a claim of 324 fresh HTTP requests. No product build, browser or Bluetooth test was repeated."
+  },
+  "sourcePackage": {
+    "filename": "Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+    "url": "https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+    "bytes": 21249310,
+    "sha256": "de82839b8cdc90f7226b1229119ebbd60a1a5cd67deb4c80e0902a640d8c487c",
+    "files": 1894,
+    "trackedGitFiles": 1891,
+    "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+    "sourceTree": "c17ad0263285ee4e9304908c89bf551e121c2e62",
+    "sourceWebProductTree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+    "originalQualificationCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+    "finalSourceHeadCiRun": 45193676314,
+    "status": "published-reproduced-and-http-verified",
+    "twoArchivesByteIdentical": true,
+    "archiveCrcAndAllBytesVerified": true,
+    "publishedAndHttpVerified": true,
+    "buildEvidence": "docs/validation/WEB3_65_0_SOURCE_PACKAGE_evidence/SOURCE_ZIP.json",
+    "reproductionEvidence": "docs/validation/WEB3_65_0_SOURCE_PACKAGE_evidence/REPRODUCIBILITY.json",
+    "scope": "Separate reproducible Web source package. It supplements the unchanged UI branch-archive link; the standard GitHub archives remain separately unverified as downloads.",
+    "assetCommit": "f1d69f020097f21487eef99314fe7da5257b41d7",
+    "assetTree": "bc1f5f7cc4cf6296a08efab2f16715c5f702e070",
+    "assetPath": "downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+    "gitBlob": "c504ca28f6c4ef2d8ecaae942887b64b275fbcd1",
+    "transportEvidence": "docs/validation/WEB3_65_0_SOURCE_PACKAGE_evidence/artifact_transport/ZIP_BLOB_RECEIPT.json",
+    "transportRun": 45198533066,
+    "transportScope": "Verified artifact-byte upload only; no product build or source-CI substitution.",
+    "publicationEvidence": "docs/validation/WEB3_65_0_FINAL_DELIVERY_evidence/PAGES_SOURCE_PUBLICATION.json",
+    "immutableAssetUrl": "https://github.com/bluecyber81/pixl.js/raw/f1d69f020097f21487eef99314fe7da5257b41d7/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+    "immutableAssetUrlSeparatelyFetched": false,
+    "httpStatus": 200,
+    "contentType": "application/x-zip-compressed",
+    "verificationEvidence": "docs/validation/WEB3_65_0_FINAL_DELIVERY_evidence/HTTP_RESULTS.json",
+    "finalCoverageEvidence": "docs/validation/WEB3_65_0_FINAL_DELIVERY_evidence/FINAL_COVERAGE_SUMMARY.json",
+    "deploymentRun": 45198958839
+  },
+  "portable": {
+    "bytes": 12444903,
+    "sha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd",
+    "unchangedAndPriorCanonicalHttpVerified": true
+  },
+  "ui": {
+    "scopedChecks": 9,
+    "originalPagesCommit": "a70187159ec177c947c931d5dd7e3d1600841492",
+    "proof": "docs/validation/WEB3_65_0_evidence/LIVE_WEB_UI.json",
+    "repeatedForArchiveOnlyFollowup": false,
+    "productDistributionFilesUnchanged": 320
+  },
+  "evidenceChronology": "Original publication/preparation receipts retain their then-pending status fields unchanged. The completed deployment and actual HTTP records in this report close those delivery gates. The prior metadata-CI failure remains recorded and was followed by a fresh successful complete c18bfb Source check.",
+  "combinedMainCisPendingAtPreparation": true,
+  "physicalDeviceAcceptancePending": true,
+  "limits": [
+    "No physical LCD/OLED, Bluetooth, NFC, Switch/Switch2 or energy measurement.",
+    "321 prior HTTP results are reused only for exactly unchanged Git blobs; only three requests are fresh in the final follow-up.",
+    "The immutable standard GitHub archive and UI branch archive were not downloaded as ZIPs; the separate Pages source package was."
+  ],
+  "evidence": [
+    {
+      "path": "CHECKER_USED.py",
+      "bytes": 19902,
+      "sha256": "a12b7f5076d4173b607e59e5ccfc43088c6ed44136c09fe829ffd7666cdb3862"
+    },
+    {
+      "path": "DELIVERY_MANIFEST.json",
+      "bytes": 59014,
+      "sha256": "9b1b8c41265057e2922ca807314770a969e6fd12c13e9507c25f4e17874444af"
+    },
+    {
+      "path": "DEPLOYMENT_SUMMARY.json",
+      "bytes": 954,
+      "sha256": "6e5100eec108386ff94aa4e19185530a398538fc99dbca923a24bd08cc5048fb"
+    },
+    {
+      "path": "DEPLOY_JOB_137777237425.log",
+      "bytes": 3703,
+      "sha256": "f4dcabd6ca3962ac277021afaac2d3bb618f4cff583c877c29304584aa0c23de"
+    },
+    {
+      "path": "EVIDENCE_SCOPE.txt",
+      "bytes": 1256,
+      "sha256": "028fca731d5e41a675cda0acc3b03da3f8b18f4f9fe0884ff19a01f39a473149"
+    },
+    {
+      "path": "FINAL_COVERAGE.json",
+      "bytes": 76757,
+      "sha256": "bedb8244d722c3938e7e06de2d593e2346ee25795ce113e1c375a86d7887890f"
+    },
+    {
+      "path": "FINAL_COVERAGE_SUMMARY.json",
+      "bytes": 2876,
+      "sha256": "af57a2dcb35195c55a80eacd800a51d55a1e12204e07f19b87d12c40a7f886f0"
+    },
+    {
+      "path": "GITHUB_JOBS.json",
+      "bytes": 2237,
+      "sha256": "664b4aeec21354023abb84048bf6f72b99e20fee4c80de555df3f915a686a245"
+    },
+    {
+      "path": "GITHUB_RUN.json",
+      "bytes": 14093,
+      "sha256": "f45bbc9a0969b98508256186a9c908c68891989bbbfaa340dbd1d7c17bf0bfcb"
+    },
+    {
+      "path": "HTTP_FOLLOWUP_MANIFEST.json",
+      "bytes": 983,
+      "sha256": "0a72b3f167a42de15377d10e28d90348a137419e73b0d86b7bfcf40f56c8b1fd"
+    },
+    {
+      "path": "HTTP_FOLLOWUP_PREPARATION.json",
+      "bytes": 2311,
+      "sha256": "a2e93d76a39216a8934c0aa63ab1d55f03b87dce508c730833a98bdee8c4238b"
+    },
+    {
+      "path": "HTTP_RESULTS.json",
+      "bytes": 7184,
+      "sha256": "4953fb37750b3e457b2b65175a0f567d1dbcc534049a5ff1cabdbff0c2c423c8"
+    },
+    {
+      "path": "HTTP_SUMMARY.json",
+      "bytes": 1793,
+      "sha256": "d2376cf3e85836c1ac79ff1fd4d2316bde3a40e008a2f2f9ad99334d0dcb1fb4"
+    },
+    {
+      "path": "PAGES_PREPARATION.json",
+      "bytes": 2313,
+      "sha256": "ea42e60216cb0feda220b549221d22ccaea35fcd022b7bd94f116b13c358ea6d"
+    },
+    {
+      "path": "PAGES_SOURCE_PUBLICATION.json",
+      "bytes": 849,
+      "sha256": "db6da2d43a4612e722d08ba2d629d669e212cb6223723d408b375b3d7a5e916f"
+    },
+    {
+      "path": "PUBLICATION_BINDING.json",
+      "bytes": 511,
+      "sha256": "9ec7ec7bdebf8396f3f68c2754986956c662f12256ff00ce4e9c6758f20194e5"
+    },
+    {
+      "path": "PUBLIC_REF.json",
+      "bytes": 388,
+      "sha256": "a4968336c6b67575216a30b0ac0a333c567956476ca648efc3793f8873adb10f"
+    }
+  ]
+}

@@ -1,5 +1,41 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.65.0 · Bildoptionen und lokaler Playerexport
+
+**Bild & Video** merkt die Einstellungen und behält eine ausgewählte Datei bis 128 MiB höchstens 30 Minuten in der geöffneten Seite. Rotation um 90°, 180° oder 270°, ein optionales Punktraster für Fotos und Drag & Drop ergänzen die 128 × 64-Vorschau. Zurücksetzen lädt die Ausgangswerte und die Demo. Auswahl und Senden bleiben getrennt; Bereichwechsel oder Ausblenden starten keine Übertragung neu.
+
+Der neue lokale Export erzeugt eine Player-BIN aus Bild, Demo oder Videoausschnitt. Anfang/Ende, Bildrate und Dateigröße sind vor dem Start sichtbar; Fortschritt und Abbruch sind vorhanden. Die fertige Datei bis 1 MiB wird heruntergeladen und anschließend ausdrücklich nach E:/player/ übertragen. App675 ergänzt die Player-Optionen Endlosschleife und Bildzähler sowie sparsamere Neuzeichnungen im Empfänger; der Bildsender funktioniert weiterhin mit App673+.
+
+Erneute Auswahl nach Ladefehler, Dateierkennung bei generischem Binärtyp und Wiederherstellung bei schnellen Bereichwechseln sind korrigiert. Ocarina-/Fatal-Fury-Hinweise werden zwischen Spielfilter, Spielübersicht und Figurendetails vereinheitlicht; 15 weitere Nintendo-belegte Kirby-Spielzuordnungen kommen hinzu. Die Katalogergänzungen sind Webdaten. App675 hat eigene Paket-, Diagnose- und Kapazitätsbindungen; frühere LCD- und OLED-Pakete bleiben erhalten.
+
+[Bild & Video öffnen](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip) · [Softwarequalifikation](validation/WEB3_65_0.json) · [Bedienung](../web/LIESMICH_3_65_0.txt). Reale Video-Codecs, Bildwirkung, Bluetooth und der LCD-Player werden am Gerät gesondert abgenommen.
+
+## Dateimanager 3.64.0 · Bild & Video auf dem LCD
+
+Der neue Bereich **Bild & Video** rechnet lokale Bilder und Videos in eine 128×64-Schwarz-Weiß-Vorschau um. Einpassen, Ausschnitt, Strecken, Hell-Dunkel-Grenze und Invertierung sind einstellbar; eine bewegte Demo ist enthalten. Verbinden und Senden sind getrennte Aktionen. Die Datei wird lokal verarbeitet. Der Sender benötigt den BLE-Bildempfang der LCD-Firmware ab DE3.100/App673; App674 ergänzt passende 32×32-Menüsymbole für Bildempfang und Switch-2-Wecken.
+
+Der Browser wartet zuerst auf die Empfängerbestätigung und anschließend auf die Bestätigung jedes Datenstücks. Stoppen, Bereichswechsel, verborgene Seite und Verbindungsfehler beenden die Übertragung ohne automatische Wiederholung. Die LCD-Vorschau verwendet die tatsächliche ST7567-Pixelpolarität. Die eingestellte Bildrate ist ein Zielwert; die erreichte Rate hängt von Bildinhalt und Verbindung ab.
+
+App674 erhält eine eigene Paket-, Diagnose- und PFS-Profilbindung. App673 sowie frühere LCD- und OLED-Ausgaben bleiben getrennt erhalten. Der direkte App674-Download verwendet den geprüften, commitfesten GitHub-ZIP-Link für den Handy-Öffnenweg. Die Geräteabnahme des Websenders und der neuen Symbole steht aus.
+
+[Bild & Video öffnen](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.64.0/Allmiibo_Dateimanager_3_64_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app674.zip) · [Softwarequalifikation](validation/WEB3_64_0.json) · [Bedienung](../web/LIESMICH_3_64_0.txt)
+
+## Dateimanager 3.63.0 · normale LCD-Ausgabe DE3.100 / App673
+
+PC-Dateien, Ordner oder Sicherungs-ZIP und die geprüfte Gerätesammlung erscheinen in einer gemeinsamen Bestandsansicht. Vollständigkeit und Aktualität entscheiden, ob fehlende Figuren behauptet werden dürfen. Gewählte lokale Dateien lassen sich an die bestehende sichere Synchronisation übergeben. Die Spielhinweise ergänzen Link’s Awakening und Yoshi and the Mysterious Book anhand offizieller Nintendo-Quellen; bisherige Übersetzungen bleiben erhalten. Die zusätzlichen Yoshi-Zuordnungen sind Webdaten ohne neue Firmwaregruppen-ID.
+
+App673 erhält eine eigene genaue Firmware-/Paketbindung und verwendet den unveränderten App672-PFS-Simulator. Der gemeinsame Versionsursprung für Web, Python, PowerShell und HTTP-Health bleibt `web/package.json`.
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/?v=3.63.0) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app673.zip) · [Softwarequalifikation](validation/WEB3_63_0.json) · [Bedienung](../web/LIESMICH_3_63_0.txt)
+
+## Dateimanager 3.62.0 · normale LCD-Ausgabe DE3.99 / App672
+
+Der lokale Python-/CMD-Starter verwendet dieselbe Versionsquelle wie Weboberfläche und HTTP-Health. Der Akkuverlauf trennt Messwertspanne, sichtbare Protokollzeit, aktive Loggerzeit und Pausen. Die normale LCD-Auswahl ist exakt an App672 und dessen PFS-Simulator gebunden; frühere private Testprofile und OLED bleiben getrennt erhalten.
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/?v=3.62.0) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip) · [Softwarequalifikation](validation/WEB3_62_0.json) · [Lieferkorrektur](validation/WEB3_62_0_DOWNLOAD_DELIVERY.json)
+
+Die Web3.62.0-Downloads verwenden GitHub Pages für das Portable und das Quellarchiv des gepflegten GitHub-Zweigs. Ein GitHub-Release-Asset ist dafür nicht erforderlich. Die folgenden Einträge behalten ihre damaligen Links.
+
 ## Dateimanager 3.58.2 · Ordnerübertragung mit DE3.89
 
 Die Firmware puffert den Inhalt jeder neuen kleinen Datei bis 572 Byte im RAM und prüft ihn nach dem Schreiben im Flash. Der Dateimanager kann einen unterbrochenen Ordnerauftrag auf demselben Gerät im offenen Browser-Tab fortsetzen. [LCD-Geräteprüfung](validation/DE3_89_LCD_READBACK.json) · [Firmware DE3.89](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Dateimanager 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)

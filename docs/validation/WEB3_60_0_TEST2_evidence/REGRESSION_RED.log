@@ -1,0 +1,132 @@
+✔ APP670_STATUS_REGRESSION 2.22.0-DE3.96 get_mtu_diagnostics selects the actual production test response without mutation (22.010296ms)
+✔ APP670_STATUS_REGRESSION 2.22.0-DE3.96 get_storage_gc_diagnostics selects the actual production test response without mutation (5.883531ms)
+✔ APP670_STATUS_REGRESSION 2.22.0-DE3.96 get_startup_diagnostics selects the actual production test response without mutation (6.36648ms)
+✖ APP670_STATUS_REGRESSION 2.22.0-DE3.97 get_mtu_diagnostics selects the actual production test response without mutation (7.257423ms)
+✖ APP670_STATUS_REGRESSION 2.22.0-DE3.97 get_storage_gc_diagnostics selects the actual production test response without mutation (7.450284ms)
+✖ APP670_STATUS_REGRESSION 2.22.0-DE3.97 get_startup_diagnostics selects the actual production test response without mutation (8.247255ms)
+✔ 2.22.0-DE3.96 APP670_STATUS_REGRESSION explicit EVT! request is bounded and SDK rejection retains previous configuration without success inference (22.870433ms)
+✖ 2.22.0-DE3.97 APP670_STATUS_REGRESSION explicit EVT! request is bounded and SDK rejection retains previous configuration without success inference (7.4479ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 4
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 241.63201
+
+✖ failing tests:
+
+test at web/tests/extra-diagnostics-transport.test.cjs:543:1
+✖ APP670_STATUS_REGRESSION 2.22.0-DE3.97 get_mtu_diagnostics selects the actual production test response without mutation (7.257423ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      [
+        5,
+        0,
+        0,
+        0,
+  -     2
+      ]
+    ]
+  
+      at TestContext.<anonymous> (/workspace/scratch/0af425ec2cbb/app670_web/web/tests/extra-diagnostics-transport.test.cjs:546:9)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ [ 5, 0, 0, 0 ] ],
+    expected: [ [ 5, 0, 0, 0, 2 ] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at web/tests/extra-diagnostics-transport.test.cjs:543:1
+✖ APP670_STATUS_REGRESSION 2.22.0-DE3.97 get_storage_gc_diagnostics selects the actual production test response without mutation (7.450284ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   [
+  -     28,
+  -     0,
+  -     0,
+  -     0,
+  -     69,
+  -     2
+  -   ]
+  - ]
+  
+      at TestContext.<anonymous> (/workspace/scratch/0af425ec2cbb/app670_web/web/tests/extra-diagnostics-transport.test.cjs:546:9)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ [ 28, 0, 0, 0, 69, 2 ] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at web/tests/extra-diagnostics-transport.test.cjs:543:1
+✖ APP670_STATUS_REGRESSION 2.22.0-DE3.97 get_startup_diagnostics selects the actual production test response without mutation (8.247255ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      [
+        9,
+        0,
+        0,
+        0,
+  +     3
+  -     4
+      ]
+    ]
+  
+      at TestContext.<anonymous> (/workspace/scratch/0af425ec2cbb/app670_web/web/tests/extra-diagnostics-transport.test.cjs:546:9)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ [ 9, 0, 0, 0, 3 ] ],
+    expected: [ [ 9, 0, 0, 0, 4 ] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at web/tests/extra-diagnostics-transport.test.cjs:607:1
+✖ 2.22.0-DE3.97 APP670_STATUS_REGRESSION explicit EVT! request is bounded and SDK rejection retains previous configuration without success inference (7.4479ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   [
+  -     5,
+  -     0,
+  -     0,
+  -     0,
+  -     2
+  -   ]
+  - ]
+  
+      at TestContext.<anonymous> (/workspace/scratch/0af425ec2cbb/app670_web/web/tests/extra-diagnostics-transport.test.cjs:610:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at node:internal/test_runner/test:1305:31
+      at node:internal/process/task_queues:151:7
+      at AsyncResource.runInAsyncScope (node:async_hooks:227:14)
+      at AsyncResource.runMicrotask (node:internal/process/task_queues:148:8) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ [ 5, 0, 0, 0, 2 ] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

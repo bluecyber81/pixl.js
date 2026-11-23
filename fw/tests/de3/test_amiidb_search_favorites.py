@@ -34,7 +34,7 @@ class SearchFavoritesTests(native.NativeTests):
 static const db_amiibo_t *expected[2048];
 static int ref_compare(const void *left,const void *right) {
  const db_amiibo_t *a=*(const db_amiibo_t *const*)left,*b=*(const db_amiibo_t *const*)right;
- int result=strcmp(a->name_en,b->name_en);if(result)return result;
+ int result=strcmp(db_amiibo_name_en(a),db_amiibo_name_en(b));if(result)return result;
  uint64_t aa=((uint64_t)a->head<<32)|a->tail,bb=((uint64_t)b->head<<32)|b->tail;
  return (aa>bb)-(aa<bb);
 }
@@ -91,9 +91,11 @@ int main(void) {
 #include <assert.h>
 #include <stdio.h>
 #include "db_header.h"
-const db_amiibo_t amiibo_list[]={{1,2,"Zulu",""},{2,2,"Alpha",""},{3,2,"Beta",""}};
+const char db_amiibo_name_pool[]="\0Zulu\0Alpha\0Beta";
+const db_amiibo_t amiibo_list[]={{1,2,1,0},{2,2,6,0},{3,2,12,0}};
 const size_t amiibo_list_size=3;
-const db_game_t game_list[]={{1,0,"Parent","",0,0},{2,1,"Child","",0,0},{3,2,"Grandchild","",0,0},{4,5,"CycleA","",0,0},{5,4,"CycleB","",0,0},{0}};
+const char db_game_name_pool[]="\0Parent\0Child\0Grandchild\0CycleA\0CycleB";
+const db_game_t game_list[]={{1,0,1,0,0,0},{2,1,8,0,0,0},{3,2,14,0,0,0},{4,5,25,0,0,0},{5,4,32,0,0,0},{0}};
 const db_link_t link_list[]= {{.game_id=2,.amiibo_index=0},{.game_id=3,.amiibo_index=1},{.game_id=4,.amiibo_index=2},{.game_id=2,.amiibo_index=0},{0}};
 #include "amiidb_api_db.c"
 int main(void) {

@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "cases": 48,
+  "pointerBytes": 8,
+  "tagBytes": 2178,
+  "previousStateBytes": 2248,
+  "stateBytes": 2248,
+  "sessionOffset": 2185,
+  "generationOffset": 2188,
+  "sourceSha256": {
+    "application/src/ntag/ntag_emu_v2.c": "7859ea77b9dd97c2cf42364d262f85f06833f05626e29de71c462ba000c71ce1",
+    "application/src/ntag/ntag_emu.h": "8cacba2a31a835f4b94ec5ade7645c54a268fa86f443acb7f806ee27cd9d0055",
+    "application/src/ntag/ntag_def.h": "bd6759a7b6c5a0425944ac8d2f7a2928e368e128f862ace4b781d1bfe610a7ce"
+  },
+  "fixtureSha256": "96874f1bd0195635bda28fafc5da6ca7e6dacf657a9a1590d0d4a9eebdbd6d0d",
+  "checkerSha256": "511ed7418c51be28669f2f55a5d01c1e56758d2e12daade86d1e98d0a705bcd6",
+  "generatedSourceSha256": "159557eb082aaa98fe42e73efad614bb58a8d1fdb27578e01025a8d8d81f23a0",
+  "arm32": false,
+  "sanitizers": [
+    "address",
+    "undefined"
+  ],
+  "deviceAccess": false,
+  "boundaries": [
+    "HAL send return/bytes, RF event delivery, UID/start/stop and UI return sink are modeled.",
+    "Actual production command parser, session flags/getter, save ownership and action queue run.",
+    "No reader/game acknowledgement, physical timing, persistence medium or firmware stack bound."
+  ]
+}

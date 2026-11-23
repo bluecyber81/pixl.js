@@ -1,0 +1,152 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> allmiibo-web@3.59.0-test.1 build:test1
+> vite build --base=/pixl.js/test/app669/ --outDir=dist-test-app669
+
+vite v8.3.8 building client environment for production...
+transforming...
+<script src="/pixl.js/test/app669/language-preference.js"> in "/index.html" can't be bundled without type="module" attribute
+✓ 1842 modules transformed.
+rendering chunks...
+computing gzip size...
+dist-test-app669/index.html                                        0.87 kB │ gzip:   0.41 kB
+dist-test-app669/assets/migration-capacity-worker-BJVE5V64.js     15.76 kB
+dist-test-app669/assets/HardwareProfile-BuUO4l_T.css               0.44 kB │ gzip:   0.26 kB
+dist-test-app669/assets/IdentifierCopy-Bs2_bB0i.css                0.54 kB │ gzip:   0.30 kB
+dist-test-app669/assets/BackupExportOptions-C2_-YBd4.css           0.62 kB │ gzip:   0.28 kB
+dist-test-app669/assets/CardSlotInspection-DJE_jGiF.css            0.69 kB │ gzip:   0.36 kB
+dist-test-app669/assets/CurrentLcdDownloads-CiB7QhbW.css           0.70 kB │ gzip:   0.36 kB
+dist-test-app669/assets/ScreenAwake-ypRNPhvM.css                   0.72 kB │ gzip:   0.36 kB
+dist-test-app669/assets/CollectionBackupAudit-C7wMT7_g.css         0.81 kB │ gzip:   0.38 kB
+dist-test-app669/assets/GameFolder-qSwXhVzu.css                    0.87 kB │ gzip:   0.35 kB
+dist-test-app669/assets/MenuRunComparison-BiwC6dtn.css             0.96 kB │ gzip:   0.42 kB
+dist-test-app669/assets/TransferStatus-nWAZERUQ.css                1.08 kB │ gzip:   0.51 kB
+dist-test-app669/assets/FirmwareBoardChoice-BuGEXwMN.css           1.09 kB │ gzip:   0.44 kB
+dist-test-app669/assets/UploadNameReview-dImUFujJ.css              1.16 kB │ gzip:   0.49 kB
+dist-test-app669/assets/LcdTestPanel-DHua12lr.css                  1.30 kB │ gzip:   0.53 kB
+dist-test-app669/assets/BackupComparison-_WGSlmtw.css              1.39 kB │ gzip:   0.53 kB
+dist-test-app669/assets/GuidedReportComparison-BhhMld0u.css        1.41 kB │ gzip:   0.53 kB
+dist-test-app669/assets/SelectionPreview-DOUTkQrT.css              1.67 kB │ gzip:   0.58 kB
+dist-test-app669/assets/FigureUsage-DOIGiNS_.css                   1.69 kB │ gzip:   0.59 kB
+dist-test-app669/assets/DisplayPhoto-BaS8wQqT.css                  1.75 kB │ gzip:   0.59 kB
+dist-test-app669/assets/DeviceSearch-aJlougZ8.css                  2.19 kB │ gzip:   0.72 kB
+dist-test-app669/assets/UpdateCheck-DE52_EFW.css                   3.55 kB │ gzip:   1.07 kB
+dist-test-app669/assets/StartupDiagnostics-CEsNsfTH.css            3.81 kB │ gzip:   1.09 kB
+dist-test-app669/assets/FigureDetails-BseEjObO.css                 4.27 kB │ gzip:   1.34 kB
+dist-test-app669/assets/DiagnosticOverview-C7-dlKZB.css            4.39 kB │ gzip:   1.30 kB
+dist-test-app669/assets/MigrationAssistant-Cc3G1yyH.css            4.51 kB │ gzip:   1.16 kB
+dist-test-app669/assets/BatteryVoltageHistory-Bvc7Ufeq.css         4.75 kB │ gzip:   1.34 kB
+dist-test-app669/assets/RemoteControl-oYzZ6rVx.css                 4.89 kB │ gzip:   1.29 kB
+dist-test-app669/assets/GuidedDeviceCheck-BNexpmac.css             6.34 kB │ gzip:   1.73 kB
+dist-test-app669/assets/CollectionAssistant-q6hXVjx8.css           6.61 kB │ gzip:   1.59 kB
+dist-test-app669/assets/CataloguePanel-CD8Fd96n.css               12.63 kB │ gzip:   3.00 kB
+dist-test-app669/assets/index-B_hilqNQ.css                       183.84 kB │ gzip:  28.74 kB
+dist-test-app669/assets/csv-export-i82OsDJ4.js                     0.16 kB │ gzip:   0.16 kB
+dist-test-app669/assets/zip-crc32-DjkMFiVs.js                      0.20 kB │ gzip:   0.17 kB
+dist-test-app669/assets/IdentifierCopy-CxfeGXh4.js                 1.08 kB │ gzip:   0.66 kB
+dist-test-app669/assets/TransferStatus-BiA55IU5.js                 1.90 kB │ gzip:   0.90 kB
+dist-test-app669/assets/CurrentLcdDownloads-BD1_RQEi.js            2.03 kB │ gzip:   1.07 kB
+dist-test-app669/assets/hardware-profile-CKYjLEn-.js               3.68 kB │ gzip:   1.62 kB
+dist-test-app669/assets/lcd-storage-self-test-CmxERlzM.js          3.87 kB │ gzip:   1.84 kB
+dist-test-app669/assets/ScreenAwake-LC-bbswd.js                    3.87 kB │ gzip:   1.83 kB
+dist-test-app669/assets/HardwareProfile-BBatdxuo.js                4.04 kB │ gzip:   1.88 kB
+dist-test-app669/assets/BackupExportOptions-CtfCGKUO.js            4.46 kB │ gzip:   2.21 kB
+dist-test-app669/assets/UploadNameReview-CSEWhyyx.js               4.61 kB │ gzip:   2.20 kB
+dist-test-app669/assets/stored-backup-ZhH6D93z.js                  4.65 kB │ gzip:   2.06 kB
+dist-test-app669/assets/FirmwareBoardChoice-C9BCqlT1.js            4.71 kB │ gzip:   2.19 kB
+dist-test-app669/assets/SelectionPreview-CaKyzpE4.js               5.18 kB │ gzip:   2.29 kB
+dist-test-app669/assets/GuidedReportComparison-Bq4i9dc-.js         5.52 kB │ gzip:   2.58 kB
+dist-test-app669/assets/firmware-releases-FFwuTmQ6.js              6.12 kB │ gzip:   1.50 kB
+dist-test-app669/assets/DisplayPhoto-DQVrnajE.js                   7.49 kB │ gzip:   3.20 kB
+dist-test-app669/assets/collection-audit-CwwV56X1.js               7.83 kB │ gzip:   3.39 kB
+dist-test-app669/assets/migration-capacity-9kNCb0D7.js             8.94 kB │ gzip:   2.55 kB
+dist-test-app669/assets/FigureUsage-DE80svh-.js                    9.67 kB │ gzip:   4.11 kB
+dist-test-app669/assets/BackupComparison-4qmkT1dq.js              10.11 kB │ gzip:   4.18 kB
+dist-test-app669/assets/CollectionBackupAudit-XfHZ6lQ8.js         10.12 kB │ gzip:   4.26 kB
+dist-test-app669/assets/MenuRunComparison-DkWnThuw.js             10.41 kB │ gzip:   4.34 kB
+dist-test-app669/assets/GameFolder-xIXe7teH.js                    10.55 kB │ gzip:   4.56 kB
+dist-test-app669/assets/LcdTestPanel-Dq7S6ABM.js                  10.62 kB │ gzip:   4.41 kB
+dist-test-app669/assets/BatteryVoltageHistory-DAdRnIKg.js         10.85 kB │ gzip:   4.63 kB
+dist-test-app669/assets/StartupDiagnostics-CyZHwAo1.js            11.73 kB │ gzip:   4.45 kB
+dist-test-app669/assets/CardSlotInspection-BVm2tZ8p.js            13.39 kB │ gzip:   5.52 kB
+dist-test-app669/assets/guided-device-check-BL68pWxD.js           13.45 kB │ gzip:   4.81 kB
+dist-test-app669/assets/figure-download-links-CN9e3dtB.js         13.59 kB │ gzip:   5.73 kB
+dist-test-app669/assets/DeviceSearch-fXLQ-uE4.js                  15.78 kB │ gzip:   6.01 kB
+dist-test-app669/assets/backup-heSG0FwR.js                        17.30 kB │ gzip:   6.88 kB
+dist-test-app669/assets/zip-import-CQXpCplD.js                    17.43 kB │ gzip:   6.93 kB
+dist-test-app669/assets/UpdateCheck-BIYCd50o.js                   19.41 kB │ gzip:   7.00 kB
+dist-test-app669/assets/GuidedDeviceCheck-Dhe-zBZo.js             29.17 kB │ gzip:  11.07 kB
+dist-test-app669/assets/DiagnosticOverview-DwLW8m5m.js            32.81 kB │ gzip:  12.65 kB
+dist-test-app669/assets/FigureDetails-DVg7QSZR.js                 33.58 kB │ gzip:  12.51 kB
+dist-test-app669/assets/RemoteControl-CGsXouxW.js                 39.04 kB │ gzip:  13.32 kB
+dist-test-app669/assets/bytebuffer-CQWJyzrQ.js                    50.85 kB │ gzip:  11.04 kB
+dist-test-app669/assets/CataloguePanel-0hazgXxX.js                53.92 kB │ gzip:  18.59 kB
+dist-test-app669/assets/MigrationAssistant-D8C0JmXy.js            70.84 kB │ gzip:  22.29 kB
+dist-test-app669/assets/figure-usage-nWE3zv6y.js                 113.84 kB │ gzip:  17.29 kB
+dist-test-app669/assets/CollectionAssistant-BdhIRbNU.js          114.82 kB │ gzip:  31.72 kB
+dist-test-app669/assets/index-DImG5uuz.js                      1,035.16 kB │ gzip: 293.51 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.33s
+
+> allmiibo-web@3.59.0-test.1 postbuild:test1
+> node scripts/copy-license-notices.mjs test-app669 && npm run test:dist:test1
+
+{"mode":"test-app669","copiedNotices":106}
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> allmiibo-web@3.59.0-test.1 test:dist:test1
+> node scripts/test-production-build.mjs test-app669
+
+✔ production worker is one self-contained referenced artifact with the tested pinned WASM assets (5.343301ms)
+✔ de396: built worker runs its real WASM and returns the matching engine/application through messages (65.989308ms)
+✔ de396: built worker rejects a server that supplies the other profile's WASM (97.002829ms)
+✔ de395: built worker runs its real WASM and returns the matching engine/application through messages (56.416403ms)
+✔ de395: built worker rejects a server that supplies the other profile's WASM (48.71361ms)
+✔ de394: built worker runs its real WASM and returns the matching engine/application through messages (57.471726ms)
+✔ de394: built worker rejects a server that supplies the other profile's WASM (45.755137ms)
+✔ de393: built worker runs its real WASM and returns the matching engine/application through messages (55.664355ms)
+✔ de393: built worker rejects a server that supplies the other profile's WASM (53.239938ms)
+✔ de392: built worker runs its real WASM and returns the matching engine/application through messages (53.595603ms)
+✔ de392: built worker rejects a server that supplies the other profile's WASM (48.953873ms)
+✔ de391: built worker runs its real WASM and returns the matching engine/application through messages (52.564449ms)
+✔ de391: built worker rejects a server that supplies the other profile's WASM (50.482358ms)
+✔ current: built worker runs its real WASM and returns the matching engine/application through messages (53.84523ms)
+✔ current: built worker rejects a server that supplies the other profile's WASM (53.953144ms)
+✔ de354: built worker runs its real WASM and returns the matching engine/application through messages (56.741068ms)
+✔ de354: built worker rejects a server that supplies the other profile's WASM (48.048046ms)
+✔ de350: built worker runs its real WASM and returns the matching engine/application through messages (57.14772ms)
+✔ de350: built worker rejects a server that supplies the other profile's WASM (46.481392ms)
+✔ de345: built worker runs its real WASM and returns the matching engine/application through messages (54.804195ms)
+✔ de345: built worker rejects a server that supplies the other profile's WASM (48.249939ms)
+✔ de344: built worker runs its real WASM and returns the matching engine/application through messages (60.286285ms)
+✔ de344: built worker rejects a server that supplies the other profile's WASM (49.882452ms)
+✔ previous: built worker runs its real WASM and returns the matching engine/application through messages (65.302531ms)
+✔ previous: built worker rejects a server that supplies the other profile's WASM (47.685517ms)
+✔ legacy: built worker runs its real WASM and returns the matching engine/application through messages (57.580223ms)
+✔ legacy: built worker rejects a server that supplies the other profile's WASM (51.779066ms)
+✔ built worker defaults an omitted profile to current, without selecting legacy implicitly (54.061626ms)
+✔ built worker rejects unknown profiles and raw target injection before any fetch or progress (269.789528ms)
+✔ /pixl.js/test/app669/: both setup guides have working anchors and bundled destinations (8.083193ms)
+✔ /pixl.js/test/app669/: production index, lazy chunks and DFU assets resolve to real files inside this deployment (10.768382ms)
+✔ /pixl.js/test/app669/: real stable firmware loader hashes and parses deployed ZIP without starting Bluetooth (50.928201ms)
+✔ /pixl.js/test/app669/: real de3.96-lcd-app-test1 firmware loader hashes and parses deployed ZIP without starting Bluetooth (8.351978ms)
+✔ /pixl.js/test/app669/: real de3.95-lcd-app firmware loader hashes and parses deployed ZIP without starting Bluetooth (4.138322ms)
+✔ /pixl.js/test/app669/: real de3.94-lcd-app firmware loader hashes and parses deployed ZIP without starting Bluetooth (6.278962ms)
+✔ /pixl.js/test/app669/: public notices preserve all selected license bytes and explicit matching source downloads (15.626371ms)
+✔ /pixl.js/test/app669/: the App669 source download resolves to its complete archive and exact firmware binding (42.083303ms)
+✔ /pixl.js/test/app669/: the App668 source download resolves to its complete archive and exact firmware binding (12.539856ms)
+✔ /pixl.js/test/app669/: the App667 source download resolves to its complete archive and exact firmware binding (9.942508ms)
+✔ /pixl.js/test/app669/: static build contains no local server, state, test, dependency tree or collection backup (3.887744ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1853.668455

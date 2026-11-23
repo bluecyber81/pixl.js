@@ -1,5 +1,8 @@
 param([ValidateRange(1024,65535)][int]$Port = 8765, [switch]$NoBrowser)
 $ErrorActionPreference = 'Stop'
+$releaseManifest = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'package.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+$appVersion = [string]$releaseManifest.version
+if ($releaseManifest.name -cne 'allmiibo-web' -or $appVersion -cnotmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$') { throw 'package.json enthaelt keine gueltige Dateimanager-Version. Bitte die komplette ZIP entpacken.' }
 $appDirectory = Join-Path $PSScriptRoot 'dist'
 $serverScript = Join-Path $PSScriptRoot 'serve_local.py'
 $stateFile = Join-Path $PSScriptRoot "server-state-$Port.json"
@@ -28,7 +31,7 @@ if (Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyCon
                 if ($existingHash -ceq $existing.instance) {
                     $existingHealth = Invoke-RestMethod -Uri ($serverUrl + '.well-known/allmiibo-dateimanager') -TimeoutSec 2
                     $existingMatches = $existingHealth.application -ceq 'allmiibo-dateimanager' -and
-                        $existingHealth.version -ceq '3.58.2' -and $existingHealth.instance -ceq $existing.instance
+                        $existingHealth.version -ceq $appVersion -and $existingHealth.instance -ceq $existing.instance
                 }
             }
         }
@@ -36,7 +39,7 @@ if (Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyCon
     if (-not $existingMatches) {
         throw "Port $Port ist bereits durch eine andere oder nicht zugeordnete Instanz belegt. Beende zuerst den dort gestarteten Dateimanager oder waehle einen anderen -Port."
     }
-    Write-Output "Dateimanager 3.58.2 laeuft bereits: $serverUrl"
+    Write-Output "Dateimanager $appVersion laeuft bereits: $serverUrl"
     Open-DateimanagerBrowser
     return
 }
@@ -61,7 +64,7 @@ try {
     for ($attempt = 0; $attempt -lt 20; $attempt++) {
         try {
             $health = Invoke-RestMethod -Uri ($serverUrl + '.well-known/allmiibo-dateimanager') -TimeoutSec 1
-            if ($health.application -ceq 'allmiibo-dateimanager' -and $health.version -ceq '3.58.2' -and $health.instance -ceq $instanceHash) { $ready = $true; break }
+            if ($health.application -ceq 'allmiibo-dateimanager' -and $health.version -ceq $appVersion -and $health.instance -ceq $instanceHash) { $ready = $true; break }
         } catch { }
         Start-Sleep -Milliseconds 150
     }
@@ -77,6 +80,6 @@ try {
     if (Test-Path -LiteralPath $stateTemp -PathType Leaf) { Remove-Item -LiteralPath $stateTemp }
     throw
 }
-Write-Output "Dateimanager 3.58.2: $serverUrl (nur auf diesem PC erreichbar)"
+Write-Output "Dateimanager ${appVersion}: $serverUrl (nur auf diesem PC erreichbar)"
 Write-Output "Beenden: Stop-Dateimanager.cmd -Port $Port"
 Open-DateimanagerBrowser

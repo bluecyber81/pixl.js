@@ -100,7 +100,7 @@ static void search_filter_reload(app_amiidb_t *app) {
     mui_list_view_clear_items(app->p_list_view);
     for (int32_t i = 0; i < count; i++)
         mui_list_view_add_item(app->p_list_view, ICON_FOLDER,
-                              isChineseLanguage() ? games[i]->name_cn : games[i]->name_en, (void *)games[i]);
+                              isChineseLanguage() ? db_game_name_cn(games[i]) : db_game_name_en(games[i]), (void *)games[i]);
     mui_list_view_add_item(app->p_list_view, ICON_FOLDER, _T(DE3_SEARCH_ALL), NULL);
     snprintf(text, sizeof(text), _T(DE3_SEARCH_PAGE), (unsigned)(app->search_filter_page + 1),
              (unsigned)(last + 1), (unsigned)app->result_total);
@@ -124,7 +124,7 @@ static void amiidb_scene_amiibo_search_reload(app_amiidb_t *app) {
     mui_list_view_add_item(app->p_list_view, ICON_SEARCH, text, NULL);
     const char *game_name = _T(DE3_SEARCH_ALL);
     for (const db_game_t *game = game_list; game->game_id; game++)
-        if (game->game_id == app->search_game_id) game_name = isChineseLanguage() ? game->name_cn : game->name_en;
+        if (game->game_id == app->search_game_id) game_name = isChineseLanguage() ? db_game_name_cn(game) : db_game_name_en(game);
     snprintf(text, sizeof(text), "%s: %s", _T(DE3_SEARCH_GAME), game_name);
     mui_list_view_add_item(app->p_list_view, ICON_SETTINGS, text, NULL);
     snprintf(text, sizeof(text), _T(DE3_SEARCH_PAGE), (unsigned)(app->search_page + 1),

@@ -1,0 +1,1 @@
+PASS linked Cortex-M4 SHA-256 32 / Nordic HMAC-SHA-256 16; 8 short-buffer retries; independent digests, guards and inputs intact

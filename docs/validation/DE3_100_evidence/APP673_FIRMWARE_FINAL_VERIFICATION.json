@@ -1,0 +1,212 @@
+{
+  "schema": 1,
+  "verifiedAt": "2026-11-22T18:02:03.667901+00:00",
+  "status": "PASS_SOFTWARE_WITH_STATED_HARDWARE_LIMITS",
+  "repository": "bluecyber81/pixl.js",
+  "branch": "work/lcd-de3100-app673",
+  "commit": "fe07e06dce6f1e9655dae7e7edf1b419b9eecf26",
+  "workingTreeStatusAtCheck": [],
+  "version": "2.22.0-DE3.100",
+  "counter": 673,
+  "board": "LCD/ST7567 / nRF52832 / S112 7.3.0",
+  "sourceIdSha256": "33d41ccf675ff8b359cd616fbc66376de9df76d73f0896a61ab9ea0ce7a50778",
+  "packedEngineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
+  "package": {
+    "filename": "Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+    "bytes": 361681,
+    "sha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+    "onlyApplication": true,
+    "binaryBytes": 361080,
+    "binarySha256": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+    "initSha256": "0dffe35c98c0add32cd04eeb3d222bb5296edd421ef89e31cf28a91daa90439d"
+  },
+  "integrityChecks": {
+    "full_suite_snapshot": {
+      "files": 843,
+      "mismatches": [],
+      "passed": true
+    },
+    "full_suite_production": {
+      "files": 720,
+      "mismatches": [],
+      "passed": true
+    },
+    "frozen_test_references": {
+      "files": 7,
+      "mismatches": [],
+      "passed": true
+    },
+    "candidate_production": {
+      "files": 720,
+      "mismatches": [],
+      "passed": true
+    },
+    "candidate_build_artifacts": {
+      "files": 4,
+      "mismatches": [],
+      "passed": true
+    },
+    "release_production": {
+      "files": 720,
+      "mismatches": [],
+      "passed": true
+    },
+    "release_build_artifacts": {
+      "files": 4,
+      "mismatches": [],
+      "passed": true
+    },
+    "arm_test_sources": {
+      "files": 13,
+      "mismatches": [],
+      "passed": true
+    },
+    "miniapp_test_logs": {
+      "files": 11,
+      "mismatches": [],
+      "passed": true
+    },
+    "miniapp_source_snapshot": {
+      "files": 34,
+      "mismatches": [],
+      "passed": true
+    }
+  },
+  "fullSuite": {
+    "finishedUTC": "2026-11-22T17:54:40.189625+00:00",
+    "availableScripts": 196,
+    "executedScripts": 196,
+    "passedScripts": 196,
+    "failedScripts": 0,
+    "omittedScripts": 0,
+    "sourceSnapshotFiles": 843,
+    "sourcesUnchangedDuringRun": true,
+    "allCurrentHashesMatch": true,
+    "caseCountIsNotScriptCount": true,
+    "result": "original-evidence/firmware_full_qualified/APP673_FULL.json"
+  },
+  "arm": {
+    "groups": 13,
+    "passedGroups": 13,
+    "failedGroups": 0,
+    "binarySha256": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+    "candidateElfSha256": "c3b422a7fa675885a282782de4fed6e8401ab4dc8f61508dd7a190a2447c4248",
+    "result": "original-evidence/arm_app673_final/RESULTS.json"
+  },
+  "targetedMiniapps": {
+    "normalGroups": 6,
+    "asanUbsanGroups": 5,
+    "allPassed": true,
+    "includedInFullSuite": true,
+    "assertionCounts": {
+      "protocol_assertions": 2182,
+      "scanner_assertions": 106,
+      "advertiser_assertions": 111,
+      "stream_ui_ack_assertions": 24,
+      "switch_ui_vfs_boot_assertions": 43,
+      "sleep_behavior_scenarios": 3,
+      "constructor_failure_stages": 9,
+      "sender_python_test_methods": 11,
+      "normal_groups": 6,
+      "asan_ubsan_groups": 5,
+      "all_pass": true,
+      "leak_sanitizer_local": {
+        "tested": false,
+        "reason": "ptrace limitation in this environment; sanitizer runs explicitly use detect_leaks=0"
+      },
+      "test_runs": "TEST_RUNS.json"
+    },
+    "result": "original-evidence/miniapps/MINIAPPS_RESULT.json"
+  },
+  "signing": {
+    "existingSignatureEvidenceBoundToCurrentPackage": true,
+    "signatureVerified": true,
+    "negativeControlsPassed": 3,
+    "performedNewSignatureCheck": false,
+    "readPrivateKey": false,
+    "result": "original-evidence/signing_app673_final/SIGNED_OTA.json"
+  },
+  "z21": {
+    "status": "PASS_WITH_EXPLICIT_LOCAL_LSAN_LIMITATION",
+    "linkedCryptoCrcCasesPassed": 7,
+    "initBankCasesPassed": 2,
+    "resumePassed": true,
+    "resumeLinkCutsDuringCheckpoint": 5,
+    "resumeCheckpointPowerCutsModeled": 455,
+    "resumeAdmissionOrCompletionFailuresModeled": 8,
+    "allFinalBytesCompared": true,
+    "asan": "PASS",
+    "ubsan": "PASS",
+    "lsan": "UNAVAILABLE_LOCAL_PTRACE",
+    "result": "original-evidence/z21_app673/Z21_APP673_FINAL_RESULT.json"
+  },
+  "linkerBudget": {
+    "binary_bytes": 361080,
+    "linker_flash_used_bytes": 361092,
+    "observed": {
+      "flash_reserve_bytes": 11644,
+      "heap_stack_gap_bytes": 1672,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "boardScope": {
+    "passed": true,
+    "method": "Fresh read-only GNU Make evaluation of current pre-template Makefile for BOARD=LCD and BOARD=OLED",
+    "selectedMiniappSources": {
+      "LCD": [
+        "./src/mod/ble/ble_switch2_scan.c",
+        "./src/app/switch2_wake/app_switch2_wake.c",
+        "./src/app/switch2_wake/switch2_protocol.c",
+        "./src/app/ble_stream/app_ble_stream.c",
+        "./src/app/ble_stream/stream_codec.c"
+      ],
+      "OLED": []
+    },
+    "oledPackageCreatedOrModified": false,
+    "oledBranchModifiedByThisSubtask": false,
+    "oledBinaryByteEquivalenceClaimed": false,
+    "qualification": "Common catalog/font/other sources changed on the LCD branch. No claim that an arbitrary future OLED build from this LCD branch is byte-identical to its predecessor."
+  },
+  "reproducibility": "APP673_FINAL_REPRODUCIBILITY.json",
+  "initialFailures": {
+    "previousFullSuitePassedScripts": 190,
+    "currentFullSuitePassedScripts": 196,
+    "correctedFiles": [
+      "tests/de3/amiidb_navigation_memory_host.c.in",
+      "tests/de3/ble_link_diagnostic_host.c.in",
+      "tests/de3/favorites_navigation_memory_host.c.in",
+      "tests/de3/test_amiidb_navigation_memory.py",
+      "tests/de3/test_ble_remote_advertising_start.py",
+      "tests/de3/test_ble_status_de320.py",
+      "tests/de3/test_favorites_navigation_memory.py"
+    ],
+    "allCorrectionsTestOnly": true,
+    "productionInputsUnchanged": true
+  },
+  "newTestOrBuildExecution": {
+    "fullSuiteRerun": false,
+    "firmwareBuildRerun": false,
+    "reason": "Completed final evidence already present, freshly rehashed and validated; only source-ID recomputation, artifact comparison and Make source selection were needed."
+  },
+  "physicalDeviceAccess": false,
+  "limits": [
+    "Firmware unit/host and ARM emulation tests do not prove physical radio, display, latency, energy or sustained device behavior.",
+    "No device-flash operation or measured device binary hash.",
+    "LSan is unavailable under local ptrace; no local leak-check success claimed.",
+    "No OLED binary equivalence claimed.",
+    "No Cloud security scan is part of this firmware qualification."
+  ],
+  "nextDeviceChecks": [
+    "Capture the user-owned paired controller and verify persistence",
+    "Actual wake of the user-owned Switch 2, including button-wake option",
+    "LCD stream over real BLE, reconnect/keyframe, inversion and measured display behavior",
+    "Sleep while scan/stream active, then normal file connection and NFC return",
+    "Energy consumption and sustained heap/stack under device workloads"
+  ],
+  "nextCoordinatingStep": "Parent combines firmware evidence with final Web3.63 test/build results and the exact source/OTA package, then completes repository and user delivery."
+}

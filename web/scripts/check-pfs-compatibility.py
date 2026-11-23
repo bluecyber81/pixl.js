@@ -1,4 +1,4 @@
-"""Read/write a synthetic PFS1 image with both exact DE354 and DE355 cores."""
+"""Read/write a synthetic PFS1 image with two exact adjacent engine snapshots."""
 from pathlib import Path
 import argparse, hashlib, json, subprocess
 
@@ -8,7 +8,7 @@ read = lambda p: json.loads(p.read_text(encoding='utf-8-sig'))
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output', type=Path, required=True)
 parser.add_argument('--gcc', default='gcc')
-parser.add_argument('--profile', choices=['de355','de389'], default='de355')
+parser.add_argument('--profile', choices=['de355','de389','de391','de392','de393','de395','de396','de397','de398','de399'], default='de355')
 args = parser.parse_args()
 out = args.output.resolve()
 out.mkdir(parents=True, exist_ok=False)
@@ -19,7 +19,7 @@ rows.sort(key=lambda r: (-r['kind'],len(r['path'].split('/')),r['path']))
 assert all(not any(x in r['path'] for x in '\t\r\n') and len(r['path'].encode('utf8'))<64 for r in rows)
 (out/'synthetic-rows.tsv').write_text(''.join(f"{r['kind']} {r['size']}\t{r['path']}\t{r['rawMeta128Hex']}\n" for r in rows), encoding='utf8', newline='\n')
 compiler = subprocess.check_output([args.gcc,'--version'],text=True)
-profiles = {'old':'packed-simulator-current' if args.profile=='de355' else 'packed-simulator-de355',
+profiles = {'old':{'de355':'packed-simulator-current','de389':'packed-simulator-de355','de391':'packed-simulator-de389','de392':'packed-simulator-de391','de393':'packed-simulator-de392','de395':'packed-simulator-de393','de396':'packed-simulator-de395','de397':'packed-simulator-de396','de398':'packed-simulator-de397','de399':'packed-simulator-de398'}[args.profile],
             'new':'packed-simulator-'+args.profile}
 sources = {'harness':sha(WEB/'tests/fixtures/pfs-compat-host.c'),'fixture':sha(fixture)}
 identities, builds = {}, []

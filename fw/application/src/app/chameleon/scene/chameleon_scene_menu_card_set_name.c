@@ -27,11 +27,10 @@ static void chameleon_scene_menu_card_set_name_text_input_event_cb(mui_text_inpu
     app_chameleon_t *app = p_text_input->user_data;
     if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED) {
         const char *text = mui_text_input_get_input_text(p_text_input);
-        if (strlen(text) > 0) {
+        if (text[0] != '\0') {
             int32_t err = tag_helper_set_nickname(text);
             if (err != 0) {
                 mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_SET_NICK_FAILED));
-                mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
                 return;
             }
             mui_toast_view_show(app->p_toast_view, _T(APP_CHAMELEON_CARD_SET_NICK_SUCCESS));

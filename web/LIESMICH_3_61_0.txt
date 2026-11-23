@@ -1,0 +1,40 @@
+Allmiibo Dateimanager 3.61.0 – normale Ausgabe für LCD App671
+
+Öffnen: https://bluecyber81.github.io/pixl.js/
+Firmware: 2.22.0-DE3.98 / App671, LCD/ST7567, PFS1, Z21, S112 7.3.0.
+
+Die neue normale Auswahl liefert die signierte App671-ZIP über den Web-Updater,
+als Download und an nRF Device Firmware Update auf Android. Der Updater prüft
+die vollständige ZIP und das enthaltene Anwendungsprofil. Öffnen der Auswahl
+startet weder einen Download noch eine Bluetooth-Übertragung automatisch.
+
+Bereits in App670 vorhanden und jetzt übernommen:
+- Sammellesen kleiner Dateien und revisiongebundene SHA-256-Abfragen.
+- Die Sicherung verwendet diese Pfade einschließlich der geprüften
+  Wiederverwendung vorhandener Dateien; sie fällt bei fehlender Fähigkeit
+  auf den vorhandenen Einzelpfad zurück.
+- Der frühere Teststatus-Versionsfehler war bereits in 3.60.0-test.2 behoben.
+
+Neu für die normale App671 integriert:
+- Normale Link-/Startdiagnose und Speicherfreigabestatus.
+- Die experimentellen App669/App670-Funk-Schalter werden für App671 nicht
+  angeboten; die Funkverlängerung wird nicht aktiviert.
+- Exakte neue Paket-, Quellen- und Speicher-Engine-Bindung.
+- Neuer Speicherbedarfssimulator aus denselben PFS1-Quellen, mit frischer
+  ARM-Qualifikation und Lesen/Schreiben zwischen App670 und App671 geprüft.
+- Aktueller Download, normaler DFU-Einstieg, Quellenlinks und DE/EN-Anleitung.
+
+Die Firmware ergänzt die dokumentierten Import-, Einstellungs-, Rückkehr- und
+Aufwachabläufe und verringert überlappende Stackbelegung. Ungespeicherte
+NFC-Änderungen temporärer Tags bleiben vor automatischem Verlassen geschützt.
+Die bestehenden Save/Retry/Discard-Regeln bleiben erhalten.
+
+Installation: Update öffnen, App671 wählen und die App-ZIP übertragen.
+Bootloader und SoftDevice sind nicht im App-Paket. Bereits eingerichtetes PFS1
+braucht keine neue Formatierung oder Migration. OLED und alte Komplettpakete
+behalten ihre eigenen Voraussetzungen. Die Testpfade bleiben getrennt erhalten.
+
+Prüfstand: docs/validation/WEB3_61_0.json und docs/validation/DE3_98.json.
+Der erste Gerätedurchlauf der neuen App671 ist von den erhaltenen Ergebnissen
+des Testbuilds App670 getrennt. Keine neue vollständige Backup-/Funk-Testserie
+ist allein wegen dieses Versionswechsels erforderlich.

@@ -1,0 +1,16 @@
+{
+  "tests": 2273,
+  "pass": 2270,
+  "fail": 0,
+  "skipped": 3,
+  "log": "web_full_node_release.log",
+  "logSha256": "1def6512aca6ba02010c32c169a980bbdda50e53e752205d024544ef328cdb61",
+  "node": "24.22.3",
+  "npm": "11.19.1",
+  "platform": "linux",
+  "skipReasons": [
+    "Two native Windows launcher cases are covered separately by Windows CI.",
+    "One optional historical Nordic DFU ZIP fixture is absent."
+  ],
+  "counting": "Targeted subsets are included where applicable; they are not added to this total."
+}

@@ -28,11 +28,168 @@ static const nfc_tag_14a_coll_res_reference_t *tag_helper_get_active_coll_res_re
 
 
 class ChameleonInputTests(HostTests):
+    def test_lcd_packed_nickname_cache_revisions_and_boundaries(self):
+        source = (SRC / 'app/chameleon/port/tag_helper.c').read_text()
+        code = '\n'.join(function(source, n) for n in ('tag_helper_get_nickname', 'tag_helper_set_nickname'))
+        self.compile_run(r'''
+#include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include "vfs_meta.h"
+#define LCD_SCREEN 1
+#define VFS_PACKED_LFS_ENABLE 1
+#define FDS_SLOT_TAG_DUMP_FILE_ID_BASE 10
+#define TAG_SENSE_HF 1
+typedef struct {int id;} vfs_driver_t;
+static const vfs_driver_t vfs_driver_fs={1}, foreign_driver={2};
+static vfs_driver_t *active_driver=(vfs_driver_t *)&vfs_driver_fs;
+static vfs_driver_t *vfs_get_default_driver(void) {return active_driver;}
+static uint64_t revision=1;
+static uint64_t vfs_packed_revision(void) {return revision;}
+static const char *fallback="Slot";
+#define _T(x) fallback
+static vfs_meta_t stored[3];
+static int read_error, write_error, reads, writes;
+static bool change_revision_during_read, change_driver_during_read;
+static uint8_t slot;
+static uint8_t tag_emulation_get_slot(void) {return slot;}
+static int fds_read_meta(int id,int key,vfs_meta_t *m) {
+    (void)key; reads++; *m=stored[id-FDS_SLOT_TAG_DUMP_FILE_ID_BASE];
+    if(change_revision_during_read) {revision++;change_revision_during_read=false;}
+    if(change_driver_during_read) {active_driver=(vfs_driver_t *)&foreign_driver;change_driver_during_read=false;}
+    return read_error;
+}
+static int fds_write_meta(int id,int key,vfs_meta_t *m) {
+    (void)key; writes++;
+    if(!write_error) {stored[id-FDS_SLOT_TAG_DUMP_FILE_ID_BASE]=*m;revision++;}
+    return write_error;
+}
+''' + code + r'''
+int main(void) {
+    char out[100];
+    stored[0].has_notes=true;memset(stored[0].notes,'n',89);stored[0].notes[89]=0;
+    tag_helper_get_nickname(out,4);assert(!strcmp(out,"nnn") && reads==1);
+    tag_helper_get_nickname(out,sizeof(out));assert(strlen(out)==89 && reads==1);
+    for(size_t cap=1;cap<=sizeof(out);cap++) {
+        memset(out,0x5a,sizeof(out));tag_helper_get_nickname(out,cap);
+        size_t len=cap<90?cap-1:89;
+        assert(strlen(out)==len);
+        for(size_t j=cap;j<sizeof(out);j++) assert(out[j]==0x5a);
+    }
+    assert(reads==1);
+    tag_helper_get_nickname(NULL,10);tag_helper_get_nickname(out,0);assert(reads==1);
+    slot=1;stored[1].has_notes=true;strcpy(stored[1].notes,"Second");
+    tag_helper_get_nickname(out,sizeof(out));assert(!strcmp(out,"Second") && reads==2);
+    slot=0;tag_helper_get_nickname(out,sizeof(out));assert(strlen(out)==89 && reads==3);
+    assert(tag_helper_set_nickname("Renamed")==0 && writes==1);
+    int before=reads;tag_helper_get_nickname(out,sizeof(out));assert(!strcmp(out,"Renamed") && reads==before+1);
+    tag_helper_get_nickname(out,sizeof(out));assert(reads==before+1);
+    /* Failed edits must keep the previously committed name, not cache the
+       requested replacement or needlessly invalidate a still-valid token. */
+    uint64_t committed_revision=revision;int committed_reads=reads, committed_writes=writes;
+    write_error=-9;assert(tag_helper_set_nickname("Not committed")==-9);
+    assert(revision==committed_revision && reads==committed_reads+1 && writes==committed_writes+1);
+    tag_helper_get_nickname(out,sizeof(out));
+    assert(!strcmp(out,"Renamed") && reads==committed_reads+1);
+    write_error=0;read_error=-7;committed_reads=reads;committed_writes=writes;
+    assert(tag_helper_set_nickname("Unreadable edit")==-7);
+    assert(revision==committed_revision && reads==committed_reads+1 && writes==committed_writes);
+    tag_helper_get_nickname(out,sizeof(out));
+    assert(!strcmp(out,"Renamed") && reads==committed_reads+1);
+    read_error=0;
+    stored[0].has_notes=false;revision++;fallback="Steckplatz";
+    tag_helper_get_nickname(out,sizeof(out));assert(!strcmp(out,"Steckplatz 01"));before=reads;
+    fallback="Slot";tag_helper_get_nickname(out,sizeof(out));assert(!strcmp(out,"Slot 01") && reads==before);
+    tag_helper_get_nickname(out,1);assert(out[0]==0 && reads==before);
+    stored[0].has_notes=true;stored[0].notes[0]=0;revision++;
+    tag_helper_get_nickname(out,sizeof(out));assert(!strcmp(out,"Slot 01"));
+    revision++;read_error=-7;before=reads;
+    tag_helper_get_nickname(out,sizeof(out));tag_helper_get_nickname(out,sizeof(out));
+    assert(!strcmp(out,"Slot 01") && reads==before+2);
+    read_error=0;strcpy(stored[0].notes,"Recovered");
+    tag_helper_get_nickname(out,sizeof(out));assert(!strcmp(out,"Recovered") && reads==before+3);
+    tag_helper_get_nickname(out,sizeof(out));assert(reads==before+3);
+    uint64_t previous=revision;revision=0;before=reads;
+    tag_helper_get_nickname(out,sizeof(out));tag_helper_get_nickname(out,sizeof(out));assert(reads==before+2);
+    revision=previous;strcpy(stored[0].notes,"After zero");
+    tag_helper_get_nickname(out,sizeof(out));assert(!strcmp(out,"After zero") && reads==before+3);
+    revision=(UINT64_C(9)<<32)|1;strcpy(stored[0].notes,"After remount");
+    tag_helper_get_nickname(out,sizeof(out));assert(!strcmp(out,"After remount") && reads==before+4);
+    active_driver=(vfs_driver_t *)&foreign_driver;before=reads;
+    tag_helper_get_nickname(out,sizeof(out));tag_helper_get_nickname(out,sizeof(out));assert(reads==before+2);
+    active_driver=(vfs_driver_t *)&vfs_driver_fs;strcpy(stored[0].notes,"After driver");
+    tag_helper_get_nickname(out,sizeof(out));assert(!strcmp(out,"After driver") && reads==before+3);
+    active_driver=NULL;tag_helper_get_nickname(out,sizeof(out));
+    active_driver=(vfs_driver_t *)&vfs_driver_fs;before=reads;
+    tag_helper_get_nickname(out,sizeof(out));assert(reads==before+1);
+    revision++;change_revision_during_read=true;before=reads;
+    tag_helper_get_nickname(out,sizeof(out));tag_helper_get_nickname(out,sizeof(out));assert(reads==before+2);
+    tag_helper_get_nickname(out,sizeof(out));assert(reads==before+2);
+    revision++;change_driver_during_read=true;before=reads;
+    tag_helper_get_nickname(out,sizeof(out));active_driver=(vfs_driver_t *)&vfs_driver_fs;
+    tag_helper_get_nickname(out,sizeof(out));assert(reads==before+2);
+    memset(stored[0].notes,'x',sizeof(stored[0].notes));revision++;
+    tag_helper_get_nickname(out,sizeof(out));assert(strlen(out)==90);
+    tag_helper_get_nickname(out,4);assert(!strcmp(out,"xxx"));
+    puts("PASS LCD PackedFS nickname cache: full notes, bounds, dynamic language, slot/revision/driver/zero/error invalidation");
+}
+''', [SRC / 'mod/vfs'])
+
+    def test_nickname_cache_excludes_oled_and_other_backends(self):
+        source = (SRC / 'app/chameleon/port/tag_helper.c').read_text()
+        code = function(source, 'tag_helper_get_nickname')
+        for defines in ('#define VFS_PACKED_LFS_ENABLE 1\n', '#define LCD_SCREEN 1\n', ''):
+            with self.subTest(defines=defines):
+                self.compile_run(defines + r'''
+#include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include "vfs_meta.h"
+#define FDS_SLOT_TAG_DUMP_FILE_ID_BASE 10
+#define TAG_SENSE_HF 1
+#define _T(x) "Slot"
+static int reads;
+static uint8_t tag_emulation_get_slot(void) {return 0;}
+static int fds_read_meta(int id,int key,vfs_meta_t *m) {
+    (void)id;(void)key;reads++;m->has_notes=true;strcpy(m->notes,reads==1?"Old":"New");return 0;
+}
+''' + code + r'''
+int main(void) {
+    char out[16];tag_helper_get_nickname(out,sizeof(out));assert(!strcmp(out,"Old"));
+    tag_helper_get_nickname(out,sizeof(out));assert(!strcmp(out,"New") && reads==2);
+    puts("PASS non-LCD/non-PackedFS keeps uncached reads without revision API dependency");
+}
+''', [SRC / 'mod/vfs'])
+
+    def test_display_uid_lengths_and_boundaries(self):
+        helper = (SRC / 'app/chameleon/port/tag_helper.c').read_text()
+        self.compile_run(PREFIX + function(helper, 'tag_helper_format_hex') + function(helper, 'tag_helper_format_uid') + r'''
+int main(void) {
+    uint8_t uid[10] = {0x04,0x0a,0x9f,0x80,0xff,0x00,0x11,0x22,0x33,0x44};
+    const char *expected = "04:0a:9f:80:ff:00:11:22:33:44";
+    for (unsigned length = 0; length <= 255; ++length) {
+        char text[32];
+        memset(text, 0x5a, sizeof(text));
+        size_t count = length == 4 || length == 7 || length == 10 ? 3 * length - 1 : 0;
+        tag_helper_format_uid(text, count ? uid : NULL, length);
+        assert(strncmp(text, expected, count) == 0);
+        assert(text[count] == 0 && text[count + 1] == 0x5a);
+    }
+    puts("PASS: valid display UIDs and all invalid lengths with output bounds");
+    return 0;
+}
+''')
+
     def test_real_id_callbacks_and_malformed_inputs(self):
         source = (SRC / 'app/chameleon/scene/chameleon_scene_menu_card_advanced_id_edit.c').read_text()
         code = '\n'.join(function(source, name) for name in
                          ('chameleon_id_hex_digit', 'chameleon_id_parse_bytes', 'handle_id_edit_cb', 'format_id_edit_text'))
-        self.compile_run(PREFIX + code + r'''
+        helper = (SRC / 'app/chameleon/port/tag_helper.c').read_text()
+        self.compile_run(PREFIX + function(helper, 'tag_helper_format_hex') + code + r'''
 int main(void) {
  app_chameleon_t app={APP_CHAMELEON_ID_EDIT_TYPE_UID};
  memset(&state,0xa5,sizeof(state));

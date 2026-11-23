@@ -24,9 +24,11 @@ static tag_specific_type_t tag_helper_get_active_tag_type(void){return slotConfi
 @tag_emulation_prepare_slot_count@
 @tag_emulation_slot_find_next@
 @tag_emulation_slot_find_prev@
+#define SETTINGS_SET(field, value) (settings_get_data()->field = (value))
 static settings_data_t*settings_get_data(void){return &settings;}
 #define NRF_SUCCESS 0
 static int settings_save(void){written++;return settings_ok?NRF_SUCCESS:1;}
+static bool chameleon_save_settings(void) {return settings_save()==NRF_SUCCESS;}
 void tag_emulation_slot_set_enable(uint8_t slot,tag_sense_type_t sense,bool enable){slotConfig.slots[slot].enabled_hf=enable;}
 bool tag_emulation_save_config(void){size_written=4+8*settings.chameleon_slot_num;assert(slotConfig.active_slot<settings.chameleon_slot_num);return config_ok;}
 @tag_helper_set_slot_num@

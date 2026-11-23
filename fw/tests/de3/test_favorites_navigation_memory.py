@@ -16,7 +16,7 @@ def run(fw,baseline=False,arm=False,sanitize=False):
   bodies='\n'.join(extract(lst,f) for f in ['mui_list_view_item_size','mui_list_view_try_add_item_ext','mui_list_view_add_item_ext','mui_list_view_add_item','mui_list_view_clear_items','mui_list_view_clear_items_with_cb','mui_list_view_set_focus','mui_list_view_get_focus','mui_list_view_sort','mui_list_view_set_selected_cb','mui_list_view_set_user_data'])
   ds=re.sub(r'^#include[^\n]*\n','',detail,flags=re.M)
   packed=packed_type_prefix((src/'mod/vfs/packed_fs.c').read_text())
-  files=[api,src/'app/amiidb/app_amiidb.h',src/'app/amiidb/scene/amiidb_scene_fav_list.c',src/'app/amiidb/scene/amiidb_scene_fav_select.c',src/'mui/view/mui_list_view.c',src/'mui/mui_mem.c',src/'mod/vfs/packed_fs.c',fw/'components/tlsf/tlsf.c']
+  files=[api,src/'amiidb/db_header.h',src/'app/amiidb/app_amiidb.h',src/'app/amiidb/scene/amiidb_scene_fav_list.c',src/'app/amiidb/scene/amiidb_scene_fav_select.c',src/'mui/view/mui_list_view.c',src/'mui/mui_mem.c',src/'mod/vfs/packed_fs.c',fw/'components/tlsf/tlsf.c']
   if not baseline:files.append(src/'app/amiidb/scene/amiidb_fav_page.h')
   before={str(p.relative_to(fw)):hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
   text=(HERE/'favorites_navigation_memory_host.c.in').read_text().replace('@LIST@',bodies).replace('@BROWSER@',re.sub(r'^#include[^\n]*\n','',browser,flags=re.M)).replace('@DETAIL@',ds).replace('@PACKED@',packed)
@@ -24,6 +24,7 @@ def run(fw,baseline=False,arm=False,sanitize=False):
   c=td/'probe.c';c.write_text(text,encoding='utf-8',newline='\n');exe=td/'probe.exe'
   inc=[td,src,src/'mui',src/'mui/view',src/'core',src/'mod',src/'mod/vfs',src/'ntag',src/'app/amiidb',src/'app/amiidb/api',src/'app/amiidb/view',src/'app/amiidb/scene',src/'amiidb',src/'i18n',fw/'components/mlib',fw/'components/u8g2/csrc',fw/'components/tlsf',fw/'components/littlefs']
   cmd=['gcc','-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-Wno-unused-function','-Wno-unused-parameter','-Wno-unused-variable','-Wno-type-limits','-Wno-comment','-Wno-unused-value','-Wno-sign-compare','-Wno-missing-field-initializers','-Wno-pointer-to-int-cast','-Wno-pointer-sign','-DTEST_BASELINE='+str(int(baseline))]
+  cmd+=['-DTEST_NAME_POOL='+str(int('name_en_offset' in (src/'amiidb/db_header.h').read_text()))]
   if sanitize:cmd+=['-fsanitize=address,undefined','-fno-sanitize-recover=all','-fno-omit-frame-pointer','-fno-pie','-no-pie']
   for d in inc:cmd+=['-I',str(d)]
   cmd += [str(c),str(fw/'components/tlsf/tlsf.c'),str(src/'i18n/de_DE.c'),str(src/'i18n/en_US.c'),'-o',str(exe)]

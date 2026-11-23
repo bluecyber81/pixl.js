@@ -1,0 +1,269 @@
+{
+  "schema": 1,
+  "qualifiedAt": "2026-11-22T13:50:07.756827+00:00",
+  "webVersion": "3.62.0",
+  "channel": "normal",
+  "status": "local-automated-qualified-public-delivery-pending",
+  "repository": "bluecyber81/pixl.js",
+  "sourceBranch": "web-app672",
+  "localBranch": "work/web362-app672",
+  "baseCommit": "72c33f42ab07baa76d6ba4aa92fac515441c0f8f",
+  "sourceInputs": {
+    "path": "WEB3_62_0_evidence/SOURCE_INPUTS.json",
+    "sha256": "e13661b1f1b6b1f83fda507b63eb509f4a37ed31c25b490e67ebb8bbeacd91f9"
+  },
+  "firmware": {
+    "board": "LCD/ST7567",
+    "version": "2.22.0-DE3.99",
+    "applicationCounter": 672,
+    "hardwareVersion": 52,
+    "softDevice": "Nordic S112 7.3.0 / FWID 0x0126",
+    "bootloader": "Z21",
+    "applicationOnly": true,
+    "productionSourceCommit": "9fb9d84b51365cf33f745896243f4cd6e934e637",
+    "productionTree": "233aec9e567495ddd25d002ec05e61173f9eac7b",
+    "sourceId": "1a60ea8e4804a958d2e0e4415a5a7a9643eca6abce788d7394e2155976da1c0d",
+    "engineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
+    "ota": {
+      "file": "Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+      "bytes": 364877,
+      "sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704"
+    },
+    "bin": {
+      "bytes": 364276,
+      "sha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7"
+    },
+    "physicalAcceptance": "pending-for-this-build",
+    "qualification": "https://github.com/bluecyber81/pixl.js/blob/release/lcd-de399-app672/docs/validation/DE3_99.json"
+  },
+  "changes": [
+    "One package.json version drives Web diagnostics, build manifest, Python launcher, HTTP health and PowerShell. The complete portable includes that same manifest.",
+    "Release source checks now run on main and web-app* pushes as well as pull requests/manual dispatch. Existing Ubuntu and Windows launcher suites remain; Linux CI additionally builds and starts the actual portable ZIP.",
+    "Normal App672 default, exact OTA and SourceID binding, read-only diagnostics, real de399 capacity simulator and source archive. Historical App671/private TEST1/OLED profiles retained.",
+    "Battery history preserves the first-to-last-valid-reading span and adds retained record window, active logger duration and pause duration. Backwards clock/invalid entries yield unknown duration; terminal pauses are not extrapolated. No ADC runtime/current/battery-life claim."
+  ],
+  "checks": {
+    "node": {
+      "total": 2118,
+      "passed": 2115,
+      "failed": 0,
+      "skipped": 3,
+      "skipReasons": [
+        "Two native Windows-only launcher cases on Linux",
+        "One optional historical DE3.17/recovery575 OTA fixture absent"
+      ],
+      "log": "WEB3_62_0_evidence/WEB_TESTS_QUALIFIED.log"
+    },
+    "pythonLauncher": {
+      "total": 26,
+      "passed": 26,
+      "failed": 0,
+      "log": "WEB3_62_0_evidence/LAUNCHER_FINAL.log",
+      "scope": "Actual Python controller and health, reuse, stop/direct stop, ownership and error cases; Windows socket errors also simulated."
+    },
+    "batterySynthetic": {
+      "total": 39,
+      "passed": 39,
+      "log": "WEB3_62_0_evidence/BATTERY_TIMING.log",
+      "includedInNodeTotal": true
+    },
+    "distRoot": {
+      "total": 50,
+      "passed": 50,
+      "log": "WEB3_62_0_evidence/DIST_ROOT_FINAL.log"
+    },
+    "distPagesAfterPreservation": {
+      "total": 50,
+      "passed": 50,
+      "log": "WEB3_62_0_evidence/DIST_PAGES_QUALIFIED.log"
+    },
+    "pfsCrossVersion": {
+      "cases": 6,
+      "files": 1131,
+      "folders": 77,
+      "passed": true,
+      "evidence": "DE3_99_CROSS_MOUNT.json"
+    },
+    "actualLinkedArmLayout": {
+      "cases": 4,
+      "passed": true,
+      "elfLoadBytesCompared": 364276,
+      "evidence": "DE3_99_PFS.json"
+    },
+    "wasmReproduction": {
+      "passed": true,
+      "bytes": 65585,
+      "sha256": "068e6f033c6e3ee95c8be2c7c6ba633daa6821c67ca38ace68a66cd5fece604c",
+      "evidence": "WEB3_62_0_evidence/REPRODUCIBLE_WASM.json"
+    },
+    "portable": {
+      "passed": true,
+      "verifiedContentFiles": 301,
+      "zipFiles": 303,
+      "normalControllerStartReuseStop": true,
+      "loopbackHttpAssets": [
+        "index.html",
+        "release.json",
+        "firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip"
+      ],
+      "nativeWindowsExecuted": false,
+      "evidence": "WEB3_62_0_evidence/PORTABLE_VERIFICATION.json"
+    },
+    "localChromium": {
+      "status": "blocked-before-first-ui-check",
+      "passed": false,
+      "checks": 0,
+      "reason": "Host rejected Unix socket() during Chromium startup (Operation not permitted).",
+      "evidence": "WEB3_62_0_evidence/LOCAL_BROWSER_BLOCKED.json"
+    },
+    "gitDiffWhitespace": {
+      "passed": true,
+      "command": "git -c core.whitespace=cr-at-eol diff --cached --check -- . ':!docs/validation/WEB3_62_0_evidence/*.log' ':!web/third-party/packed-simulator-de399/**'",
+      "scope": "Changed first-party code and documents. Exact captured raw logs and byte-bound copied third-party simulator sources are excluded because they contain inherited trailing spaces and must remain unchanged."
+    }
+  },
+  "artifacts": {
+    "portable": {
+      "schema": 1,
+      "version": "3.62.0",
+      "archive": "Allmiibo_Dateimanager_3_62_0_Portable.zip",
+      "bytes": 11163187,
+      "sha256": "d917fe47fc9c6c66a1de8e73ff596a39ee6380ce55e7f8d3f6c61b63d00ca2c1",
+      "files": 303,
+      "portableManifestSha256": "09eb81b79e8020668ec72176d0a7a977b34159bb579876ef70040c2e0a9f7fb4",
+      "nativeExecutable": false,
+      "verification": {
+        "path": "PORTABLE_VERIFICATION.json",
+        "sha256": "39dc9caab5e782f902ca80b1900f7cbbbabdb04c89be6f90382b2cdce68a685d"
+      }
+    },
+    "rootBuild": {
+      "directory": "web/dist",
+      "base": "/",
+      "files": 290,
+      "manifest": "WEB3_62_0_evidence/WEB362_ROOT_MANIFEST.json"
+    },
+    "pagesBuild": {
+      "directory": "web/dist-pages",
+      "base": "/pixl.js/",
+      "files": 1137,
+      "manifest": "WEB3_62_0_evidence/WEB362_PAGES_MANIFEST.json"
+    },
+    "simulatorSource": {
+      "path": "web/public/sources/LCD_DE3_99_App672_Simulatorquellen.zip",
+      "bytes": 151971,
+      "sha256": "dceecd21e37d0b02fd5bafc25f16bf7a90a7a8f0792d4479ea75878f5fb0c3bc",
+      "files": 25
+    }
+  },
+  "pagesPreservation": {
+    "baseHead": "f83275eb5568ca777a750f70e0b9bb504e5e7c62",
+    "testTrees": {
+      "test/app662": 234,
+      "test/app669": 268,
+      "test/app670": 314
+    },
+    "testTreesByteIdentical": true,
+    "additionalHistoricalStaticFiles": 247,
+    "obsoleteRootBundleAssetsNotCopied": 1486,
+    "evidence": "WEB3_62_0_evidence/PAGES_HISTORICAL_PRESERVATION.json",
+    "referenceVerification": "WEB3_62_0_evidence/PAGES_REFERENCE_VERIFICATION.json",
+    "deletedRootAssetsReferencedByRetainedFiles": 0,
+    "retainedTextFilesScanned": 482,
+    "historicalDownloadsByteIdentical": 20,
+    "historicalOledArtifactsByteIdentical": 12
+  },
+  "validationProcess": "Initial integration attempts exposed stale current-release fixture expectations and missing imports in the test VM after the version/reference split. These fixtures were updated, historical assertions retained, and App672 was added alongside App671 to the actual normal backup/diagnostic/transport paths. The final complete suite above passed. The final PowerShell interpolation review was followed by actual portable rebuilding and the launcher suite; native Windows execution remains explicitly pending.",
+  "limits": [
+    "No physical App672 installation, Bluetooth transfer, phone DFU, timings or battery-current measurement was performed by these Web checks.",
+    "OLED Test5 counter85 and Test6 counter86 remain distinct, with their own firmware and hardware acceptance boundaries.",
+    "No native Windows/PowerShell runtime or EXE was available locally. The real package contains the Python/CMD route; Windows CI executes the existing native tests when the release branch is published.",
+    "Local Chromium was blocked by the execution host. Public HTTP/Cloud-browser delivery verification is separate and still pending at qualification time.",
+    "The App662 full Android system package remains historical and explicitly identified; it is followed by the separate App672 app-only update when appropriate.",
+    "Initial source/toolchain receipts may contain pending text from their creation time; the final qualification above supersedes those workflow statuses without modifying immutable old evidence.",
+    "The Web source branch contains inherited historical firmware sources. App672 production source is the explicit commit in the separate release branch."
+  ],
+  "nextStep": "Publish the frozen web-app672 source and web3.62.0 source/portable assets, publish the prepared Pages tree preserving historical routes, then record public HTTP and Cloud-browser checks in a separate delivery receipt. No additional broad user device test is required for publication.",
+  "evidenceFiles": [
+    {
+      "path": "WEB3_62_0_evidence/BATTERY_TIMING.log",
+      "bytes": 4155,
+      "sha256": "ea2b6907a87d5ab959a14b1dd54238ddff7a8a217fccc58737bc5fa72386f4eb"
+    },
+    {
+      "path": "WEB3_62_0_evidence/DIST_PAGES_QUALIFIED.log",
+      "bytes": 5836,
+      "sha256": "c354840364785cece06df1af6ba9d2cd104e9a2d0b8fd3198c5f345feccc3be8"
+    },
+    {
+      "path": "WEB3_62_0_evidence/DIST_ROOT_FINAL.log",
+      "bytes": 5714,
+      "sha256": "fe7b95b1a357915b1ac08199c6475e29db10a7a279d11700feb5a4ff2bf69ac6"
+    },
+    {
+      "path": "WEB3_62_0_evidence/LAUNCHER_FINAL.log",
+      "bytes": 3975,
+      "sha256": "8cecc671cf42a86cb8deca1d27c706d88ed9d1b40a3bcfe34ad0d8b712f43a13"
+    },
+    {
+      "path": "WEB3_62_0_evidence/LOCAL_BROWSER_BLOCKED.json",
+      "bytes": 57707,
+      "sha256": "b5e86ed1e74e9fb22fac030fc9fbfbe9b92029d5ff6f6f5c391b93343f2e667f"
+    },
+    {
+      "path": "WEB3_62_0_evidence/NPM_CI.log",
+      "bytes": 175,
+      "sha256": "c800d2a4ca58b555b1a50392b1f75043d5295ee227739f0dcacf89cc7308af5a"
+    },
+    {
+      "path": "WEB3_62_0_evidence/PAGES_HISTORICAL_PRESERVATION.json",
+      "bytes": 241454,
+      "sha256": "0144987da2c2c9156c082aa36946ae9acc0deaeadb51827672e7ccce709c10f3"
+    },
+    {
+      "path": "WEB3_62_0_evidence/PAGES_REFERENCE_VERIFICATION.json",
+      "bytes": 96811,
+      "sha256": "bdd1890ac23e703912b97a30f3da162e5cbb0e40c144b721cde66aecbb43f986"
+    },
+    {
+      "path": "WEB3_62_0_evidence/PORTABLE_BUILD_FINAL.log",
+      "bytes": 517,
+      "sha256": "e8646b09d9161cd679cf2cf6a957333fab6ce9c7e222fe38c6c6e77708079e92"
+    },
+    {
+      "path": "WEB3_62_0_evidence/PORTABLE_PACKAGE.json",
+      "bytes": 489,
+      "sha256": "ebfe6e6fe44380b4a82ed12bf65f328b1173f640f4897a39131304de3f169528"
+    },
+    {
+      "path": "WEB3_62_0_evidence/PORTABLE_VERIFICATION.json",
+      "bytes": 954,
+      "sha256": "39dc9caab5e782f902ca80b1900f7cbbbabdb04c89be6f90382b2cdce68a685d"
+    },
+    {
+      "path": "WEB3_62_0_evidence/REPRODUCIBLE_WASM.json",
+      "bytes": 4530,
+      "sha256": "e075ee96661e8a6ae99f01dce7a2869c36114596b3b4b95a27af4951af0b3259"
+    },
+    {
+      "path": "WEB3_62_0_evidence/SOURCE_INPUTS.json",
+      "bytes": 161880,
+      "sha256": "e13661b1f1b6b1f83fda507b63eb509f4a37ed31c25b490e67ebb8bbeacd91f9"
+    },
+    {
+      "path": "WEB3_62_0_evidence/WEB362_PAGES_MANIFEST.json",
+      "bytes": 214193,
+      "sha256": "7b17a440b201b21923d8a54013ef12a33f96f607e836fe9992a0933fde253b2b"
+    },
+    {
+      "path": "WEB3_62_0_evidence/WEB362_ROOT_MANIFEST.json",
+      "bytes": 52122,
+      "sha256": "3320ba88b12b4ebd633508c49df4be9e4a61fda5d8d506bacdec18676b0d5015"
+    },
+    {
+      "path": "WEB3_62_0_evidence/WEB_TESTS_QUALIFIED.log",
+      "bytes": 222063,
+      "sha256": "adb0ab1b634542c6219fdffadde9042ccd12173941102d6d78432f06917bb247"
+    }
+  ]
+}

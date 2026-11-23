@@ -1,0 +1,265 @@
+{
+  "schema": 1,
+  "recordedAt": "2026-11-21T14:43:41+01:00",
+  "scope": "Local source finalization for Web 3.59.0-test.1 and LCD App669 TEST1; live HTTP/UI and physical acceptance remain separate.",
+  "webVersion": "3.59.0-test.1",
+  "webBranch": "work/web-app669-test1",
+  "webBaseCommit": "cbd9f8872842c953dc2601d7f2a330a603bed72b",
+  "deploymentBase": "/pixl.js/test/app669/",
+  "deviceAccess": false,
+  "hardwareAcceptance": "pending",
+  "firmwareReference": {
+    "board": "LCD",
+    "firmwareVersion": "2.22.0-DE3.96",
+    "applicationCounter": 669,
+    "testLabel": "TEST1",
+    "chipPart": 337970,
+    "sourceId": "dea06409b9ff20a12f446a7baed683b6442573ed427c5dc87cd4bed2885df858",
+    "productionCommit": "feb6c58ad14998f31aef07dc84d8dc0732e32ede",
+    "sourceCommit": "feb6c58ad14998f31aef07dc84d8dc0732e32ede",
+    "localProductionCommit": "6243a79875e8e84e2d24cd7de07111b718dd6131",
+    "validationCommit": "de9f457fac652153f71dc08243368f6283e1159c",
+    "otaSha256": "021d1a35b00b6cb344702c48df609060e51b55bcecaa9781071d1bcd87829b1f",
+    "otaBytes": 363913,
+    "applicationBytes": 363312,
+    "applicationBinSha256": "32d3a83b0692ea06b65af48c236bcffa4eb3469c0e98e9bb6840965cc1dabb80",
+    "artifactStatus": "experimental-signed-application",
+    "hardwareAcceptance": "pending"
+  },
+  "firmwareReferenceFile": {
+    "path": "web/public/dfu/lcd-private-reference.mjs",
+    "bytes": 5652,
+    "sha256": "8d2c43f18e67ea24420e8119be114fdf0905f781fc0fbae0514ad30abba0c904"
+  },
+  "ota": {
+    "path": "web/public/firmware/Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip",
+    "bytes": 363913,
+    "sha256": "021d1a35b00b6cb344702c48df609060e51b55bcecaa9781071d1bcd87829b1f"
+  },
+  "simulatorSources": {
+    "path": "web/public/sources/LCD_DE3_96_App669_TEST1_Simulatorquellen.zip",
+    "bytes": 153464,
+    "sha256": "e135cea2079c45668a0392939dc3cf951b4270e6cdef6dcfe95e21f9211054dc"
+  },
+  "simulatorWasm": {
+    "path": "web/public/lfs-capacity-de396.wasm",
+    "bytes": 64830,
+    "sha256": "d3a2e2d9378440c58051349502c51a7977ef7863d1cb2eec303d002b659a8a56"
+  },
+  "engineSha256": "3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d",
+  "validationEvidence": {
+    "DE3_96_PFS.json": {
+      "path": "docs/validation/DE3_96_PFS.json",
+      "bytes": 3645,
+      "sha256": "13df7aa16f8a608148754cccaf994cacb73276cd0b005816acaa47b10821df29"
+    },
+    "DE3_96_CROSS_MOUNT.json": {
+      "path": "docs/validation/DE3_96_CROSS_MOUNT.json",
+      "bytes": 15139,
+      "sha256": "32f7ac70eba63d660c7e5c67be95145b068aa596225f846fa0d484f5cc99a89c"
+    },
+    "DE3_96_PRODUCTION_INPUTS.json": {
+      "path": "docs/validation/DE3_96_PRODUCTION_INPUTS.json",
+      "bytes": 85213,
+      "sha256": "b393615f7a53d24d468ec946e5279eaf24595eb2771b76a457414816bda671f6"
+    }
+  },
+  "tests": {
+    "fullWeb": {
+      "tests": 1999,
+      "pass": 1996,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 3,
+      "todo": 0,
+      "command": "npm test",
+      "evidence": {
+        "path": "docs/validation/WEB3_59_0_TEST1_evidence/FULL_WEB_TESTS_RETRY_FINAL.log",
+        "bytes": 208034,
+        "sha256": "4c3316a28ef55f7dbe3cce3a4b9f143cd0a9291f83b73a610458bc52a97fadf5"
+      },
+      "skips": [
+        {
+          "name": "Windows launchers keep two ports independent, reject altered tokens and preserve legacy state",
+          "reason": "Windows-only case on Linux"
+        },
+        {
+          "name": "Windows failed state persistence asks only the newly started server to stop itself",
+          "reason": "Windows-only case on Linux"
+        },
+        {
+          "name": "real immutable DE3.17 and recovery575 application archives pass without device access",
+          "reason": "Optional historical local OTA fixtures absent"
+        }
+      ]
+    },
+    "dfuReference": {
+      "tests": 70,
+      "pass": 70,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "evidence": {
+        "path": "docs/validation/WEB3_59_0_TEST1_evidence/DFU_REFERENCE_TESTS_FINAL2.log",
+        "bytes": 8201,
+        "sha256": "fb8e64badb9ebf9c6494182fee1ef6d91469403fce3060707928a2400e902611"
+      },
+      "command": null,
+      "commandNote": "The preserved log contains test output but no complete invocation line."
+    },
+    "isolatedDistribution": {
+      "tests": 40,
+      "pass": 40,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "command": "npm run test:dist:test1",
+      "evidence": {
+        "path": "docs/validation/WEB3_59_0_TEST1_evidence/DIST_TEST1_FINAL.log",
+        "bytes": 4879,
+        "sha256": "9fa6d1415f23352b5e9243b432eb742e79e393586c93ee7256323ee8957c4652"
+      }
+    },
+    "storageSelfTest": {
+      "tests": 10,
+      "pass": 10,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "evidence": {
+        "path": "docs/validation/WEB3_59_0_TEST1_evidence/STORAGE_SELF_TEST.log",
+        "bytes": 1034,
+        "sha256": "bfcfb41eff6279875c8cbb90379fd9d8cff18791e4fe4a0a00436aef7f81ff47"
+      }
+    },
+    "capacity": {
+      "tests": 87,
+      "pass": 87,
+      "fail": 0,
+      "skipped": 0,
+      "evidence": {
+        "path": "docs/validation/WEB3_59_0_TEST1_evidence/CAPACITY_TESTS.json",
+        "bytes": 507,
+        "sha256": "aba9c866f1bf30bfb08141f97a6f7377ddcdca8b712728277f61275174cd949a"
+      }
+    }
+  },
+  "build": {
+    "command": "npm run build:test1",
+    "status": "passed-in-preserved-log",
+    "evidence": {
+      "path": "docs/validation/WEB3_59_0_TEST1_evidence/BUILD_TEST1_FINAL.log",
+      "bytes": 13158,
+      "sha256": "166b9095584c837395111efc48105059c5105a3b677e534d6d858f497396e6b5"
+    },
+    "distributionFiles": 268
+  },
+  "sourceManifest": {
+    "path": "docs/validation/WEB3_59_0_TEST1_evidence/SOURCE_SNAPSHOT_SHA256.json",
+    "bytes": 135101,
+    "sha256": "ce1e58ccb887caf72ef16f026e6c1468caed6e0caababd0fe58552890132ed01"
+  },
+  "distributionManifest": {
+    "path": "docs/validation/WEB3_59_0_TEST1_evidence/DIST_TEST1_SHA256.json",
+    "bytes": 44544,
+    "sha256": "9b9b537caef36991f503e903c6383151c72336063fe108867174d0ba6d57d385"
+  },
+  "freshLocalVerification": {
+    "path": "docs/validation/WEB3_59_0_TEST1_evidence/LOCAL_HASH_RECHECK.json",
+    "bytes": 4719,
+    "sha256": "de0219a967daefe330537fa22a0569be331e47c734a5345505ea17441899fd8c"
+  },
+  "historicalEvidenceCopies": {
+    "FULL_WEB_TESTS_RETRY_FINAL.log": {
+      "path": "docs/validation/WEB3_59_0_TEST1_evidence/FULL_WEB_TESTS_RETRY_FINAL.log",
+      "bytes": 208034,
+      "sha256": "4c3316a28ef55f7dbe3cce3a4b9f143cd0a9291f83b73a610458bc52a97fadf5"
+    },
+    "DFU_REFERENCE_TESTS_FINAL2.log": {
+      "path": "docs/validation/WEB3_59_0_TEST1_evidence/DFU_REFERENCE_TESTS_FINAL2.log",
+      "bytes": 8201,
+      "sha256": "fb8e64badb9ebf9c6494182fee1ef6d91469403fce3060707928a2400e902611"
+    },
+    "BUILD_TEST1_FINAL.log": {
+      "path": "docs/validation/WEB3_59_0_TEST1_evidence/BUILD_TEST1_FINAL.log",
+      "bytes": 13158,
+      "sha256": "166b9095584c837395111efc48105059c5105a3b677e534d6d858f497396e6b5"
+    },
+    "DIST_TEST1_FINAL.log": {
+      "path": "docs/validation/WEB3_59_0_TEST1_evidence/DIST_TEST1_FINAL.log",
+      "bytes": 4879,
+      "sha256": "9fa6d1415f23352b5e9243b432eb742e79e393586c93ee7256323ee8957c4652"
+    },
+    "STORAGE_SELF_TEST.log": {
+      "path": "docs/validation/WEB3_59_0_TEST1_evidence/STORAGE_SELF_TEST.log",
+      "bytes": 1034,
+      "sha256": "bfcfb41eff6279875c8cbb90379fd9d8cff18791e4fe4a0a00436aef7f81ff47"
+    },
+    "CAPACITY_TESTS.json": {
+      "path": "docs/validation/WEB3_59_0_TEST1_evidence/CAPACITY_TESTS.json",
+      "bytes": 507,
+      "sha256": "aba9c866f1bf30bfb08141f97a6f7377ddcdca8b712728277f61275174cd949a"
+    },
+    "CAPACITY_TESTS.log": {
+      "path": "docs/validation/WEB3_59_0_TEST1_evidence/CAPACITY_TESTS.log",
+      "bytes": 10235,
+      "sha256": "99003b077ed1ddcc63701413a9441feda09f7b1746612aab199c9bac3f343eec"
+    },
+    "SOURCE_ARCHIVE.json": {
+      "path": "docs/validation/WEB3_59_0_TEST1_evidence/SOURCE_ARCHIVE.json",
+      "bytes": 385,
+      "sha256": "4990d5de6aac1f9a752776cdf0110bad1defeb847ca5e7ca73ce3f7531303294"
+    },
+    "SOURCE_ARCHIVE_REBUILD.log": {
+      "path": "docs/validation/WEB3_59_0_TEST1_evidence/SOURCE_ARCHIVE_REBUILD.log",
+      "bytes": 228,
+      "sha256": "da79950976bdfb4ba21e2a90913fb7789b829d3d90b3342b6ad7290f5418ad6c"
+    },
+    "CAPACITY_HISTORICAL_UNCHANGED.json": {
+      "path": "docs/validation/WEB3_59_0_TEST1_evidence/CAPACITY_HISTORICAL_UNCHANGED.json",
+      "bytes": 72,
+      "sha256": "84623fb596eeb90c57c10c2880199cb8ca2e75e1a37619de821b26d919a0bf2b"
+    }
+  },
+  "executionScope": {
+    "historicalTestsRerun": false,
+    "productionSourceChanged": false,
+    "freshChecks": [
+      "source/dist SHA-256 snapshots",
+      "all 268 dist/Pages local files",
+      "all 85 copied public assets",
+      "OTA archive/reference/app bindings",
+      "22 matching simulator archive input files",
+      "credential and task-path review"
+    ]
+  },
+  "publication": {
+    "sourceRemoteWritePerformed": false,
+    "httpVerification": "pending-at-this-source-finalization",
+    "liveUiVerification": "pending-at-this-source-finalization",
+    "reportedPagesCommit": "5cbfe7c7dec9a5283f87bf834f49425beee121bf",
+    "reportedPagesCommitSource": "Existing app669_delivery/PAGES_RECEIPT.json; not independently fetched in this finalization"
+  },
+  "openDeviceTests": [
+    "Install/boot App669 on LCD/ST7567 and export fresh diagnostics matching counter, SourceID and default extension OFF.",
+    "Explicit 512-byte create/read/compare/remove test and separate fresh free-space readings; export its report.",
+    "New complete backups of the same unchanged selection in OFF/ON/OFF order, without resume or previous-ZIP reuse; preserve full timing/link/transport reports.",
+    "Verify confirmed option persists across reconnect and returns OFF after device/stack restart.",
+    "Normal settings save, deliberate ordinary discard, menu return and persistence after normal restart.",
+    "Normal use and longer-session diagnostics; report actual faults without manufactured flash/power failures."
+  ],
+  "limits": [
+    "Test counts overlap and must not be summed.",
+    "Host, linked-ARM and simulator checks do not establish physical device acceptance.",
+    "A configured radio option or 2M link does not establish file throughput improvement.",
+    "The 512-byte run is functional, not a large-transfer speed benchmark.",
+    "Empty-directory check and recursive remove are not atomic against another writer; use one exclusive file-manager session.",
+    "Removal success and restoration of initial free bytes are separate outcomes.",
+    "New current source/hash records do not retroactively prove a pre-test input snapshot.",
+    "OLED, stable catalogue, normal Pages root and this LCD TEST1 distribution remain separate."
+  ],
+  "nextStep": "Finish separate live HTTP/UI/download checks and shared handover; then collect physical App669 reports before selecting a higher-counter normal build."
+}

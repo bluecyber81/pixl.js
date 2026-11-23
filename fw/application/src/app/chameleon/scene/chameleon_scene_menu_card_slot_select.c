@@ -1,5 +1,6 @@
 #include "app_chameleon.h"
 #include "chameleon_scene.h"
+#include "fds_utils.h"
 
 #include "mini_app_launcher.h"
 #include "mini_app_registry.h"
@@ -21,6 +22,7 @@ void chameleon_scene_menu_card_slot_select_on_event(mui_list_view_event_t event,
     switch (p_item->icon) {
     case ICON_DATA: {
         uint8_t slot = (uint8_t)(uintptr_t)p_item->user_data;
+        chameleon_save_begin();
         if (!tag_emulation_change_slot(slot, false)) {
             app_chameleon_show_save_error(app);
             return;

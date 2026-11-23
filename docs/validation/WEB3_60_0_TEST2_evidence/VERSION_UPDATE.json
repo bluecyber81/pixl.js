@@ -1,0 +1,114 @@
+{
+  "from": "3.60.0-test.1",
+  "to": "3.60.0-test.2",
+  "files": [
+    {
+      "path": "web/serve_local.py",
+      "occurrences": 2,
+      "beforeSha256": "54a451cb04bd0717fd3fba1040b7c23f0cca30bafb60a192086fe15a86338a5e",
+      "afterSha256": "fcaeb24585d4ecd5b2fadda8c91bd4f6066d3e0e016cb4ba33c8737e1c61eca1"
+    },
+    {
+      "path": "web/index.html",
+      "occurrences": 1,
+      "beforeSha256": "0c2f6dfbf0a53f895f77784ad6589b4b6c152b5c3ccbbac58fa5565055d146e5",
+      "afterSha256": "6558f5b0fa114ac36ac535008d77d2be02ce1f49bebb2528e7be0023587c4f5a"
+    },
+    {
+      "path": "web/Start-Dateimanager.ps1",
+      "occurrences": 4,
+      "beforeSha256": "4ebefca5a4b393af13387a0fc39f9c069bed88c4f0cffd7c961bb6e98ae8d7d1",
+      "afterSha256": "9efc680d46abc3d8685fb87aba09da66f8f5f445e0d75d6a642a988d10e9fcc2"
+    },
+    {
+      "path": "web/package-lock.json",
+      "occurrences": 2,
+      "beforeSha256": "ab84ad354f5c8ea7d33fc59498d8173a2e70685a44719a87f625da376c281ac4",
+      "afterSha256": "c6596751da6b5bd7dfb1ed623786f22ef38968ab18a2fe06c256ed28b3517965"
+    },
+    {
+      "path": "web/tests/private-lcd-669.test.mjs",
+      "occurrences": 1,
+      "beforeSha256": "14d73e51e7a774f04e99d65bfc1cf55272134dcaa50b19f7f5fb44c0c08bdc35",
+      "afterSha256": "4635fdb566df8b7a82ecefd73c854c676d13b6597c4b11444ba4dd560a92d29a"
+    },
+    {
+      "path": "web/scripts/verify-screen-awake-browser.mjs",
+      "occurrences": 2,
+      "beforeSha256": "e8f73314cfceb076d699fd7eca8d1d33b60711020185addacd374430ae3930ce",
+      "afterSha256": "aa02e2caf09c3b33c8e47eea34dbcc5259d34c4bccedb7800c627203eeb1dfbb"
+    },
+    {
+      "path": "web/scripts/verify-collection-tools-browser.mjs",
+      "occurrences": 2,
+      "beforeSha256": "9bb58164fbe1b3d85e9c6dec9911014a71704df062081080a69fa56fb5f03688",
+      "afterSha256": "aaa621b298926b6e24f428c15a7d52fcb6598c835f7ee8d00aacd5d208fb6bf3"
+    },
+    {
+      "path": "web/tests/launcher.test.cjs",
+      "occurrences": 1,
+      "beforeSha256": "1299d6a9e0e164fe3d1d325b196367af7b7b7937138d205aeb5854edccfcc3fb",
+      "afterSha256": "bfff58355641c46ceb756f4274f90ebd212f079dcd34a61d42473259d1af368b"
+    },
+    {
+      "path": "web/tests/test_windows_launcher_r2.py",
+      "occurrences": 2,
+      "beforeSha256": "b08ff14a50af8f4ef59811fdf8d72b4121ea3e7b97c9831ce1432aaf7379430b",
+      "afterSha256": "3b78e4922c93bbac6a2aeaf01c1ddcaadf42d4053c943fb45c6ea43f9cb67a8a"
+    },
+    {
+      "path": "web/tests/dfu-page.test.cjs",
+      "occurrences": 4,
+      "beforeSha256": "bcae5b7743acd68ef6d3b9a55e7e8563c4e08ff6fea79542b8c9565dfc473ddd",
+      "afterSha256": "6c411ea9326d86b69d007b2abfce488a7dce34629c44aca93ca71500efb480ea"
+    },
+    {
+      "path": "web/package.json",
+      "occurrences": 1,
+      "beforeSha256": "03d7e48ec3d537217938b972842b5ae3aa0444f3d880fa833575ed23ce0d3d41",
+      "afterSha256": "0467b9f5f3b9aaa6184ce8764b0efcfd099ea15f1d96d9fd422e9d54a9f63954"
+    },
+    {
+      "path": "web/tests/ui-modern.test.cjs",
+      "occurrences": 6,
+      "beforeSha256": "8efa85526286d2075efaf3726539ef90f39b7960abfd29efea7dfba1dac2bdd4",
+      "afterSha256": "007866f514cef6a8009406b72370f9023610c7cfa2ac81dd828fd34213588b93"
+    },
+    {
+      "path": "web/tests/device-info.test.mjs",
+      "occurrences": 1,
+      "beforeSha256": "3a2d393cda4d20fde0310a505d21a28f86206e83f0c1fdfad65bb1022f1720fb",
+      "afterSha256": "91eaddfe1456527b4351164836c8367aa2072886eee1aaa527555eceb5258faa"
+    },
+    {
+      "path": "web/tests/update-check.test.mjs",
+      "occurrences": 1,
+      "beforeSha256": "6cb740a5fe5c021ffb12e70191eb1786fb5a1bf902137ecf0c8ebd69fde7b417",
+      "afterSha256": "f930a02fd962265d1d16a8d0e65d5f1b5c5773f39d73bf37a1756645807de924"
+    },
+    {
+      "path": "web/src/lib/device-info.js",
+      "occurrences": 1,
+      "beforeSha256": "25b7d8f9b872fbc9505a95d0407babbe8945a8cd5a70a5c3e0be6df6fceb637d",
+      "afterSha256": "0853ad262b44f356c5077633e23f941e68709a13c0199790ffdbf1cb4dc4c842"
+    },
+    {
+      "path": "web/public/dfu/page.js",
+      "occurrences": 2,
+      "beforeSha256": "03cd87c7d829c9371f06f2500253b34dd640cee70ecc51da24bead1977645f71",
+      "afterSha256": "7bfd74a520de6430d6b7caf52fd840a3d6c1d4935a8893a0d6dbe5a389c6cdf5"
+    },
+    {
+      "path": "web/public/dfu/package.json",
+      "occurrences": 1,
+      "beforeSha256": "8361d0348abc402618942ce80849093cf0b43de0f0fa8ddd2d2cb3e85f048fe5",
+      "afterSha256": "9fe597ac855b7a4dde8b2fa64daf7c8ca37fbf5f59cc88f4c6d95e7702f37ab4"
+    },
+    {
+      "path": "web/public/dfu/web.html",
+      "occurrences": 11,
+      "beforeSha256": "691269a7c368db78def5239cf71d34cd8ab1c4f68a31473d67dc207572ba7d1c",
+      "afterSha256": "2bfa18cf349e907cdf309b82e9016e68af39a600bd098b4f8185e0141a1cb689"
+    }
+  ]
+}

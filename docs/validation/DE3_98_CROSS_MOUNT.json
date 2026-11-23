@@ -1,0 +1,299 @@
+{
+  "schema": 1,
+  "profile": "de398",
+  "passed": true,
+  "deviceAccess": false,
+  "syntheticDataOnly": true,
+  "compiler": "gcc (Debian 14.2.0-19) 14.2.0\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "format": "PFS1",
+  "layoutConstantsUnchanged": true,
+  "engines": {
+    "old": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+    "new": "a645c8556c6b2e7dd9c35af621822a4ab2cb45a4315f116fe07ed7c03898098d"
+  },
+  "sourcesBefore": {
+    "harness": "73bff4818fa6619e3deedbbda848cfd71ec90bc2cec5894a57ffde086f9ebfc4",
+    "fixture": "0a03f00e8eace67596347265c5e8a6b7c49006b0cf4bb65843aabb633ca944eb",
+    "packed-simulator-de397/core/packed_fs.c": "123fdef17c2c42d0d7374db931c7e738e44584fbd8bb2fc2953a7454033462a4",
+    "packed-simulator-de397/core/packed_fs.h": "a3781e3e8e59a10aef7781dddc6b8129fe0f97f89d34798d30e36d24f6b4be58",
+    "packed-simulator-de397/littlefs/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+    "packed-simulator-de397/littlefs/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+    "packed-simulator-de397/littlefs/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+    "packed-simulator-de397/littlefs/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3",
+    "packed-simulator-de397/sim/capacity_simulator.c": "64e01259a25dd1a03e03a9764edb3f3125b69bfe88b3b02ee6039a09a4fa4679",
+    "packed-simulator-de397/sim/minilib.c": "f077daf9974d26eb268789c3a7f84c0b2c605669805aa92899e53d8929012e27",
+    "packed-simulator-de397/sim/freestanding/string.h": "893d3290c17fb201ee7b93a6e5fab20abdfb88f6b3cb8ae82ce419167cc0d169",
+    "packed-simulator-de397/sim/freestanding/inttypes.h": "c99d8fe419f5d60f116f2703cef920c88c2641baf0afebe13beeff8b52b7f1d0",
+    "packed-simulator-de397/packed_identity.py": "1ac063efdda46af531e8b64b474bbd0e85b8bf1db4b69025cae8de9304202dee",
+    "packed-simulator-de397/sim/sim_identity.h": "c5886a0ecb27c76e253af7bdc8d6806c2ca594079537057822c1ec5667474a0d",
+    "packed-simulator-de398/core/packed_fs.c": "893edc1bf1a3858293b07cfef46f33505301f984a4c323535fefea349ad54bb6",
+    "packed-simulator-de398/core/packed_fs.h": "5faf4a60c668e6188e23fe4a5b1b735e18c5dff8cfb8be32cd834248f38a82ef",
+    "packed-simulator-de398/littlefs/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+    "packed-simulator-de398/littlefs/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+    "packed-simulator-de398/littlefs/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+    "packed-simulator-de398/littlefs/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3",
+    "packed-simulator-de398/sim/capacity_simulator.c": "64e01259a25dd1a03e03a9764edb3f3125b69bfe88b3b02ee6039a09a4fa4679",
+    "packed-simulator-de398/sim/minilib.c": "f077daf9974d26eb268789c3a7f84c0b2c605669805aa92899e53d8929012e27",
+    "packed-simulator-de398/sim/freestanding/string.h": "893d3290c17fb201ee7b93a6e5fab20abdfb88f6b3cb8ae82ce419167cc0d169",
+    "packed-simulator-de398/sim/freestanding/inttypes.h": "c99d8fe419f5d60f116f2703cef920c88c2641baf0afebe13beeff8b52b7f1d0",
+    "packed-simulator-de398/packed_identity.py": "1ac063efdda46af531e8b64b474bbd0e85b8bf1db4b69025cae8de9304202dee",
+    "packed-simulator-de398/sim/sim_identity.h": "3fd43a5a3efc2cfbc55ccdfd625c4cde340f796f03fbe5a19a9d8a5300fc95ce"
+  },
+  "sourcesAfter": {
+    "harness": "73bff4818fa6619e3deedbbda848cfd71ec90bc2cec5894a57ffde086f9ebfc4",
+    "fixture": "0a03f00e8eace67596347265c5e8a6b7c49006b0cf4bb65843aabb633ca944eb",
+    "packed-simulator-de397/core/packed_fs.c": "123fdef17c2c42d0d7374db931c7e738e44584fbd8bb2fc2953a7454033462a4",
+    "packed-simulator-de397/core/packed_fs.h": "a3781e3e8e59a10aef7781dddc6b8129fe0f97f89d34798d30e36d24f6b4be58",
+    "packed-simulator-de397/littlefs/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+    "packed-simulator-de397/littlefs/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+    "packed-simulator-de397/littlefs/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+    "packed-simulator-de397/littlefs/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3",
+    "packed-simulator-de397/sim/capacity_simulator.c": "64e01259a25dd1a03e03a9764edb3f3125b69bfe88b3b02ee6039a09a4fa4679",
+    "packed-simulator-de397/sim/minilib.c": "f077daf9974d26eb268789c3a7f84c0b2c605669805aa92899e53d8929012e27",
+    "packed-simulator-de397/sim/freestanding/string.h": "893d3290c17fb201ee7b93a6e5fab20abdfb88f6b3cb8ae82ce419167cc0d169",
+    "packed-simulator-de397/sim/freestanding/inttypes.h": "c99d8fe419f5d60f116f2703cef920c88c2641baf0afebe13beeff8b52b7f1d0",
+    "packed-simulator-de397/packed_identity.py": "1ac063efdda46af531e8b64b474bbd0e85b8bf1db4b69025cae8de9304202dee",
+    "packed-simulator-de397/sim/sim_identity.h": "c5886a0ecb27c76e253af7bdc8d6806c2ca594079537057822c1ec5667474a0d",
+    "packed-simulator-de398/core/packed_fs.c": "893edc1bf1a3858293b07cfef46f33505301f984a4c323535fefea349ad54bb6",
+    "packed-simulator-de398/core/packed_fs.h": "5faf4a60c668e6188e23fe4a5b1b735e18c5dff8cfb8be32cd834248f38a82ef",
+    "packed-simulator-de398/littlefs/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+    "packed-simulator-de398/littlefs/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+    "packed-simulator-de398/littlefs/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+    "packed-simulator-de398/littlefs/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3",
+    "packed-simulator-de398/sim/capacity_simulator.c": "64e01259a25dd1a03e03a9764edb3f3125b69bfe88b3b02ee6039a09a4fa4679",
+    "packed-simulator-de398/sim/minilib.c": "f077daf9974d26eb268789c3a7f84c0b2c605669805aa92899e53d8929012e27",
+    "packed-simulator-de398/sim/freestanding/string.h": "893d3290c17fb201ee7b93a6e5fab20abdfb88f6b3cb8ae82ce419167cc0d169",
+    "packed-simulator-de398/sim/freestanding/inttypes.h": "c99d8fe419f5d60f116f2703cef920c88c2641baf0afebe13beeff8b52b7f1d0",
+    "packed-simulator-de398/packed_identity.py": "1ac063efdda46af531e8b64b474bbd0e85b8bf1db4b69025cae8de9304202dee",
+    "packed-simulator-de398/sim/sim_identity.h": "3fd43a5a3efc2cfbc55ccdfd625c4cde340f796f03fbe5a19a9d8a5300fc95ce"
+  },
+  "builds": [
+    {
+      "profile": "old",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-DLFS_NO_ASSERT",
+        "-DLFS_NO_DEBUG",
+        "-DLFS_NO_ERROR",
+        "-DLFS_NO_MALLOC",
+        "-DLFS_NO_WARN",
+        "-I/workspace/scratch/0af425ec2cbb/app671_web/web/third-party/packed-simulator-de397/core",
+        "-I/workspace/scratch/0af425ec2cbb/app671_web/web/third-party/packed-simulator-de397/littlefs",
+        "/workspace/scratch/0af425ec2cbb/app671_web/web/tests/fixtures/pfs-compat-host.c",
+        "/workspace/scratch/0af425ec2cbb/app671_web/web/third-party/packed-simulator-de397/core/packed_fs.c",
+        "/workspace/scratch/0af425ec2cbb/app671_web/web/third-party/packed-simulator-de397/littlefs/lfs.c",
+        "/workspace/scratch/0af425ec2cbb/app671_web/web/third-party/packed-simulator-de397/littlefs/lfs_util.c",
+        "-o",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/old.exe"
+      ],
+      "exitCode": 0,
+      "log": "old-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "profile": "new",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-DLFS_NO_ASSERT",
+        "-DLFS_NO_DEBUG",
+        "-DLFS_NO_ERROR",
+        "-DLFS_NO_MALLOC",
+        "-DLFS_NO_WARN",
+        "-I/workspace/scratch/0af425ec2cbb/app671_web/web/third-party/packed-simulator-de398/core",
+        "-I/workspace/scratch/0af425ec2cbb/app671_web/web/third-party/packed-simulator-de398/littlefs",
+        "/workspace/scratch/0af425ec2cbb/app671_web/web/tests/fixtures/pfs-compat-host.c",
+        "/workspace/scratch/0af425ec2cbb/app671_web/web/third-party/packed-simulator-de398/core/packed_fs.c",
+        "/workspace/scratch/0af425ec2cbb/app671_web/web/third-party/packed-simulator-de398/littlefs/lfs.c",
+        "/workspace/scratch/0af425ec2cbb/app671_web/web/third-party/packed-simulator-de398/littlefs/lfs_util.c",
+        "-o",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/new.exe"
+      ],
+      "exitCode": 0,
+      "log": "new-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "cases": [
+    {
+      "engine": "old",
+      "action": "create",
+      "phase": 0,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/old.exe",
+        "create",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-disk.bin",
+        "0"
+      ],
+      "exitCode": 0,
+      "log": "1-old-create.log",
+      "logSha256": "31c70f23f1c109406f56cc9e89e0dcba906ceabab7ad7ca6c2a6222ee8bf86f1",
+      "imageBeforeSha256": null,
+      "imageAfterSha256": "b4751e19f5d6e00526668a82d21e78d44c272a78249bfed4eefc5ddbd72b7af6",
+      "result": {
+        "passed": true,
+        "phase": 0,
+        "expectedRows": 1208,
+        "reads": 3721660,
+        "programs": 97693,
+        "erases": 7876,
+        "readonly": false
+      }
+    },
+    {
+      "engine": "new",
+      "action": "verify",
+      "phase": 0,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/new.exe",
+        "verify",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-disk.bin",
+        "0"
+      ],
+      "exitCode": 0,
+      "log": "2-new-verify.log",
+      "logSha256": "dc442e8c51281d9874309f1f3468e1ff8783f96cfcbfff093aef430d43f579a1",
+      "imageBeforeSha256": "b4751e19f5d6e00526668a82d21e78d44c272a78249bfed4eefc5ddbd72b7af6",
+      "imageAfterSha256": "b4751e19f5d6e00526668a82d21e78d44c272a78249bfed4eefc5ddbd72b7af6",
+      "result": {
+        "passed": true,
+        "phase": 0,
+        "expectedRows": 1208,
+        "reads": 427304,
+        "programs": 0,
+        "erases": 0,
+        "readonly": true
+      }
+    },
+    {
+      "engine": "new",
+      "action": "modify",
+      "phase": 1,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/new.exe",
+        "modify",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-disk.bin",
+        "1"
+      ],
+      "exitCode": 0,
+      "log": "3-new-modify.log",
+      "logSha256": "ef26e91d1c8d67972e6197b2236ef323fb07bd20119a5ca204b0034e34e23510",
+      "imageBeforeSha256": "b4751e19f5d6e00526668a82d21e78d44c272a78249bfed4eefc5ddbd72b7af6",
+      "imageAfterSha256": "7649c7ea731324528999e76cb6d79eb9782b204fd3de63717f4bee7dd56932db",
+      "result": {
+        "passed": true,
+        "phase": 1,
+        "expectedRows": 1209,
+        "reads": 703363,
+        "programs": 455,
+        "erases": 33,
+        "readonly": false
+      }
+    },
+    {
+      "engine": "old",
+      "action": "verify",
+      "phase": 1,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/old.exe",
+        "verify",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-disk.bin",
+        "1"
+      ],
+      "exitCode": 0,
+      "log": "4-old-verify.log",
+      "logSha256": "59bda24d0bb137222f448ea01a5cc2e1ff9313ae0e8cfbef64c31e2dae91ce4f",
+      "imageBeforeSha256": "7649c7ea731324528999e76cb6d79eb9782b204fd3de63717f4bee7dd56932db",
+      "imageAfterSha256": "7649c7ea731324528999e76cb6d79eb9782b204fd3de63717f4bee7dd56932db",
+      "result": {
+        "passed": true,
+        "phase": 1,
+        "expectedRows": 1209,
+        "reads": 451819,
+        "programs": 0,
+        "erases": 0,
+        "readonly": true
+      }
+    },
+    {
+      "engine": "old",
+      "action": "modify",
+      "phase": 2,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/old.exe",
+        "modify",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-disk.bin",
+        "2"
+      ],
+      "exitCode": 0,
+      "log": "5-old-modify.log",
+      "logSha256": "77fc0826469ec0f91abe894f44555aa05581b932e0781d0c8f44b718d25f32b1",
+      "imageBeforeSha256": "7649c7ea731324528999e76cb6d79eb9782b204fd3de63717f4bee7dd56932db",
+      "imageAfterSha256": "5802b215942d075491b03390d790e46c56e9348bae3e3150231bae101f333904",
+      "result": {
+        "passed": true,
+        "phase": 2,
+        "expectedRows": 1209,
+        "reads": 594076,
+        "programs": 70,
+        "erases": 5,
+        "readonly": false
+      }
+    },
+    {
+      "engine": "new",
+      "action": "verify",
+      "phase": 2,
+      "command": [
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/new.exe",
+        "verify",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-rows.tsv",
+        "/workspace/scratch/0af425ec2cbb/app671_validation/pfs_cross/synthetic-disk.bin",
+        "2"
+      ],
+      "exitCode": 0,
+      "log": "6-new-verify.log",
+      "logSha256": "502cb94727a615467b8823f83c854296a2bfabd47f91360b55d5caa2d9928583",
+      "imageBeforeSha256": "5802b215942d075491b03390d790e46c56e9348bae3e3150231bae101f333904",
+      "imageAfterSha256": "5802b215942d075491b03390d790e46c56e9348bae3e3150231bae101f333904",
+      "result": {
+        "passed": true,
+        "phase": 2,
+        "expectedRows": 1209,
+        "reads": 362482,
+        "programs": 0,
+        "erases": 0,
+        "readonly": true
+      }
+    }
+  ],
+  "filesInitially": 1131,
+  "directoriesInitially": 77,
+  "verification": "Every active path, kind, size, content byte, raw128 byte, import identity and complete namespace at each phase, including remount.",
+  "mutations": [
+    "replace existing content and raw128",
+    "rename existing file",
+    "remove existing file",
+    "add8193-byte file",
+    "add empty file",
+    "old-engine replacement after new-engine writes"
+  ],
+  "limits": [
+    "Host synthetic flash only. Not a device readback, timing benchmark or proof against every power interruption.",
+    "Read-only stages perform no flash programming/erase. Writable phases exercise normal APIs and GC, not injected flash failures."
+  ]
+}

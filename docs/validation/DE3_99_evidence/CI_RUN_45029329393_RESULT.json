@@ -1,0 +1,672 @@
+{
+  "observedUTC": "2026-11-22T13:55:34.321162+00:00",
+  "repository": "bluecyber81/pixl.js",
+  "runId": 45029329393,
+  "attempt": 1,
+  "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393",
+  "head": "33bcbef30db52493b8d3a63cfc064e5bcb277b4f",
+  "tree": "f0b2b735657a027612d702dd258af3124b994197",
+  "branch": "release/lcd-de399-app672",
+  "actualConclusion": "failure",
+  "githubActionsExecuted": true,
+  "jobs": [
+    {
+      "id": 137229201119,
+      "name": "z19 source-bound build and ARM tests",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 45029329393,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:1:1"
+        },
+        {
+          "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:2:1"
+        },
+        {
+          "name": "Verify the Z19 test input hashes",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:3:1"
+        },
+        {
+          "name": "Fetch the pinned SDK and compile the bound unsigned bootloader",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:4:1"
+        },
+        {
+          "name": "Prepare the pinned ARM emulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:5:1"
+        },
+        {
+          "name": "Run source-bound reset, session, LCD and ARM crypto tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:6:1"
+        },
+        {
+          "name": "Check Z19 runner and all frozen App662 and App654 stream-mode tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:7:1"
+        },
+        {
+          "name": "Resume the hash-bound current LCD release and pinned App654 on Z19",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:8:1"
+        },
+        {
+          "name": "Archive bootloader evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:9:1"
+        },
+        {
+          "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:18:1"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:19:1"
+        }
+      ],
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119"
+    },
+    {
+      "id": 137229201422,
+      "name": "z17 source-bound build and ARM tests",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 45029329393,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422#step:1:1"
+        },
+        {
+          "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422#step:2:1"
+        },
+        {
+          "name": "Verify the Z19 test input hashes",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 3,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422#step:3:1"
+        },
+        {
+          "name": "Fetch the pinned SDK and compile the bound unsigned bootloader",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422#step:4:1"
+        },
+        {
+          "name": "Prepare the pinned ARM emulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422#step:5:1"
+        },
+        {
+          "name": "Run source-bound reset, session, LCD and ARM crypto tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422#step:6:1"
+        },
+        {
+          "name": "Check Z19 runner and all frozen App662 and App654 stream-mode tests",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422#step:7:1"
+        },
+        {
+          "name": "Resume the hash-bound current LCD release and pinned App654 on Z19",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422#step:8:1"
+        },
+        {
+          "name": "Archive bootloader evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422#step:9:1"
+        },
+        {
+          "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422#step:18:1"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422#step:19:1"
+        }
+      ],
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201422"
+    },
+    {
+      "id": 137229201447,
+      "name": "LCD application build",
+      "status": "completed",
+      "conclusion": "failure",
+      "run_id": 45029329393,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:1:1"
+        },
+        {
+          "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:2:1"
+        },
+        {
+          "name": "Determine the required application check",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:3:1"
+        },
+        {
+          "name": "Fetch pinned external SDK and ARM toolchain",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:4:1"
+        },
+        {
+          "name": "Exercise linker budget gates",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:5:1"
+        },
+        {
+          "name": "Compile unsigned LCD and inspect actual flash and RAM reserves",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:6:1"
+        },
+        {
+          "name": "Install the pinned Cortex-M4 emulator and SDK test inputs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:7:1"
+        },
+        {
+          "name": "Verify the signed package against the compiled application and bound bootloader key",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:8:1"
+        },
+        {
+          "name": "Resume the verified signed LCD application on the bound Z21 data path",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:9:1"
+        },
+        {
+          "name": "Verify both Android DFU phases against the release packages",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:10:1"
+        },
+        {
+          "name": "Exercise every DE2 and DE3 host suite",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 11,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:11:1"
+        },
+        {
+          "name": "Exercise stack, menu, crypto, flash ID and LCD on the linked Cortex-M4 ELF",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:12:1"
+        },
+        {
+          "name": "Archive the actual build and test results",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:13:1"
+        },
+        {
+          "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:26:1"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:27:1"
+        }
+      ],
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447"
+    },
+    {
+      "id": 137229201477,
+      "name": "z21 source-bound build and DFU recovery tests",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 45029329393,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201477#step:1:1"
+        },
+        {
+          "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201477#step:2:1"
+        },
+        {
+          "name": "Prepare the bound bootloader sources and reproduce the pinned LCD image",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201477#step:3:1"
+        },
+        {
+          "name": "Run the native and ARM checks and resume the signed package",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201477#step:4:1"
+        },
+        {
+          "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201477#step:5:1"
+        },
+        {
+          "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201477#step:10:1"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201477#step:11:1"
+        }
+      ],
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201477"
+    },
+    {
+      "id": 137229201522,
+      "name": "z20 source-bound build and DFU recovery tests",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 45029329393,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201522#step:1:1"
+        },
+        {
+          "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201522#step:2:1"
+        },
+        {
+          "name": "Prepare the bound bootloader sources and reproduce the pinned LCD image",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201522#step:3:1"
+        },
+        {
+          "name": "Run the native and ARM checks and resume the signed package",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201522#step:4:1"
+        },
+        {
+          "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201522#step:5:1"
+        },
+        {
+          "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201522#step:10:1"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201522#step:11:1"
+        }
+      ],
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201522"
+    },
+    {
+      "id": 137229202675,
+      "name": "BL8 corresponding-source build",
+      "status": "completed",
+      "conclusion": "skipped",
+      "run_id": 45029329393,
+      "logs_url": null,
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229202675"
+    }
+  ],
+  "application": {
+    "jobId": 137229201447,
+    "buildPassed": true,
+    "buildAndBudgetStep": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:6:1",
+    "signaturePassed": true,
+    "signatureStep": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:8:1",
+    "signatureEvidence": {
+      "name": "Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+      "sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
+      "bytes": 364877,
+      "images": [
+        {
+          "type": "application",
+          "firmware_type": 0,
+          "counter": 672,
+          "sd_req": [
+            294
+          ],
+          "bytes": 364276,
+          "sha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+          "signature_verified": true,
+          "sd_size": 0,
+          "bl_size": 0,
+          "app_size": 364276,
+          "boot_validation": "GENERATED_CRC",
+          "negative_controls_passed": 3
+        }
+      ],
+      "identicalWebPackage": "web/public/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+      "publicKeySource": "bootloader-z19/fw/bootloader/src/dfu_public_key.c",
+      "publicKeySourceSha256": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3"
+    },
+    "sourceId": "1a60ea8e4804a958d2e0e4415a5a7a9643eca6abce788d7394e2155976da1c0d",
+    "binSha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+    "hexSha256": "8054f73280b26b8cc0a4dc10ebc75a393339014ed4786ba66fd1593fab6b33e5",
+    "downloadedCiBinAndHexByteEqualToLocalQualifiedBuild": true,
+    "hostSuites": {
+      "executed": 187,
+      "passed": 186,
+      "failed": [
+        "de3/test_ble_conn_preferences.py"
+      ],
+      "step": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:11:1"
+    },
+    "elfStep": {
+      "number": 12,
+      "conclusion": "skipped-after-host-failure",
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:12:1"
+    },
+    "limits": "Eight linked-ELF commands in this CI step were not reached; the earlier local 13-group ELF qualification is separate."
+  },
+  "z19App672Resume": {
+    "jobId": 137229201119,
+    "stepNumber": 8,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201119#step:8:1",
+    "artifactId": 14756848849,
+    "artifactMember": "_checks/current-release-resume.json",
+    "passed": true,
+    "defaultLeakGatePreserved": true,
+    "positiveControlPassed": true,
+    "leakDetectionEnabled": true,
+    "leakDetectionConfirmed": true,
+    "sanitizerOptions": {
+      "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+    },
+    "payloadSha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+    "payloadBytes": 364276,
+    "result": {
+      "payloadBytes": 364276,
+      "linkCutOffset": 4136,
+      "reportedResumeOffset": 0,
+      "packetReceipts": 18439,
+      "objectExecutes": 90,
+      "finalCrc32": 4236643304,
+      "passed": true,
+      "status": "PASS",
+      "sanitizerControl": "PASS",
+      "leakDetectionEnabled": true,
+      "leakDetectionConfirmed": true,
+      "appSha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+      "inputKind": "local-test-binary",
+      "deviceAccess": false,
+      "sanitizerOptions": {
+        "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1",
+        "UBSAN_OPTIONS": "halt_on_error=1",
+        "LSAN_OPTIONS": "detect_leaks=1:exitcode=23"
+      },
+      "boundFixtureSha256": "2f63031edcb468f5bd4d6552b457bf23b38bf97aa110446de18e776821963ed2",
+      "scope": "Host GCC C model: Z19 data CREATE/WRITE/CRC/EXECUTE, modeled BLE disconnect and settings restoration after accepted init.",
+      "limitations": [
+        "Signature/activation validator, flash hardware and S112 are modeled here.",
+        "No physical reset, MBR boot copy, or actual radio connection."
+      ]
+    }
+  },
+  "z21App672Resume": {
+    "jobId": 137229201447,
+    "stepNumber": 9,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201447#step:9:1",
+    "artifactId": 14757341731,
+    "artifactMember": "Z21_PREVIEW_RESUME.json",
+    "passed": true,
+    "defaultLeakGatePreserved": true,
+    "positiveControlPassed": true,
+    "sanitizers": [
+      "ASan",
+      "UBSan",
+      "LSan-positive-control"
+    ],
+    "sourceContract": "Prepared bound tests/check_resume.py forces detect_leaks=1 and calls verify_sanitizer_environment(env, True, stage) before executing the native model; no no-leak option used.",
+    "result": {
+      "payloadBytes": 364276,
+      "cutOffsets": [
+        40,
+        180264,
+        360488
+      ],
+      "resumeOffsets": [
+        0,
+        131072,
+        327680
+      ],
+      "checkpointCount": 5,
+      "additionalPageErases": 10,
+      "finalCrc32": 4236643304,
+      "passed": true,
+      "sha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+      "cutKinds": [
+        "link",
+        "link",
+        "cold-restart"
+      ],
+      "duplicateExecuteExtraErases": 0,
+      "modeledLinkCutsDuringCheckpoint": 5,
+      "modeledCheckpointPowerCuts": 455,
+      "modeledAdmissionOrCompletionFailures": 8,
+      "sanitizers": [
+        "ASan",
+        "UBSan",
+        "LSan-positive-control"
+      ],
+      "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access."
+    }
+  },
+  "z21HistoricalApp662Resume": {
+    "jobId": 137229201477,
+    "stepNumber": 4,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45029329393/job/137229201477#step:4:1",
+    "artifactId": 14757087528,
+    "artifactMember": "_checks/checkpoint-resume.json",
+    "passed": true,
+    "result": {
+      "payloadBytes": 363752,
+      "cutOffsets": [
+        40,
+        180264,
+        360488
+      ],
+      "resumeOffsets": [
+        0,
+        131072,
+        327680
+      ],
+      "checkpointCount": 5,
+      "additionalPageErases": 10,
+      "finalCrc32": 503301183,
+      "passed": true,
+      "sha256": "401e9517ad3c199b48122caadcec86a72e15bb3ada491cea1b3d1342b34983ec",
+      "cutKinds": [
+        "link",
+        "link",
+        "cold-restart"
+      ],
+      "duplicateExecuteExtraErases": 0,
+      "modeledLinkCutsDuringCheckpoint": 5,
+      "modeledCheckpointPowerCuts": 455,
+      "modeledAdmissionOrCompletionFailures": 8,
+      "sanitizers": [
+        "ASan",
+        "UBSan",
+        "LSan-positive-control"
+      ],
+      "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access."
+    }
+  },
+  "failure": {
+    "classification": "CI SDK test-input provisioning",
+    "firmwareDefectFound": false,
+    "script": "de3/test_ble_conn_preferences.py",
+    "missingPath": "components/ble/common/ble_conn_params.c",
+    "failure": "FileNotFoundError before fixture compilation; the CI SDK tar omitted this declared input.",
+    "excerpt": "application_job137229201447_failure_excerpt.log",
+    "patch": "CI_SDK_INPUT_FIX.patch",
+    "patchSha256": "95c159f90d95ecf85cda7d4c3e1514fd897a7cfd2e95c45645f32c04d9ce8766",
+    "patchLinesAdded": 1,
+    "patchLinesRemoved": 0,
+    "rootWorktreeMutatedByThisAgent": false,
+    "SDKInventory": "CI_SDK_INPUT_INVENTORY.json",
+    "externalSdkConsumers": 6,
+    "requiredSdkInputsMissingAfterPatch": [],
+    "exactReducedSdkFailedSuiteRerunPassed": true,
+    "fullLocalSuiteRepeated": false
+  },
+  "artifacts": [
+    {
+      "id": 14756848849,
+      "name": "app672-ci-z19-evidence.zip",
+      "sha256": "ad2ac256d517944166a5dd5cff7fd2ddb7630b0e155b63500e6551e7bdd550d7",
+      "matchesActionsDigest": true,
+      "url": "https://api.github.com/repos/bluecyber81/pixl.js/actions/artifacts/14756848849",
+      "localPath": "app672-ci-z19-evidence.zip"
+    },
+    {
+      "id": 14757341731,
+      "name": "app672-ci-application-evidence.zip",
+      "sha256": "70e614852b93025304cc51a6d810f72a59bf42d7c8af5152d7f805aca2106d34",
+      "matchesActionsDigest": true,
+      "url": "https://api.github.com/repos/bluecyber81/pixl.js/actions/artifacts/14757341731",
+      "localPath": "app672-ci-application-evidence.zip"
+    },
+    {
+      "id": 14757087528,
+      "name": "app672-ci-z21-evidence.zip",
+      "sha256": "ddcc00b1196c196e374d18ee3bf012290186fec996c53335c35160cc31b04733",
+      "matchesActionsDigest": true,
+      "url": "https://api.github.com/repos/bluecyber81/pixl.js/actions/artifacts/14757087528",
+      "localPath": "app672-ci-z21-evidence.zip"
+    }
+  ],
+  "limitations": [
+    "No physical device, RF, battery-lifetime or measured hardware-stack acceptance.",
+    "Local default-LSan execution remains blocked under ptrace; these successful GitHub LSan proofs are distinct independent executions.",
+    "This actual CI run is failed overall; its valid build/signature/Z19/Z21 proofs remain explicitly attributed.",
+    "Root will apply the one-line SDK-input patch and publish a follow-up commit; a subsequent actual CI run is required to close the public CI gate."
+  ]
+}

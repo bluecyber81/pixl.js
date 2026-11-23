@@ -41,7 +41,8 @@ export function figureUsage(id, data, locale = 'de_DE') {
     const group = groups.get(association.groupId);
     const note = notes.get(association.noteId);
     const label = group.labelPath.join(' › ');
-    const attribution = { groupId: group.id, label, sourceUrl: association.sourceUrl || `${linkSource.referenceUrl}#L${association.sourceLine}` };
+    const attribution = { groupId: group.id, label, sourceUrl: association.sourceUrl || `${linkSource.referenceUrl}#L${association.sourceLine}`,
+      ...(association.webSupplement ? { webSupplement: true, platform: association.platform } : {}) };
     if (association.sourceUrl && !note) {
       const guide = label === 'Kirby Air Riders' && airRidersGuide.ids.includes(normalized) ? airRidersGuide : null;
       return { ...attribution, officialAssociation: true, text: guide?.[de ? 'de' : 'en'] ?? null,
@@ -61,6 +62,7 @@ export function figureUsage(id, data, locale = 'de_DE') {
       original: translated ? note.en : null,
       language: translated ? 'de' : note?.en ? 'en' : null,
       translated,
+      editorialNote: note?.translation === 'editorial-from-primary-source',
     };
   });
 }

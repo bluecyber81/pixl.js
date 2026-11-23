@@ -25,6 +25,12 @@ void mui_input_context_changed(void) {
     input_context = next ? next : 1u;
 }
 
+void mui_input_modal_boundary(void) {
+    mui_input_context_changed();
+    /* Remote keys carry the activity generation sampled in the receive IRQ. */
+    ble_remote_local_activity();
+}
+
 void mui_input_tag_current_event(mui_event_t *event) {
     if (event) event->arg_ptr = mui_input_context_token(input_context);
 }

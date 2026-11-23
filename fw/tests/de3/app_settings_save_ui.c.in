@@ -1,0 +1,191 @@
+/* Host dependencies for actual app callbacks, scene dispatcher and byte-level
+ * settings checkpoints. Persistence outcomes and visual containers are modeled;
+ * production callback/dispatcher/checkpoint functions are copied unchanged. */
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
+#define NRF_SUCCESS 0
+#define VFS_MAX_PATH_LEN 64
+static const char *fixture_text(const char *name) { return name; }
+#define _T(x) fixture_text(#x)
+/* Use short labels for formatting-only dependencies; ON/OFF remain distinct. */
+static const char *fixture_language(const char *name) {
+    return !strcmp(name, "_L_ON_F") || !strcmp(name, "_L_OFF_F") ? name : "Label";
+}
+#define getLangString(x) fixture_language(#x)
+#define string_get_cstr(x) (x)
+#define MUI_LIST_VIEW_EVENT_SELECTED 0
+#define MUI_LIST_VIEW_EVENT_LONG_SELECTED 1
+#define MUI_MSG_BOX_EVENT_SELECT_LEFT 0
+#define MUI_MSG_BOX_EVENT_SELECT_CENTER 1
+#define MUI_MSG_BOX_EVENT_SELECT_RIGHT 2
+#define MUI_TEXT_INPUT_EVENT_CONFIRMED 0
+#define AMIIBO_VIEW_ID_LIST 10
+#define AMIIBO_VIEW_ID_MSG_BOX 11
+#define AMIIBO_VIEW_ID_DETAIL 12
+#define AMIIBO_VIEW_ID_INPUT 13
+#define AMIIDB_VIEW_ID_LIST 20
+#define AMIIDB_VIEW_ID_MSG_BOX 21
+#define AMIIDB_VIEW_ID_DETAIL 22
+#define AMIIBOLINK_VIEW_ID_LIST 30
+#define AMIIBOLINK_VIEW_ID_MSG_BOX 31
+#define AMIIBO_SCENE_FILE_BROWSER 40
+#define AMIIDB_SCENE_FAV_SELECT 41
+#define AMIIDB_SCENE_DATA_SELECT 42
+#define AMIIDB_SCENE_SETTINGS_SLOT_NUM 2
+#define AMIIDB_SCENE_DATA_LIST 3
+#define BLE_AMIIBOLINK_MODE_RANDOM 1
+#define BLE_AMIIBOLINK_MODE_RANDOM_AUTO_GEN 2
+#define BLE_AMIIBOLINK_MODE_CYCLE 3
+#define BLE_AMIIBOLINK_MODE_NTAG 4
+#define LANGUAGE_DE_DE 0
+#define getLanguage() LANGUAGE_DE_DE
+#define MINI_APP_ID_AMIIBO 50
+#define AMIIDB_SORT_COLUMN_DEFAULT 0
+#define ICON_EXIT 1
+#define ICON_SLOT 2
+#define ICON_SETTINGS 3
+#define ICON_KEY 4
+#define ICON_FAVORITE 5
+#define ICON_DATA 6
+#define ICON_MODE 0xe1ed
+#define ICON_BACK 0xe069
+
+typedef int mui_msg_box_event_t;
+typedef int mui_list_view_event_t;
+typedef int mui_text_input_event_t;
+typedef int amiibo_view_event_t;
+typedef int amiibo_detail_view_event_t;
+typedef int ble_amiibolink_mode_t;
+typedef int ret_code_t;
+typedef struct mui_msg_box_s mui_msg_box_t;
+typedef struct mui_list_view_s mui_list_view_t;
+typedef struct mui_list_item_s mui_list_item_t;
+typedef void (*mui_msg_box_event_cb_t)(mui_msg_box_event_t, mui_msg_box_t *);
+typedef void (*mui_list_view_selected_cb)(mui_list_view_event_t, mui_list_view_t *, mui_list_item_t *);
+struct mui_msg_box_s {
+    void *user_data;
+    mui_msg_box_event_cb_t event_cb;
+    const char *header, *message, *left, *center, *right;
+    unsigned focus;
+};
+struct mui_list_view_s { void *user_data; mui_list_view_selected_cb selected_cb; unsigned rows; };
+struct mui_list_item_s { int icon; void *user_data; char sub_text[64]; };
+typedef struct { void *user_data; } mui_text_input_t;
+typedef struct { unsigned info_page, note_offset, note_total; } amiibo_detail_view_t;
+typedef amiibo_detail_view_t amiibo_view_t;
+typedef struct { unsigned char data[100]; bool read_only; } ntag_t;
+typedef struct { int dummy; } db_amiibo_t;
+typedef struct {
+    mui_list_view_t *p_list_view;
+    mui_msg_box_t *p_msg_box;
+    mui_text_input_t *p_text_input;
+    void *p_toast_view, *p_view_dispatcher, *p_scene_dispatcher;
+    amiibo_detail_view_t *p_amiibo_detail_view;
+    amiibo_view_t *p_amiibo_view;
+    ntag_t ntag;
+    bool focus_detail_file;
+    unsigned cur_slot_index, prev_scene_id;
+    bool temporary_tag_changed;
+    const char *current_file;
+    int amiibolink_mode;
+} test_app_t;
+typedef test_app_t app_amiibo_t;
+typedef test_app_t app_amiidb_t;
+typedef test_app_t app_amiibolink_t;
+typedef struct {
+    bool auto_gen_amiibo, qrcode_enabled;
+    uint8_t amiibolink_mode, amiidb_sort_column, amiidb_data_slot_num;
+    uint8_t unrelated;
+} settings_data_t;
+/* SETTINGS_CHECKPOINT_TYPES */
+static settings_data_t ram, disk, discard_base;
+#define m_settings_data ram
+static uint32_t save_generation, edited_fields;
+static void (*m_recovered)(const settings_data_t *previous);
+/* SETTINGS_CHECKPOINT_FUNCTIONS */
+static int save_result, saves, previous, next_scene, shown, toasts, warnings, saved_logs, clears, no_key;
+static bool key_loaded = true, commit_before_error;
+static amiibo_detail_view_t detail_view;
+static settings_data_t *settings_get_data(void) { return &ram; }
+#define SETTINGS_FIELD_MASK(field) (UINT32_C(1) << offsetof(settings_data_t, field))
+#define SETTINGS_TOGGLE(field) settings_toggle_byte(offsetof(settings_data_t, field))
+#define SETTINGS_SET(field, value) settings_set_byte(offsetof(settings_data_t, field), (value))
+#define SETTINGS_CHECKPOINT(field, checkpoint) settings_checkpoint_byte(offsetof(settings_data_t, field), (checkpoint))
+#define SETTINGS_DISCARD(field, checkpoint) settings_discard_byte(offsetof(settings_data_t, field), (checkpoint))
+static int settings_save(void) {
+    saves++;
+    if (!save_result || commit_before_error) disk = ram;
+    if (!save_result) { discard_base = ram; save_generation++; edited_fields = 0; }
+    return save_result;
+}
+#define NRF_LOG_INFO(...) ((void)saved_logs++)
+#define NRF_LOG_WARNING(...) ((void)warnings++)
+static void mui_msg_box_set_header(mui_msg_box_t *box, const char *s) { box->header = s; }
+static void mui_msg_box_set_message(mui_msg_box_t *box, const char *s) { box->message = s; }
+static void mui_msg_box_set_btn_text(mui_msg_box_t *box, const char *left, const char *center, const char *right) { box->left = left; box->center = center; box->right = right; }
+static void mui_msg_box_set_btn_focus(mui_msg_box_t *box, unsigned focus) { box->focus = focus; }
+static void mui_msg_box_set_event_cb(mui_msg_box_t *box, mui_msg_box_event_cb_t cb) { box->event_cb = cb; }
+static void mui_view_dispatcher_switch_to_view(void *d, unsigned view) { (void)d; shown = view; }
+static void mui_toast_view_show(void *toast, const char *s) { (void)toast; assert(s); toasts++; }
+static void mui_list_view_item_set_sub_text(mui_list_item_t *item, const char *s) { snprintf(item->sub_text, sizeof(item->sub_text), "%s", s); }
+static void mui_list_view_set_selected_cb(mui_list_view_t *list, mui_list_view_selected_cb cb) { list->selected_cb = cb; }
+static void mui_list_view_set_user_data(mui_list_view_t *list, void *p) { list->user_data = p; }
+static void mui_list_view_clear_items(mui_list_view_t *list) { list->rows = 0; clears++; }
+static void mui_list_view_add_item(mui_list_view_t *list, int icon, const char *s, void *data) { (void)icon; (void)s; (void)data; list->rows++; }
+static void mui_list_view_add_item_ext(mui_list_view_t *list, int icon, const char *s, const char *sub, void *data) { (void)sub; mui_list_view_add_item(list, icon, s, data); }
+static bool amiibo_helper_is_key_loaded(void) { return key_loaded; }
+static void amiibo_scene_amiibo_detail_no_key_msg(app_amiibo_t *app) { (void)app; no_key++; }
+static void amiidb_scene_amiibo_detail_no_key_msg(app_amiidb_t *app) { (void)app; no_key++; }
+static uint32_t to_little_endian_int32(const void *p) { (void)p; return 0; }
+static const db_amiibo_t *get_amiibo_by_id(uint32_t head, uint32_t tail) { (void)head; (void)tail; return NULL; }
+static int amiibo_helper_rand_amiibo_uuid(ntag_t *tag) { (void)tag; return 0; }
+static bool ntag_emu_set_tag(ntag_t *tag) { (void)tag; return true; }
+static void ntag_store_get_uuid(ntag_t *tag, uint8_t uid[7]) { (void)tag; memset(uid, 0, 7); }
+static int amiibo_scene_amiibo_detail_set_readonly(app_amiibo_t *app, bool flag) { (void)app; (void)flag; return 0; }
+static int amiidb_api_slot_set_readonly(unsigned slot, bool flag) { (void)slot; (void)flag; return 0; }
+static void *mini_app_launcher(void) { return NULL; }
+static void mini_app_launcher_kill(void *launcher, unsigned app) { (void)launcher; (void)app; }
+static void mini_app_launcher_exit(void *launcher) { (void)launcher; }
+static void amiibo_scene_figure_info_back(int event, amiibo_detail_view_t *view) { (void)event; (void)view; }
+static void amiidb_scene_figure_info_back(int event, amiibo_view_t *view) { (void)event; (void)view; }
+static void amiibo_detail_view_set_event_cb(amiibo_detail_view_t *view, void (*cb)(int, amiibo_detail_view_t *)) { (void)view; (void)cb; }
+static void amiibo_view_set_event_cb(amiibo_view_t *view, void (*cb)(int, amiibo_view_t *)) { (void)view; (void)cb; }
+static void amiidb_scene_detail_back_to_list(app_amiidb_t *app) { (void)app; }
+static void mui_text_input_set_header(mui_text_input_t *input, const char *s) { (void)input; (void)s; }
+static void mui_text_input_set_input_text(mui_text_input_t *input, const char *s) { (void)input; (void)s; }
+static void mui_text_input_set_event_cb(mui_text_input_t *input, void (*cb)(int, mui_text_input_t *)) { (void)input; (void)cb; }
+static void amiibo_scene_amiibo_detail_menu_text_input_set_id_event_cb(int event, mui_text_input_t *input) { (void)event; (void)input; }
+static void amiibo_scene_amiibo_detail_delete_tag_confirmed(int event, mui_msg_box_t *box) { (void)event; (void)box; }
+static void *mui(void) { return NULL; }
+static void mui_show_memory_error(void *p) { (void)p; assert(false); }
+
+static void reset_fixture(test_app_t *app, mui_list_view_t *list, mui_msg_box_t *box, unsigned view) {
+    memset(&ram, 0, sizeof(ram)); disk = discard_base = ram;
+    save_generation = edited_fields = 0; m_recovered = NULL; commit_before_error = false;
+    memset(&detail_view, 0, sizeof(detail_view));
+    saves = previous = next_scene = toasts = warnings = saved_logs = clears = no_key = 0;
+    save_result = 0; key_loaded = true; shown = view;
+    memset(app, 0, sizeof(*app)); memset(list, 0, sizeof(*list)); memset(box, 0, sizeof(*box));
+    list->user_data = app; list->rows = 8; box->user_data = app;
+    app->p_list_view = list; app->p_msg_box = box;
+    app->p_amiibo_detail_view = app->p_amiibo_view = &detail_view;
+}
+static void check_save_error(mui_msg_box_t *box, unsigned view) {
+    assert(shown == (int)view && previous == 0 && box->event_cb);
+    assert(!strcmp(box->header, "DE3_SAVE_FAILED") && !strcmp(box->message, "DE3_SAVE_RAM_ONLY"));
+    assert(!strcmp(box->left, "DE3_SAVE_RETRY_ACTION"));
+    assert(!strcmp(box->center, "DE3_SAVE_DISCARD_ACTION"));
+    assert(!strcmp(box->right, "BACK") && box->focus == MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+}
+
+static void check_discard_question(mui_msg_box_t *box, unsigned view) {
+    assert(shown == (int)view && box->event_cb);
+    assert(!strcmp(box->message, "DE3_SAVE_DISCARD_ASK"));
+    assert(!strcmp(box->left, "DE3_SAVE_YES_SHORT") && !box->center);
+    assert(!strcmp(box->right, "DE3_SAVE_NO_SHORT") && box->focus == MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+}

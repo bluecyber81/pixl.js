@@ -37,20 +37,25 @@ def harness(mutant=None):
     for text, enumeration in ((main, 'settings_main_menu_t'), (sleep, 'settings_sleep_timeout_menu_t')):
         start = text.index('enum ' + enumeration)
         pieces.append(text[start:text.index('};', start) + 2])
-    pieces += [function(main, name) for name in ('settings_reset_default',
+    pieces.append(re.search(r'static const uint8_t timeout_seconds\[\] = \{[^;]+;', sleep).group())
+    pieces += [function(main[main.rfind('\nstatic void '+name+'('):], name) for name in ('settings_reset_default',
         'settings_scene_main_close_error', 'settings_scene_main_save_error',
-        'settings_scene_main_msg_box_reset_settings_cb', 'settings_scene_main_list_view_on_selected')]
+        'settings_scene_main_exit_error', 'settings_scene_main_request_exit', 'settings_scene_main_try_exit',
+        'settings_scene_main_exit_choice', 'settings_scene_main_msg_box_reset_settings_cb', 'settings_scene_main_list_view_on_selected')]
     # Skip the forward declaration when extracting the reload body.
     pieces.append(function(main[main.rfind('\nstatic void settings_scene_main_reload('):],
                            'settings_scene_main_reload'))
     pieces += [function(main, name) for name in ('settings_scene_main_on_enter', 'settings_scene_main_on_exit')]
     pieces += [function(sleep, name) for name in ('settings_scene_sleep_timeout_list_view_on_selected',
         'settings_scene_sleep_timeout_on_enter', 'settings_scene_sleep_timeout_on_exit')]
+    pieces.append(function((scene / 'settings_scene_app_management.c').read_text(),
+                           'settings_scene_app_management_list_view_on_selected'))
     pieces += [function(language, name) for name in ('settings_scene_language_list_view_on_selected',
         'settings_scene_language_on_enter', 'settings_scene_language_on_exit')]
     pieces.insert(0, (SRC / 'mui/mui_contrast.h').read_text().replace('#include "boards.h"', ''))
     template = Path(__file__).with_name('settings_return_focus_de340.c.in').read_text()
-    return template.replace('@APP_STRUCT@', app).replace('@DISPATCH_TYPES@', dispatch_types).replace(
+    ids = (SRC / 'i18n/string_id.h').read_text()
+    return template.replace('@STRING_IDS@', ids).replace('@APP_STRUCT@', app).replace('@DISPATCH_TYPES@', dispatch_types).replace(
         '@PRODUCTION@', '\n'.join(pieces))
 
 

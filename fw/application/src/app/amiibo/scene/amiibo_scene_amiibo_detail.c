@@ -149,7 +149,7 @@ static void ntag_update(app_amiibo_t *app, ntag_t *p_ntag) {
         if (amd && strncmp(string_get_cstr(app->current_file), "new", 3) == 0) {
             char new_path[VFS_MAX_PATH_LEN];
             char new_name[VFS_MAX_NAME_LEN];
-            snprintf(new_name, sizeof(new_name), "%s.bin", amd->name_en);
+            snprintf(new_name, sizeof(new_name), "%s.bin", db_amiibo_name_en(amd));
             if (!cwalk_append_segment(new_path, string_get_cstr(app->current_folder), new_name)) {
                 mui_toast_view_show(app->p_toast_view, _T(FAILED));
                 mui_update(mui());
@@ -175,6 +175,17 @@ static void ntag_update(app_amiibo_t *app, ntag_t *p_ntag) {
     mui_update(mui());
 }
 
+static void amiibo_nfc_return_to_list(void *context) {
+    app_amiibo_t *app = context;
+    if (!ntag_emu_session_used() || settings_get_data()->auto_gen_amiibo ||
+        mui_scene_dispatcher_current_scene(app->p_scene_dispatcher) != AMIIBO_SCENE_AMIIBO_DETAIL) return;
+    /* Same named parent/focus path as the manual file-browser return. This
+     * also works when resume entered the detail without a parent stack row. */
+    app->focus_detail_file = true;
+    mui_scene_dispatcher_next_scene(app->p_scene_dispatcher, AMIIBO_SCENE_FILE_BROWSER);
+    app->focus_detail_file = false;
+}
+
 static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag) {
 
     app_amiibo_t *app = context;
@@ -190,13 +201,15 @@ static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag
             app_timer_start(m_amiibo_gen_delay_timer, APP_TIMER_TICKS(1000), app);
         }
     }
+    if (!settings_get_data()->auto_gen_amiibo && ntag_emu_session_used() && !ntag_emu_save_pending())
+        ntag_emu_request_action(amiibo_nfc_return_to_list, app, ntag_emu_get_generation());
 }
 
 static bool amiibo_scene_amiibo_detail_reload_ntag(app_amiibo_t *app, const char *file_name) {
     char path[VFS_MAX_PATH_LEN];
     char selected_name[VFS_MAX_NAME_LEN];
 
-    if (strlen(file_name) == 0 || strlen(file_name) >= sizeof(selected_name)) {
+    if (file_name[0] == '\0' || strlen(file_name) >= sizeof(selected_name)) {
         return false;
     }
     /* Saving a newly written tag can rename it and rebuild the file list. */

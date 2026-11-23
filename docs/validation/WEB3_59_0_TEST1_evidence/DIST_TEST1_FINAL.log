@@ -1,0 +1,53 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> allmiibo-web@3.59.0-test.1 test:dist:test1
+> node scripts/test-production-build.mjs test-app669
+
+✔ production worker is one self-contained referenced artifact with the tested pinned WASM assets (11.696383ms)
+✔ de396: built worker runs its real WASM and returns the matching engine/application through messages (116.984162ms)
+✔ de396: built worker rejects a server that supplies the other profile's WASM (84.698112ms)
+✔ de395: built worker runs its real WASM and returns the matching engine/application through messages (54.731476ms)
+✔ de395: built worker rejects a server that supplies the other profile's WASM (47.140766ms)
+✔ de394: built worker runs its real WASM and returns the matching engine/application through messages (58.368381ms)
+✔ de394: built worker rejects a server that supplies the other profile's WASM (49.474036ms)
+✔ de393: built worker runs its real WASM and returns the matching engine/application through messages (67.869568ms)
+✔ de393: built worker rejects a server that supplies the other profile's WASM (49.038729ms)
+✔ de392: built worker runs its real WASM and returns the matching engine/application through messages (66.678317ms)
+✔ de392: built worker rejects a server that supplies the other profile's WASM (59.811789ms)
+✔ de391: built worker runs its real WASM and returns the matching engine/application through messages (58.972994ms)
+✔ de391: built worker rejects a server that supplies the other profile's WASM (61.261015ms)
+✔ current: built worker runs its real WASM and returns the matching engine/application through messages (66.92626ms)
+✔ current: built worker rejects a server that supplies the other profile's WASM (61.616547ms)
+✔ de354: built worker runs its real WASM and returns the matching engine/application through messages (68.706651ms)
+✔ de354: built worker rejects a server that supplies the other profile's WASM (54.369465ms)
+✔ de350: built worker runs its real WASM and returns the matching engine/application through messages (70.359379ms)
+✔ de350: built worker rejects a server that supplies the other profile's WASM (68.253478ms)
+✔ de345: built worker runs its real WASM and returns the matching engine/application through messages (69.27326ms)
+✔ de345: built worker rejects a server that supplies the other profile's WASM (56.727873ms)
+✔ de344: built worker runs its real WASM and returns the matching engine/application through messages (60.888538ms)
+✔ de344: built worker rejects a server that supplies the other profile's WASM (48.782543ms)
+✔ previous: built worker runs its real WASM and returns the matching engine/application through messages (60.751156ms)
+✔ previous: built worker rejects a server that supplies the other profile's WASM (187.919263ms)
+✔ legacy: built worker runs its real WASM and returns the matching engine/application through messages (62.607115ms)
+✔ legacy: built worker rejects a server that supplies the other profile's WASM (70.885707ms)
+✔ built worker defaults an omitted profile to current, without selecting legacy implicitly (56.423473ms)
+✔ built worker rejects unknown profiles and raw target injection before any fetch or progress (286.53218ms)
+✔ /pixl.js/test/app669/: both setup guides have working anchors and bundled destinations (12.409027ms)
+✔ /pixl.js/test/app669/: production index, lazy chunks and DFU assets resolve to real files inside this deployment (19.615237ms)
+✔ /pixl.js/test/app669/: real stable firmware loader hashes and parses deployed ZIP without starting Bluetooth (53.820262ms)
+✔ /pixl.js/test/app669/: real de3.96-lcd-app-test1 firmware loader hashes and parses deployed ZIP without starting Bluetooth (8.906174ms)
+✔ /pixl.js/test/app669/: real de3.95-lcd-app firmware loader hashes and parses deployed ZIP without starting Bluetooth (4.853561ms)
+✔ /pixl.js/test/app669/: real de3.94-lcd-app firmware loader hashes and parses deployed ZIP without starting Bluetooth (5.905327ms)
+✔ /pixl.js/test/app669/: public notices preserve all selected license bytes and explicit matching source downloads (9.173056ms)
+✔ /pixl.js/test/app669/: the App669 source download resolves to its complete archive and exact firmware binding (30.324932ms)
+✔ /pixl.js/test/app669/: the App668 source download resolves to its complete archive and exact firmware binding (25.633185ms)
+✔ /pixl.js/test/app669/: the App667 source download resolves to its complete archive and exact firmware binding (13.406712ms)
+✔ /pixl.js/test/app669/: static build contains no local server, state, test, dependency tree or collection backup (2.02881ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2315.860767

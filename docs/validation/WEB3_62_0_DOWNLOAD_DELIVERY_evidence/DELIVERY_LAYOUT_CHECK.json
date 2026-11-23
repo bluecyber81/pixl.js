@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "portableFile": "Allmiibo_Dateimanager_3_62_0_Portable.zip",
+  "portableSha256": "96c70b03e5fdd3ad459da0c61eef095edb15cd1941f87403bd4b7a45578e026c",
+  "zipFileCount": 303,
+  "portableSelfEmbedded": false,
+  "portableDownloadDirectoryEmbedded": false,
+  "webPublicPortablePresent": false,
+  "pagesPreparedPortablePresent": false,
+  "pagesPreparedFiles": 1137,
+  "publicPagesBaseline": "7e6ef6d2500165f2466c229df02edc1d5bec0a40",
+  "previous1137FilesMatchPublicGitBlobs": true,
+  "firmwareOtaSha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704"
+}

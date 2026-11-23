@@ -1,0 +1,153 @@
+/* SDK option state models the documented default and lifetime. */
+typedef uint32_t ret_code_t;
+#define APP_BLE_CONN_CFG_TAG 1
+#define APP_BLE_OBSERVER_PRIO 3
+#define NRF_SDH_BLE_OBSERVER(...) ((void)0)
+static unsigned option_calls, stack_enables;
+static uint32_t option_result;
+static bool sdk_extension, request_disconnect;
+static uint8_t requested_extension_value;
+static bool nrf_sdh_is_enabled(void) { return true; }
+static ret_code_t nrf_sdh_enable_request(void) { return NRF_SUCCESS; }
+static ret_code_t nrf_sdh_ble_default_cfg_set(uint8_t tag, uint32_t *ram) {
+    CHECK(tag == 1 && ram); *ram = 0x20002000; return NRF_SUCCESS;
+}
+static ret_code_t nrf_sdh_ble_enable(uint32_t *ram) {
+    CHECK(ram && *ram == 0x20002000); ++stack_enables; sdk_extension = false; return NRF_SUCCESS;
+}
+uint32_t sd_ble_opt_set(uint32_t option_id, const ble_opt_t *option) {
+    CHECK(critical_depth && option_id == BLE_COMMON_OPT_CONN_EVT_EXT && option);
+    CHECK(m_conn_handle != BLE_CONN_HANDLE_INVALID && m_nus_session_handle == m_conn_handle);
+    ++option_calls; requested_extension_value = option->common_opt.conn_evt_ext.enable;
+    if (!option_result) sdk_extension = requested_extension_value != 0;
+    if (request_disconnect) { request_disconnect = false; pending_disconnect = true; }
+    return option_result;
+}
+
+/* ACTUAL_TEST_FUNCTIONS */
+
+static void query_test(void) {
+    const uint8_t selector = 2; issue(&selector, 1, 0, 0);
+    CHECK(response.status == DF_STATUS_OK && response.length == 40 && response.data[4] == 3);
+    CHECK(response.data[33] == 0 && u16(response.data + 34) == 6);
+    CHECK(response.data[32] == (1u | (sdk_extension ? 2u : 0u)));
+}
+static void set_extension(uint8_t value) {
+    const uint8_t request[] = {'E', 'V', 'T', '!', value}; issue(request, 5, 0, 0);
+}
+static void expect_rejected(const uint8_t *data, size_t length, uint8_t status, uint16_t chunk) {
+    unsigned calls = option_calls; bool enabled = sdk_extension;
+    uint32_t old_result = m_event_extension_result;
+    issue(data, length, status, chunk);
+    CHECK(response.status == DF_STATUS_ERR && !response.length && option_calls == calls);
+    CHECK(sdk_extension == enabled && m_event_extension_enabled == enabled && m_event_extension_result == old_result);
+}
+static void reject_setting(void) {
+    const uint8_t request[] = {'E', 'V', 'T', '!', 0}; expect_rejected(request, 5, 0, 0);
+}
+
+int main(void) {
+    uint8_t guarded[42]; memset(guarded, 0xa5, sizeof(guarded));
+    CHECK(!ble_test_diagnostic(-1, NULL, 40));
+    CHECK(!ble_test_diagnostic(-1, guarded + 1, 39));
+    CHECK(!ble_test_diagnostic(-2, guarded + 1, 40));
+    CHECK(!ble_test_diagnostic(2, guarded + 1, 40));
+    m_ble_initialized = false; CHECK(!ble_test_diagnostic(-1, guarded + 1, 40));
+    CHECK(!ble_test_diagnostic(1, guarded + 1, 40)); m_ble_initialized = true;
+    for (unsigned i = 0; i < sizeof(guarded); ++i) CHECK(guarded[i] == 0xa5);
+    CHECK(!option_calls); pass("bounds_invalid_requests_and_uninitialized_are_nonmutating");
+
+    ble_stack_init(); query_test();
+    CHECK(stack_enables == 1 && response.data[32] == 1 && u32(response.data + 36) == UINT32_MAX);
+    CHECK(!(response.data[14] & 1) && !option_calls);
+    CHECK(ble_test_diagnostic(-1, guarded + 1, 40) && guarded[0] == 0xa5 && guarded[41] == 0xa5);
+    pass("fresh_stack_baseline_off_and_guarded_v3_snapshot");
+
+    vfs_idle = false; query_test(); CHECK(!(response.data[5] & 4));
+    vfs_idle = true; query_test(); CHECK(response.data[5] & 4);
+    CHECK(!option_calls); pass("read_only_query_allowed_while_vfs_busy_without_radio_option_call");
+
+    connect_peer(7, 24, 0, 500); file_session(); phy_result = NRF_SUCCESS;
+    ble_process_pending(); phy_event(7, 0, 2, 2);
+    issue(NULL, 0, 0, 0); df_frame_t v1 = response;
+    query(); df_frame_t v2 = response;
+    query_test(); CHECK(!memcmp(response.data, v2.data, 4) && !memcmp(response.data + 5, v2.data + 5, 27));
+    CHECK(v1.length == 16 && v1.data[4] == 1 && v2.length == 32 && v2.data[4] == 2);
+    CHECK(u16(response.data + 16) == 24 && response.data[22] == 2 && response.data[23] == 2);
+    pass("v3_preserves_legacy_prefix_and_confirmed_link_values");
+
+    set_extension(1); CHECK(response.status == DF_STATUS_OK && response.length == 40);
+    CHECK(option_calls == 1 && requested_extension_value == 1 && sdk_extension && response.data[32] == 3);
+    CHECK(u32(response.data + 36) == NRF_SUCCESS && m_conn_handle == 7);
+    query_test(); CHECK(option_calls == 1); pass("explicit_enable_success_only_and_no_retry_on_read");
+    set_extension(0); CHECK(option_calls == 2 && !sdk_extension && response.data[32] == 1);
+    CHECK(u32(response.data + 36) == 0); pass("explicit_disable_success");
+
+    const uint32_t failures[] = {NRF_ERROR_BUSY, NRF_ERROR_NOT_SUPPORTED, NRF_ERROR_INVALID_STATE, NRF_ERROR_INVALID_PARAM};
+    for (unsigned enabled = 0; enabled < 2; ++enabled) {
+        option_result = 0; set_extension((uint8_t)enabled); CHECK(sdk_extension == (enabled != 0));
+        for (unsigned i = 0; i < sizeof(failures) / sizeof(failures[0]); ++i) {
+            unsigned calls = option_calls; option_result = failures[i]; set_extension((uint8_t)!enabled);
+            CHECK(option_calls == calls + 1 && response.status == DF_STATUS_OK && response.length == 40);
+            CHECK(u32(response.data + 36) == option_result && sdk_extension == (enabled != 0));
+            query_test(); CHECK(option_calls == calls + 1 && m_conn_handle == 7 && !disconnect_calls);
+        }
+    }
+    pass("api_rejection_reports_error_preserves_previous_setting_without_reset_or_retry");
+
+    option_result = 0;
+    vfs_idle = false; reject_setting(); vfs_idle = true;
+    m_sessions_enabled = false; reject_setting(); m_sessions_enabled = true;
+    m_file_mode = false; reject_setting(); m_file_mode = true;
+    m_remote_mode = true; reject_setting(); m_remote_mode = false;
+    m_mode_pending = true; reject_setting(); m_mode_pending = false;
+    m_release_handle = 7; reject_setting(); m_release_handle = BLE_CONN_HANDLE_INVALID;
+    m_nus_session_handle = 9; reject_setting(); m_nus_session_handle = 7;
+    work_ready = false; reject_setting(); work_ready = true;
+    m_ble_initialized = false; reject_setting(); m_ble_initialized = true;
+    m_conn_handle = BLE_CONN_HANDLE_INVALID; reject_setting(); m_conn_handle = 7;
+    pass("vfs_and_exact_active_file_session_ownership_gate_every_setting");
+
+    uint8_t malformed[7] = {'E', 'V', 'T', '!', 0, 0, 0};
+    for (unsigned n = 1; n <= sizeof(malformed); ++n) if (n != 5) expect_rejected(malformed, n, 0, 0);
+    for (unsigned value = 2; value <= 255; ++value) { malformed[4] = (uint8_t)value; expect_rejected(malformed, 5, 0, 0); }
+    malformed[4] = 1;
+    for (unsigned status = 1; status <= 255; ++status) expect_rejected(malformed, 5, (uint8_t)status, 0);
+    for (unsigned chunk = 1; chunk <= 65535; ++chunk) expect_rejected(malformed, 5, 0, (uint16_t)chunk);
+    const uint8_t bad_selector = 3; expect_rejected(&bad_selector, 1, 0, 0);
+    pass("malformed_setting_length_value_status_chunk_and_selector_rejected");
+
+    unsigned calls = option_calls, sent = tx_calls;
+    df_event_t ignored = {DF_EVENT_DATA_TRANSMIT_READY, NULL}; df_proto_handler_info_mtu_diagnostic(&ignored);
+    ignored.type = DF_EVENT_LINK_DISCONNECTED; df_proto_handler_info_mtu_diagnostic(&ignored);
+    CHECK(option_calls == calls && tx_calls == sent); pass("nonrequest_events_never_change_global_policy");
+
+    issue(NULL, 0, 0, 0); CHECK(response.length == 16 && !memcmp(response.data, v1.data, 16));
+    query(); CHECK(response.length == 32 && !memcmp(response.data, v2.data, 32));
+    const uint8_t mtu23[] = {'M', 'T', 'U', '!', 23, 0}; issue(mtu23, 6, 0, 0);
+    CHECK(response.length == 16 && response.data[4] == 1 && u16(response.data + 8) == 23 && m_gatt.effective == 250);
+    m_gatt.att_mtu_desired_periph = 250;
+    pass("v1_v2_and_next_mtu_setting_stay_byte_compatible");
+
+    set_extension(1); disconnect_peer(9); query_test(); CHECK(m_conn_handle == 7 && sdk_extension);
+    disconnect_peer(7); query_test(); CHECK(!(response.data[14] & 1) && sdk_extension && response.data[32] == 3);
+    reject_setting(); connect_peer(8, 24, 0, 500); file_session(); query_test();
+    CHECK(response.data[32] == 3 && u32(response.data + 36) == 0 && response.data[22] == 0);
+    pass("global_success_survives_real_reconnect_and_stale_handle_events");
+
+    request_disconnect = true; set_extension(0);
+    CHECK(response.status == 0 && response.data[32] == 1 && response.data[14] & 1);
+    CHECK(m_conn_handle == BLE_CONN_HANDLE_INVALID && !pending_disconnect);
+    query_test(); CHECK(!(response.data[14] & 1));
+    pass("option_and_snapshot_are_atomic_to_application_gap_events");
+
+    connect_peer(7, 24, 0, 500); file_session(); set_extension(1); disconnect_peer(7);
+    ble_stack_init(); query_test(); CHECK(!sdk_extension && response.data[32] == 1 && u32(response.data + 36) == UINT32_MAX);
+    CHECK(stack_enables == 2); pass("fresh_stack_restores_off_baseline_and_no_prior_request_claim");
+
+    connect_peer(7, 24, 0, 500); file_session(); phy_result = NRF_SUCCESS;
+    ble_process_pending(); phy_event(7, 0, 2, 2); set_extension(1); query_test();
+    printf("WIRE "); for (unsigned i = 0; i < response.length; ++i) printf("%02x", response.data[i]); puts("");
+    CHECK(!critical_depth && !disconnect_calls);
+    printf("PASS %u event-extension/legacy/ownership cases; actual S112 option ABI; no radio\n", checks);
+}

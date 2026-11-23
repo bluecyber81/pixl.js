@@ -1,0 +1,20 @@
+{
+  "physicalDeviceAccess": false,
+  "asan": true,
+  "ubsan": true,
+  "lsan": false,
+  "lsanReason": "Local ASan/UBSan explicitly disables leak detection in the ptrace-controlled environment; no fresh LSan qualification is claimed.",
+  "results": [
+    {
+      "name": "MINIAPPS_SANITIZERS",
+      "exitCode": 0,
+      "log": "MINIAPPS_SANITIZERS.log"
+    },
+    {
+      "name": "PLAYER_SDK_SANITIZERS",
+      "exitCode": 0,
+      "log": "PLAYER_SDK_SANITIZERS.log"
+    }
+  ],
+  "passed": true
+}

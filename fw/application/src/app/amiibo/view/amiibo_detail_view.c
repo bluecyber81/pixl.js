@@ -98,7 +98,7 @@ static void amiibo_detail_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canva
         mui_element_autowrap_text(p_canvas, 0, y, mui_canvas_get_width(p_canvas), 24, name);
         /* A wrapped figure name occupies the second row. Never draw a note
          * over that row; the underlying metadata remains unchanged. */
-        if (strlen(ntag->notes) > 0 &&
+        if (ntag->notes[0] != '\0' &&
             mui_element_text_height(p_canvas, mui_canvas_get_width(p_canvas), name) <= 13) {
             mui_element_autowrap_text(p_canvas, 0, y + 13, mui_canvas_get_width(p_canvas), 13, ntag->notes);
         }

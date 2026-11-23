@@ -44,10 +44,19 @@ header += r'''
 #define REMOTE_LCD_CHUNK_MAX 0
 #define MINI_APP_ID_BLE 1
 #define MINI_APP_ID_AMIIBOLINK 2
-typedef struct {bool file,link;} mini_app_launcher_t;
+#define MINI_APP_ID_SWITCH2_WAKE 4
+#define MINI_APP_ID_BLE_STREAM 5
+typedef struct {bool file,link,wake,stream;} mini_app_launcher_t;
 static mini_app_launcher_t launcher;
+/* A stop request does not release radio ownership: the peripheral completion
+ * is delivered explicitly by each case, matching the actual async contract. */
+static bool scan_owner, raw_owner;
+static unsigned scan_stops, raw_stops;
+static bool ble_miniapp_radio_busy(void){return scan_owner || raw_owner;}
+static void ble_switch2_scan_stop(void){scan_stops++;}
+static void ble_raw_adv_stop(void){raw_stops++;}
 static mini_app_launcher_t *mini_app_launcher(void){return &launcher;}
-static void *mini_app_launcher_get_app_handle(mini_app_launcher_t *l,unsigned id){return id==1?(l->file?l:NULL):(l->link?l:NULL);}
+static void *mini_app_launcher_get_app_handle(mini_app_launcher_t *l,unsigned id){return (id==1?l->file:id==2?l->link:id==4?l->wake:id==5?l->stream:false)?l:NULL;}
 static void mini_app_launcher_run(mini_app_launcher_t *l,unsigned id){(void)l;(void)id;assert(!"unexpected handoff");}
 static struct {bool active,pending,replying;uint32_t generation;} protocol;
 static bool permission,dispatching,handoff_requested,handoff_armed,file_link_requested,recovery;
@@ -86,6 +95,7 @@ static void tick(void){ble_work_process(ble_on_disconnected);ble_pending_mode_po
 static void reset(void){
     ble_work_disconnected();ble_work_set_handlers(NULL,NULL);ble_work_process(ble_on_disconnected);
     memset(&launcher,0,sizeof launcher);memset(&protocol,0,sizeof protocol);
+    scan_owner=raw_owner=false;scan_stops=raw_stops=0;
     m_conn_handle=m_nus_session_handle=m_release_handle=65535;
     m_ble_initialized=m_sessions_enabled=m_remote_mode=m_file_mode=m_mode_pending=m_advertising_active=false;
     m_mode_adv_requested=m_mode_handlers_ready=m_mode_stop_requested=m_mode_wait_reply=false;
@@ -114,6 +124,28 @@ int main(void){
         for(unsigned i=0;i<4;i++)tick();assert(!stack_inits&&!advertised);
         launcher.file=launcher.link=false;tick();tick();assert(advertised==1);
     }
+#ifdef BOARD_LCD
+    /* New main apps and still-closing radio sessions must never be stolen by
+     * remote autostart. Completion, not a stop request, releases the owner. */
+    for(unsigned owner=0;owner<4;owner++){
+        reset();launcher.wake=owner==0;launcher.stream=owner==1;
+        scan_owner=owner==2;raw_owner=owner==3;
+        assert(ble_remote_set_enabled(true));
+        for(unsigned i=0;i<4;i++)tick();assert(!stack_inits&&!advertised);
+        launcher.wake=launcher.stream=scan_owner=raw_owner=false;
+        tick();tick();assert(advertised==1&&stack_inits==1);
+    }
+    /* An explicit mode handoff requests stop but waits for actual completion. */
+    for(unsigned owner=0;owner<2;owner++){
+        reset();ble_remote_set_enabled(true);ble_init();scan_owner=owner==0;raw_owner=owner==1;
+        ble_device_mode_prepare(BLE_DEVICE_MODE_REMOTE);ble_adv_start();
+        ble_nus_set_handler(ble_remote_receive,NULL);
+        assert(m_mode_pending&&scan_stops==1&&raw_stops==1&&!advertised);
+        for(unsigned i=0;i<4;i++)tick();assert(m_mode_pending&&!advertised);
+        scan_owner=raw_owner=false;tick();assert(!m_mode_pending&&advertised==1);
+    }
+    puts("PASS 6 LCD miniapp/radio ownership and confirmed-completion scenarios");
+#endif
     /* Recovery and a real retained GAP link suppress remote reconfiguration. */
     reset();recovery=true;ble_remote_set_enabled(true);tick();tick();assert(!advertised);
     recovery=false;tick();tick();assert(advertised==1);

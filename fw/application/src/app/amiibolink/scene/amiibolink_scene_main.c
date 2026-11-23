@@ -89,6 +89,14 @@ static void ntag_generate_timer_request(void *context) {
     ntag_emu_request_action(ntag_generate_cb, context, m_generate_generation);
 }
 
+/* On LCD the pending-save callback must finish before the large next-tag
+ * frame is entered. Other boards keep their existing inlining policy. */
+#if defined(BOARD_LCD)
+#define NTAG_RELOAD_PHASE __attribute__((noinline))
+#else
+#define NTAG_RELOAD_PHASE
+#endif
+
 #ifdef INTERNAL_ENABLE
 static bool ntag_update(app_amiibolink_t *app, uint8_t index, ntag_t *p_ntag) {
     ret_code_t err_code = ntag_store_write(index, p_ntag);
@@ -126,11 +134,8 @@ static bool ntag_update(app_amiibolink_t *app, uint8_t index, ntag_t *p_ntag) {
     return err_code == NTAG_DATA_SIZE;
 }
 
-static bool ntag_reload(app_amiibolink_t *app, uint8_t index) {
-    if (!ntag_emu_prepare_change()) {
-        amiibolink_view_set_index(app->p_amiibolink_view, m_active_index);
-        return false;
-    }
+static bool ntag_reload_prepared(app_amiibolink_t *app, uint8_t index) NTAG_RELOAD_PHASE;
+static bool ntag_reload_prepared(app_amiibolink_t *app, uint8_t index) {
     ntag_t ntag = {0};
     char path[VFS_MAX_PATH_LEN] = {0};
 
@@ -151,6 +156,14 @@ static bool ntag_reload(app_amiibolink_t *app, uint8_t index) {
     m_active_index = index;
     m_active_mode = app->amiibolink_mode;
     return true;
+}
+
+static bool ntag_reload(app_amiibolink_t *app, uint8_t index) {
+    if (!ntag_emu_prepare_change()) {
+        amiibolink_view_set_index(app->p_amiibolink_view, m_active_index);
+        return false;
+    }
+    return ntag_reload_prepared(app, index);
 }
 
 static void ntag_init() {

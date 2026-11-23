@@ -8,6 +8,11 @@
 #include "utils2.h"
 #include <string.h>
 #include <stddef.h>
+#include "boards.h"
+#if defined(LCD_SCREEN) && defined(VFS_PACKED_LFS_ENABLE)
+#include "vfs_driver_fs.h"
+#include "vfs_packed_runtime.h"
+#endif
 
 #define NFC_TAG_NTAG_DATA_SIZE 4
 
@@ -185,16 +190,21 @@ bool tag_helper_apply_disney_profile(void) {
         return tag_types.tag_hf;
     }
 
-    void tag_helper_format_uid(char *buff, uint8_t *uid, uint8_t uid_len) {
-        if (uid_len == NFC_TAG_14A_UID_SINGLE_SIZE) {
-            sprintf(buff, "%02x:%02x:%02x:%02x", uid[0], uid[1], uid[2], uid[3]);
-        } else if (uid_len == NFC_TAG_14A_UID_DOUBLE_SIZE) {
-            sprintf(buff, "%02x:%02x:%02x:%02x:%02x:%02x:%02x", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6]);
-        } else {
-            sprintf(buff, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", uid[0], uid[1], uid[2], uid[3], uid[4],
-                    uid[5], uid[6], uid[7], uid[8], uid[9]);
-        }
+void tag_helper_format_hex(char *out, const uint8_t *bytes, uint8_t length, char separator) {
+    static const char hex[] = "0123456789abcdef";
+    for (uint8_t i = 0; i < length; ++i) {
+        if (i) *out++ = separator;
+        *out++ = hex[bytes[i] >> 4];
+        *out++ = hex[bytes[i] & 15];
     }
+    *out = '\0';
+}
+
+void tag_helper_format_uid(char *out, const uint8_t *uid, uint8_t length) {
+    if (length != NFC_TAG_14A_UID_SINGLE_SIZE && length != NFC_TAG_14A_UID_DOUBLE_SIZE &&
+        length != NFC_TAG_14A_UID_TRIPLE_SIZE) length = 0;
+    tag_helper_format_hex(out, uid, length, ':');
+}
 
     const char *tag_helper_get_mf_write_mode_name(nfc_tag_mf1_write_mode_t write_mode) {
         if (write_mode == NFC_TAG_MF1_WRITE_SHADOW_REQ) {
@@ -211,19 +221,45 @@ bool tag_helper_apply_disney_profile(void) {
             return;
         }
         uint8_t slot = tag_emulation_get_slot();
-        vfs_meta_t meta = {0};
+        int32_t err = 0;
+#if defined(LCD_SCREEN) && defined(VFS_PACKED_LFS_ENABLE)
+        /* Only committed metadata is cached. The mount epoch and manifest
+         * generation change on remount/format and published file/metadata edits.
+         * Keep the decoded record, since callers use different output lengths.
+         * Hits need neither another metadata read nor a temporary record copy. */
+        static struct {
+            uint64_t revision;
+            vfs_meta_t meta;
+            uint8_t slot;
+        } cached;
+        vfs_meta_t *meta = &cached.meta;
+        vfs_driver_t *driver = vfs_get_default_driver();
+        uint64_t revision = driver == &vfs_driver_fs ? vfs_packed_revision() : 0;
+        if (!(revision && cached.revision == revision && cached.slot == slot)) {
+            cached.revision = 0;
+            memset(meta, 0, sizeof(*meta));
+            err = fds_read_meta(FDS_SLOT_TAG_DUMP_FILE_ID_BASE + slot, TAG_SENSE_HF, meta);
+            if (err == 0 && revision && driver == vfs_get_default_driver() &&
+                revision == vfs_packed_revision()) {
+                cached.slot = slot;
+                cached.revision = revision;
+            }
+        }
+#else
+        vfs_meta_t local_meta = {0};
+        vfs_meta_t *meta = &local_meta;
+        err = fds_read_meta(FDS_SLOT_TAG_DUMP_FILE_ID_BASE + slot, TAG_SENSE_HF, meta);
+#endif
         memset(buff, 0, buff_len);
-        int32_t err = fds_read_meta(FDS_SLOT_TAG_DUMP_FILE_ID_BASE + slot, TAG_SENSE_HF, &meta);
-
-        if (err == 0 && meta.has_notes) {
+        if (err == 0 && meta->has_notes) {
             size_t length = 0;
-            while (length < sizeof(meta.notes) && meta.notes[length]) length++;
+            while (length < sizeof(meta->notes) && meta->notes[length]) length++;
             if (length >= buff_len) length = buff_len - 1;
-            memcpy(buff, meta.notes, length);
+            memcpy(buff, meta->notes, length);
             buff[length] = '\0';
         }
 
-        if (strlen(buff) == 0) {
+        if (buff[0] == '\0') {
             snprintf(buff, buff_len, "%s %02d", _T(APP_CHAMELEON_CARD_SLOT), slot + 1);
         }
     }
@@ -333,15 +369,15 @@ bool tag_helper_apply_disney_profile(void) {
         if (tag_helper_get_active_tag_type() != TAG_TYPE_UNDEFINED && !tag_emulation_active_data_ready()) return false;
 
         settings_data_t *settings = settings_get_data();
-        settings->chameleon_slot_num = slot_num;
+        SETTINGS_SET(chameleon_slot_num, slot_num);
         if (settings->chameleon_default_slot_index >= slot_num) {
-            settings->chameleon_default_slot_index = INVALID_SLOT_INDEX;
+            SETTINGS_SET(chameleon_default_slot_index, INVALID_SLOT_INDEX);
         }
         for (uint8_t i = slot_num; i < TAG_MAX_SLOT_NUM; i++) {
             tag_emulation_slot_set_enable(i, TAG_SENSE_HF, false);
         }
         /* The active card is already saved. The count controls the config file length.
          * Keep the pending choice in RAM if either write fails, so Retry can finish both. */
-        *pending = !tag_emulation_save_config() || settings_save() != NRF_SUCCESS;
+        *pending = !tag_emulation_save_config() || !chameleon_save_settings();
         return !*pending;
     }

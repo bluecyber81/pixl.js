@@ -1,0 +1,33 @@
+// Normal signed LCD application; physical acceptance is recorded separately.
+export const lcdRelease = Object.freeze({
+  "board": "LCD",
+  "firmwareVersion": "2.22.0-DE3.100",
+  "applicationCounter": 673,
+  "firmwareChannel": "normal",
+  "chipPart": 337970,
+  "sourceId": "33d41ccf675ff8b359cd616fbc66376de9df76d73f0896a61ab9ea0ce7a50778",
+  "productionCommit": "6039c163b3d4c52338e708fd0fb39e0606ce7fbf",
+  "sourceCommit": "6039c163b3d4c52338e708fd0fb39e0606ce7fbf",
+  "productionTree": "1f83834c03e508b8794835f5d09fb23e33a22183",
+  "localProductionCommit": "fe07e06dce6f1e9655dae7e7edf1b419b9eecf26",
+  "otaSha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+  "otaBytes": 361681,
+  "applicationBytes": 361080,
+  "applicationBinSha256": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+  "artifactStatus": "stable-signed-application",
+  "hardwareAcceptance": "pending-for-this-build"
+});
+export const lcdReleasePackage = Object.freeze({
+  "id": "de3.100-lcd-app",
+  "version": "2.22.0-DE3.100",
+  "counter": 673,
+  "file": "Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+  "bytes": 361681,
+  "sha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+  "board": "LCD",
+  "storage": "PFS1",
+  "bootloader": "Z21",
+  "softDevice": "S112 7.3.0",
+  "applicationOnly": true,
+  "migrationRequired": false
+});

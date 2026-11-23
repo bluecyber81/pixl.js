@@ -436,6 +436,17 @@ SRC_FILES += \
   $(U8G2_ROOT)/u8x8_d_ssd1306_128x64_noname.c
 
 # Include folders common to all targets
+# These miniapps share the custom LCD/S112 lifecycle. Keep their timeslot
+# observer and app sources out of independent OLED builds.
+ifeq ($(BOARD),LCD)
+SRC_FILES += \
+  $(PROJ_DIR)/mod/ble/ble_switch2_scan.c \
+  $(PROJ_DIR)/app/switch2_wake/app_switch2_wake.c \
+  $(PROJ_DIR)/app/switch2_wake/switch2_protocol.c \
+  $(PROJ_DIR)/app/ble_stream/app_ble_stream.c \
+  $(PROJ_DIR)/app/ble_stream/stream_codec.c
+endif
+
 INC_FOLDERS += \
   $(SDK_ROOT)/components/nfc/ndef/generic/message \
   $(SDK_ROOT)/components/nfc/t2t_lib \
@@ -596,6 +607,8 @@ INC_FOLDERS += \
   $(PROJ_DIR)/app/ble \
   $(PROJ_DIR)/app/ble/scene \
   $(PROJ_DIR)/app/ble/view \
+  $(PROJ_DIR)/app/switch2_wake \
+  $(PROJ_DIR)/app/ble_stream \
   $(PROJ_DIR)/app/desktop \
   $(PROJ_DIR)/app/desktop/view \
   $(PROJ_DIR)/app/settings \
@@ -738,6 +751,10 @@ pixljs: CFLAGS += -D__HEAP_SIZE=512
 pixljs: CFLAGS += -D__STACK_SIZE=8192
 ifeq ($(BOARD),LCD)
 pixljs: CFLAGS += -DPIXL_RUNTIME_DIAGNOSTICS=1
+# Optional laboratory instrumentation is excluded from normal LCD builds.
+ifeq ($(PIXL_TEST_DIAGNOSTICS),1)
+pixljs: CFLAGS += -DPIXL_TEST_DIAGNOSTICS=1
+endif
 ifeq ($(RELEASE),1)
 # Production diagnostics keep warnings and errors. Debug builds keep verbose RTT.
 pixljs: CFLAGS += -DNRF_LOG_DEFAULT_LEVEL=2 -DNRF_LOG_BUFSIZE=512

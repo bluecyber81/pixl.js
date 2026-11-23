@@ -1,5 +1,19 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## DE3.102 / App675 · Player-Optionen und Bildempfang
+
+Die normale LCD-App ergänzt **Endlosschleife** und **Bildzähler** im Dateimenü des Animationsplayers. Beide Optionen starten ausgeschaltet und gelten für die aktuelle Playersitzung. Beim Wiederholen wird die Datei erneut geöffnet und ihr Header vollständig geprüft; es bleibt bei einem Bildpuffer. Der BLE-Bildempfang zeichnet vollständige Bilder oder sichtbare Statusänderungen neu. Das App673-Protokoll und die PFS1-Engine bleiben unverändert.
+
+App675 ist für LCD/ST7567, PFS1, Z21 und S112 7.3.0 bestimmt. Das signierte App-Update erhält Dateisystem und Systemkomponenten. Die Menüsymbole aus App674 bleiben enthalten. Web3.65.0 ergänzt gemerkte Bildoptionen, Rotation, Punktraster, Drag & Drop und lokalen Playerexport; der Websender bleibt mit App673+ kompatibel.
+
+Zwei lokale Builds und der unabhängige GitHub-Build liefern dieselben BIN-/HEX-Bytes. 198 Hostskripte, 13 lokale ARM-Prüfgruppen und die aktuelle App675-Update-Datenphase sind bestanden. Die GitHub-Prüfung belegt zusätzlich die positive LeakSanitizer-Kontrolle. Diese Softwareprüfungen ersetzen keine physische Abnahme von Bildübertragung, Player oder Switch-2-Wecken. [Firmware-Prüfbericht](validation/DE3_102.json) · [Releasehinweise](DE3_102_RELEASE.md) · [Signierte App675-ZIP](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip).
+
+## LCD DE3.101 / App674 · normale Firmware vom 22.11.2026
+
+Eigene monochrome 32×32-Menübilder für „Switch 2 wecken“ und „BLE-Bildempfang“. Die acht übrigen Symbole und die PFS1-Engine bleiben unverändert; das Anwendungs-BIN wächst um 272 Byte. Ziel bleibt **LCD/ST7567 mit vorhandenem PFS1, Z21 und S112 7.3.0**. [Signierte Nur-App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip) · [Änderungen und Bildvorschau](DE3_101_RELEASE.md) · [Prüfnachweis](validation/DE3_101.json)
+
+197/197 Hostskripte, 13 lokale ARM-Prüfgruppen, Signatur und vollständige Z21-Wiederaufnahmeprüfung bestanden. [CI 45060195633](https://github.com/bluecyber81/pixl.js/actions/runs/45060195633) auf dem qualifizierten Commit `a39d43c…` liefert dieselben BIN-/HEX-Bytes und bestätigt das aktuelle App674-Modell einschließlich ASan/UBSan/LSan mit positiver Leckkontrolle. Die Geräteabnahme der neuen Menübilder bleibt offen. Der Nutzerbericht zur funktionierenden Fernbedienung und die passende Diagnose gehören zum Vorgänger **App673/DE3.100**. OLED bleibt eine getrennte Version.
+
 ## LCD DE3.89 / App662 · Freigabe vom 19.11.2026
 
 Die Firmware puffert den Inhalt jeder neuen kleinen Datei bis 572 Byte im RAM und prüft ihn nach dem Schreiben im Flash. Der Dateimanager kann einen unterbrochenen Ordnerauftrag auf demselben Gerät im offenen Browser-Tab fortsetzen. [LCD-Geräteprüfung](validation/DE3_89_LCD_READBACK.json) · [Firmware DE3.89](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Dateimanager 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)

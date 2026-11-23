@@ -9,10 +9,21 @@ import {createHash} from 'node:crypto'
 // tests/dist -> web/dist: production artifacts, not source-module substitutes.
 const actualDist=path.resolve(process.env.ALLMIIBO_DIST_DIR||fileURLToPath(new URL('../../dist',import.meta.url)))
 const base=process.env.ALLMIIBO_TEST_BASE_PATH||'/'
-assert.ok(['/', '/pixl.js/'].includes(base))
+assert.ok(['/', '/pixl.js/', '/pixl.js/test/app669/', '/pixl.js/test/app670/'].includes(base))
 const deployed=url=>base+url.slice(1)
 const sha=data=>createHash('sha256').update(data).digest('hex')
 const profiles={
+ de3101:{url:'/lfs-capacity-de399.wasm',wasm:'068e6f033c6e3ee95c8be2c7c6ba633daa6821c67ca38ace68a66cd5fece604c',engine:'3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f',counter:674,version:'2.22.0-DE3.101'},
+ de3100:{url:'/lfs-capacity-de399.wasm',wasm:'068e6f033c6e3ee95c8be2c7c6ba633daa6821c67ca38ace68a66cd5fece604c',engine:'3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f',counter:673,version:'2.22.0-DE3.100'},
+ de399:{url:'/lfs-capacity-de399.wasm',wasm:'068e6f033c6e3ee95c8be2c7c6ba633daa6821c67ca38ace68a66cd5fece604c',engine:'3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f',counter:672,version:'2.22.0-DE3.99'},
+ de398:{url:'/lfs-capacity-de398.wasm',wasm:'30bca7ffb0b1db1773b4bb6dcb05aaa861f5e9d9dc13eca96b3324e760f26273',engine:'a645c8556c6b2e7dd9c35af621822a4ab2cb45a4315f116fe07ed7c03898098d',counter:671,version:'2.22.0-DE3.98'},
+ de397:{url:'/lfs-capacity-de397.wasm',wasm:'d77286b2176a369b957b7259305df82da5f950c6e33b3a90ce54c21bf7e8ec4c',engine:'a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788',counter:670,version:'2.22.0-DE3.97'},
+ de396:{url:'/lfs-capacity-de396.wasm',wasm:'d3a2e2d9378440c58051349502c51a7977ef7863d1cb2eec303d002b659a8a56',engine:'3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d',counter:669,version:'2.22.0-DE3.96'},
+ de395:{url:'/lfs-capacity-de395.wasm',wasm:'311519a0da49474b57376908f836f2f45deccb90a9bbda855ae09343633b151c',engine:'a9bdec38eaa41680e1c9fdebd5fd12995e9d38ff070560ff605fd387d471dabd',counter:668,version:'2.22.0-DE3.95'},
+ de394:{url:'/lfs-capacity-de393.wasm',wasm:'f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96',engine:'7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e',counter:667,version:'2.22.0-DE3.94'},
+ de393:{url:'/lfs-capacity-de393.wasm',wasm:'f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96',engine:'7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e',counter:666,version:'2.22.0-DE3.93'},
+ de392:{url:'/lfs-capacity-de392.wasm',wasm:'08428602391b6d9f8ee1bfb28abf683a5a774b97d75242da70d8d0f2f6314d16',engine:'605356ff74646392adcfb26adf5c7d39fe7138272e84b4e4a0f167b94e34c2c1',counter:665,version:'2.22.0-DE3.92'},
+ de391:{url:'/lfs-capacity-de391.wasm',wasm:'91ca3ef469ea6ecfca1dc18c80ad39d60977fc591b823274324c516bb7024548',engine:'a0d15c28160774dd83ba80a71e8aad61fb41cd7ae0209eeec5486be7ea00d7a2',counter:664,version:'2.22.0-DE3.91'},
  current:{url:'/lfs-capacity-de355.wasm',wasm:'652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9',engine:'2b27ee2d3f58687f768689893b8ed40bc7ec49ba2c17a02fd9246c0e416d0248',counter:660,version:'2.22.0-DE3.87'},
  de354:{url:'/lfs-capacity-current.wasm',wasm:'50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105',engine:'7f1c05d5159815922a89821ea23b080d25548ac3b2a075372b54905ca836496d',counter:626,version:'2.22.0-DE3.54'},
  de350:{url:'/lfs-capacity-de350.wasm',wasm:'0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b',engine:'a69d7b41bcb3ea72d02869290651efd00eea837109230f37364b3e1477a87059',counter:622,version:'2.22.0-DE3.50'},
@@ -35,7 +46,7 @@ const bootstrap=`const {parentPort,workerData}=require('node:worker_threads');
  globalThis.fetch=async(url,options)=>{
    if(typeof url!=='string'||!url.startsWith(workerData.base))throw Error('Request escaped deployment base');
    const canonical='/'+url.slice(workerData.base.length);
-   if(!['/lfs-capacity-de355.wasm','/lfs-capacity-de350.wasm','/lfs-capacity.wasm','/lfs-capacity-current.wasm','/lfs-capacity-previous.wasm','/lfs-capacity-de344.wasm','/lfs-capacity-de345.wasm'].includes(canonical))throw Error('Unexpected request');
+   if(!['/lfs-capacity-de399.wasm','/lfs-capacity-de398.wasm','/lfs-capacity-de397.wasm','/lfs-capacity-de396.wasm','/lfs-capacity-de395.wasm','/lfs-capacity-de393.wasm','/lfs-capacity-de392.wasm','/lfs-capacity-de391.wasm','/lfs-capacity-de355.wasm','/lfs-capacity-de350.wasm','/lfs-capacity.wasm','/lfs-capacity-current.wasm','/lfs-capacity-previous.wasm','/lfs-capacity-de344.wasm','/lfs-capacity-de345.wasm'].includes(canonical))throw Error('Unexpected request');
    parentPort.postMessage({kind:'test-fetch',url,cache:options.cache,credentials:options.credentials});
    const selected=workerData.swapAsset?(canonical==='/lfs-capacity.wasm'?'/lfs-capacity-current.wasm':'/lfs-capacity.wasm'):canonical;
    const data=fs.readFileSync(path.join(workerData.dist,selected.slice(1)));
@@ -61,7 +72,7 @@ async function runWorker(message,{swapAsset=false}={}) {
  }finally{await worker.terminate()}
 }
 
-test('production worker is one self-contained referenced artifact with all seven exact pinned WASM assets',()=>{
+test('production worker is one self-contained referenced artifact with the tested pinned WASM assets',()=>{
  const worker=artifact(),name=path.basename(worker),data=fs.readFileSync(worker,'utf8')
  const clients=fs.readdirSync(path.join(actualDist,'assets')).filter(x=>x.endsWith('.js')&&x!==name)
  assert(clients.some(x=>fs.readFileSync(path.join(actualDist,'assets',x),'utf8').includes(name)))

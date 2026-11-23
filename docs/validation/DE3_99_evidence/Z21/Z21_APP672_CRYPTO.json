@@ -1,0 +1,235 @@
+{
+  "passed": true,
+  "signedZipSha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
+  "paddedBootloaderSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+  "bootloaderElfBinding": {
+    "elf_path": "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/Z21_build/bootloader.out",
+    "elf_sha256": "4354695b5c0cb08943a43960f1decf30caa265763577e36dc39d7ba621e80e50",
+    "bin_path": "/workspace/scratch/01be954f2c61/normal_build_20261122/firmware_results/Z21_build/BOOTLOADER_UNSIGNED_ANALYSIS.bin",
+    "bin_sha256": "bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c",
+    "physical_boot_payload_matches": true,
+    "boot_payload_bytes": 26932,
+    "initial_data_lma": "0x7d8ec",
+    "ram_data_start": "0x20005968",
+    "ram_initialized_end": "0x200059b0",
+    "bss_start": "0x200059b0",
+    "bss_end": "0x200084c0",
+    "stack_limit": "0x2000f000",
+    "stack_top": "0x20010000",
+    "loaded_sections": [
+      {
+        "name": ".text",
+        "vma": "0x77000",
+        "bytes": 26764,
+        "zeroed": false
+      },
+      {
+        "name": ".dfu_trans",
+        "vma": "0x7d88c",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".svc_data",
+        "vma": "0x7d894",
+        "bytes": 12,
+        "zeroed": false
+      },
+      {
+        "name": ".nrf_balloc",
+        "vma": "0x7d8a0",
+        "bytes": 20,
+        "zeroed": false
+      },
+      {
+        "name": ".sdh_ble_observers",
+        "vma": "0x7d8b4",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".sdh_req_observers",
+        "vma": "0x7d8bc",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".sdh_state_observers",
+        "vma": "0x7d8c4",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".sdh_stack_observers",
+        "vma": "0x7d8cc",
+        "bytes": 16,
+        "zeroed": false
+      },
+      {
+        "name": ".sdh_soc_observers",
+        "vma": "0x7d8dc",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".ARM.exidx",
+        "vma": "0x7d8e4",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".data",
+        "vma": "0x20005968",
+        "bytes": 52,
+        "zeroed": false
+      },
+      {
+        "name": ".uicr_bootloader_start_address",
+        "vma": "0x10001014",
+        "bytes": 4,
+        "zeroed": false
+      },
+      {
+        "name": ".uicr_mbr_params_page",
+        "vma": "0x10001018",
+        "bytes": 4,
+        "zeroed": false
+      },
+      {
+        "name": ".fs_data",
+        "vma": "0x2000599c",
+        "bytes": 20,
+        "zeroed": false
+      },
+      {
+        "name": ".bss",
+        "vma": "0x200059b0",
+        "bytes": 11024,
+        "zeroed": true
+      }
+    ],
+    "exact_function_symbols": {
+      "nrf_dfu_validation_signature_check": "0x7a9c1",
+      "nrf_dfu_validation_hash_ok": "0x7a641",
+      "nrf_dfu_validation_boot_validate": "0x7aac9",
+      "uECC_verify": "0x7cd8d",
+      "sha256_transform": "0x77561"
+    }
+  },
+  "applicationBinSha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+  "counter": 672,
+  "bytes": 364276,
+  "cases": [
+    {
+      "name": "signed init",
+      "expected": 1,
+      "passed": true,
+      "return_value": 1,
+      "blocks": 464029,
+      "seconds": 1.9512,
+      "stack_written_span_bytes": 1028,
+      "stack_block_entry_span_bytes": 1024,
+      "stack_pointer_restored": true,
+      "lower_256_byte_guard_intact": true,
+      "executed_functions": [
+        "crypto_init.part.0",
+        "sha256_transform",
+        "uECC_verify"
+      ]
+    },
+    {
+      "name": "changed signature",
+      "expected": 5,
+      "passed": true,
+      "return_value": 5,
+      "blocks": 447573,
+      "seconds": 1.8282,
+      "stack_written_span_bytes": 1028,
+      "stack_block_entry_span_bytes": 1024,
+      "stack_pointer_restored": true,
+      "lower_256_byte_guard_intact": true,
+      "executed_functions": [
+        "crypto_init.part.0",
+        "sha256_transform",
+        "uECC_verify"
+      ]
+    },
+    {
+      "name": "changed init",
+      "expected": 5,
+      "passed": true,
+      "return_value": 5,
+      "blocks": 463004,
+      "seconds": 1.8298,
+      "stack_written_span_bytes": 1028,
+      "stack_block_entry_span_bytes": 1024,
+      "stack_pointer_restored": true,
+      "lower_256_byte_guard_intact": true,
+      "executed_functions": [
+        "crypto_init.part.0",
+        "sha256_transform",
+        "uECC_verify"
+      ]
+    },
+    {
+      "name": "full BIN hash",
+      "expected": 1,
+      "passed": true,
+      "return_value": 1,
+      "blocks": 1833515,
+      "seconds": 5.2663,
+      "stack_written_span_bytes": 576,
+      "stack_block_entry_span_bytes": 576,
+      "stack_pointer_restored": true,
+      "lower_256_byte_guard_intact": true,
+      "executed_functions": [
+        "crypto_init.part.0",
+        "sha256_transform"
+      ]
+    },
+    {
+      "name": "changed BIN hash",
+      "expected": 0,
+      "passed": true,
+      "return_value": 0,
+      "blocks": 1833419,
+      "seconds": 5.0537,
+      "stack_written_span_bytes": 576,
+      "stack_block_entry_span_bytes": 576,
+      "stack_pointer_restored": true,
+      "lower_256_byte_guard_intact": true,
+      "executed_functions": [
+        "crypto_init.part.0",
+        "sha256_transform"
+      ]
+    },
+    {
+      "name": "boot CRC",
+      "expected": 1,
+      "passed": true,
+      "return_value": 1,
+      "blocks": 3642776,
+      "seconds": 7.4789,
+      "stack_written_span_bytes": 52,
+      "stack_block_entry_span_bytes": 52,
+      "stack_pointer_restored": true,
+      "lower_256_byte_guard_intact": true,
+      "executed_functions": []
+    },
+    {
+      "name": "changed BIN boot CRC",
+      "expected": 0,
+      "passed": true,
+      "return_value": 0,
+      "blocks": 3642776,
+      "seconds": 6.8708,
+      "stack_written_span_bytes": 52,
+      "stack_block_entry_span_bytes": 52,
+      "stack_pointer_restored": true,
+      "lower_256_byte_guard_intact": true,
+      "executed_functions": []
+    }
+  ],
+  "physicalDeviceAccess": false,
+  "limits": "Actual linked ARM crypto/CRC with simulated memory, no RF/device transfer."
+}

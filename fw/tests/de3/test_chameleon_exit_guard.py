@@ -31,6 +31,13 @@ def build_harness(fw):
     code = Path(__file__).with_suffix('.c.in').read_text(encoding='utf8')
     header = (tag_dir / 'hf/nfc_mf1.h').read_text(encoding='utf8')
     header = header.replace('#include "netdata.h"', '').replace('"nfc_14a.h"', '"hf/nfc_14a.h"')
+    # The error screen iterates the real localization enum. Symbolic labels make
+    # control-flow assertions independent of the selected display language.
+    ids = sorted(set(re.findall(r'\b_L_(\w+)', app)))
+    labels = ', '.join(f'[_L_{key}]="{key}"' for key in ids)
+    language = (src / 'i18n/string_id.h').read_text(encoding='utf8')
+    language += '\nstatic const char *getLangString(L_StringID id) { static const char *const labels[] = {' + labels + '}; return labels[id]; }'
+    code = code.replace('@LANGUAGE@', language)
     code = code.replace('@MF1_HEADER@', header)
     code = code.replace('@VFS_HEADER@', without_includes((src / 'mod/vfs/vfs.h').read_text(encoding='utf8')))
     code = code.replace('@VIEW_HEADER@', without_includes((src / 'mui/mui_view.h').read_text(encoding='utf8')))
@@ -40,8 +47,31 @@ def build_harness(fw):
     code = code.replace('@CORE_HEADER@', core)
     code = code.replace('@APP_HEADER@', without_includes((src / 'app/chameleon/app_chameleon.h').read_text(encoding='utf8')))
     code = code.replace('@HAS_GUARD@', str(int(has_guard)))
+    modal = 'mui_fence_input_after_frame' in app
+    code = code.replace('@HAS_MODAL@', str(int(modal)))
+    modal_types = ''
+    modal_model = ''
+    if modal:
+        core_ui = (src / 'mui/mui_core.c').read_text()
+        from root_host import function
+        modal_types = without_includes((src / 'mui/mui_event.h').read_text())
+        modal_types += '\n' + without_includes((src / 'mod/bsp_btn.h').read_text())
+        modal_model = Path(__file__).with_name('chameleon_modal_frame.c.in').read_text()
+        modal_model = modal_model.replace('@EVENT_QUEUE@', without_includes((src / 'mui/mui_event.c').read_text()))
+        physical = without_includes((src / 'mui/mui_input.c').read_text()).split('void mui_input_init()')[0]
+        modal_model = modal_model.replace('@PHYSICAL@', physical)
+        # Include the same post-transfer barrier and stale-event check as the LCD.
+        for name in ('mui_fence_input_after_frame', 'mui_buffer_flush', 'mui_process_input'):
+            modal_model = modal_model.replace('@' + name + '@', function(core_ui, name))
+    code = code.replace('@MODAL_TYPES@', modal_types).replace('@MODAL_MODEL@', modal_model)
     code = code.replace('@CRC@', without_includes((tag_dir.parent / 'crc_utils.c').read_text(encoding='utf8')))
     parts = []
+    has_issue = 'chameleon_last_save_issue' in port
+    if has_issue:
+        port_header = (src / 'app/chameleon/port/fds_utils.h').read_text(encoding='utf8')
+        parts.append(port_header[port_header.index('typedef enum {'):port_header.index('void chameleon_save_begin')])
+        parts.append(port[port.index('static chameleon_save_issue_t m_save_issue;'):port.index('static void fds_map_file_name')])
+    code = code.replace('@HAS_SAVE_ISSUE@', str(int(has_issue)))
     for text, name, result in [
         (port, 'fds_map_file_name', 'void'), (port, 'fds_read_sync', 'bool'),
         (port, 'fds_write_sync', 'bool'), (port, 'fds_compare_sync', 'int32_t'),
@@ -58,6 +88,10 @@ def build_harness(fw):
         (tag, 'tag_emulation_change_slot', 'bool' if 'bool tag_emulation_change_slot(' in tag else 'void'),
     ]:
         parts.append(definition(text, name, result))
+    has_discard = 'void tag_emulation_discard(' in tag
+    if has_discard:
+        parts.append(definition(tag, 'tag_emulation_discard', 'void'))
+    code = code.replace('@HAS_DISCARD@', str(int(has_discard)))
     if has_guard:
         parts.append(definition(tag, 'tag_emulation_save_for_exit', 'bool'))
     count_scene = ''

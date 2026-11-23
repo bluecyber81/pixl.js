@@ -29,7 +29,16 @@ mui_t *mui(void){return &fake_mui;}
 void mui_show_memory_error(mui_t*m){m->memory_error=true;oom++;}
 const char*getLangString(L_StringID id){return lang_de_DE[id];}
 bool isChineseLanguage(void){return chinese;}
-const char*get_amiibo_display_name(const db_amiibo_t*a){return chinese?a->name_cn:a->name_en;}
+#if TEST_NAME_POOL
+#define TEST_FIGURE_EN(a) db_amiibo_name_en(a)
+#define TEST_FIGURE_CN(a) db_amiibo_name_cn(a)
+#define TEST_GAME_EN(a) db_game_name_en(a)
+#else
+#define TEST_FIGURE_EN(a) ((a)->name_en)
+#define TEST_FIGURE_CN(a) ((a)->name_cn)
+#define TEST_GAME_EN(a) ((a)->name_en)
+#endif
+const char*get_amiibo_display_name(const db_amiibo_t*a){return chinese?TEST_FIGURE_CN(a):TEST_FIGURE_EN(a);}
 bool is_valid_amiibo_v3(uint32_t a,uint32_t b){(void)a;return (b&255)==3;}
 void mui_toast_view_show(mui_toast_view_t*v,const char*t){(void)v;(void)t;}
 void mui_view_dispatcher_switch_to_view(mui_view_dispatcher_t*d,uint32_t id){(void)d;last_view=id;}
@@ -99,8 +108,8 @@ static void memory_case(void){
 }
 #if !TEST_BASELINE
 static const db_game_t*games[256];static const db_amiibo_t*figures[2048];
-static int cmp_game(const void*x,const void*y){const db_game_t*a=*(const db_game_t*const*)x,*b=*(const db_game_t*const*)y;if(!config.amiidb_sort_column&&a->order!=b->order)return a->order>b->order?-1:1;int r=strcmp(a->name_en,b->name_en);return r?r:(int)a->game_id-(int)b->game_id;}
-static int cmp_fig(const void*x,const void*y){const db_amiibo_t*a=*(const db_amiibo_t*const*)x,*b=*(const db_amiibo_t*const*)y;int r=strcmp(a->name_en,b->name_en);if(r)return r;if(a->head!=b->head)return a->head<b->head?-1:1;return (a->tail>b->tail)-(a->tail<b->tail);}
+static int cmp_game(const void*x,const void*y){const db_game_t*a=*(const db_game_t*const*)x,*b=*(const db_game_t*const*)y;if(!config.amiidb_sort_column&&a->order!=b->order)return a->order>b->order?-1:1;int r=strcmp(TEST_GAME_EN(a),TEST_GAME_EN(b));return r?r:(int)a->game_id-(int)b->game_id;}
+static int cmp_fig(const void*x,const void*y){const db_amiibo_t*a=*(const db_amiibo_t*const*)x,*b=*(const db_amiibo_t*const*)y;int r=strcmp(TEST_FIGURE_EN(a),TEST_FIGURE_EN(b));if(r)return r;if(a->head!=b->head)return a->head<b->head?-1:1;return (a->tail>b->tail)-(a->tail<b->tail);}
 static bool in_game(uint8_t parent,uint8_t child){for(unsigned d=0;child&&d<256;d++){if(child==parent)return true;const db_game_t*g=game_list;while(g->game_id&&g->game_id!=child)g++;if(!g->game_id)return false;child=g->parent_game_id;}return false;}
 static void check_group(uint8_t id){
  unsigned ng=0,nf=0;for(const db_game_t*g=game_list;g->game_id;g++)if(g->parent_game_id==id)games[ng++]=g;

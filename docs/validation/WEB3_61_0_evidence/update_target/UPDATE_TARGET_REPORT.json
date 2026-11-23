@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "createdUtc": "2026-11-21T18:53:32.319364+00:00",
+  "passed": true,
+  "exitCode": 0,
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "web/tests/update-check.test.mjs"
+  ],
+  "fileHashes": {
+    "web/src/lib/update-target.js": "ee1cc4aab84aa89d68ce2c49fd8c8cdd0ee7e67eb69a0da7074808047ee9bbff",
+    "web/tests/update-check.test.mjs": "ae69a4d12583976e93fb0e5035d481f21495ca3cc12b2ec7ca65044c43b06b52"
+  },
+  "inputsUnchangedWithinRun": true,
+  "hardwareBootloaderSoftdeviceAndHistoricalMappingsByteUnchanged": true,
+  "sourceChangeScope": [
+    "profileRevision=2026-11-21-de398-z21",
+    "targetId=allmiibo-lcd-de3.98-z21-s112-7.3.0",
+    "applicationVersion=2.22.0-DE3.98",
+    "applicationCounter=671"
+  ],
+  "testScope": "Independent current-target wire fixture; exact normal catalogue binding; old App662 historical Z21 case retained; App668/669/670 known profiles included; existing evidence, mismatch, downgrade, geometry and lifecycle assertions retained.",
+  "noNewReleaseTagCreated": true,
+  "newDeviceTests": false,
+  "logPath": "/workspace/scratch/0af425ec2cbb/app671_validation/web/update_target/UPDATE_TARGET_TEST.log",
+  "logSha256": "f040618fd41c926dbb93f70aa3170d9306eaf69d89cfdd0f3f1f8389720e4cad",
+  "tests": 41,
+  "pass": 41,
+  "fail": 0,
+  "skipped": 0
+}

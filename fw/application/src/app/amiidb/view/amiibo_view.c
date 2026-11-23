@@ -252,7 +252,7 @@ static void amiibo_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
         p_amiibo_view->desc_step = 8;
         p_amiibo_view->desc_page_size = clip_win_cur.h;
         p_amiibo_view->desc_total = 0;
-        if (strlen(ntag->notes) > 0) {
+        if (ntag->notes[0] != '\0') {
             p_amiibo_view->desc_total =
                 mui_element_autowrap_text_box(p_canvas, clip_win_cur.x, clip_win_cur.y, text_width, clip_win_cur.h,
                                               p_amiibo_view->desc_page_size, p_amiibo_view->desc_offset, 0, ntag->notes);

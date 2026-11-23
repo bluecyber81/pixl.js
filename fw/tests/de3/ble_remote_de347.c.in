@@ -10,7 +10,7 @@
 #include "app_util_platform.h"
 int critical_depth;
 enum {NRF_SUCCESS=0,NRF_ERROR_RESOURCES=1,NRF_ERROR_INVALID_STATE=2};
-enum {MINI_APP_ID_BLE=1,MINI_APP_ID_AMIIBOLINK=2,BLE_DEVICE_MODE_REMOTE=3};
+enum {MINI_APP_ID_BLE=1,MINI_APP_ID_AMIIBOLINK=2,BLE_DEVICE_MODE_REMOTE=3,MINI_APP_ID_SWITCH2_WAKE=4,MINI_APP_ID_BLE_STREAM=5};
 enum {MUI_EVENT_ID_INPUT=1,INPUT_TYPE_SHORT=2,INPUT_TYPE_LONG=3,INPUT_KEY_CENTER=1};
 #define MAX_EVENT_MSG 64
 #define APP_TIMER_TICKS(n) (n)
@@ -22,12 +22,13 @@ typedef struct {unsigned id,arg_int;void *arg_ptr;} mui_event_t;
 /* ACTUAL_INPUT_CONTEXT */
 typedef struct {mui_event_t *events;void *dispatcher;unsigned head,count;} mui_event_queue_t;
 typedef struct {bool initialized,memory_error,auto_update;mui_event_queue_t event_queue;struct {uint8_t *pixels;unsigned width,height;} u8g2;} mui_t;
-typedef struct {bool file,loop;} mini_app_launcher_t;
+typedef struct {bool file,loop,wake,stream;} mini_app_launcher_t;
 static mui_event_t input_events[64];
 static mui_t mock_ui;
 static mini_app_launcher_t mock_launcher;
 static bool mock_permission_safe,mock_recovery,mock_mode,mock_connected,mock_ready,mock_pending,mock_cleanup;
-static bool mock_hold,mock_advertising,mock_launch_fail;
+static bool mock_hold,mock_advertising,mock_launch_fail,mock_radio_busy;
+static bool ble_miniapp_radio_busy(void){return mock_radio_busy;}
 static unsigned mock_session,mock_link,mock_tick,mock_send_result,mock_actions,mock_launches,mock_feed,mock_sent,mock_aborts,mock_releases;
 static int mock_action_effect;
 static unsigned mock_input;
@@ -52,7 +53,7 @@ static void mui_mem_free(void *block){assert(!critical_depth && mock_allocations
 static uint32_t app_timer_cnt_get(void){return mock_tick;}
 static uint32_t app_timer_cnt_diff_compute(uint32_t a,uint32_t b){return a-b;}
 static mini_app_launcher_t *mini_app_launcher(void){return &mock_launcher;}
-static void *mini_app_launcher_get_app_handle(mini_app_launcher_t *l,unsigned id){return id==1?(l->file?l:NULL):(l->loop?l:NULL);}
+static void *mini_app_launcher_get_app_handle(mini_app_launcher_t *l,unsigned id){return (id==1?l->file:id==2?l->loop:id==4?l->wake:id==5?l->stream:false)?l:NULL;}
 static void mini_app_launcher_run(mini_app_launcher_t *l,unsigned id){assert(!critical_depth && id==1);
 #ifdef BOARD_LCD
     assert(mock_allocations==0); /* Snapshot must already be released at app entry. */
@@ -90,6 +91,7 @@ static void mui_event_dispatch_now(mui_event_queue_t *q,mui_event_t *e){
     if(mock_action_effect==4){mock_pending=true;mock_launcher.loop=true;}
 }
 /* ACTUAL_REMOTE_SOURCE */
+/* ACTUAL_MODAL_BOUNDARY */
 static unsigned cases;
 #define CHECK(x) do{assert(x);cases++;}while(0)
 static void clean(void){assert(!critical_depth);mock_cleanup=true;}
@@ -100,7 +102,7 @@ static void reset(void){
     ble_remote_shutdown();ble_work_disconnected();ble_work_set_handlers(ble_remote_receive,NULL);ble_work_process(clean);
     memset(&mock_ui,0,sizeof(mock_ui));memset(&mock_launcher,0,sizeof(mock_launcher));memset(&protocol,0,sizeof(protocol));
     memset(input_events,0,sizeof(input_events));mock_ui.initialized=true;mock_ui.auto_update=true;mock_ui.event_queue.events=input_events;mock_ui.event_queue.dispatcher=&mock_ui;
-    mock_permission_safe=true;mock_recovery=mock_pending=mock_hold=mock_advertising=mock_launch_fail=false;mock_mode=true;mock_ready=mock_connected=false;
+    mock_permission_safe=true;mock_recovery=mock_pending=mock_hold=mock_advertising=mock_launch_fail=false;mock_mode=true;mock_ready=mock_connected=mock_radio_busy=false;
     mock_tick=mock_actions=mock_launches=mock_feed=mock_sent=mock_aborts=mock_releases=mock_send_result=0;mock_action_effect=0;nfct.FIELDPRESENT=0;
     CHECK(!ble_remote_enabled());CHECK(ble_remote_set_enabled(true));connect();ble_remote_poll();
 }
@@ -214,6 +216,22 @@ int main(int argc,char **argv){
 #else
     reset();handshake();request(REMOTE_LCD_READ,2,0);CHECK(mock_reply_length==12 && mock_reply[6]==REMOTE_UNSUPPORTED && mock_reply[8]==31);
 #endif
+#ifdef BOARD_LCD
+    /* New apps and an asynchronously closing timeslot retain radio ownership.
+     * Remote must neither inject keys nor restart its advertiser in that gap. */
+    for (unsigned owner=0; owner<3; ++owner) {
+        reset();handshake();
+        if(owner==0)mock_launcher.wake=true;
+        if(owner==1)mock_launcher.stream=true;
+        if(owner==2)mock_radio_busy=true;
+        CHECK(other_owner());
+        CHECK(execute(NULL,REMOTE_TAP,1,local_generation)==REMOTE_BUSY && !mock_actions);
+        disconnect();ble_work_process(clean);mock_mode=false;mock_advertising=false;
+        ble_remote_poll();CHECK(!mock_mode && !mock_advertising);
+        mock_launcher.wake=mock_launcher.stream=mock_radio_busy=false;
+        CHECK(!other_owner());ble_remote_poll();CHECK(mock_mode && mock_advertising);
+    }
+#endif
     reset();request(2,1,0);CHECK(mock_reply[6]==REMOTE_UNSUPPORTED&&mock_actions==0);request(0,2,0);CHECK(protocol.handshake);
     for(unsigned key=0;key<3;key++){request(2,3+key,key);CHECK(mock_input==((2u<<8)|key));}
     CHECK(mock_actions==3);request(3,6,0);CHECK(mock_actions==4&&mock_input==((3u<<8)|1));
@@ -224,6 +242,17 @@ int main(int argc,char **argv){
     reset();handshake();enqueue(2,2,0);ble_remote_local_activity();ble_work_process(clean);ble_remote_poll();CHECK(mock_actions==0&&mock_reply[6]==REMOTE_BUSY);
     request(2,3,0);CHECK(mock_actions==1);
     reset();handshake();enqueue(2,2,0);ble_work_process(clean);ble_remote_local_activity();ble_remote_poll();CHECK(mock_actions==0&&mock_reply[6]==REMOTE_BUSY);
+    /* A tap from before the modal's display transfer may already be in either
+     * the IRQ work queue or the command slot when the new choice is shown. */
+    for(unsigned before_poll=0;before_poll<2;before_poll++){
+        reset();handshake();enqueue(REMOTE_TAP,2,1);
+        if(before_poll)ble_work_process(clean);
+        mui_input_modal_boundary();
+        ble_work_process(clean);ble_remote_poll();
+        CHECK(!mock_actions && mock_reply[6]==REMOTE_BUSY);
+        request(REMOTE_TAP,3,1);
+        CHECK(mock_actions==1 && mock_reply[6]==REMOTE_DONE);
+    }
     reset();handshake();enqueue(2,2,0);disconnect();connect();ble_work_process(clean);ble_remote_poll();CHECK(mock_actions==0);handshake();request(2,2,0);CHECK(mock_actions==1);
     reset();handshake();mock_session++;CHECK(execute(NULL,REMOTE_TAP,1,local_generation)==REMOTE_BUSY&&!mock_actions);
     reset();handshake();mock_action_effect=1;request(2,2,1);CHECK(mock_actions==1&&mock_sent==1&&!ble_remote_enabled());

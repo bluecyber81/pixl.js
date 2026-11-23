@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "status": "completed",
+  "conclusion": "success",
+  "runId": 45189684248,
+  "attempt": 1,
+  "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45189684248",
+  "commit": "a70187159ec177c947c931d5dd7e3d1600841492",
+  "tree": "e9b30b9199efa2278985aa15b39f3f448c3d0c17",
+  "sourceCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "sourceCiRun": 45184306115,
+  "createdAtUtc": "2026-11-23T14:01:00Z",
+  "completedAtUtc": "2026-11-23T14:01:49Z",
+  "proof": "docs/validation/WEB3_65_0_evidence/PAGES_RUN_45189684248.json",
+  "initialPublicationReceipt": "docs/validation/WEB3_65_0_evidence/PAGES_INITIAL_PUBLICATION_RECEIPT.json",
+  "scope": "The actual GitHub Pages deployment completed successfully. This record covers deployment only; public HTTP byte comparison and interactive browser observations have separate evidence.",
+  "httpVerificationIncluded": false,
+  "browserVerificationIncluded": false
+}

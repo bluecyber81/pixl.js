@@ -97,6 +97,7 @@
 #include "mini_app_registry.h"
 #include "mui_include.h"
 #include "mui_mem.h"
+#include "mui_u8g2.h"
 
 #include "hal_spi_bus.h"
 #include "hal_nfc_t2t.h"
@@ -107,6 +108,9 @@
 #include "cache.h"
 #include "i18n/language.h"
 #include "settings.h"
+#ifdef BOARD_LCD
+#include "app_switch2_wake.h"
+#endif
 #ifdef VFS_PACKED_LFS_ENABLE
 #include "vfs_packed_runtime.h"
 #endif
@@ -170,6 +174,9 @@ void bsp_evt_handler(bsp_event_t evt) { app_sched_event_put(&evt, sizeof(evt), b
  *
  * @param[in]   event       Shutdown type.
  */
+#ifdef BOARD_LCD
+static bool m_miniapp_sleep_pending;
+#endif
 static bool shutdown_handler(nrf_pwr_mgmt_evt_t event) {
     ret_code_t err_code;
 
@@ -187,6 +194,14 @@ static bool shutdown_handler(nrf_pwr_mgmt_evt_t event) {
         ble_remote_shutdown();
         ble_disable();
         ble_process_pending();
+#ifdef BOARD_LCD
+        /* Timeslot closure is asynchronous. Keep UI/state alive until S112 has
+         * delivered SESSION_CLOSED and all temporary advertising data is gone. */
+        if (ble_miniapp_radio_busy()) {
+            m_miniapp_sleep_pending = true;
+            return false;
+        }
+#endif
 
         if (!mini_app_launcher_sleep(mini_app_launcher())) {
             mini_app_launcher_cancel_exit(mini_app_launcher());
@@ -327,6 +342,20 @@ void startup_storage_checkpoint(enum startup_storage_checkpoint step) {
 }
 #endif
 
+static void mui_settings_recovered(const settings_data_t *previous) {
+    mui_t *ui = mui();
+    if (!ui->initialized) return;
+    settings_data_t *current = settings_get_data();
+    setLanguage(current->language);
+    ble_set_standby_timeout(current->sleep_timeout_sec);
+    if (previous->flip_display != current->flip_display)
+        mui_u8g2_set_flip_display(current->flip_display);
+    if (previous->oled_contrast != current->oled_contrast ||
+        previous->lcd_backlight != current->lcd_backlight || previous->backlight != current->backlight)
+        mui_u8g2_recover_levels();
+    mui_update(ui);
+}
+
 int main(void) {
     runtime_diag_stack_init();
     runtime_diag_boot_capture(nrf_power_resetreas_get());
@@ -415,12 +444,16 @@ int main(void) {
     runtime_diag_startup_mark(STARTUP_DISPLAY_BEGIN, startup_elapsed_ms(startup_started));
 #endif
     mui_init(p_mui);
+    settings_on_recovered(mui_settings_recovered);
 #if defined(PIXL_RUNTIME_DIAGNOSTICS)
     runtime_diag_startup_mark(STARTUP_DISPLAY_DONE, startup_elapsed_ms(startup_started));
 #endif
 
     mini_app_launcher_t *p_launcher = mini_app_launcher();
     mini_app_launcher_init(p_launcher, wakeup_reason);
+#ifdef BOARD_LCD
+    app_switch2_wake_on_boot(wakeup_reason);
+#endif
 #if defined(PIXL_RUNTIME_DIAGNOSTICS)
     runtime_diag_startup_mark(STARTUP_LAUNCHER_DONE, startup_elapsed_ms(startup_started));
     bool startup_dispatched = false;
@@ -433,6 +466,16 @@ int main(void) {
         ntag_emu_process_pending();
         ble_process_pending();
         app_sched_execute();
+#ifdef BOARD_LCD
+        if (m_miniapp_sleep_pending) {
+            if (!ble_miniapp_radio_busy()) {
+                m_miniapp_sleep_pending = false;
+                nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_CONTINUE);
+            }
+            nrf_pwr_mgmt_run();
+            continue;
+        }
+#endif
 #if defined(PIXL_SMALL_CREATE_ENABLE) && defined(VFS_PACKED_LFS_ENABLE)
         df_proto_vfs_expire_small();
 #endif

@@ -11,6 +11,7 @@ SRC=FW/'application/src/mod/ble'
 strip=lambda s: re.sub(r'(?m)^\s*#include[^\n]*\n','',s)
 code=(HERE/'ble_remote_de347.c.in').read_text(encoding='utf-8').replace('/* ACTUAL_REMOTE_SOURCE */',strip((SRC/'ble_remote.c').read_text(encoding='utf-8')))
 code=code.replace('/* ACTUAL_INPUT_CONTEXT */',context_state()+context_functions((*TOKEN_FUNCTIONS,'mui_input_context_changed')))
+code=code.replace('/* ACTUAL_MODAL_BOUNDARY */',context_functions(('mui_input_modal_boundary',)))
 with tempfile.TemporaryDirectory(prefix='ble-remote-de347-') as tmp:
     p=Path(tmp);c=p/'harness.c';exe=p/'test.exe';c.write_text(code,encoding='utf-8')
     (p/'app_util_platform.h').write_text('extern int critical_depth;\n#define CRITICAL_REGION_ENTER() do { critical_depth++;\n#define CRITICAL_REGION_EXIT() critical_depth--; } while(0)\n')

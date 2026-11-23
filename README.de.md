@@ -1,8 +1,30 @@
-# Firmware für Allmiibo LCD und Pixl.js OLED
+# Allmiibo LCD und Pixl.js OLED
 
-[English](README.md) · [Bluetooth-Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
+## Aktuell: LCD DE3.102 / App675 und Dateimanager 3.65.0
 
-## LCD DE3.89 / App662 · stabile Firmware
+**Öffentlicher Web-Prüfstand.** Der unveränderte Web-Produktstand wurde auf [`a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4`](https://github.com/bluecyber81/pixl.js/commit/a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4) qualifiziert; der korrigierte öffentliche Metadatenkopf c18bfb hat ebenfalls die [vollständige Quellprüfung](https://github.com/bluecyber81/pixl.js/actions/runs/45193676314) bestanden. Die [abschließende Pages-Bereitstellung](https://github.com/bluecyber81/pixl.js/actions/runs/45198958839) enthält das separate Quellpaket. Der Endbestand von 324 Dateien ist durch 321 unveränderte frühere HTTP-Nachweise und drei neue Downloads belegt; neun gezielte UI-Prüfungen gelten für den unveränderten Produktstand. [Nachweise und Prüfgrenzen](docs/validation/WEB3_65_0_FINAL_DELIVERY.json). Die beiden vollständigen Prüfabläufe für den kombinierten Main-Commit werden separat unter [GitHub Actions für main](https://github.com/bluecyber81/pixl.js/actions?query=branch%3Amain) geführt.
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signierte App675-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip) · [Reproduzierbares Quellpaket (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip).
+
+**Web 3.65.0** merkt die Bildoptionen und behält eine lokale Datei beim Wechsel zwischen Bereichen für höchstens 30 Minuten in der geöffneten Seite. Drehen um 90°, 180° oder 270°, ein optionales Punktraster für Fotos sowie Drag & Drop ergänzen die Vorschau. Unter **Für den Animationsplayer speichern** lassen sich ein Einzelbild, die Demo oder ein Videoausschnitt als Player-BIN herunterladen. Anfang, Ende, Bildrate und Dateigröße sind vor dem Export sichtbar; Fortschritt und Abbruch sind enthalten. Die Verarbeitung bleibt lokal. [Bedienung](https://bluecyber81.github.io/pixl.js/guide/index.html#bild-video).
+
+**LCD DE3.102 / App675** zeichnet den Bildempfang bei vollständigen Bildern oder geänderten Statusanzeigen neu. Im Animationsplayer lassen sich **Endlosschleife** und **Bildzähler** einschalten; beide starten ausgeschaltet und gelten für die aktuelle Playersitzung. Die neuen Menüsymbole aus App674 bleiben enthalten. Die Firmware ist für **LCD/ST7567, PFS1, Z21 und S112 7.3.0** bestimmt. Das reine App-Update erhält das PFS1-Dateisystem, den Bootloader und das SoftDevice.
+
+Der Web-Bildsender arbeitet weiterhin mit **App673 oder neuer**. App675 wird für die neuen Player-Optionen und die verbesserte Anzeigeaktualisierung benötigt. Dateiauswahl und Export starten keine Bluetooth-Übertragung. Die fertige Player-BIN wird anschließend über **Dateien** nach **E:/player/** kopiert. Verlassen oder Ausblenden des Senders beendet die Übertragung; es gibt keine automatische Wiederaufnahme.
+
+Der Figurenkatalog führt vorhandene Ocarina-/Fatal-Fury-Spielhinweise mit den Figurendetails zusammen und ergänzt belegte Spielzuordnungen für Sword Kirby & Dragoon und Noir Dedede & Hydra. Die Angaben nennen ihre Nintendo-Quellen. Bestehende Sicherungs-, Vergleichs-, Synchronisations-, Fernbedienungs- und Diagnosefunktionen bleiben verfügbar.
+
+### Quellen und Prüfstand
+
+[LCD-Produktionszweig](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Webzweig](https://github.com/bluecyber81/pixl.js/tree/web-app675) · [Firmware-Prüfbericht](docs/validation/DE3_102.json) · [ARM-/PFS-Bindung](docs/validation/DE3_102_PFS.json) · [Web-Prüfbericht](docs/validation/WEB3_65_0.json) · [Bedienhinweise](web/LIESMICH_3_65_0.txt) · [English](README.md).
+
+Dieser gemeinsame Hauptbranch enthält die vollständige App675-Firmware und die normale Web3.65.0. Alle 720 Firmware-Produktionseingaben stimmen mit dem unveränderlichen LCD-Produktionscommit `658d43a7fe2777778d8efa8439f73aa48210e033` und der SourceID `9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46` überein; das vorhandene Paket bleibt an diesen Commit gebunden. Getrennte Web- und historische Firmwarezweige behalten ihre eigenen Stände. Softwareprüfungen und praktische Geräteabnahme sind getrennt dokumentiert. Die offene Abnahme betrifft insbesondere Bildübertragung, Video-Codecs, Player-Wiederholung, Bildzähler und Switch-2-Wecken am tatsächlichen Gerät. OLED Test6/App86 bleibt ein eigener Geräte- und Paketpfad; private Web-Ausgaben bleiben historische, separate Stände.
+
+## Frühere Downloads und getrennte OLED-Ausgaben
+
+Das ältere Android-Komplettpaket enthält App662 und ist ein eigener Systemweg für passende ältere LCDs; danach folgt die normale App675 als separates App-Update. App674, App673 und App672 bleiben als frühere normale Pakete erhalten. OLED-Test5/App85 und Test6/App86 behalten ihre eigenen Pakete und Prüfgrenzen.
+
+## Archiv: LCD DE3.89 / App662
 
 | Dein LCD-Gerät | Passender Download |
 | --- | --- |
@@ -14,7 +36,7 @@ Sichere deine Dateien und wähle die gepackte ZIP in **nRF Device Firmware Updat
 
 Am 19. November 2026 bestätigte der Besitzer den erfolgreichen Praxistest auf seinem LCD. Der Dateimanager 3.58.2 las App662, die passende LCD-Buildkennung, Z21 und S112 7.3.0 aus. Der Zeitvergleich mit Mochi auf App662 und die Wiederaufnahme eines unterbrochenen Android-Firmwareupdates sind noch offen. [Gerätenachweis](docs/validation/DE3_89_LCD_READBACK.json)
 
-## Dateimanager 3.58.2
+## Archiv: Dateimanager 3.58.2
 
 Vorschau, Prüfung und Sicherung kleiner Dateien können diese mit einer einzigen Anfrage auslesen. Bei einer erneuten Suche prüft der Browser, ob sich der Speicher seit der letzten Suche geändert hat. Einen unterbrochenen Ordnerupload kannst du im selben Tab nach dem Wiederverbinden fortsetzen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Paket und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2)
 

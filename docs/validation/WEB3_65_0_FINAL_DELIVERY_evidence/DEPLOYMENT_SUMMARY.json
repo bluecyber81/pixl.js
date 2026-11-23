@@ -1,0 +1,32 @@
+{
+  "runId": 45198958839,
+  "attempt": 1,
+  "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45198958839",
+  "headCommit": "f1d69f020097f21487eef99314fe7da5257b41d7",
+  "tree": "bc1f5f7cc4cf6296a08efab2f16715c5f702e070",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 137776942150,
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 137777237283,
+      "name": "report-build-status",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 137777237425,
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "runEvidenceSha256": "f45bbc9a0969b98508256186a9c908c68891989bbbfaa340dbd1d7c17bf0bfcb",
+  "jobsEvidenceSha256": "664b4aeec21354023abb84048bf6f72b99e20fee4c80de555df3f915a686a245",
+  "deployJobLogSha256": "f4dcabd6ca3962ac277021afaac2d3bb618f4cff583c877c29304584aa0c23de"
+}

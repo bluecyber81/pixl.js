@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "recordedAtUtc": "2026-11-23T14:21:50.831965+00:00",
+  "status": "metadata-corrected-targeted-test-passed-public-full-ci-pending",
+  "baseMetadataCommit": "d700e95a67dda2035a6189c16a7868d42a64a2c5",
+  "webProductTree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+  "webProductUnchanged": true,
+  "publicProductQualificationCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "publicProductQualificationCiRun": 45184306115,
+  "failedMetadataCi": {
+    "commit": "d700e95a67dda2035a6189c16a7868d42a64a2c5",
+    "tree": "4254fe3e5d01da9aed06ec7b81aed21caffb3420",
+    "runId": 45192485217,
+    "jobId": 137754178877,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45192485217",
+    "conclusion": "failure",
+    "tests": 2273,
+    "passed": 2269,
+    "failed": 1,
+    "skipped": 3,
+    "test": "the rendered DE/EN footer offers the matching Web and LCD release assets on root and Pages",
+    "assertion": "web/tests/deployment-path.test.mjs:80 compares metadata.web_downloads.source with projectDownloads(version).source",
+    "actualMetadataLink": "https://github.com/bluecyber81/pixl.js/archive/a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4.zip",
+    "expectedActualUiLink": "https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip",
+    "reason": "The metadata follow-up incorrectly replaced the actual UI branch-download link with the immutable qualification archive link. The deployed Web product bytes were unchanged, but the source metadata contract genuinely failed.",
+    "originalLog": "docs/validation/WEB3_65_0_METADATA_CORRECTION_evidence/FAILED_WEB_CI_JOB_137754178877.log",
+    "failurePreserved": true
+  },
+  "correction": {
+    "web_downloads.source": "https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip",
+    "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4.zip",
+    "scope": "Actual UI download route and immutable qualification source are separate metadata concepts. A separately packaged source ZIP will use its own new field; it must not replace the UI download route.",
+    "productOrTestChanges": false
+  },
+  "targetedVerification": {
+    "passed": true,
+    "command": "node --test tests/deployment-path.test.mjs",
+    "workingDirectory": "web",
+    "nodeVersion": "24.22.3",
+    "tests": 9,
+    "passedTests": 9,
+    "failed": 0,
+    "skipped": 0,
+    "existingTestUnchanged": true,
+    "testSourceSha256": "292d0c81e75965131da55660c308264fafc5d36c04fd260a19747b550e662926",
+    "log": "docs/validation/WEB3_65_0_METADATA_CORRECTION_evidence/DEPLOYMENT_PATH_METADATA_FIX.log",
+    "logSha256": "76377ef490fc67f79312e73f2e306f0bb6f3f595161b36ef7ccb2db65a558596",
+    "testedUiSourceLink": "https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip",
+    "testedPortableLink": "https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip",
+    "scope": "The existing deployment-path test file was run unchanged after correcting only the metadata UI source link. This is a narrow local verification, not a new full-suite pass."
+  },
+  "evidence": [
+    {
+      "file": "DEPLOYMENT_PATH_METADATA_FIX.log",
+      "bytes": 1088,
+      "sha256": "76377ef490fc67f79312e73f2e306f0bb6f3f595161b36ef7ccb2db65a558596"
+    },
+    {
+      "file": "FAILED_WEB_CI_JOB_137754178877.log",
+      "bytes": 328077,
+      "sha256": "e9010cb225c7e3ccb73197b1a145f2cd5b1dd9f81bad700dd6fe44db6e059a71"
+    }
+  ],
+  "publicFullCiOnCorrectionPending": true,
+  "combinedMainCisPending": true,
+  "physicalDeviceAcceptancePending": true
+}

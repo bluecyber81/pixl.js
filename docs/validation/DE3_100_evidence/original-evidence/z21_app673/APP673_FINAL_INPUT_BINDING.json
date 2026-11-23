@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-11-22T17:49:11.755341+00:00",
+  "status": "PASS_FINAL_CORRECTED_INPUT",
+  "supersedes": "superseded_run_1/SUPERSEDED.json",
+  "applicationCounter": 673,
+  "previousCounter": 672,
+  "otaPath": "/workspace/scratch/01be954f2c61/work_20261122_next/firmware/fw/releases/Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+  "otaBytes": 361681,
+  "otaSha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+  "binaryPath": "/workspace/scratch/01be954f2c61/work_20261122_next/evidence/app673_final_release/pixljs.bin",
+  "binaryBytes": 361080,
+  "binarySha256": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+  "initSha256": "0dffe35c98c0add32cd04eeb3d222bb5296edd421ef89e31cf28a91daa90439d",
+  "zipPayloadEqualsFinalReleaseBin": true,
+  "sourceIdSha256": "33d41ccf675ff8b359cd616fbc66376de9df76d73f0896a61ab9ea0ce7a50778",
+  "sourceIdMatchesFinalBuildMetadata": true,
+  "signatureEvidence": "../signing_app673_final/SIGNED_OTA.json",
+  "releaseBuildEvidence": "../app673_final_release/BUILD_RESULT.json",
+  "buildMetadataSha256": "b6ecc1fd32e6ac67870622b17460300b39931f48821444e41576f6bc0aefb6f6",
+  "previousArchiveBinding": "PREVIOUS_APP672_READBACK.json",
+  "physicalDeviceAccess": false
+}

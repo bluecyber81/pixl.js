@@ -1,6 +1,43 @@
 export const BATTERY_HISTORY_INTERVAL = 10_000;
 export const BATTERY_HISTORY_LIMIT = 120;
 
+// Time in the retained logger window, not ADC sampling time or battery life.
+// Each interval belongs to the state after its left entry. Never extend the
+// last entry to Date.now(): a terminal stop or open pause has no known end.
+export function batteryHistoryTiming(rows) {
+  const result = { firstAt: null, lastAt: null, elapsedMilliseconds: null,
+    activeMilliseconds: null, pausedMilliseconds: null, clockAdjusted: false,
+    truncated: false, invalidEntries: false };
+  if (!Array.isArray(rows) || !rows.length) return result;
+  result.truncated = Number.isSafeInteger(rows[0]?.id) && rows[0].id > 1;
+  let previousAt = null, paused = false, activeTime = 0, pauseTime = 0;
+  for (const row of rows) {
+    const validTime = row && Number.isSafeInteger(row.at) && Math.abs(row.at) <= 8640000000000000;
+    const reading = row && Number.isInteger(row.mv) && row.mv >= 1 && row.mv <= 65535 &&
+      (row.reason == null || row.reason === 'reading');
+    const event = row?.mv === null && ['pause', 'resume', 'invalid'].includes(row.reason);
+    if (!validTime || !reading && !event) { result.invalidEntries = true; continue; }
+    if (previousAt === null) result.firstAt = row.at;
+    else {
+      const interval = row.at - previousAt;
+      if (interval < 0) result.clockAdjusted = true;
+      else if (!Number.isSafeInteger(interval)) result.invalidEntries = true;
+      else if (paused) pauseTime += interval;
+      else activeTime += interval;
+    }
+    previousAt = row.at;
+    result.lastAt = row.at;
+    paused = row.reason === 'pause';
+  }
+  if (result.firstAt !== null && !result.clockAdjusted && !result.invalidEntries &&
+      Number.isSafeInteger(activeTime + pauseTime)) {
+    result.elapsedMilliseconds = result.lastAt - result.firstAt;
+    result.activeMilliseconds = activeTime;
+    result.pausedMilliseconds = pauseTime;
+  }
+  return result;
+}
+
 // Summarize only valid cached voltage readings with valid browser receipt times.
 // The span includes gaps; it is neither active sampling time nor battery life.
 // A backwards wall clock invalidates the duration, but not the voltage values.

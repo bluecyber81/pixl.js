@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "files": [
+    {
+      "path": "README.md",
+      "preservedHistoricalReleaseLinks": 71
+    },
+    {
+      "path": "README.de.md",
+      "preservedHistoricalReleaseLinks": 71
+    },
+    {
+      "path": "web/README.md",
+      "preservedHistoricalReleaseLinks": 67
+    },
+    {
+      "path": "web/src/lib/project-downloads.js",
+      "preservedHistoricalReleaseLinks": 4
+    },
+    {
+      "path": "web/scripts/copy-license-notices.mjs",
+      "preservedHistoricalReleaseLinks": 0
+    }
+  ]
+}

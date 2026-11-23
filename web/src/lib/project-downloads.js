@@ -1,12 +1,14 @@
+import release from '../../package.json' with { type: 'json' };
+
 export function projectDownloads(buildVersion) {
-  const version = '3.58.2';
-  const directory = 'https://github.com/bluecyber81/pixl.js/releases/download/web' + version + '/';
+  const version = release.version;
+  const directory = 'https://bluecyber81.github.io/pixl.js/downloads/web' + version + '/';
   const fileVersion = version.replaceAll('.', '_');
   return {
     version,
     labelSuffix: version === buildVersion ? '' : ' · ' + version,
     portable: directory + 'Allmiibo_Dateimanager_' + fileVersion + '_Portable.zip',
-    source: directory + 'Allmiibo_Dateimanager_' + fileVersion + '_Quellcode.zip',
+    source: 'https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip',
     candidatePortable: 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89-lcd-test1/Allmiibo_Dateimanager_3_58_2_App662_Test1_Windows.zip',
     candidateSource: 'https://github.com/bluecyber81/pixl.js/archive/refs/tags/de3.89-lcd-test1.zip',
     lcdKit: 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip',

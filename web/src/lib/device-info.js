@@ -1,5 +1,8 @@
+import release from '../../package.json' with { type: 'json' };
 import { normalizeBootDiagnostics } from "./boot-diagnostics.js";
 import { normalizePowerDiagnostics } from "./power-diagnostics.js";
+
+import { normalizeTransferObservation } from "./transfer-observation.js";
 
 const nonnegative = value => Number.isSafeInteger(value) && value >= 0;
 
@@ -58,7 +61,7 @@ export function createDiagnostics({ firmwareVersion, connected, browser, transpo
   const capacity = value => Number.isInteger(value) && value >= 20 && value <= 247 ? value : null;
   // Explicit allowlist: never spread arbitrary device data or exception text.
   return {
-    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: '3.58.2',
+    schema: 1, application: 'Allmiibo Dateimanager', applicationVersion: release.version,
     firmwareVersion: /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion || '') ? firmwareVersion : null,
     connected: connected === true,
     runtime: normalizeRuntimeDiagnostics(runtime),
@@ -81,10 +84,14 @@ export function createDiagnostics({ firmwareVersion, connected, browser, transpo
     drives: (drives || []).filter(drive => ['I', 'E'].includes(drive.label)).map(drive => ({
       label: drive.label, status: number(drive.status), totalBytes: number(drive.totalBytes), freeBytes: number(drive.freeBytes)
     })),
-    recentTransfers: (history || []).slice(-20).map(item => ({
+    recentTransfers: (Array.isArray(history) ? history : []).filter(item => item && typeof item === 'object').slice(-20).map(item => ({
       kind: fixed(item.kind, ['upload', 'download', 'backup', 'sync']), status: fixed(item.status, ['success', 'failed', 'cancelled', 'interrupted']),
-      bytes: number(item.bytes), verified: item.verified === true
+      bytes: number(item.bytes), verified: item.verified === true,
+      ...(item.kind === 'backup' && item.status === 'success' && normalizeTransferObservation(item.measurement)
+        ? {measurement:normalizeTransferObservation(item.measurement)} : {})
     })),
-    limitations: ['Browser transport counters and GATT value capacities do not measure the ATT MTU.', 'No hardware test implied', 'Free-space snapshots may become stale']
+    limitations: ['Browser transport counters and GATT value capacities do not measure the ATT MTU.', 'No hardware test implied', 'Free-space snapshots may become stale',
+      ...(Array.isArray(history) && history.some(item => item?.kind === 'backup' && item.status === 'success' && normalizeTransferObservation(item.measurement))
+        ? ['Backup measurement readFileBytes counts file payload read from the device; reusedFileBytes counts freshly digest-verified cached payload. Transport counters separately include framing and metadata. Link values were read before and after the operation, not continuously; equal endpoint values do not prove the mode stayed unchanged throughout.'] : [])]
   };
 }

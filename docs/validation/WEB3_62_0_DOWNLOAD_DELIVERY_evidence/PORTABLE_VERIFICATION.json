@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "passed": true,
+  "version": "3.62.0",
+  "archiveSha256": "96c70b03e5fdd3ad459da0c61eef095edb15cd1941f87403bd4b7a45578e026c",
+  "verifiedFiles": 301,
+  "normalControllerStartReuseStop": true,
+  "downloads": [
+    {
+      "path": "index.html",
+      "bytes": 767,
+      "sha256": "594a0ea2b5fbd8efa103c3f7f8222bf967da3914a2e15d85d3e8f2f13c79ca7b"
+    },
+    {
+      "path": "release.json",
+      "bytes": 479,
+      "sha256": "21d8e4ad95b9fb19622b02da0acebdd191dd1d775f8f130e46f5702e0cda5001"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+      "bytes": 364877,
+      "sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704"
+    }
+  ],
+  "platform": "linux",
+  "nativeWindowsExecuted": false,
+  "limits": [
+    "Loopback HTTP and the real Python controller only; no device or Bluetooth transfer.",
+    "CMD/PowerShell native execution is covered separately by the Windows CI job."
+  ]
+}

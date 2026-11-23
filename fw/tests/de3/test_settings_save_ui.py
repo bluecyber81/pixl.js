@@ -23,8 +23,9 @@ class SettingsSaveUiTests(native.NativeTests):
         app = (SRC / 'app_settings.c').read_text()
         enum_start = main.index('enum settings_main_menu_t')
         enumeration = main[enum_start:main.index('};', enum_start) + 2]
-        reset = '\n'.join(native.function(main, n) for n in ('settings_scene_main_close_error',
-            'settings_scene_main_save_error', 'settings_scene_main_msg_box_reset_settings_cb'))
+        reset = '\n'.join(native.function(main[main.rfind('\nstatic void '+n+'('):], n) for n in ('settings_scene_main_close_error',
+            'settings_scene_main_save_error', 'settings_scene_main_exit_error', 'settings_scene_main_request_exit',
+            'settings_scene_main_try_exit', 'settings_scene_main_exit_choice', 'settings_scene_main_msg_box_reset_settings_cb'))
         selected = native.function(main, 'settings_scene_main_list_view_on_selected')
         leave = native.function(management, 'settings_scene_app_management_on_exit')
         kill = native.function(app[app.rfind('\nvoid app_settings_on_kill('):], 'app_settings_on_kill')
@@ -33,6 +34,8 @@ class SettingsSaveUiTests(native.NativeTests):
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stddef.h>
+#include <string.h>
 #define NRF_SUCCESS 0
 #define MUI_LIST_VIEW_EVENT_SELECTED 0
 #define INPUT_TYPE_SHORT 2
@@ -44,6 +47,8 @@ class SettingsSaveUiTests(native.NativeTests):
 #define mui_nav_diag_end() ((void)0)
 #define _T(x) #x
 #define MUI_MSG_BOX_EVENT_SELECT_LEFT 0
+#define MUI_MSG_BOX_EVENT_SELECT_CENTER 1
+#define MUI_MSG_BOX_EVENT_SELECT_RIGHT 2
 #define SETTINGS_VIEW_ID_MAIN 1
 #define SETTINGS_VIEW_ID_MSG_BOX 2
 #define MINI_APP_ID_SETTINGS 3
@@ -57,7 +62,7 @@ typedef struct {void *user_data;} mui_list_view_t;
 typedef struct {void *user_data;} mui_list_item_t;
 typedef struct {bool valid;} settings_storage_snapshot_t;
 static void settings_storage_snapshot_invalidate(settings_storage_snapshot_t*p){p->valid=false;}
-typedef struct {void *p_toast_view,*p_scene_dispatcher,*p_view_dispatcher,*p_view_dispatcher_toast,*p_list_view,*p_progress_bar,*p_msg_box;bool exit_saved;settings_storage_snapshot_t storage_snapshot;} app_settings_t;
+typedef struct {void *p_toast_view,*p_scene_dispatcher,*p_view_dispatcher,*p_view_dispatcher_toast,*p_list_view,*p_progress_bar,*p_msg_box;bool exit_saved,exit_discard,confirm_discard;uint32_t changed_fields;uint16_t changed_apps;int entry_settings;settings_storage_snapshot_t storage_snapshot;} app_settings_t;
 typedef struct {void *p_handle;} mini_app_inst_t;
 typedef struct {bool bat_mode,show_mem_usage,hibernate_enabled,anim_enabled,no_sleep_mode,flip_display,swap_buttons;} settings_data_t;
 static settings_data_t data;
@@ -68,12 +73,16 @@ static bool ble_remote_set_enabled(bool enabled){fixture_remote_enabled=enabled;
 static int result,save_calls,reset_calls,toast_calls,kills,reboots,resets,reloads,logs,cleanup_calls,dfus;
 static int settings_save(void){save_calls++;return result;}
 static int settings_reset(void){reset_calls++;return result;}
+#define APP_SETTINGS_CHANGED(app,field) ((app)->changed_fields|=UINT32_C(1)<<offsetof(settings_data_t,field))
+static void settings_discard_fields(uint32_t fields,uint16_t apps,const int*cp){(void)fields;(void)apps;(void)cp;}
+#define SETTINGS_TOGGLE(field) (settings_get_data()->field = !settings_get_data()->field)
 static settings_data_t *settings_get_data(void){return &data;}
 static void mui_toast_view_show(void*p,const char*s){(void)p;(void)s;toast_calls++;}
 static void settings_reset_default(void*p){(void)p;resets++;}
 static void settings_scene_main_reload(void*p){(void)p;reloads++;}
 static void mini_app_launcher_kill(void*p,unsigned id){(void)p;assert(id==MINI_APP_ID_SETTINGS);kills++;}
 static void *mini_app_launcher(void){return NULL;}
+static void *mini_app_launcher_get_app_handle(void*p,unsigned id){(void)p;(void)id;return NULL;}
 static bool system_reboot(void){reboots++;return true;}
 static void go_sleep(void){}
 static bool enter_dfu(void){dfus++;return true;}
@@ -87,16 +96,18 @@ static void mui_view_dispatcher_switch_to_view(void*p,unsigned n){(void)p;visibl
 static void *mui(void){return NULL;}
 static void mui_update_now(void*p){(void)p;}
 static void mui_u8g2_set_flip_display(bool b){(void)b;}
-#define mui_msg_box_set_header(...) ((void)0)
+static void mui_msg_box_set_header(void*p,const char*s){(void)p;if(!strcmp(s,"DE3_SAVE_FAILED"))errors++;}
 #define mui_msg_box_set_message(...) ((void)0)
 #define mui_msg_box_set_btn_text(...) ((void)0)
 #define mui_msg_box_set_btn_focus(...) ((void)0)
-#define mui_msg_box_set_event_cb(...) ((void)0)
+#define mui_msg_box_set_event_cb(box,cb) (ack=(cb))
+static void settings_scene_main_exit_choice(mui_msg_box_event_t event,mui_msg_box_t *box);
 static void mui_list_view_clear_items(void*p){(void)p;}
 static void cleanup(void*p){(void)p;cleanup_calls++;}
 #define mui_scene_dispatcher_free cleanup
 #define mui_view_dispatcher_free cleanup
 #define mui_list_view_free cleanup
+#define mui_u8g2_settings_slider(active) ((void)(active))
 #define mui_progress_bar_free cleanup
 #define mui_msg_box_free cleanup
 #define mui_toast_view_free cleanup
@@ -108,22 +119,26 @@ static void mui_view_dispatcher_detach(void*p,unsigned n){(void)p;assert(n==MUI_
 ''' + enumeration + '\n' + reset + '\n' + selected + '\n' + leave + '\n' + kill + r'''
 int main(void){
  app_settings_t app={0};mui_list_view_t list={&app};mui_list_item_t item={0};mui_msg_box_t box={&app};
+ item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_ANIM_ENABLED;
+ settings_scene_main_list_view_on_selected(0,&list,&item);
+ assert(data.anim_enabled && (app.changed_fields&(UINT32_C(1)<<offsetof(settings_data_t,anim_enabled))));
+ reloads=0;
  int failures[]={-91,8};
  for(unsigned i=0;i<2;i++){
   result=failures[i];item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_REBOOT;
   settings_scene_main_list_view_on_selected(0,&list,&item);assert(reboots==0 && kills==0);
   item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_EXIT;
   settings_scene_main_list_view_on_selected(0,&list,&item);assert(kills==0 && visible==SETTINGS_VIEW_ID_MSG_BOX && ack);
-  ack(1,&box);assert(visible==SETTINGS_VIEW_ID_MAIN);
+  ack(MUI_MSG_BOX_EVENT_SELECT_RIGHT,&box);assert(visible==SETTINGS_VIEW_ID_MAIN);
   item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_DFU;
   settings_scene_main_list_view_on_selected(0,&list,&item);assert(dfus==0);
-  settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(resets==0 && reloads==0 && visible==SETTINGS_VIEW_ID_MSG_BOX);
+  settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(resets==0 && reloads==(int)i+1 && visible==SETTINGS_VIEW_ID_MSG_BOX);
  }
  assert(save_calls==6 && reset_calls==2 && errors==8 && toast_calls==0);
  result=0;item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_REBOOT;settings_scene_main_list_view_on_selected(0,&list,&item);assert(reboots==1);
  item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_EXIT;settings_scene_main_list_view_on_selected(0,&list,&item);assert(kills==1);
  item.user_data=(void*)(uintptr_t)SETTINGS_MAIN_MENU_DFU;settings_scene_main_list_view_on_selected(0,&list,&item);assert(dfus==1);
- settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(resets==1 && reloads==1);
+ settings_scene_main_msg_box_reset_settings_cb(MUI_MSG_BOX_EVENT_SELECT_LEFT,&box);assert(resets==1 && reloads==3);
  settings_scene_main_msg_box_reset_settings_cb(2,&box);assert(reset_calls==3);
  result=-91;settings_scene_app_management_on_exit(&app);assert(toast_calls==1);
  app.exit_saved=false;mini_app_inst_t instance={&app};app_settings_on_kill(&instance);assert(logs==1 && cleanup_calls>0 && instance.p_handle==NULL);

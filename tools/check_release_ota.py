@@ -169,7 +169,8 @@ def main():
         need(preview is not None, 'No separate LCD preview is registered')
         need(type(preview['counter']) is int and preview['counter'] > release['counter'], 'Newer preview counter')
         release = {**release, **preview, 'production_source_id_sha256': preview['source_id']}
-    build = args.build_dir or root / ('build/lcd-preview' if args.preview else 'build/lcd-de389')
+    build = args.build_dir or root / ('build/lcd-preview' if args.preview else
+                                     'build/lcd-release' if release.get('firmware_channel') == 'normal' else 'build/lcd-de389')
     result = json.loads((build / 'BUILD_RESULT.json').read_bytes())
     need(result['mode'] == mode and result['status'] == 'passed', 'Fresh matching firmware build required')
     need((result['version'], result['counter'], result['source_id_sha256']) ==

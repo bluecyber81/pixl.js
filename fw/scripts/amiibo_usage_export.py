@@ -4,8 +4,11 @@ import argparse
 import csv
 import hashlib
 import json
+import re
+from datetime import date
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from urllib.parse import urlsplit
 
 from amiibo_db_gen import read_catalog, text_field
 
@@ -65,7 +68,105 @@ def source_lines(path):
         return starts
 
 
-def export_usage(data_dir, translations_path):
+def apply_web_supplement(data, supplement_path):
+    """Add reviewed web notes without inventing firmware groups or CSV rows."""
+    supplement = json.loads(supplement_path.read_text(encoding='utf8'))
+    if supplement.get('schemaVersion') != 1 or not isinstance(supplement.get('games'), list):
+        raise ValueError('Unsupported Nintendo web-supplement schema')
+    date.fromisoformat(supplement['checkedDate'])
+    figures = {figure['id']: figure for figure in data['figures']}
+    groups = {group['id']: group for group in data['groups']}
+    original_targets = {(figure['id'], row['groupId'])
+                        for figure in data['figures'] for row in figure['associations']}
+    note_ids = {(note['en'], note['de'], note['translation']): note['id'] for note in data['notes']}
+    game_ids = set()
+    targets = set()
+    new_associations = new_notes = supplemented_notes = 0
+    for game in supplement['games']:
+        if not isinstance(game.get('id'), str) or not re.fullmatch(r'[a-z0-9-]+', game['id']) or game['id'] in game_ids:
+            raise ValueError('Invalid or duplicate Nintendo game-guide ID')
+        game_ids.add(game['id'])
+        for field in ('title', 'de', 'en'):
+            text_field(game[field], 'Nintendo game guide ' + field, required=True)
+        if game.get('checkedDate'):
+            date.fromisoformat(game['checkedDate'])
+        source = urlsplit(game['source'])
+        if source.scheme != 'https' or not source.hostname or not source.hostname.endswith('.nintendo.com') or source.username or source.password:
+            raise ValueError('Nintendo supplement must link to an official HTTPS source')
+        text_field(game['platform'], 'Nintendo game platform', required=True)
+        text_field(game['groupLabel'], 'Nintendo game label', required=True)
+        group_id = game['groupId']
+        if group_id not in groups:
+            if not isinstance(group_id, str) or not re.fullmatch(r'web-[a-z0-9-]+', group_id):
+                raise ValueError('A web-only game must not invent a numeric firmware group')
+            group = {'id': group_id, 'parentId': None, 'labelPath': [game['groupLabel']],
+                     'platform': game['platform'], 'sourceUrl': game['source'], 'webOnly': True}
+            data['groups'].append(group)
+            groups[group_id] = group
+        elif groups[group_id]['labelPath'][-1] != game['groupLabel']:
+            raise ValueError('Nintendo supplement game label does not match its group')
+        # A shared guide may also name a figure whose original, more specific
+        # note must be preserved (for example the two Ocarina mask figures).
+        for identifier in game.get('includeExistingIds', []):
+            target = (identifier, group_id)
+            if target not in original_targets or target in targets:
+                raise ValueError('Guide-only figure ID must have a unique existing game association')
+            targets.add(target)
+        translation = game.get('translation', 'editorial-from-english')
+        if translation not in ('editorial-from-english', 'editorial-from-primary-source'):
+            raise ValueError('Unsupported Nintendo note translation provenance')
+        for note in game['rows']:
+            for language in ('en', 'de'):
+                text_field(note[language], 'Nintendo note ' + language, required=True)
+            identity = (note['en'], note['de'], translation)
+            note_id = note_ids.get(identity, len(data['notes']) + 1)
+            if not note['ids']:
+                raise ValueError('Nintendo note has no reviewed figure IDs')
+            for identifier in note['ids']:
+                if not isinstance(identifier, str) or not re.fullmatch(r'[0-9a-f]{16}', identifier) or identifier not in figures:
+                    raise ValueError('Unknown exact figure ID in Nintendo supplement')
+                target = (identifier, group_id)
+                if target in targets:
+                    raise ValueError('Duplicate Nintendo figure/game association')
+                targets.add(target)
+                rows = figures[identifier]['associations']
+                existing = next((row for row in rows if row['groupId'] == group_id), None)
+                if existing is not None:
+                    if existing['noteId'] is not None:
+                        raise ValueError('Nintendo supplement must not replace an existing usage note')
+                    existing['firmwareNoteId'] = existing['noteId']
+                else:
+                    existing = {'groupId': group_id, 'webOnly': True}
+                    rows.append(existing)
+                    new_associations += 1
+                existing.update(noteId=note_id, sourceUrl=game['source'],
+                                webSupplement=True, platform=game['platform'])
+                supplemented_notes += 1
+            if identity not in note_ids:
+                data['notes'].append({'id': note_id, 'en': note['en'], 'de': note['de'],
+                                      'translation': translation})
+                note_ids[identity] = note_id
+                new_notes += 1
+    data['source']['webSupplement'] = {
+        'path': 'web/src/data/usage-nintendo-supplement.json',
+        'sha256': hashlib.sha256(supplement_path.read_bytes()).hexdigest(),
+        'checkedDate': supplement['checkedDate'],
+        'policy': supplement['policy'],
+    }
+    data['source']['firmwareDataVersion'] = data['dataVersion']
+    data['dataVersion'] = supplement['checkedDate'] + '.nintendo-web'
+    coverage = data['coverage']
+    coverage.update(groups=len(data['groups']), associations=coverage['associations'] + new_associations,
+                    nintendoWebAssociations=new_associations, nintendoWebNoteAdditions=supplemented_notes,
+                    englishNoteAssociations=coverage['englishNoteAssociations'] + supplemented_notes,
+                    germanNoteAssociations=coverage['germanNoteAssociations'] + supplemented_notes,
+                    uniqueEnglishNotes=coverage['uniqueEnglishNotes'] + new_notes,
+                    uniqueGermanTranslations=coverage['uniqueGermanTranslations'] + new_notes)
+    data['policy']['germanTranslationScope'] += ' and the reviewed Nintendo web supplement'
+    return data
+
+
+def export_usage(data_dir, translations_path, supplement_path=None):
     figures, games, links = read_catalog(data_dir)
     for filename, expected in SOURCE_SHA256.items():
         if hashlib.sha256((data_dir / filename).read_bytes()).hexdigest() != expected:
@@ -126,7 +227,7 @@ def export_usage(data_dir, translations_path):
                                  'amiidb_link.csv': RIDER_ADDITIONS + RIDER_TRAINING + OCARINA_ADDITIONS,
                              }[filename],
                              'readNormalization': normalization})
-    return {
+    data = {
         'schemaVersion': 1,
         'dataVersion': '2026-11-16.de376',
         'source': {'label': 'Bundled firmware catalogue', 'referenceCommit': SOURCE_COMMIT,
@@ -147,6 +248,7 @@ def export_usage(data_dir, translations_path):
         'notes': notes,
         'figures': [{'id': identifier, 'associations': rows} for identifier, rows in sorted(associations.items())],
     }
+    return apply_web_supplement(data, supplement_path or ROOT / 'web/src/data/usage-nintendo-supplement.json')
 
 
 def render_usage(data):
@@ -184,12 +286,13 @@ def main():
     parser.add_argument('--data-dir', type=Path, default=ROOT / 'fw/data')
     parser.add_argument('--translations', type=Path, default=ROOT / 'web/src/data/usage-translations.de.json')
     parser.add_argument('--output', type=Path, default=ROOT / 'web/src/data/figure-usage.json')
+    parser.add_argument('--supplement', type=Path, default=ROOT / 'web/src/data/usage-nintendo-supplement.json')
     parser.add_argument('--check', action='store_true', help='Compare the existing JSON without modifying it.')
     parser.add_argument('--reference', type=Path,
                         help='Protect published associations and wording from this earlier export as well.')
     args = parser.parse_args()
     try:
-        data = export_usage(args.data_dir, args.translations)
+        data = export_usage(args.data_dir, args.translations, args.supplement)
         rendered = render_usage(data).encode('utf8')
         if args.reference:
             protect_existing_usage(json.loads(args.reference.read_bytes()), data)

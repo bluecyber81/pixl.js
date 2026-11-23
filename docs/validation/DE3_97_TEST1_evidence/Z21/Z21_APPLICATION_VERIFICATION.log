@@ -1,0 +1,2 @@
+PASS: seven actual Z21 ARM signature/hash/CRC cases
+PASS: signed App670 accepted with App669 present and empty bank on Z21/S1127.3.0

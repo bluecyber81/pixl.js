@@ -1,0 +1,75 @@
+Allmiibo Dateimanager 3.63.0 – normale Ausgabe für LCD DE3.100 / App673
+
+Online: https://bluecyber81.github.io/pixl.js/
+Windows-Portable: https://bluecyber81.github.io/pixl.js/downloads/web3.63.0/Allmiibo_Dateimanager_3_63_0_Portable.zip
+Webquellen: https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app673.zip
+LCD-App: https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.100-lcd-app#board=LCD
+
+Windows: lokale Ausgabe starten
+
+1. Die komplette Portable-ZIP in einen eigenen Ordner entpacken.
+2. Ein vorhandenes Python 3.8 oder neuer verwenden. Das Paket enthält den
+   Python-/CMD-Starter; es enthält keinen eigenen Python-Interpreter und keine EXE.
+3. Start-Dateimanager.cmd öffnen. Der Server bindet ausschließlich an
+   127.0.0.1:8765. Falls der Browser nicht automatisch aufgeht, diese lokale
+   Adresse in Chrome oder Edge öffnen.
+4. Mit Stop-Dateimanager.cmd dieselbe lokale Instanz beenden.
+
+Ein anderer Port ist mit -Port möglich, etwa Start-Dateimanager.cmd -Port 8766.
+Start-Dateimanager-Direkt.cmd zeigt den Server im geöffneten Konsolenfenster;
+Strg-C beendet diesen Direktstart. Jede entpackte Kopie behält ihren eigenen
+portbezogenen Zustand. Ein fremder Dienst am gewählten Port wird nicht beendet.
+
+package.json ist die gemeinsame Versionsquelle für Oberfläche, Diagnose und
+lokale Starter. Diese Datei und release_version.py gehören zum Paket und müssen
+neben dateimanager_launcher.py und serve_local.py bleiben. Node oder npm sind
+zum Ausführen der fertigen Portable-Ausgabe nicht erforderlich.
+
+Änderungen dieser normalen Ausgabe
+
+- Unter Figurenkatalog → PC und Gerät vergleichen lokale BIN-Dateien, einen Ordner
+  oder eine Sicherungs-ZIP auswählen. Die lokale Prüfung liest kein Gerät aus.
+  Für den Gerätevergleich zuerst eine aktuelle Geräteprüfung erstellen.
+- Gemeinsame und einseitig vorhandene Figuren werden getrennt angezeigt.
+  Fehlende Figuren sind nur bei zwei vollständigen aktuellen Prüfungen belegt.
+  Dieselbe Figur kann verschiedene UID-, Spielstand- oder Fahrzeugdaten haben.
+- Eine lokale Auswahl lässt sich ausdrücklich an die bestehende
+  Ordnersynchronisation übergeben. Diese Übergabe schreibt noch nichts;
+  Zielordner, Konflikte, Vorschau und Start bleiben im Synchronisationsdialog.
+- Link’s Awakening und Yoshi and the Mysterious Book haben zusätzliche
+  Spielhinweise mit Nintendo-Quellen. Shadow Link gilt nur für die passende
+  Link’s-Awakening-Link-Figur. Die acht Yoshi-Zuordnungen sind ausschließlich
+  Webdaten; es wird kein neuer Spielordner auf dem Gerät erfunden.
+- App673 besitzt eine eigene genaue Paket- und Firmwarebindung. Die PFS1-Engine
+  und die Simulator-WASM bleiben bytegleich zu App672. Ein vorhandenes PFS1
+  benötigt für dieses App-Update keine erneute Speicherumstellung.
+- Sicherungen, Abbruch/Wiederaufnahme, Fernbedienung, optionale Displayfotos,
+  Akkuverlauf, Spielordner und lokale Reparaturkopien bleiben erhalten.
+- package.json bleibt die gemeinsame Versionsquelle für Web und lokale Starter.
+
+Firmwareauswahl
+
+Die normale LCD-App DE3.100 / App673 ist für LCD/ST7567 mit Packed LittleFS
+(PFS1), Z21 und S112 7.3.0 (FWID 0x0126) bestimmt. Das reine App-Update erhält
+Bootloader, SoftDevice und vorhandenes PFS1-Dateisystem. Ein bereits eingerichtetes
+PFS1-Gerät benötigt dafür keine erneute Speicherumstellung.
+
+Das frühere Android-Komplettpaket mit App662 bleibt ein gesonderter Systemweg
+für passende ältere Geräte. Danach folgt die neue normale App673 als eigenes
+App-Update. Es ist kein aktuelles App673-Komplettpaket.
+
+OLED ist ein eigener Geräte- und Paketpfad. OLED-Test5/App85 und Test6/App86
+sind keine LCD-Ausgaben und werden durch dieses Webpaket nicht neu abgenommen.
+
+Prüfstand und Quellen
+
+PORTABLE-MANIFEST.json und SHA256SUMS.txt binden die enthaltenen Dateien.
+Die Auslieferungsquittung nennt die tatsächlich ausgeführten Software- und
+Launcherprüfungen. Ein lokaler Loopbacktest ersetzt keine native Windows- oder
+physische Bluetooth-/Geräteprüfung. Der erste praktische Durchlauf dieser neuen
+Firmware bleibt gesondert zu dokumentieren.
+
+Webquellen: https://github.com/bluecyber81/pixl.js/tree/web-app673
+LCD-Produktionsquellen: https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3100-app673
+Lizenzen und mitgelieferte Simulatorquellen: im Dateimanager unter Quellen und
+Lizenzen; die vollständigen Lizenztexte liegen außerdem im Unterordner dist/licenses.

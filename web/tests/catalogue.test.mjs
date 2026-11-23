@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { filterCatalogue, cataloguePage, releaseLabel, parseKnownFigureIds } from '../src/lib/catalogue.js';
 import { mergeCatalogueEntries } from '../src/lib/catalogue-updates.js';
+import { gameGuides } from '../src/data/game-guides.js';
 const data = JSON.parse(fs.readFileSync(new URL('../src/data/catalogue.json', import.meta.url), 'utf8'));
 test('catalogue snapshot is pinned, attributed and uses unique exact identifiers', () => {
   const source = fs.readFileSync(new URL('../third-party/amiiboapi/amiibo.json', import.meta.url));
@@ -42,6 +43,17 @@ test('catalogue supports case, accent, multi-term, exact ID and series/type filt
   assert.equal(filterCatalogue(data.entries, {series:'does-not-exist'}).length, 0);
   assert.ok(filterCatalogue(data.entries, {kind:'Card'}).every(e=>e.type==='Card'));
   assert.equal(filterCatalogue([{name:'M',firmwareIdKnown:false}],{knownOnly:true}).length,0);
+});
+test('game title searches use the same exact editions as reviewed filters without widening to a whole franchise', () => {
+  for (const id of ['fatal-fury-cotw', 'ocarina-of-time', 'kirby-forgotten-land-switch2', 'miitopia']) {
+    const guide = gameGuides.find(game => game.id === id);
+    const actual = filterCatalogue(data.entries, { query: guide.title });
+    assert.deepEqual(new Set(actual.map(entry => entry.id)), new Set(guide.ids), id);
+  }
+  const fatal = filterCatalogue(data.entries, { query: 'City of the Wolves', kind: 'Card' });
+  assert.equal(fatal.length, 8);
+  assert.ok(!fatal.some(entry => entry.name === 'Ryu'));
+  assert.ok(!filterCatalogue(data.entries, { query: 'Miitopia' }).some(entry => entry.id === '1f02010004c81e03'));
 });
 test('both the first 60 choices and every card page keep their order after a no-change merge', () => {
   const merged = mergeCatalogueEntries(data.entries, data.entries);

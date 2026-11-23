@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {parseStartupDiagnostics} from '../src/lib/startup-diagnostics.js';
 import * as Vue from 'vue';
 import {loadSfc} from './helpers/vue-component-host.mjs';
 import {diagnosticSnapshot} from './fixtures/diagnostic-overview-data.mjs';
 import {normalizeDiagnosticSnapshot} from '../src/lib/diagnostic-snapshot.js';
+import {parseMtuDiagnostics,parseStorageGcDiagnostics} from '../src/lib/device-extra-diagnostics.js';
+import mtuLinkPacket from './mtu-link-fixture.cjs';
 
 // The actual SFC template and script run through Vue's real renderer/reactivity.
 // No browser, Bluetooth or arbitrary network requests are made by this host.
@@ -145,6 +149,27 @@ test('MTU capacity and next-connection configuration never substitute for an abs
   assert.equal(row(card(h.root,'mtu'),'Aktuelle GATT-Wertkapazität'),'Nicht erfasst');
   assert.equal(row(card(h.root,'mtu'),'Grenze für nächste Verbindung'),'23');
   assert.match(text(card(h.root,'mtu')),/keine aktuelle ATT-MTU gemeldet/);
+ }finally{h.app.unmount();}
+});
+
+test('MTUD v2 renders negotiated link values in both languages and distinguishes a pending request',async()=>{
+ const snapshot=diagnosticSnapshot();snapshot.sections.mtu.data=parseMtuDiagnostics(mtuLinkPacket());
+ const h=await mount({snapshot});
+ try{
+  assert.equal(row(card(h.root,'mtu'),'Ausgehandeltes Verbindungsintervall'),'7,5 ms');
+  assert.equal(row(card(h.root,'mtu'),'Aktueller Funkmodus RX / TX'),'2M / 2M');
+  assert.equal(row(card(h.root,'mtu'),'Verbindungsüberwachung'),'4000 ms');
+  assert.match(text(card(h.root,'mtu')),/keine gemessene Dateiübertragungsgeschwindigkeit/);
+  const pending=mtuLinkPacket();pending[14]|=8;pending[22]=pending[23]=1;pending[15]=255;
+  snapshot.sections.mtu.data=parseMtuDiagnostics(pending);
+  await change(h,{snapshot:structuredClone(snapshot),locale:'en_US'});
+  assert.equal(row(card(h.root,'mtu'),'Negotiated connection interval'),'7.5 ms');
+  assert.equal(row(card(h.root,'mtu'),'Current radio PHY RX / TX'),'1M / 1M');
+  assert.equal(row(card(h.root,'mtu'),'PHY request pending'),'Yes');
+  assert.equal(row(card(h.root,'mtu'),'Last PHY event status'),'Not recorded');
+  assert.match(text(card(h.root,'mtu')),/does not confirm a switch to 2M/);
+  await change(h,{snapshot:diagnosticSnapshot()});
+  assert.doesNotMatch(text(card(h.root,'mtu')),/Negotiated connection interval|Current radio PHY/);
  }finally{h.app.unmount();}
 });
 
@@ -337,5 +362,26 @@ test('build reference separates reported version/counter from package SourceID a
   await change(h,{firmwareVersion:'2.22.0-DE3.81-OLEDt4'});assert.match(text(h.root),/No package reference is available/);
   assert.doesNotMatch(text(h.root),/632c29cb9408|5e556b10359a|One LCD confirmed/);
   await change(h,{snapshot:null});assert.doesNotMatch(text(h.root),/fbade80d03a44a3b/);
+ }finally{h.app.unmount();}
+});
+
+
+test('App669 overview shows cached cleanup pins and inclusive startup measurements without invented reclaimable bytes',async()=>{
+ const load=name=>JSON.parse(readFileSync(new URL(`./fixtures/${name}.json`,import.meta.url),'utf8'));
+ const packet=hex=>Uint8Array.from(Buffer.from(hex,'hex'));
+ const snapshot=diagnosticSnapshot();
+ snapshot.sections.storage.data.cleanup=parseStorageGcDiagnostics(packet(load('packed-gc-diagnostic-v1').cases.find(f=>f.name==='pinned').hex));
+ snapshot.sections.mtu.data=parseMtuDiagnostics(packet(load('ble-link-diagnostic-v3').responsePayloadHex));
+ snapshot.sections.startup.data=parseStartupDiagnostics(packet(load('startup-profile-v5').hex));
+ const h=await mount({snapshot});try{
+  assert.equal(row(card(h.root,'storage'),'Speicherfreigabe'),'Aufräumen ausstehend');
+  assert.equal(row(card(h.root,'storage'),'Leser mit alten Speichergruppen'),'2');
+  assert.match(text(card(h.root,'storage')),/keine Bytezahl/);assert.doesNotMatch(text(card(h.root,'storage')),/freigebbar.*[0-9]+ B/);
+  assert.match(row(card(h.root,'startup'),'Indexprüfung inkl. Flash\/CRC'),/3,052 ms \(50 Ticks\)/);
+  assert.match(text(card(h.root,'startup')),/nicht aufsummieren/);
+  assert.match(row(card(h.root,'mtu'),'Test 1: Ereignisverlängerung konfiguriert'),/Ja/);
+  assert.match(text(card(h.root,'mtu')),/globale Funkstack-Konfiguration/);
+  const current=diagnosticSnapshot();current.sections.storage.data.cleanup=null;await change(h,{snapshot:current});
+  assert.doesNotMatch(text(card(h.root,'storage')),/Leser mit alten Speichergruppen/);assert.doesNotMatch(text(card(h.root,'mtu')),/Ereignisverlängerung/);
  }finally{h.app.unmount();}
 });

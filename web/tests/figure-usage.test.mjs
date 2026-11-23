@@ -7,6 +7,7 @@ import { parse, compileScript } from '@vue/compiler-sfc';
 import { figureUsage } from '../src/lib/figure-usage.js';
 import deLocale from '../src/i18n/de_DE.js';
 import enLocale from '../src/i18n/en_US.js';
+import supplement from '../src/data/usage-nintendo-supplement.json' with { type: 'json' };
 
 const data = JSON.parse(fs.readFileSync(new URL('../src/data/figure-usage.json', import.meta.url), 'utf8'));
 const german = data.figures.find(figure => figure.associations.some(row => data.notes.find(note => note.id === row.noteId)?.de));
@@ -47,6 +48,16 @@ test('all exported rows keep a group path and pinned source line without externa
       if (row.translated) translated++;
       if (row.guideUrl) official++;
       assert.ok(row.label);
+      if (row.webSupplement) {
+        assert.equal(row.officialAssociation, true);
+        const game = supplement.games.find(game => game.groupId === row.groupId);
+        assert.ok(game, 'Every added association is tied to a reviewed game source');
+        assert.equal(row.platform, game.platform);
+        assert.equal(row.sourceUrl, game.source);
+        assert.ok(new URL(row.sourceUrl).hostname.endsWith('.nintendo.com'));
+        assert.ok(row.text && row.original);
+        continue;
+      }
       if (row.officialAssociation && row.groupId === 82) {
         assert.ok(['0100000004fd0902','0101000004ff0902'].includes(figure.id));
         assert.match(row.sourceUrl, /^https:\/\/www\.nintendo\.com\/us\/amiibo\/detail\/young-(?:link|zelda)-/);
@@ -67,7 +78,22 @@ test('all exported rows keep a group path and pinned source line without externa
       assert.match(row.sourceUrl, /^https:\/\/github\.com\/bluecyber81\/pixl\.js\/blob\/[0-9a-f]{40}\/fw\/data\/amiidb_link\.csv#L[1-9][0-9]*$/);
     }
   }
-  assert.deepEqual({ associations, notes, translated, official }, { associations: 1348, notes: 72, translated: 68, official: 4 });
+  assert.deepEqual({ associations, notes, translated, official }, { associations: 1414, notes: 163, translated: 159, official: 4 });
+});
+
+test('reviewed Nintendo web notes use exact editions and platforms without firmware-only group inference', () => {
+  const shadow = figureUsage('0100000003990902', data).find(row => row.groupId === 5);
+  const ordinary = figureUsage('0100000000040002', data).find(row => row.groupId === 5);
+  assert.match(shadow.text, /Schatten-Link/);
+  assert.doesNotMatch(ordinary.text, /Schatten-Link/);
+  assert.match(ordinary.text, /fünf/);
+  assert.match(ordinary.text, /speichern/);
+  const yoshi = figureUsage('0003000000020002', data).find(row => row.groupId === 'web-yoshi-mysterious-book');
+  assert.equal(yoshi.platform, 'Switch 2');
+  assert.match(yoshi.text, /täglich.*Glyphen/);
+  for (const id of ['09c40101027d0e02', '00030003039fff02', '0003000404421c02']) {
+    assert.ok(!figureUsage(id, data).some(row => row.groupId === 'web-yoshi-mysterious-book'), 'no card/band/block inference');
+  }
 });
 
 // Compile and mount the actual Vue template; this small renderer records emitted UI.
@@ -142,12 +168,42 @@ test('both Kirby riders link to the official game update in DE and EN', async ()
         state.id = id; state.locale = locale; await Vue.nextTick();
         assert.match(text(root), /1\.3\.3/);
         assert.match(text(root), locale === 'de_DE' ? /Trainiere den Fahrer als Figurenspieler/ : /Train the rider as a Figure Player/);
-        const links = nodes(root, 'a');
+        const training = nodes(root, 'li').find(row => text(nodes(row, 'strong')[0]) === 'Kirby Air Riders');
+        const links = nodes(training, 'a');
         assert.equal(links.length, 1);
         assert.equal(text(links[0]), locale === 'de_DE' ? 'Quelle: Nintendo-Spielupdate' : 'Source: Nintendo game update');
         assert.match(links[0].props.href, /^https:\/\/www\.nintendo\.com\/de-de\/.*2967700\.html$/);
       }
     }
+  } finally { app.unmount(); }
+});
+
+test('curated notes keep editions, platforms and source wording distinct in the actual component', async () => {
+  const { root, state, app } = await mount({ id: '34c1000003890002', locale: 'de_DE' });
+  try {
+    const gameRows = () => nodes(root, 'li');
+    let row = gameRows().find(row => text(nodes(row, 'strong')[0]) === 'Fatal Fury: City of the Wolves');
+    assert.ok(row);
+    assert.match(text(row), /Avatare.*Titel.*Erfahrung/);
+    assert.match(text(row), /Nintendo Switch 2/);
+    assert.match(text(row), /Redaktioneller Spielhinweis nach Nintendo-Quelle/);
+    assert.match(text(row), /Englische Fassung anzeigen/);
+    assert.doesNotMatch(text(row), /Englischen Quelltext/);
+    state.id = '0100000000040002'; await Vue.nextTick();
+    row = gameRows().find(row => text(nodes(row, 'strong')[0]) === 'The Legend of Zelda: Ocarina of Time');
+    assert.match(text(row), /Gegenstände.*Hylianischen Steppe/);
+    assert.equal(text(nodes(row, 'a')[0]), 'Spielhinweis von Nintendo');
+    state.id = '0100000004fd0902'; await Vue.nextTick();
+    row = gameRows().find(row => text(nodes(row, 'strong')[0]) === 'The Legend of Zelda: Ocarina of Time');
+    assert.match(text(row), /besondere Maske/);
+    assert.equal(text(nodes(row, 'a')[0]), 'Quelle: Nintendo-Figurenseite');
+    state.id = '1f00010004c51e03'; state.locale = 'en_US'; await Vue.nextTick();
+    row = gameRows().find(row => text(nodes(row, 'strong')[0]) === 'Miitopia');
+    assert.match(text(row), /Nintendo Switch/);
+    assert.match(text(row), /not on Nintendo 3DS/);
+    state.id = '1f02010004c81e03'; await Vue.nextTick();
+    assert.ok(!gameRows().some(row => text(nodes(row, 'strong')[0]) === 'Miitopia'));
+    for (const row of gameRows()) assert.doesNotMatch(text(row), /10.20 Fragments|two Picture Pieces|Maxim Tomato/);
   } finally { app.unmount(); }
 });
 

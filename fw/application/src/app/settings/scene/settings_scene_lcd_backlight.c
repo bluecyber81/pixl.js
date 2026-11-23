@@ -30,12 +30,14 @@ static void settings_scene_lcd_backlight_event_cb(mui_progress_bar_event_t event
         return;
     }
     if (event == MUI_PROGRESS_BAR_EVENT_CONFIRMED) {
-        p_settings->lcd_backlight = value;
+        SETTINGS_SET(lcd_backlight, value);
+        APP_SETTINGS_CHANGED(app, lcd_backlight);
         mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
     }
 }
 
 void settings_scene_lcd_backlight_on_enter(void *user_data) {
+    mui_u8g2_settings_slider(true);
     app_settings_t *app = user_data;
     settings_data_t *p_settings = settings_get_data();
     mui_progress_bar_set_header(app->p_progress_bar, getLangString(_L_APP_SET_LCD_BACKLIGHT_TITLE));
@@ -47,6 +49,7 @@ void settings_scene_lcd_backlight_on_enter(void *user_data) {
 }
 
 void settings_scene_lcd_backlight_on_exit(void *user_data) {
+    mui_u8g2_settings_slider(false);
     app_settings_t *app = user_data;
     mui_progress_bar_reset(app->p_progress_bar);
 }

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import bootPacket from './boot-fixture.cjs';
 import { parseBootDiagnostics } from '../src/lib/boot-diagnostics.js';
+import { parseMtuDiagnostics } from '../src/lib/device-extra-diagnostics.js';
+import mtuLinkPacket from './mtu-link-fixture.cjs';
 import { createDiagnostics } from '../src/lib/device-info.js';
 import { DIAGNOSTIC_SECTION_KEYS, collectDiagnosticSnapshot, normalizeDiagnosticSnapshot,
   normalizeStorageDiagnostics, createCombinedDiagnosticReport } from '../src/lib/diagnostic-snapshot.js';
@@ -210,6 +212,19 @@ test('export names the ATT MTU source and only claims a firmware reading when it
     assert.equal(result.limitations.some(text => text.includes('no firmware reading')), value !== current);
   }
   assert.equal(createCombinedDiagnosticReport({baseReport}).diagnosticSnapshot, null);
+});
+
+test('MTUD v2 survives combined export with raw GAP units, explicit unknowns and no private extras', async () => {
+  const value = parseMtuDiagnostics(mtuLinkPacket());
+  const snapshot = await collectDiagnosticSnapshot({readers:{mtu:() => ({...value,
+    privateName:'SECRET',link:{...value.link, privateAddress:'SECRET'}})},now:clock()});
+  const report = createCombinedDiagnosticReport({baseReport:{firmwareVersion:'2.22.0-DE3.95'},snapshot});
+  assert.deepEqual(report.diagnosticSnapshot.sections.mtu.data, value);
+  assert.equal(report.diagnosticSnapshot.sections.mtu.data.link.connectionIntervalUnits, 6);
+  assert.match(report.limitations.join(' '), /1\.25 ms.*10 ms/);
+  assert.match(report.limitations.join(' '), /does not measure file throughput/);
+  assert.doesNotMatch(JSON.stringify(report), /SECRET/);
+  assert.deepEqual(normalizeDiagnosticSnapshot(JSON.parse(JSON.stringify(snapshot))), snapshot);
 });
 
 test('snapshot normalization rejects incomplete/invalid records and never exports failed-section payloads', async () => {

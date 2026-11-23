@@ -28,7 +28,10 @@ const tag_specific_type_name_t *tag_helper_get_tag_type_name(tag_specific_type_t
 nfc_tag_14a_coll_res_reference_t *tag_helper_get_active_coll_res_ref();
 tag_group_type_t tag_helper_get_tag_group_type(tag_specific_type_t tag_type);
 tag_specific_type_t tag_helper_get_active_tag_type();
-void tag_helper_format_uid(char *buff, uint8_t *uid, uint8_t uid_len);
+/* Output requires 3 bytes per UID byte, including the final terminator. */
+/* The destination needs three bytes per input byte, or one byte for empty input. */
+void tag_helper_format_hex(char *out, const uint8_t *bytes, uint8_t length, char separator);
+void tag_helper_format_uid(char *out, const uint8_t *uid, uint8_t length);
 const char *tag_helper_get_mf_write_mode_name(nfc_tag_mf1_write_mode_t write_mode);
 void tag_helper_load_coll_res_from_block0();
 

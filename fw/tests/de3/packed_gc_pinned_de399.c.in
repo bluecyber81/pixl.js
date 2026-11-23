@@ -1,0 +1,217 @@
+/* Native contract: actual PackedFS/LittleFS and legal catalogue fixtures.
+ * All large arrays, fault hooks and counters belong to this host test only. */
+#include "lfs.h"
+static int watched_dir_open(lfs_t *, lfs_dir_t *, const char *);
+static int watched_dir_read(lfs_t *, lfs_dir_t *, struct lfs_info *);
+static int watched_file_close(lfs_t *, lfs_file_t *);
+#define lfs_dir_open watched_dir_open
+#define lfs_dir_read watched_dir_read
+#define lfs_file_close watched_file_close
+/* CATALOGUE_FIXTURE */
+#undef lfs_dir_open
+#undef lfs_dir_read
+#undef lfs_file_close
+
+static unsigned root_scans, dir_reads, fail_dir_read;
+static lfs_file_t *fail_close;
+static int watched_dir_open(lfs_t *lfs, lfs_dir_t *dir, const char *path) {
+    if (!strcmp(path, "/")) ++root_scans;
+    return lfs_dir_open(lfs, dir, path);
+}
+static int watched_dir_read(lfs_t *lfs, lfs_dir_t *dir, struct lfs_info *info) {
+    if (fail_dir_read && ++dir_reads == fail_dir_read) return LFS_ERR_NOSPC;
+    return lfs_dir_read(lfs, dir, info);
+}
+static int watched_file_close(lfs_t *lfs, lfs_file_t *file) {
+    int r = lfs_file_close(lfs, file);
+    if (file == fail_close) { fail_close = NULL; return r ? r : LFS_ERR_NOSPC; }
+    return r;
+}
+
+typedef struct { uint64_t reads, programs, erases, scans; } metrics_t;
+static metrics_t totals;
+static void start_observation(void) {
+    observe_reset(); root_scans = 0; dir_reads = 0;
+}
+static metrics_t finish_observation(unsigned expected_scans) {
+    REQUIRE(root_scans == expected_scans);
+    metrics_t n = {media.stats.reads, media.stats.programs, media.stats.erases, root_scans};
+    totals.reads += n.reads; totals.programs += n.programs;
+    totals.erases += n.erases; totals.scans += n.scans;
+    return n;
+}
+static unsigned obsolete_groups(void) {
+    lfs_dir_t dir; struct lfs_info info; unsigned obsolete = 0; int r;
+    REQUIRE(lfs_dir_open(&store->lfs, &dir, "/") == 0);
+    while ((r = lfs_dir_read(&store->lfs, &dir, &info)) > 0) {
+        uint32_t id;
+        if (shard_id(info.name, &id) && !manifest_has(&store->current, id)) ++obsolete;
+    }
+    REQUIRE(r == 0 && lfs_dir_close(&store->lfs, &dir) == 0);
+    return obsolete;
+}
+static void clean_temporary_files(void) {
+    struct lfs_info info;
+    REQUIRE(lfs_stat(&store->lfs, STAGE, &info) == LFS_ERR_NOENT);
+    REQUIRE(lfs_stat(&store->lfs, NEXT, &info) == LFS_ERR_NOENT);
+}
+static void diagnose(unsigned state, unsigned held) {
+    pfs_gc_diagnostic_t diag;
+    REQUIRE(pfs_gc_diagnostic(store, &diag));
+    REQUIRE(diag.state == state && diag.held_handles == held);
+    REQUIRE((diag.flags & 17u) == 17u && !(diag.flags & 14u));
+    REQUIRE(diag.last_result == 0);
+}
+static void exact_file(const char *path, const uint8_t *data, const uint8_t *raw) {
+    pfs_info_t info;
+    REQUIRE(pfs_stat(store, path, &info) == 0 && info.size == 540);
+    REQUIRE(!memcmp(info.meta, raw, PFS_META_SIZE));
+    REQUIRE(driver()->read_file_data(path, check, sizeof(check)) == 540);
+    REQUIRE(!memcmp(check, data, 540));
+}
+static void compare_case(unsigned groups, unsigned records) {
+    fixture(groups, records);
+    const size_t steady = live;
+    memset(&totals, 0, sizeof(totals));
+    char late[32], folder[24];
+    snprintf(folder, sizeof(folder), "/g%02u", groups - 1);
+    snprintf(late, sizeof(late), "%s/r00", folder);
+    pfs_dir_t *old_root, *old_dir; pfs_file_t *reader, *writer;
+    REQUIRE(pfs_opendir(store, "/", &old_root) == 0);
+    REQUIRE(pfs_opendir(store, folder, &old_dir) == 0);
+    REQUIRE(pfs_open(store, late, LFS_O_RDONLY, &reader) == 0);
+    peak = live;
+    uint8_t changed[PFS_META_SIZE]; memset(changed, 0xd0, sizeof(changed));
+    start_observation(); REQUIRE(pfs_setattr(store, late, changed) == 0);
+    metrics_t first = finish_observation(2);
+    diagnose(1, 3); REQUIRE(obsolete_groups() == 1);
+    uint64_t repeated_reads = 0;
+    for (unsigned n = 1; n <= 6; ++n) {
+        memset(changed, 0xd0 + n, sizeof(changed));
+        start_observation(); REQUIRE(pfs_setattr(store, late, changed) == 0);
+        metrics_t edit = finish_observation(EXPECTED_OPTIMIZED ? 1 : 2);
+        repeated_reads += edit.reads;
+        exact_file(late, old_data, changed);
+        diagnose(1, 3); REQUIRE(obsolete_groups() == 1);
+    }
+    start_observation();
+    REQUIRE(pfs_open(store, late, LFS_O_WRONLY | LFS_O_TRUNC, &writer) == 0);
+    REQUIRE(pfs_write(writer, new_data, 540) == 540);
+    REQUIRE(pfs_abort(writer) == 0);
+    metrics_t aborted = finish_observation(EXPECTED_OPTIMIZED ? 1 : 2);
+    clean_temporary_files(); exact_file(late, old_data, changed); diagnose(1, 3);
+    start_observation();
+    REQUIRE(pfs_open(store, late, LFS_O_WRONLY | LFS_O_TRUNC, &writer) == 0);
+    REQUIRE(pfs_write(writer, new_data, 540) == 540);
+    REQUIRE(pfs_close(writer) == 0);
+    metrics_t committed = finish_observation(EXPECTED_OPTIMIZED ? 1 : 2);
+    clean_temporary_files(); exact_file(late, new_data, changed); diagnose(1, 3);
+    start_observation(); REQUIRE(pfs_gc(store) == 0); finish_observation(1);
+    diagnose(1, 3); REQUIRE(obsolete_groups() == 1);
+
+    /* Old immutable data and raw128 metadata remain readable throughout. */
+    start_observation();
+    REQUIRE(pfs_read(reader, check, 540) == 540 && !memcmp(check, old_data, 540));
+    unsigned seen = 0; int r; pfs_info_t info, original;
+    while ((r = pfs_readdir(old_dir, &info)) > 0) {
+        unsigned record; REQUIRE(sscanf(strrchr(info.path, '/') + 1, "r%u", &record) == 1);
+        object(groups - 1, record + 1, &original);
+        REQUIRE(!strcmp(info.path, original.path) && !memcmp(info.meta, original.meta, PFS_META_SIZE));
+        ++seen;
+    }
+    REQUIRE(r == 0 && seen == records - 1);
+    REQUIRE(pfs_closedir(old_dir) == 0 && pfs_close(reader) == 0);
+    finish_observation(0); diagnose(1, 1);
+    start_observation(); REQUIRE(pfs_closedir(old_root) == 0);
+    metrics_t released = finish_observation(1);
+    /* Assert automatic cleanup before any explicit collector can hide a bug. */
+    REQUIRE(obsolete_groups() == 0 && live == steady && !store->handles);
+    diagnose(2, 0); clean_temporary_files();
+    start_observation(); REQUIRE(pfs_gc(store) == 0); finish_observation(1);
+    uint32_t total_bytes, free_bytes;
+    REQUIRE(pfs_space(store, &total_bytes, &free_bytes) == 0);
+    uint32_t generation = pfs_generation(store), disk_crc = ~crc(~0u, media.disk, NOR_BYTES);
+    size_t measured_peak = peak;
+    drop(); REQUIRE(driver()->mount() == 0);
+    exact_file(late, new_data, changed);
+    for (unsigned g = 0; g < groups; ++g) {
+        for (unsigned j = 0; j < records; ++j) {
+            object(g, j, &original);
+            REQUIRE(pfs_stat(store, original.path, &info) == 0);
+            REQUIRE(info.size == original.size && info.type == original.type);
+            if (!strcmp(info.path, late)) continue;
+            REQUIRE(!memcmp(info.meta, original.meta, PFS_META_SIZE));
+            if (j) {
+                REQUIRE(driver()->read_file_data(info.path, check, sizeof(check)) == 540);
+                REQUIRE(!memcmp(check, old_data, 540));
+            }
+        }
+    }
+    REQUIRE(store->current.count == groups && store->current.objects == groups * records);
+    REQUIRE(generation == pfs_generation(store) && obsolete_groups() == 0);
+    REQUIRE(disk_crc == ~crc(~0u, media.disk, NOR_BYTES));
+    const char *image_prefix = getenv("PIXL_GC_PINNED_IMAGE_PREFIX");
+    if (image_prefix) {
+        char image_path[1024];
+        int length = snprintf(image_path, sizeof(image_path), "%s-%u.nor", image_prefix, groups);
+        REQUIRE(length > 0 && length < (int)sizeof(image_path));
+        FILE *image = fopen(image_path, "wb"); REQUIRE(image);
+        REQUIRE(fwrite(media.disk, 1, NOR_BYTES, image) == NOR_BYTES && fclose(image) == 0);
+    }
+    printf("{\"groups\":%u,\"recordsPerGroup\":%u,\"initialEditReads\":%llu,"
+           "\"sixRepeatedEditReads\":%llu,\"abortReads\":%llu,\"commitReads\":%llu,"
+           "\"lastReleaseReads\":%llu,\"totalReads\":%llu,\"totalPrograms\":%llu,"
+           "\"totalErases\":%llu,\"totalRootScans\":%llu,\"pfsBytes\":%zu,"
+           "\"steadyRequestedHeap\":%zu,\"peakRequestedHeap\":%zu,\"finalGeneration\":%u,"
+           "\"finalFreeBytes\":%u,\"finalDiskCrc32\":%u,\"finalObsoleteGroups\":0}\n",
+           groups, records, (unsigned long long)first.reads, (unsigned long long)repeated_reads,
+           (unsigned long long)aborted.reads, (unsigned long long)committed.reads,
+           (unsigned long long)released.reads, (unsigned long long)totals.reads,
+           (unsigned long long)totals.programs, (unsigned long long)totals.erases,
+           (unsigned long long)totals.scans, sizeof(pfs_t), steady, measured_peak,
+           generation, free_bytes, disk_crc);
+}
+
+static void error_invalidation(void) {
+    fixture(3, 4);
+    pfs_file_t *reader;
+    REQUIRE(pfs_open(store, "/g02/r00", LFS_O_RDONLY, &reader) == 0);
+    uint8_t changed[PFS_META_SIZE]; memset(changed, 0xa1, sizeof(changed));
+    REQUIRE(pfs_setattr(store, "/g02/r00", changed) == 0); diagnose(1, 1);
+    fail_close = &reader->io.f;
+    start_observation(); REQUIRE(pfs_close(reader) == LFS_ERR_NOSPC);
+    REQUIRE(!fail_close && !store->handles && !root_scans && !pfs_poisoned(store));
+    REQUIRE(obsolete_groups() == 1);
+    memset(changed, 0xa2, sizeof(changed));
+    start_observation(); REQUIRE(pfs_setattr(store, "/g02/r00", changed) == 0);
+    REQUIRE(root_scans == 2 && obsolete_groups() == 0); diagnose(2, 0);
+    exact_file("/g02/r00", old_data, changed);
+
+    REQUIRE(pfs_open(store, "/g02/r00", LFS_O_RDONLY, &reader) == 0);
+    memset(changed, 0xa3, sizeof(changed));
+    REQUIRE(pfs_setattr(store, "/g02/r00", changed) == 0); diagnose(1, 1);
+    start_observation(); fail_dir_read = 3;
+    REQUIRE(pfs_gc(store) == LFS_ERR_NOSPC && dir_reads == 3 && root_scans == 1);
+    fail_dir_read = 0;
+    pfs_gc_diagnostic_t diag;
+    REQUIRE(pfs_gc_diagnostic(store, &diag) && diag.state == 1 && diag.last_result == LFS_ERR_NOSPC);
+    memset(changed, 0xa4, sizeof(changed));
+    start_observation(); REQUIRE(pfs_setattr(store, "/g02/r00", changed) == 0);
+    REQUIRE(root_scans == 2 && obsolete_groups() == 1); diagnose(1, 1);
+    REQUIRE(pfs_close(reader) == 0 && obsolete_groups() == 0); diagnose(2, 0);
+    exact_file("/g02/r00", old_data, changed);
+    clean_temporary_files(); drop(); REQUIRE(!live);
+}
+
+int main(void) {
+    for (unsigned i = 0; i < sizeof(old_data); ++i) {
+        old_data[i] = (uint8_t)(i * 19 + 7); new_data[i] = old_data[i] ^ 0x66;
+    }
+    const unsigned groups[] = {28, 32, 33, 54, 64};
+    for (unsigned i = 0; i < sizeof(groups) / sizeof(*groups); ++i)
+        compare_case(groups[i], groups[i] == 64 ? 32 : 44);
+    error_invalidation();
+    printf("{\"passed\":true,\"errorInvalidationCases\":2,\"liveAtEnd\":%zu,\"pointerBytes\":%zu}\n", live, sizeof(void *));
+    puts("PASS pinned-only scan avoidance, exact old/new payloads and raw128, full remount, final owner cleanup and error invalidation");
+    return 0;
+}

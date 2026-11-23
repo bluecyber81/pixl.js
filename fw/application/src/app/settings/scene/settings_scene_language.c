@@ -16,7 +16,8 @@ static void settings_scene_language_list_view_on_selected(mui_list_view_event_t 
     uint32_t selection = (uint32_t)(uintptr_t)p_item->user_data;
     settings_data_t *p_settings = settings_get_data();
     if (selection < LANGUAGE_COUNT){
-        p_settings->language = selection;
+        SETTINGS_SET(language, selection);
+        APP_SETTINGS_CHANGED(app, language);
         setLanguage(p_settings->language);
     }
 

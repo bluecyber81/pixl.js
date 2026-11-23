@@ -1,4 +1,5 @@
 #include "app_settings.h"
+#include "mui_u8g2.h"
 #include "settings_scene.h"
 #include "settings.h"
 #include "nrf_log.h"
@@ -45,6 +46,7 @@ void app_settings_on_run(mini_app_inst_t *p_app_inst) {
     p_app_handle->p_view_dispatcher_toast = mui_view_dispatcher_create();
     if (!p_app_handle->p_view_dispatcher_toast) goto startup_failed;
     p_app_inst->p_handle = p_app_handle;
+    settings_checkpoint(&p_app_handle->entry_settings);
 
 
     mui_list_view_set_user_data(p_app_handle->p_list_view, p_app_handle);
@@ -97,10 +99,16 @@ void app_settings_on_kill(mini_app_inst_t *p_app_inst) {
     /* Dispatcher destruction does not invoke view exit callbacks. */
     settings_device_test_restore(p_app_handle);
 #endif
-    if (!p_app_handle || !p_app_handle->exit_saved) {
+    if (p_app_handle && p_app_handle->exit_discard) {
+        /* The launcher has accepted every owner guard. No write or speculative
+         * rollback takes place while another owner can still veto this exit. */
+        settings_discard_fields(p_app_handle->changed_fields, p_app_handle->changed_apps,
+                                &p_app_handle->entry_settings);
+    } else if (!p_app_handle || !p_app_handle->exit_saved) {
         int32_t result = settings_save();
         if (result != NRF_SUCCESS) NRF_LOG_WARNING("Settings could not be saved on app exit: %d", result);
     }
+    mui_u8g2_settings_slider(false);
     if (!p_app_handle) return;
     mui_scene_dispatcher_free(p_app_handle->p_scene_dispatcher);
     mui_view_dispatcher_detach(p_app_handle->p_view_dispatcher, MUI_LAYER_FULLSCREEN);

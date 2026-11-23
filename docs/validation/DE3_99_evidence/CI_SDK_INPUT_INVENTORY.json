@@ -1,0 +1,87 @@
+{
+  "observedUTC": "2026-11-22T13:53:36.559350+00:00",
+  "passed": true,
+  "scope": "Static external-SDK dependency inventory for all 187 selected host suites, exact patched tar subset and only the failed suite rerun.",
+  "selectedHostSuites": 187,
+  "externalSdkConsumerSuites": 6,
+  "consumerInputs": {
+    "de3/test_ble_conn_preferences.py": [
+      "components/ble/common/ble_conn_params.c"
+    ],
+    "de3/test_ble_remote_advdata.py": [
+      "components/ble/common/ble_advdata.c",
+      "components/ble/common/ble_advdata.h",
+      "components/softdevice/s112/headers"
+    ],
+    "de3/test_ble_link_diagnostic.py": [
+      "components/softdevice/s112/headers"
+    ],
+    "de3/test_ble_event_extension_de396.py": [
+      "components/softdevice/s112/headers"
+    ],
+    "de3/test_mtu_diagnostic.py": [
+      "components/ble/nrf_ble_gatt/nrf_ble_gatt.c"
+    ],
+    "de3/test_device_info.py": [
+      "components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex"
+    ]
+  },
+  "helperScope": "player_lifecycle_test.py accepts an explicit --sdk path but is not a test_*.py default suite and is not invoked by the selected suites. Other SDK excerpts are repository-contained fixtures.",
+  "previousExports": [
+    "components/ble/nrf_ble_gatt/nrf_ble_gatt.c",
+    "components/ble/common/ble_advdata.c",
+    "components/ble/common/ble_advdata.h",
+    "components/softdevice/s112/headers",
+    "components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex"
+  ],
+  "patchedExports": [
+    "components/ble/nrf_ble_gatt/nrf_ble_gatt.c",
+    "components/ble/common/ble_advdata.c",
+    "components/ble/common/ble_advdata.h",
+    "components/ble/common/ble_conn_params.c",
+    "components/softdevice/s112/headers",
+    "components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex"
+  ],
+  "missingBefore": [
+    "components/ble/common/ble_conn_params.c"
+  ],
+  "missingAfter": [],
+  "extractedFileCount": 23,
+  "extractedSha256": {
+    "components/ble/nrf_ble_gatt/nrf_ble_gatt.c": "8639e289bf9f28943700adcee47f5fdfbe539de545d1877acbe66de0389db354",
+    "components/ble/common/ble_conn_params.c": "ce003b7aea88a24b8c23fe7240794df97071de730b3136165187bdeba7f9ef9e",
+    "components/ble/common/ble_advdata.c": "70ab5c3511b7c5df45141a1abf529fdcb5e1235784a5637ed6fda5950ad27e6c",
+    "components/ble/common/ble_advdata.h": "aa3ead7252ce494e0b3281e28ef43fd891acfa5ea1196c20f8ddbaccd66ecf69",
+    "components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex": "6024130cbe5b89e5f108951b7f65374c2bb1aabb57049cdf9b4bcab4ce3e80e4",
+    "components/softdevice/s112/headers/nrf_svc.h": "d8deffc6ca5924e53543f86772e8bc4625ab08e2c7d0760d7d4ae90dc4a3a65e",
+    "components/softdevice/s112/headers/nrf_sd_def.h": "dc995e62f1b9f7e6084414a1f607dcf0bc7fa2bbf11af3ed8aece16e30a9201c",
+    "components/softdevice/s112/headers/nrf_error_soc.h": "809df4e68f850f420a57c5e30b99fe93b58c69845a8cefdd58f14a75d9654598",
+    "components/softdevice/s112/headers/nrf_error.h": "e0b2a0aea6d28ca2f8215a66fb8816ae17852d505283e4d70863a7dc86f88fc5",
+    "components/softdevice/s112/headers/ble_ranges.h": "94ed64409fcb75a9b46a594eb6d7cfc4387a37e4ee9606a0e4917b9b4c820856",
+    "components/softdevice/s112/headers/ble_gatt.h": "95356e826d77e8393a6124762fab639a928b98487e03d02e66fa413b95d6f0f9",
+    "components/softdevice/s112/headers/ble_gap.h": "0ec9439c9e87a917cfbc65817bd8fb696060b4154919fee0f08ebbfefa84067c",
+    "components/softdevice/s112/headers/nrf_error_sdm.h": "06ff592f41b31ca4b9a465355d12bb0783d21efa328198169f1c0cc7992c459f",
+    "components/softdevice/s112/headers/ble.h": "9b8131fffee18f0548c30990e501e7337b36e27f82d59ee61c3a8df5678e5d23",
+    "components/softdevice/s112/headers/nrf_nvic.h": "4505df359460dc12df197ab00cb523c0eb3214f379e1a0c24ae3bdc2070ea210",
+    "components/softdevice/s112/headers/ble_err.h": "3a33c272f5f3a952d0985ccaf5dfb6976596a58063ee49d16962fd55e6969892",
+    "components/softdevice/s112/headers/ble_gatts.h": "309dabaf75e95d46dbf73e694d77ce6c9edf7ee1fdda0bc4ac77a75923d6d403",
+    "components/softdevice/s112/headers/ble_hci.h": "61f96a40c8e064771d47cd530707a7d94fe56ced0c463fc245a3a107de7d79f6",
+    "components/softdevice/s112/headers/ble_types.h": "e6d6ab2ba07a6a1cc1ed7171f74267c0b9c36b016b0d00ba9d9b8557512e9285",
+    "components/softdevice/s112/headers/nrf_soc.h": "b3e40bed8c0f95b0c93bfeb964044dec052648dfed05a31fc32d9aa3ff8c39e2",
+    "components/softdevice/s112/headers/nrf_sdm.h": "b83e5cd0171c569fda941a347f8430e171e965d8979f518ff97cbd477c7ffbc3",
+    "components/softdevice/s112/headers/ble_gattc.h": "f5cc49a274f5655b9f51ad63c809a701bce38f468537862d5f9f5ddacecec117",
+    "components/softdevice/s112/headers/nrf52/nrf_mbr.h": "64336b336ea231e2c00e7e75cb9594d6b8b153d6ceba5ece2f86300414f225b1"
+  },
+  "pinnedSdkImage": "solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16",
+  "failedSuiteRerun": {
+    "passed": true,
+    "exitCode": 0,
+    "report": "BLE_CONN_PREFERENCES_CI_SUBSET.json",
+    "log": "BLE_CONN_PREFERENCES_CI_SUBSET.log"
+  },
+  "rootWorkflowUnchanged": true,
+  "full187SuitesRerun": false,
+  "firmwareSourceChanged": false,
+  "patch": "CI_SDK_INPUT_FIX.patch",
+  "patchSha256": "95c159f90d95ecf85cda7d4c3e1514fd897a7cfd2e95c45645f32c04d9ce8766"
+}

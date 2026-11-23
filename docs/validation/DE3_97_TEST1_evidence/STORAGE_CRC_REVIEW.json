@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "scope": "LCD DE3.97 App670 TEST1: kleine CRC-Schleifenoptimierung und begrenzte Startzeitanalyse",
+  "createdUTC": "2026-11-21T15:26:54.764785+00:00",
+  "worktree": "/workspace/scratch/0af425ec2cbb/app670_fw",
+  "branch": "work/lcd-de397-app670-test1",
+  "baselineCommit": "bc806a55ec32975d833be70cc00413b4b4b38399",
+  "productionFilesChanged": [
+    "fw/application/src/mod/vfs/packed_fs.c"
+  ],
+  "productionSourceRawSha256": "123fdef17c2c42d0d7374db931c7e738e44584fbd8bb2fc2953a7454033462a4",
+  "finding": {
+    "physicalProfileFromParent": "Flash-Lesezeit ca.1.02s, CRC ca.0.43s, Index ca.41ms und Busywait ca.0.061ms; Teilzeiten überlappen und dürfen nicht summiert werden. Kein eigener neuer Gerätetest.",
+    "spi": "Bereits8MHz; allein902656Nutzbytes entsprechen etwa903ms reiner Drahtzeit. SPI-Frequenz, IRQ-Schutz, Bereitschaftscache, Timeouts und Flashzugriffe unverändert.",
+    "decision": "Beide vorhandenen CRC-Byte-Schleifen verwenden einmalige Leerprüfung plus do/while. Das entfernt beim gepinnten ARM-GCC12.2/-Os eine Schleifeninstruktion pro Byte, ohne CRC-Arithmetik, Tabelle, Speicherzugriffe oder Schutzbedingungen zu ändern.",
+    "discarded": "Kompliziertere algebraische CRC-Paarumformung verworfen. Kein weiterer Katalogcache, kein Flash-Clock-Wechsel und keine verringerte Datenvalidierung."
+  },
+  "hostTests": {
+    "command": "python3 -m unittest test_packed_crc_de345 test_packed_crc_pair_de355 test_packed_mount_stream_de341",
+    "cwd": "/workspace/scratch/0af425ec2cbb/app670_fw/fw/tests/de3",
+    "native": {
+      "passed": true,
+      "tests": 6,
+      "seconds": 4.123
+    },
+    "asanUbsan": {
+      "passed": true,
+      "tests": 6,
+      "seconds": 5.327,
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=0",
+        "PIXL_SANITIZE": "1"
+      },
+      "leakSanitizer": false,
+      "initialSanitizerAttempt": "LeakSanitizer fatal under ptrace. Derselbe Test wurde mit deaktivierter Leak-Erkennung und weiterhin aktiver Address/UndefinedBehaviorSanitizer-Prüfung erfolgreich wiederholt."
+    },
+    "actualSourceFunctions": true,
+    "crcCases": 6281,
+    "pairCases": 18575,
+    "streamedRecordsPerHarness": 384,
+    "maximumLength": 4097,
+    "pairAlignments": 8,
+    "mountCases": 8448,
+    "injectedIoFailures": 6,
+    "negativeControls": [
+      "record",
+      "shard",
+      "record_crc",
+      "header_crc",
+      "body_crc",
+      "path"
+    ],
+    "limits": "Gezielte Funktions-/Parser-Prüfungen, keine vollständige Firmware-Testsuite."
+  },
+  "armComparison": {
+    "report": "/workspace/scratch/0af425ec2cbb/app670_storage_work/CRC_ARM_COMPARISON.json",
+    "sha256": "f15616df77a0588d1f27e38f9bf468ac6d8b742b619dd8181e288e1de832d7ce",
+    "passed": true,
+    "callsCompared": 216,
+    "oracle": "Unabhängige bitweise CRC; Null-Länge mit nicht gemapptem Datenzeiger; Ein-/Ausgabeguards und unveränderte Eingaben geprüft.",
+    "modes": [
+      {
+        "profiling": false,
+        "functionBytesBefore": {
+          "crc": 36,
+          "crc_pair": 52
+        },
+        "functionBytesAfter": {
+          "crc": 36,
+          "crc_pair": 52
+        },
+        "stackFramesUnchanged": {
+          "crc": {
+            "bytes": 8,
+            "kind": "static"
+          },
+          "crc_pair": {
+            "bytes": 20,
+            "kind": "static"
+          }
+        },
+        "allCasesNoInstructionIncrease": true
+      },
+      {
+        "profiling": true,
+        "functionBytesBefore": {
+          "crc": 56,
+          "crc_pair": 80
+        },
+        "functionBytesAfter": {
+          "crc": 56,
+          "crc_pair": 76
+        },
+        "stackFramesUnchanged": {
+          "crc": {
+            "bytes": 16,
+            "kind": "static"
+          },
+          "crc_pair": {
+            "bytes": 24,
+            "kind": "static"
+          }
+        },
+        "allCasesNoInstructionIncrease": true
+      }
+    ],
+    "example128BytesProfiled": {
+      "crc": {
+        "before": 1042,
+        "after": 912
+      },
+      "crc_pair": {
+        "before": 1557,
+        "after": 1427
+      }
+    },
+    "limits": "Dynamische ARM-Instruktionen in Unicorn; keine Zyklus-/Flash-/Interruptmessung. Profilinghooks sind identische externe ABI-Stubs. Daraus wird keine konkrete Bootzeitersparnis behauptet."
+  },
+  "linkedEarlyBuild": {
+    "directory": "/workspace/scratch/0af425ec2cbb/build_de397_budget1",
+    "elfSha256": "3372eb1a23a9eb1db1bf5047a1e73c3ce08d63e0b91553d3204cd2c894a1bf60",
+    "crcBytes": 56,
+    "crcPairBytes": 76,
+    "crcTableBytes": 1024,
+    "crcStackBytes": 16,
+    "crcPairStackBytes": 24,
+    "budgetFromParent": {
+      "binBytes": 363888,
+      "flashReserveBytes": 8836,
+      "staticGapBytes": 1688,
+      "stackReserveBytes": 8192
+    },
+    "limits": "Früher Integrationsbuild, kein abschließender Releasebeleg. Gesamtänderung enthält weitere Agentenarbeit."
+  },
+  "crossmount": {
+    "report": "/workspace/scratch/0af425ec2cbb/app670_storage_work/crossmount/PFS_CROSS_MOUNT.json",
+    "sha256": "0ff97f0d368881619ea3ac81cee81f3130b1db524e0addf69481ac01b19858ae",
+    "passed": true,
+    "phases": 6,
+    "initialFiles": 1131,
+    "initialDirectories": 77,
+    "oldEngine": "3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d",
+    "newEngine": "a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788",
+    "layoutConstantsUnchanged": true,
+    "readOnlyVerification": "Alle3Phasen: unveränderte Image-SHA256,0Programme,0Erases.",
+    "limits": "Synthetisches NOR im Host; vollständige portable Quellen beider Versionen. Keine reale Gerätesitzung, keine WASM-Qualifikation, keine vollständige Stromausfallkampagne."
+  },
+  "pending": [
+    "Finaler integrierter Firmwarebuild und Budgetgate durch Root.",
+    "Passender neuer de397-WASM-Snapshot samt Quellen-/Firmware-Bindung.",
+    "Ein vergleichbarer Gerätestart mit neuem Testbuild zur tatsächlichen Laufzeitmessung, wenn Nutzer ohnehin testet."
+  ],
+  "boardSeparation": "Kein OLED-Build oder OLED-Gerätetest. Nichtprofilierte CRC-Host/ARM-Funktionsprüfung ist kein OLED-Releasebeleg."
+}

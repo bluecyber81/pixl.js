@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "baseUrl": "https://bluecyber81.github.io/pixl.js/",
+  "publicationStatus": "prepared-second-pages-delivery",
+  "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+  "qualifiedBuildCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "sourcePublicationStatus": "public",
+  "files": [
+    {
+      "path": "downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+      "bytes": 21249310,
+      "sha256": "de82839b8cdc90f7226b1229119ebbd60a1a5cd67deb4c80e0902a640d8c487c"
+    },
+    {
+      "path": "downloads/web3.65.0/MANIFEST.json",
+      "bytes": 4992,
+      "sha256": "06328dd7541e981cfad55b285ef52ffdf8ad3f3005db1c391dc56e1769ec2508"
+    },
+    {
+      "path": "downloads/web3.65.0/SHA256SUMS.txt",
+      "bytes": 297,
+      "sha256": "a944211b8c9b6750d10e55f341b4ac771a0fa04207ce71792f808158c2e3b790"
+    }
+  ],
+  "scope": "Only the three added/changed files; 321 unchanged first-delivery files retain their prior canonical HTTP evidence"
+}

@@ -1,0 +1,217 @@
+﻿2026-11-23T14:50:35.1038651Z Current runner version: '2.338.2'
+2026-11-23T14:50:35.1059265Z ##[group]Runner Image Provisioner
+2026-11-23T14:50:35.1059993Z Hosted Compute Agent
+2026-11-23T14:50:35.1060403Z Version: 20261111.635
+2026-11-23T14:50:35.1060871Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+2026-11-23T14:50:35.1061397Z Build Date: 2026-11-11T01:49:01Z
+2026-11-23T14:50:35.1061938Z Worker ID: {3baf8e38-f33d-4512-a18c-88254d159d94}
+2026-11-23T14:50:35.1062463Z Region: westus3
+2026-11-23T14:50:35.1062852Z Cloud: Azure
+2026-11-23T14:50:35.1063312Z ##[endgroup]
+2026-11-23T14:50:35.1064515Z ##[group]Operating System
+2026-11-23T14:50:35.1064973Z Ubuntu
+2026-11-23T14:50:35.1065386Z 24.04.5
+2026-11-23T14:50:35.1065744Z LTS
+2026-11-23T14:50:35.1066242Z ##[endgroup]
+2026-11-23T14:50:35.1066679Z ##[group]Runner Image
+2026-11-23T14:50:35.1067159Z Image: ubuntu-24.04
+2026-11-23T14:50:35.1067589Z Version: 20261116.376.1
+2026-11-23T14:50:35.1068472Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261116.376/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-23T14:50:35.1069563Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261116.376
+2026-11-23T14:50:35.1070201Z ##[endgroup]
+2026-11-23T14:50:35.1071273Z ##[group]GITHUB_TOKEN Permissions
+2026-11-23T14:50:35.1072847Z Contents: write
+2026-11-23T14:50:35.1073295Z Metadata: read
+2026-11-23T14:50:35.1073711Z ##[endgroup]
+2026-11-23T14:50:35.1075293Z Secret source: Actions
+2026-11-23T14:50:35.1076014Z Cache mode: write
+2026-11-23T14:50:35.1076771Z Prepare workflow directory
+2026-11-23T14:50:35.1321883Z Prepare all required actions
+2026-11-23T14:50:35.1358805Z Getting action download info
+2026-11-23T14:50:35.4499494Z Download action repository 'actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+2026-11-23T14:50:35.6612657Z Complete job name: store-verified-object
+2026-11-23T14:50:35.7350553Z ##[group]Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+2026-11-23T14:50:35.7351148Z with:
+2026-11-23T14:50:35.7351472Z   ref: 071528452e25d689d03a2747157bc96c5760fe97
+2026-11-23T14:50:35.7351830Z   fetch-depth: 1
+2026-11-23T14:50:35.7352115Z   persist-credentials: false
+2026-11-23T14:50:35.7352477Z   sparse-checkout: tools/publish-web365-source-object
+2026-11-23T14:50:35.7352866Z   repository: bluecyber81/pixl.js
+2026-11-23T14:50:35.7355261Z   token: ***
+2026-11-23T14:50:35.7355528Z   ssh-strict: true
+2026-11-23T14:50:35.7355797Z   ssh-user: git
+2026-11-23T14:50:35.7356050Z   clean: true
+2026-11-23T14:50:35.7356468Z   sparse-checkout-cone-mode: true
+2026-11-23T14:50:35.7356895Z   fetch-tags: false
+2026-11-23T14:50:35.7357170Z   show-progress: true
+2026-11-23T14:50:35.7357444Z   lfs: false
+2026-11-23T14:50:35.7357700Z   submodules: false
+2026-11-23T14:50:35.7357976Z   set-safe-directory: true
+2026-11-23T14:50:35.7358293Z   allow-unsafe-pr-checkout: false
+2026-11-23T14:50:35.7358747Z ##[endgroup]
+2026-11-23T14:50:36.0018482Z Syncing repository: bluecyber81/pixl.js
+2026-11-23T14:50:36.0019850Z ##[group]Getting Git version info
+2026-11-23T14:50:36.0020528Z Working directory is '/home/runner/work/pixl.js/pixl.js'
+2026-11-23T14:50:36.0021423Z [command]/usr/bin/git version
+2026-11-23T14:50:36.0126819Z git version 2.56.1
+2026-11-23T14:50:36.0141611Z ##[endgroup]
+2026-11-23T14:50:36.0155324Z Temporarily overriding HOME='/home/runner/work/_temp/01efe242-9bee-4874-97c2-1713db188145' before making global git config changes
+2026-11-23T14:50:36.0156836Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-23T14:50:36.0159878Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pixl.js/pixl.js
+2026-11-23T14:50:36.0272459Z Deleting the contents of '/home/runner/work/pixl.js/pixl.js'
+2026-11-23T14:50:36.0278078Z ##[group]Determining repository object format
+2026-11-23T14:50:36.0280584Z ##[endgroup]
+2026-11-23T14:50:36.0281318Z ##[group]Initializing the repository
+2026-11-23T14:50:36.0284981Z [command]/usr/bin/git init /home/runner/work/pixl.js/pixl.js
+2026-11-23T14:50:36.0395274Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-23T14:50:36.0396681Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-23T14:50:36.0397693Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-23T14:50:36.0398462Z hint: call:
+2026-11-23T14:50:36.0398917Z hint:
+2026-11-23T14:50:36.0399488Z hint: 	git config --global init.defaultBranch <name>
+2026-11-23T14:50:36.0400126Z hint:
+2026-11-23T14:50:36.0400736Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-23T14:50:36.0401683Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-23T14:50:36.0402784Z hint:
+2026-11-23T14:50:36.0403618Z hint: 	git branch -m <name>
+2026-11-23T14:50:36.0404136Z hint:
+2026-11-23T14:50:36.0404644Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-23T14:50:36.0405267Z Initialized empty Git repository in /home/runner/work/pixl.js/pixl.js/.git/
+2026-11-23T14:50:36.0416726Z [command]/usr/bin/git remote add origin https://github.com/bluecyber81/pixl.js
+2026-11-23T14:50:36.0517915Z ##[endgroup]
+2026-11-23T14:50:36.0518737Z ##[group]Disabling automatic garbage collection
+2026-11-23T14:50:36.0522083Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-23T14:50:36.0578306Z ##[endgroup]
+2026-11-23T14:50:36.0579551Z ##[group]Setting up auth
+2026-11-23T14:50:36.0580215Z Removing SSH command configuration
+2026-11-23T14:50:36.0582939Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T14:50:36.0633401Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-23T14:50:36.1032854Z Removing HTTP extra header
+2026-11-23T14:50:36.1040213Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T14:50:36.1089500Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-23T14:50:36.1342102Z Removing includeIf entries pointing to credentials config files
+2026-11-23T14:50:36.1350321Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T14:50:36.1402009Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-23T14:50:36.1674658Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-23T14:50:36.1742891Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/pixl.js/pixl.js/.git.path /home/runner/work/_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:36.1795472Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/pixl.js/pixl.js/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:36.1848660Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:36.1918111Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:36.1971849Z ##[endgroup]
+2026-11-23T14:50:36.1972667Z ##[group]Fetching the repository
+2026-11-23T14:50:36.1982519Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --filter=blob:none --depth=1 origin 071528452e25d689d03a2747157bc96c5760fe97
+2026-11-23T14:50:36.7796812Z From https://github.com/bluecyber81/pixl.js
+2026-11-23T14:50:36.7798509Z  * branch            071528452e25d689d03a2747157bc96c5760fe97 -> FETCH_HEAD
+2026-11-23T14:50:36.7820328Z [command]/usr/bin/git rev-parse --verify --quiet 071528452e25d689d03a2747157bc96c5760fe97^{object}
+2026-11-23T14:50:36.7847945Z 071528452e25d689d03a2747157bc96c5760fe97
+2026-11-23T14:50:36.7858226Z ##[endgroup]
+2026-11-23T14:50:36.7858832Z ##[group]Determining the checkout info
+2026-11-23T14:50:36.7859419Z ##[endgroup]
+2026-11-23T14:50:36.7859934Z ##[group]Setting up sparse checkout
+2026-11-23T14:50:36.7861901Z [command]/usr/bin/git sparse-checkout set tools/publish-web365-source-object
+2026-11-23T14:50:36.7983855Z ##[endgroup]
+2026-11-23T14:50:36.7985469Z ##[group]Checking out the ref
+2026-11-23T14:50:36.7987284Z [command]/usr/bin/git checkout --progress --force 071528452e25d689d03a2747157bc96c5760fe97
+2026-11-23T14:50:38.5247237Z Updating files:   4% (1/25)
+2026-11-23T14:50:38.5248170Z Updating files:   8% (2/25)
+2026-11-23T14:50:38.5258352Z Updating files:  12% (3/25)
+2026-11-23T14:50:38.5258771Z Updating files:  16% (4/25)
+2026-11-23T14:50:38.5259089Z Updating files:  20% (5/25)
+2026-11-23T14:50:38.5259403Z Updating files:  24% (6/25)
+2026-11-23T14:50:38.5259692Z Updating files:  28% (7/25)
+2026-11-23T14:50:38.5260019Z Updating files:  32% (8/25)
+2026-11-23T14:50:38.5260291Z Updating files:  36% (9/25)
+2026-11-23T14:50:38.5260579Z Updating files:  40% (10/25)
+2026-11-23T14:50:38.5261159Z Updating files:  44% (11/25)
+2026-11-23T14:50:38.5262950Z Updating files:  48% (12/25)
+2026-11-23T14:50:38.5263446Z Updating files:  52% (13/25)
+2026-11-23T14:50:38.5263854Z Updating files:  56% (14/25)
+2026-11-23T14:50:38.5264281Z Updating files:  60% (15/25)
+2026-11-23T14:50:38.5264596Z Updating files:  64% (16/25)
+2026-11-23T14:50:38.5264923Z Updating files:  68% (17/25)
+2026-11-23T14:50:38.5442178Z Updating files:  72% (18/25)
+2026-11-23T14:50:38.5554882Z Updating files:  76% (19/25)
+2026-11-23T14:50:38.5647798Z Updating files:  80% (20/25)
+2026-11-23T14:50:38.5648283Z Updating files:  84% (21/25)
+2026-11-23T14:50:38.5648710Z Updating files:  88% (22/25)
+2026-11-23T14:50:38.5649117Z Updating files:  92% (23/25)
+2026-11-23T14:50:38.5650483Z Updating files:  96% (24/25)
+2026-11-23T14:50:38.5650860Z Updating files: 100% (25/25)
+2026-11-23T14:50:38.5651234Z Updating files: 100% (25/25), done.
+2026-11-23T14:50:38.5676968Z Note: switching to '071528452e25d689d03a2747157bc96c5760fe97'.
+2026-11-23T14:50:38.5677654Z 
+2026-11-23T14:50:38.5678082Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-23T14:50:38.5678686Z changes and commit them, and you can discard any commits you make in this
+2026-11-23T14:50:38.5679214Z state without impacting any branches by switching back to a branch.
+2026-11-23T14:50:38.5679573Z 
+2026-11-23T14:50:38.5679903Z If you want to create a new branch to retain commits you create, you may
+2026-11-23T14:50:38.5680649Z do so (now or later) by using -c with the switch command. Example:
+2026-11-23T14:50:38.5681025Z 
+2026-11-23T14:50:38.5681269Z   git switch -c <new-branch-name>
+2026-11-23T14:50:38.5681583Z 
+2026-11-23T14:50:38.5681815Z Or undo this operation with:
+2026-11-23T14:50:38.5682100Z 
+2026-11-23T14:50:38.5682307Z   git switch -
+2026-11-23T14:50:38.5682535Z 
+2026-11-23T14:50:38.5682878Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-23T14:50:38.5683346Z 
+2026-11-23T14:50:38.5683712Z HEAD is now at 0715284 Accept opaque header-safe Actions token for fixed blob upload
+2026-11-23T14:50:38.5700378Z ##[endgroup]
+2026-11-23T14:50:38.5764789Z [command]/usr/bin/git log -1 --format=%H
+2026-11-23T14:50:38.5803277Z 071528452e25d689d03a2747157bc96c5760fe97
+2026-11-23T14:50:38.5813732Z ##[group]Removing auth
+2026-11-23T14:50:38.5814293Z Removing SSH command configuration
+2026-11-23T14:50:38.5817730Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T14:50:38.5860907Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-23T14:50:38.6102390Z Removing HTTP extra header
+2026-11-23T14:50:38.6105682Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T14:50:38.6162292Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-23T14:50:38.6387759Z Removing includeIf entries pointing to credentials config files
+2026-11-23T14:50:38.6390483Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T14:50:38.6431959Z includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git.path
+2026-11-23T14:50:38.6433429Z includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git/worktrees/*.path
+2026-11-23T14:50:38.6434258Z includeif.gitdir:/github/workspace/.git.path
+2026-11-23T14:50:38.6434861Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-23T14:50:38.6442627Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git.path
+2026-11-23T14:50:38.6480065Z /home/runner/work/_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:38.6492367Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git.path /home/runner/work/_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:38.6540945Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git/worktrees/*.path
+2026-11-23T14:50:38.6576587Z /home/runner/work/_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:38.6585398Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:38.6650914Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-11-23T14:50:38.6672262Z /github/runner_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:38.6681964Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:38.6738655Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-23T14:50:38.6776509Z /github/runner_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:38.6783439Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config
+2026-11-23T14:50:38.6832303Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-23T14:50:38.7065284Z Removing credentials config '/home/runner/work/_temp/git-credentials-9aa02c79-f3bf-4f95-87d8-ccfdbd766a81.config'
+2026-11-23T14:50:38.7074652Z ##[endgroup]
+2026-11-23T14:50:38.7285414Z ##[group]Run python3 -B tools/publish-web365-source-object/run.py verify
+2026-11-23T14:50:38.7286022Z [36;1mpython3 -B tools/publish-web365-source-object/run.py verify[0m
+2026-11-23T14:50:38.7308511Z shell: /usr/bin/bash -e {0}
+2026-11-23T14:50:38.7308831Z ##[endgroup]
+2026-11-23T14:50:39.0165899Z {"archiveFiles": 1894, "authenticatedRequests": 0, "bytes": 21249310, "chunksVerified": 3, "gitBlob": "c504ca28f6c4ef2d8ecaae942887b64b275fbcd1", "helperCommit": "071528452e25d689d03a2747157bc96c5760fe97", "manifestSha256": "8761a59bd94f2caad7c9d2348d862f3cd90c7978dc67d092e0eabb9ec41e51cf", "method": "Reassembled fixed data chunks; no code from the ZIP was executed and no compression was performed", "qualifiedBuildCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4", "remoteMutation": false, "repository": "bluecyber81/pixl.js", "sha256": "de82839b8cdc90f7226b1229119ebbd60a1a5cd67deb4c80e0902a640d8c487c", "sourceBindingVerified": true, "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd", "zipCrcVerified": true}
+2026-11-23T14:50:39.0339618Z ##[group]Run python3 -B tools/publish-web365-source-object/run.py publish
+2026-11-23T14:50:39.0340038Z [36;1mpython3 -B tools/publish-web365-source-object/run.py publish[0m
+2026-11-23T14:50:39.0358677Z shell: /usr/bin/bash -e {0}
+2026-11-23T14:50:39.0358892Z env:
+2026-11-23T14:50:39.0360721Z   GITHUB_TOKEN: ***
+2026-11-23T14:50:39.0360912Z ##[endgroup]
+2026-11-23T14:50:44.3879808Z {"archiveFiles": 1894, "authenticatedRequests": 1, "bytes": 21249310, "chunksVerified": 3, "gitBlob": "c504ca28f6c4ef2d8ecaae942887b64b275fbcd1", "gitBlobUrl": "https://api.github.com/repos/bluecyber81/pixl.js/git/blobs/c504ca28f6c4ef2d8ecaae942887b64b275fbcd1", "helperCommit": "071528452e25d689d03a2747157bc96c5760fe97", "manifestSha256": "8761a59bd94f2caad7c9d2348d862f3cd90c7978dc67d092e0eabb9ec41e51cf", "method": "Reassembled fixed data chunks; no code from the ZIP was executed and no compression was performed", "qualifiedBuildCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4", "refsChanged": false, "repository": "bluecyber81/pixl.js", "requestEndpoint": "https://api.github.com/repos/bluecyber81/pixl.js/git/blobs", "requestMethod": "POST", "sha256": "de82839b8cdc90f7226b1229119ebbd60a1a5cd67deb4c80e0902a640d8c487c", "sourceBindingVerified": true, "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd", "uploadedGitBlob": "c504ca28f6c4ef2d8ecaae942887b64b275fbcd1", "zipCrcVerified": true}
+2026-11-23T14:50:44.4151349Z Post job cleanup.
+2026-11-23T14:50:44.4767665Z [command]/usr/bin/git version
+2026-11-23T14:50:44.4811725Z git version 2.56.1
+2026-11-23T14:50:44.4843265Z Temporarily overriding HOME='/home/runner/work/_temp/b444eb1f-928e-40dd-adf6-d51fab1af1b0' before making global git config changes
+2026-11-23T14:50:44.4843843Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-23T14:50:44.4848016Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pixl.js/pixl.js
+2026-11-23T14:50:44.4885137Z Removing SSH command configuration
+2026-11-23T14:50:44.4891352Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T14:50:44.4927161Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-23T14:50:44.5152917Z Removing HTTP extra header
+2026-11-23T14:50:44.5158056Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T14:50:44.5202854Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-23T14:50:44.5417792Z Removing includeIf entries pointing to credentials config files
+2026-11-23T14:50:44.5424012Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T14:50:44.5465648Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-23T14:50:44.5826008Z Cleaning up orphan processes

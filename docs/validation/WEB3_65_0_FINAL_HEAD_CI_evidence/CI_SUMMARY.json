@@ -1,0 +1,228 @@
+{
+  "schema": 1,
+  "reviewedAtUtc": "2026-11-23T14:28:52.768125+00:00",
+  "passed": true,
+  "repository": "bluecyber81/pixl.js",
+  "workflow": "Source checks",
+  "workflowPath": ".github/workflows/checks.yml",
+  "workflowSha256": "b7102ebde978d19511ee2f724b47c0adcdd6096802131c7d6f8cd981c3644101",
+  "runId": 45193676314,
+  "attempt": 1,
+  "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45193676314",
+  "headBranch": "web-app675",
+  "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+  "sourceTree": "c17ad0263285ee4e9304908c89bf551e121c2e62",
+  "webProductTree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+  "status": "completed",
+  "conclusion": "success",
+  "createdAtUtc": "2026-11-23T14:23:24Z",
+  "completedAtUtc": "2026-11-23T14:25:20Z",
+  "jobs": [
+    {
+      "id": 137758332130,
+      "name": "Windows portable launcher",
+      "conclusion": "success"
+    },
+    {
+      "id": 137758332628,
+      "name": "Portable firmware regression subset",
+      "conclusion": "success"
+    },
+    {
+      "id": 137758332678,
+      "name": "Web tests and both bundles",
+      "conclusion": "success"
+    }
+  ],
+  "nodeVersion": "26.13.0",
+  "declaredLinuxNpmVersion": "11.19.1",
+  "nodeSuite": {
+    "tests": 2273,
+    "suites": 0,
+    "pass": 2270,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "todo": 0,
+    "duration_ms": 74865.863412,
+    "skipNames": [
+      "real immutable DE3.17 and recovery575 application archives pass without device access",
+      "Windows launchers keep two ports independent, reject altered tokens and preserve legacy state",
+      "Windows failed state persistence asks only the newly started server to stop itself"
+    ],
+    "nativeWindowsCoveredSkips": [
+      "Windows launchers keep two ports independent, reject altered tokens and preserve legacy state",
+      "Windows failed state persistence asks only the newly started server to stop itself"
+    ],
+    "remainingOptionalHistoricalFixture": "DE3.17 and recovery575 application archives; ALLMIIBO_DFU_FIXTURES not provided"
+  },
+  "distributionRoot": {
+    "tests": 57,
+    "suites": 0,
+    "pass": 57,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "duration_ms": 2130.741328
+  },
+  "distributionPages": {
+    "tests": 57,
+    "suites": 0,
+    "pass": 57,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "duration_ms": 2071.98412
+  },
+  "catalogueValidation": {
+    "englishNoteLinks": 72,
+    "figures": 956,
+    "games": 83,
+    "legacyEmptyLinkColumns": 3,
+    "links": 1348,
+    "uncategorizedFigures": 0,
+    "uniqueEnglishNotes": 55,
+    "valid": true
+  },
+  "usageExporterValidation": {
+    "associations": 1414,
+    "bytes": 270740,
+    "englishNoteAssociations": 163,
+    "figures": 956,
+    "firmwareAssociations": 1348,
+    "germanNoteAssociations": 163,
+    "groups": 86,
+    "legacyEmptyLinkColumns": 3,
+    "nintendoWebAssociations": 66,
+    "nintendoWebNoteAdditions": 91,
+    "uniqueEnglishNotes": 64,
+    "uniqueGermanTranslations": 64,
+    "valid": true
+  },
+  "usageExporterPythonTests": {
+    "total": 13,
+    "passed": 13,
+    "skipped": 0,
+    "failed": 0,
+    "seconds": 1.032
+  },
+  "previousPublishedNotesComparisonPassed": true,
+  "readmeDownloadComparisonPassed": true,
+  "linuxLauncherPython": {
+    "total": 26,
+    "passed": 26,
+    "skipped": 0,
+    "failed": 0,
+    "seconds": 5.419
+  },
+  "windowsLauncherPython": {
+    "total": 26,
+    "passed": 24,
+    "skipped": 2,
+    "failed": 0,
+    "seconds": 14.754,
+    "skipDetails": [
+      "test_linux_bind_behavior_is_preserved (__main__.LauncherTests.test_linux_bind_behavior_is_preserved) ... skipped 'Linux/POSIX socket behavior check'",
+      "test_real_direct_start_ctrl_c_and_unchanged_state (__main__.LauncherTests.test_real_direct_start_ctrl_c_and_unchanged_state) ... skipped 'POSIX signal integration; native Windows Ctrl+C is not tested here'"
+    ],
+    "scope": "24 passed out of 26 discovered cases; two POSIX-only cases are covered by the Linux launcher run."
+  },
+  "nativeWindowsPowershell": {
+    "tests": 4,
+    "suites": 0,
+    "pass": 4,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "duration_ms": 14512.8923,
+    "testNames": [
+      "local server identity, routes and authenticated self-stop reject wrong token, Origin and Host",
+      "Windows launchers keep two ports independent, reject altered tokens and preserve legacy state",
+      "Windows failed state persistence asks only the newly started server to stop itself",
+      "launcher wrappers forward arguments and have no PID-based termination"
+    ]
+  },
+  "portable": {
+    "schema": 1,
+    "version": "3.65.0",
+    "archive": "Allmiibo_Dateimanager_3_65_0_Portable.zip",
+    "bytes": 12444903,
+    "sha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd",
+    "files": 315,
+    "portableManifestSha256": "e051fbc10f186f46cd0a4e9317b8dd39259d3e5f776f2c785858b79bc937773d",
+    "nativeExecutable": false,
+    "verification": {
+      "path": "PORTABLE_VERIFICATION.json",
+      "sha256": "f783623a9b3f7e35ac2cff191a775238ee3fea293a56dfa2052dc406e44bba45"
+    },
+    "verifiedManifestContentFiles": 313,
+    "additionalManifestAndChecksumFiles": 2,
+    "matchesCurrentDeliveryMetadata": true,
+    "archiveHashSource": "Actual package creation output in the successful CI log; no separate CI artifact download was needed.",
+    "realPackagedControllerVerificationPassed": true
+  },
+  "firmwareRegressionSubset": {
+    "passed": true,
+    "scriptsExecuted": 15,
+    "scripts": [
+      "fw/tests/de3/test_ble_status_de357.py",
+      "fw/tests/de3/test_chameleon_exit_guard.py",
+      "fw/tests/de3/test_chameleon_state_load.py",
+      "fw/tests/de3/test_display_photo.py",
+      "fw/tests/de3/test_exit_contract_de358.py",
+      "fw/tests/de3/test_hal_reliability.py",
+      "fw/tests/de3/test_kirby_v3_machines.py",
+      "fw/tests/de3/test_lfs_wear_de355.py",
+      "fw/tests/de3/test_packed_crc_pair_de355.py",
+      "fw/tests/de3/test_packed_recovery_protocol.py",
+      "fw/tests/de3/test_progress_bar_bounds.py",
+      "fw/tests/de3/test_reset_exit_contract_de358.py",
+      "fw/tests/de3/test_settings_label_width_de361.py",
+      "fw/tests/de3/test_text_input_render_de344.py",
+      "fw/tests/de3/test_ui_comfort_de356.py"
+    ],
+    "scope": "Runs the inherited fw/ subset in the Web source tree. This is not the full current App675 qualification or a combined-main CI; those have separate source-bound evidence."
+  },
+  "logEvidence": {
+    "windows": {
+      "file": "WINDOWS_JOB_137758332130.log",
+      "bytes": 23890,
+      "sha256": "9e170956ffc3b09e50a272dd110192a34391df119a2714db4d32df5fb6bc1d39"
+    },
+    "firmwareSubset": {
+      "file": "FIRMWARE_SUBSET_JOB_137758332628.log",
+      "bytes": 32850,
+      "sha256": "e16f7dd4aea3bc4c516944001a4dc5bb6d0e81bff9b06c77a6c75d3024c1aa36"
+    },
+    "web": {
+      "file": "WEB_JOB_137758332678.log",
+      "bytes": 372012,
+      "sha256": "f4106c7f8f620ef187c5092dadc94b72f4d5b70023239ea8a6bc108a6f76d0ea"
+    }
+  },
+  "testsRepeatedLocally": false,
+  "physicalDeviceAccess": false,
+  "pagesDeploymentAndLiveChecksIncluded": false,
+  "combinedMainCiIncluded": false,
+  "remainingGates": [
+    "Final separate source ZIP delivery and its Pages/HTTP binding",
+    "Both complete CIs on the eventual combined main commit",
+    "Physical LCD/Stream/Player/Switch2 acceptance"
+  ],
+  "scope": "Fresh successful Source checks on the corrected public metadata head; raw job logs were retrieved independently. The deployed Web product is unchanged. This is not a relabeling of the earlier source qualification.",
+  "originalProductQualificationCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "originalProductQualificationCiRun": 45184306115,
+  "previousMetadataCiFailure": {
+    "commit": "d700e95a67dda2035a6189c16a7868d42a64a2c5",
+    "runId": 45192485217,
+    "passed": 2269,
+    "failed": 1,
+    "skipped": 3,
+    "retainedEvidence": "docs/validation/WEB3_65_0_METADATA_CORRECTION.json"
+  },
+  "correctedMetadataUiDownloadContractPassed": true,
+  "metadataCorrectionDidNotChangeProductOrTests": true
+}

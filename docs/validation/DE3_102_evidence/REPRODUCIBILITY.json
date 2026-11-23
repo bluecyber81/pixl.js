@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "version": "2.22.0-DE3.102",
+  "counter": 675,
+  "sourceId": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+  "byteIdentical": {
+    "pixljs.bin": true,
+    "pixljs.hex": true,
+    "production-inputs.json": true
+  },
+  "candidateArtifacts": {
+    "pixljs.bin": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+    "pixljs.hex": "adc87454dd86241ebf7e208220e40d725daf6d4f470abdd347a3375a04271fdd",
+    "pixljs.out": "e57228b5736cb73aaa6e63c886b54fe12b7de327b741cc6f223ebafca0d98802",
+    "pixljs.map": "7fb09bd7133540bd2866a4a89465d64b4a526e1c45e20751a5b345ba42e875f2"
+  },
+  "releaseArtifacts": {
+    "pixljs.bin": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+    "pixljs.hex": "adc87454dd86241ebf7e208220e40d725daf6d4f470abdd347a3375a04271fdd",
+    "pixljs.out": "1ffb6413d274f97a6b9a64d81782f15a3b34baaf89b4736c6c0d9a68b87a9ef8",
+    "pixljs.map": "a1af06de55aa902694ad6896fcd0952adfe89f9c1e0b1d2bd72aa1658c0011e1"
+  },
+  "scope": "Two isolated native builds from the same production inputs. BIN and HEX match exactly; ELF/map retain distinct build metadata and are not claimed byte-identical.",
+  "signedPayloadSha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+  "physicalDeviceAccess": false
+}

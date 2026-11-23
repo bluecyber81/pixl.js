@@ -25,6 +25,18 @@ static uint8_t m_active_focus;
 static bool m_active_slot_persist;
 static void amiidb_scene_amiibo_detail_error_msg(app_amiidb_t *app, const char *message);
 
+static void amiidb_nfc_return_to_list(void *context) {
+    app_amiidb_t *app = context;
+    if (app->temporary_tag_changed || !ntag_emu_session_used() || settings_get_data()->auto_gen_amiibo ||
+        mui_scene_dispatcher_current_scene(app->p_scene_dispatcher) != AMIIDB_SCENE_AMIIBO_DETAIL) return;
+    /* Stop reception before the final check: prepare may deliver a WRITE
+     * that arrived after the earlier session/action checks. */
+    if (!ntag_emu_prepare_change()) return;
+    if (app->temporary_tag_changed) { ntag_emu_cancel_change(); return; }
+    amiidb_scene_detail_back_to_list(app);
+    ntag_emu_cancel_change();
+}
+
 static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag) {
 
     app_amiidb_t *app = context;
@@ -36,7 +48,12 @@ static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag
             if (amiidb_api_slot_update(m_active_slot, &app->ntag) != VFS_OK) {
                 ntag_emu_save_failed();
                 /* Global save overlay remains usable even if the heap is full. */
+            } else {
+                app->temporary_tag_changed = false;
             }
+        } else {
+            /* A later READ must not silently discard an unsaved temporary tag. */
+            app->temporary_tag_changed = true;
         }
         mui_update(mui());
     } else if (type == NTAG_EVENT_TYPE_READ) {
@@ -47,6 +64,9 @@ static void ntag_update_cb(ntag_event_type_t type, void *context, ntag_t *p_ntag
             app_timer_start(m_amiibo_gen_delay_timer, APP_TIMER_TICKS(1000), app);
         }
     }
+    if (!app->temporary_tag_changed && !settings_get_data()->auto_gen_amiibo &&
+        ntag_emu_session_used() && !ntag_emu_save_pending())
+        ntag_emu_request_action(amiidb_nfc_return_to_list, app, ntag_emu_get_generation());
 }
 
 static void amiidb_scene_amiibo_game_list_generate(app_amiidb_t *app) {
@@ -54,15 +74,20 @@ static void amiidb_scene_amiibo_game_list_generate(app_amiidb_t *app) {
     if (!ntag_emu_prepare_change()) return;
     m_active_slot_persist = false;
     const db_amiibo_t *p_amiibo = app->cur_amiibo;
-    ret_code_t result = p_amiibo ? amiibo_helper_generate_amiibo(p_amiibo->head, p_amiibo->tail, &app->ntag)
-                                : NRF_ERROR_INVALID_DATA;
+    bool retained = app->resume_tag;
+    ret_code_t result = !p_amiibo ? NRF_ERROR_INVALID_DATA : app->resume_tag ? NRF_SUCCESS :
+                       amiibo_helper_generate_amiibo(p_amiibo->head, p_amiibo->tail, &app->ntag);
+    app->resume_tag = false;
     if (result != NRF_SUCCESS) {
         amiidb_scene_amiibo_detail_error_msg(app, result == NRF_ERROR_NOT_SUPPORTED
                                                    ? _T(APP_AMIIDB_NOT_SUPPORT_V3) : _T(FAILED));
         return;
     }
     m_tag_ready = ntag_emu_set_tag(&app->ntag);
-    if (m_tag_ready) amiidb_recent_note(p_amiibo, app->p_amiibo_view->game_id);
+    if (m_tag_ready) {
+        if (!retained) app->temporary_tag_changed = false;
+        amiidb_recent_note(p_amiibo, app->p_amiibo_view->game_id);
+    }
 }
 
 static void amiidb_scene_amiibo_game_list_init(app_amiidb_t *app) {
@@ -116,7 +141,7 @@ static void amiidb_scene_amiibo_data_list_init(app_amiidb_t *app) {
     } else if (result != VFS_OK) { m_tag_ready = false; amiidb_scene_amiibo_detail_error_msg(app, _T(DE3_STORAGE_IO_ERROR)); return; }
     m_active_slot = app->cur_slot_index;
     m_active_slot_persist = true;
-    ntag_emu_set_tag(&app->ntag);
+    if (ntag_emu_set_tag(&app->ntag)) app->temporary_tag_changed = false;
 
     settings_data_t *p_settings_data = settings_get_data();
     amiibo_view_set_max_ntags(app->p_amiibo_view, p_settings_data->amiidb_data_slot_num);
@@ -141,7 +166,7 @@ static void amiidb_scene_amiibo_data_list_update(app_amiidb_t *app) {
     } else if (result != VFS_OK) { m_tag_ready = false; amiidb_scene_amiibo_detail_error_msg(app, _T(DE3_STORAGE_IO_ERROR)); return; }
     m_active_slot = focus;
     m_active_slot_persist = true;
-    ntag_emu_set_tag(&app->ntag);
+    if (ntag_emu_set_tag(&app->ntag)) app->temporary_tag_changed = false;
 }
 
 /* The cache starts at cur_fav and follows the same key order as the list.
@@ -332,6 +357,12 @@ void amiidb_scene_amiibo_detail_on_enter(void *user_data) {
 
     const db_amiibo_t *selected = app->prev_scene_id == AMIIDB_SCENE_FAV_LIST
         ? get_amiibo_by_id(app->cur_fav.amiibo_head, app->cur_fav.amiibo_tail) : app->cur_amiibo;
+    /* Returning from the menu keeps unsaved NFC edits, including writes to
+     * the payload ID. Explicit list return/UID generation and successful
+     * Save As clear protection before a different source can be selected. */
+    if (app->temporary_tag_changed && app->prev_scene_id != AMIIDB_SCENE_DATA_LIST && selected &&
+        app->ntag.type == NTAG_215 &&
+        !memcmp(&app->ntag, ntag_emu_get_current_tag(), sizeof(app->ntag))) app->resume_tag = true;
     if (app->prev_scene_id != AMIIDB_SCENE_DATA_LIST && selected &&
         is_valid_amiibo_v3(selected->head, selected->tail)) {
         amiidb_scene_amiibo_detail_error_msg(app, _T(APP_AMIIDB_NOT_SUPPORT_V3));

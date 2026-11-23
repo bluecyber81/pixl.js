@@ -36,6 +36,7 @@ function harness(overrides = {}) {
   const timeouts = [];
   const context = vm.createContext({ module: { exports: {} }, proto, pixl, document, window, navigator,
     ...require('../src/lib/upload-names.js'),
+    ...require('../src/lib/transfer-observation.js'),
     ...require('../src/lib/rename-confirmation.js'),
     ...require('../src/lib/build-version.js'),
     dfuReference: require('../src/lib/release-packages.js').dfuReference,
@@ -48,6 +49,7 @@ function harness(overrides = {}) {
     performance: require('node:perf_hooks').performance,
     setTimeout(callback, delay) { timeouts.push({ callback, delay }); return timeouts.length; },
     clearTimeout(id) { if (timeouts[id - 1]) timeouts[id - 1].cancelled = true; },
+    loadLcdStorageSelfTest: () => require('../src/lib/lcd-storage-self-test.js'),
     loadBackupTools: overrides.loadBackupTools || (() => ({ createBackup: context.createBackup, createBackupCheckpoint: context.createBackupCheckpoint })),
     createBackup: options => overrides.createBackup(options),
     createBackupCheckpoint: options => overrides.createBackupCheckpoint ? overrides.createBackupCheckpoint(options) : ({
@@ -65,10 +67,17 @@ function harness(overrides = {}) {
   // In browsers the Window picker is also a global. Keep that real contract
   // while the VM isolates the browser fakes from the Node test process.
   Object.defineProperty(context, 'showSaveFilePicker', { get: () => window.showSaveFilePicker });
+  context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
+  context.lcdRelease = require('../public/dfu/lcd-release-reference.mjs').lcdRelease;
+  context.app674 = require('../public/dfu/lcd-app674-reference.mjs').lcdRelease;
+  context.app673 = require('../public/dfu/lcd-app673-reference.mjs').lcdRelease;
+  context.app672 = require('../public/dfu/lcd-app672-reference.mjs').lcdRelease;
+  context.app671 = require('../public/dfu/lcd-app671-reference.mjs').lcdRelease;
+  context.release = require('../package.json');
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/power-diagnostics.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/metadata-note.js'), 'utf8').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/language-preference.js'), 'utf8'), context);
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/device-storage-display.js'), 'utf8').replace(/export /g, ''), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/device-storage-display.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export /g, ''), context);
   vm.runInContext('{ ' + fs.readFileSync(path.join(__dirname, '../src/lib/portable-names.js'), 'utf8').replace(/export /g, '') + '\nObject.assign(globalThis, { assertPortableEntryName, assertWritableDevicePath, portableNameKey, assertNameByteLimit, assertPathByteLimit, devicePathSpace, backupPathSpace }); }', context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/browser-tools.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export /g, ''), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/lib/folder-navigation.js'), 'utf8').replace(/export /g, ''), context);
@@ -83,13 +92,13 @@ function harness(overrides = {}) {
     ['lcd-build-diagnostics.js',['buildDiagnosticBoard','normalizeBuildDiagnostics']],
     ['firmware-build-reference.js',['diagnosticBuildIdentity']],
     ['startup-diagnostics.js',['normalizeStartupDiagnostics']],
-    ['device-extra-diagnostics.js',['normalizeMenuDiagnostics','normalizeMtuDiagnostics','normalizeUiDiagnostics','supportsMenuDiagnostics']],
+    ['device-extra-diagnostics.js',['normalizeMenuDiagnostics','normalizeMtuDiagnostics','normalizeUiDiagnostics','normalizeStorageGcDiagnostics','supportsMenuDiagnostics','supportsBleTestDiagnostics','supportsLinkDiagnostics','supportsStorageGcDiagnostics']],
     ['diagnostic-snapshot.js',['diagnosticSectionKeys','collectDiagnosticSnapshot','createCombinedDiagnosticReport']]
   ]) {
     const source=fs.readFileSync(path.join(__dirname,'../src/lib/',file),'utf8').replace(/^import .*$/gm,'').replace(/export /g,'');
     vm.runInContext('{ '+source+'\n'+names.map(name=>'globalThis.'+name+'='+name+';').join('')+' }',context);
   }
-  vm.runInContext(descriptor.script.content.replace(/^import .*$/gm, '').replace('export default', 'module.exports ='), context);
+  vm.runInContext(descriptor.script.content.replace(/^import .*$/gm, '').replace("import('./lib/lcd-storage-self-test.js')", 'loadLcdStorageSelfTest()').replace('export default', 'module.exports ='), context);
   const options = context.module.exports;
   const instance = {
     $t: key => key, $i18n: { locale: 'de_DE', availableLocales: ['de_DE', 'en'] },
@@ -107,6 +116,202 @@ function harness(overrides = {}) {
     disconnects: () => disconnected, mount: () => options.mounted.call(instance), unmount: () => options.beforeUnmount.call(instance) };
 }
 const connected = h => { h.instance.connected = true; h.instance.current_dir = 'E:/'; return h.instance; };
+
+test('image streaming exclusively owns the device and keeps the screen awake only while sending', () => {
+  const h = harness(), app = h.instance;
+  let connects = 0, handoffs = 0;
+  h.pixl.connect = () => { connects++; };
+  h.pixl.adopt_remote_connection = () => { handoffs++; return true; };
+  app.streamActive = true;
+  app.on_btn_ble_connect();
+  assert.equal(connects, 0);
+  assert.throws(() => app.on_remote_file_handoff({}), /busy/);
+  assert.equal(handoffs, 0);
+  assert.equal(app.screenAwakeActive, false);
+  app.streamSending = true;
+  assert.equal(app.screenAwakeActive, true);
+  app.streamSending = false;
+  app.streamActive = false;
+  app.on_btn_ble_connect();
+  assert.equal(connects, 1);
+  assert.equal(app.screenAwakeActive, false);
+});
+
+test('the image sender leaves no hidden streaming component after workspace navigation', () => {
+  const h = harness(), app = h.instance;
+  let focused = 0;
+  app.$refs.streamWorkspace = {open:false,scrollIntoView(){},querySelector:() => ({focus(){focused++;}})};
+  app.show_workspace('stream');
+  assert.equal(app.activeWorkspace, 'stream');
+  assert.equal(app.$refs.streamWorkspace.open, true);
+  assert.equal(focused, 1);
+  assert.match(descriptor.template.content, /<BleImageSender v-if="activeWorkspace === 'stream'"/);
+  assert.match(descriptor.template.content, /:blocked="connected \|\| connecting \|\| disconnecting \|\| busy \|\| remoteActive" @active="streamActive = \$event"/);
+  assert.match(descriptor.template.content, /<RemoteControl[^>]+:blocked="[^"]+\|\| streamActive"/);
+  assert.match(appSource, /searchParams\.get\('workspace'\) === 'stream'/);
+});
+
+// Exercise the real upload entry point, its adapters, safeUpload and the real
+// protocol's digest/read queues. Only device storage and GATT are simulated.
+async function digestUploadHarness({ firmwareVersion = '2.22.0-DE3.92', size = 540,
+  replace = false, omitDigest = false, digestReply } = {}) {
+  const { safeUpload } = await import('../src/lib/safe-upload.js');
+  const { memoryVfs, metadata, localFile } = await import('./helpers/memory-vfs.mjs');
+  const { readDigestWire } = require('./helpers/read-digest-wire.cjs');
+  const vfs = memoryVfs(), target = 'E:/tags/a.bin', source = new Uint8Array(size).fill(3);
+  const oldMetadata = metadata(0x80, 'Preserve this note');
+  if (replace) vfs.put(target, new Uint8Array(size).fill(1), oldMetadata);
+  const wire = await readDigestWire(vfs, { digestReply }), digestCalls = [], progress = [];
+  const h = harness({ safeUploads: true,
+    safeUpload: options => safeUpload({ ...options, randomToken: () => 'abcdef012345' }),
+    vfs_read_folder: async path => ({ status: 0, data: await vfs.api.readDirectory(path) }),
+    vfs_helper_read_file: (...args) => wire.api.vfs_helper_read_file(...args),
+    vfs_backup_digest: (path, size, version) => {
+      digestCalls.push({ path, size, version });
+      vfs.log.push({ op: 'digest', args: [path, size] });
+      return wire.api.vfs_backup_digest(path, size, version);
+    },
+    vfs_helper_write_file(path, blob, onProgress, success, error) {
+      blob.arrayBuffer().then(buffer => vfs.api.writeFile(path, new Uint8Array(buffer), { onProgress }))
+        .then(() => success(), error);
+    },
+    vfs_rename: async (from, to) => { await vfs.api.rename(from, to); return { status: 0 }; },
+    vfs_remove: async path => { await vfs.api.remove(path); return { status: 0 }; },
+    vfs_update_meta: async (path, meta) => { await vfs.api.updateMetadata(path, meta); return { status: 0 }; },
+  });
+  const app = connected(h);
+  wire.bus.on('ble_disconnected', () => app.on_ble_disconnected());
+  app.current_dir = 'E:/tags'; app.firmwareVersion = firmwareVersion; app.replaceUploads = replace;
+  if (omitDigest) {
+    // Reproduce the published adapter wiring before this change; the same
+    // production read helper still selects 0x24 for this App665 connection.
+    const adapters = app.transfer_adapters;
+    app.transfer_adapters = generation => { const result = adapters(generation); delete result.readFileDigest; return result; };
+  }
+  return { app, vfs, wire, digestCalls, progress, source, target, oldMetadata,
+    run: () => app.on_upload_request({ file: localFile('a.bin', source), onProgress: value => progress.push(value.percent) }) };
+}
+function verificationNotifications(fixture) {
+  const packets = fixture.wire.replies.filter(frame => [0x14, 0x21, 0x24].includes(frame[0]) && frame[1] === 0);
+  return { frames: packets.length, payloadBytes: packets.reduce((sum, frame) => sum + frame.length - 4, 0),
+    wireBytes: packets.reduce((sum, frame) => sum + frame.length, 0) };
+}
+const digestMutations = fixture => fixture.vfs.log.filter(entry => ['write', 'rename', 'remove', 'meta'].includes(entry.op));
+
+test('small upload digest uses the real App665 SHA path for both stage and target with fewer verification notifications', async t => {
+  const before = await digestUploadHarness({ omitDigest: true }), after = await digestUploadHarness();
+  await before.run(); await after.run();
+  assert.deepEqual(before.wire.requests.map(frame => frame[0]), [0x22, 0x24, 0x24]);
+  assert.deepEqual(after.wire.requests.map(frame => frame[0]), [0x21, 0x21]);
+  assert.deepEqual(verificationNotifications(before), { frames: 6, payloadBytes: 1080, wireBytes: 1104 });
+  assert.deepEqual(verificationNotifications(after), { frames: 2, payloadBytes: 64, wireBytes: 72 });
+  assert.deepEqual(after.digestCalls, [
+    { path: 'E:/tags/~uabcdef012345', size: 540, version: '2.22.0-DE3.92' },
+    { path: after.target, size: 540, version: '2.22.0-DE3.92' },
+  ]);
+  assert.deepEqual(digestMutations(after), digestMutations(before));
+  assert.deepEqual(after.vfs.bytes(after.target), Array.from(after.source));
+  assert.equal(after.app.transferHistory.at(-1).verified, true);
+  assert.equal(after.app.pendingUploads, 0);
+  assert.deepEqual(after.wire.errors, []);
+  t.diagnostic('Deterministic GATT247 mock, not measured phone speed: two 540-byte checks use 6 -> 2 data notifications, 1080 -> 64 content bytes, 1104 -> 72 NUS bytes. The previous fresh-session path additionally issued one 0x22 capability probe (20 response bytes).');
+});
+
+test('small upload digest preserves replacement metadata and checks the original twice plus stage and final target', async () => {
+  const f = await digestUploadHarness({ replace: true });
+  await f.run();
+  assert.deepEqual(f.wire.requests.map(frame => frame[0]), [0x21, 0x21, 0x21, 0x21]);
+  assert.deepEqual(f.digestCalls.map(call => call.path), [f.target, 'E:/tags/~uabcdef012345', f.target, f.target]);
+  assert.deepEqual(f.vfs.nodes.get(f.target).meta, f.oldMetadata);
+  assert.deepEqual(f.vfs.bytes(f.target), Array.from(f.source));
+  const log = f.vfs.log, firstRename = log.findIndex(entry => entry.op === 'rename');
+  assert.equal(log.slice(0, firstRename).filter(entry => entry.op === 'digest').length, 3);
+  const finalDigest = log.findLastIndex(entry => entry.op === 'digest');
+  assert(log.findIndex(entry => entry.op === 'remove') > finalDigest);
+  assert.equal(f.vfs.nodes.has('E:/tags/~babcdef012345'), false);
+  assert.equal(f.app.transferHistory.at(-1).verified, true);
+});
+
+for (const variant of [
+  { name: 'older LCD', firmwareVersion: '2.22.0-DE3.65', size: 540, commands: [0x12, 0x14, 0x13, 0x12, 0x14, 0x13] },
+  { name: 'OLED', firmwareVersion: '2.22.0-DE3.87-OLEDt6', size: 540, commands: [0x12, 0x14, 0x13, 0x12, 0x14, 0x13] },
+  { name: 'larger than 572 bytes', firmwareVersion: '2.22.0-DE3.92', size: 573, commands: [0x12, 0x14, 0x13, 0x12, 0x14, 0x13] },
+  { name: 'explicitly unsupported SHA command', firmwareVersion: '2.22.0-DE3.92', size: 540,
+    digestReply: () => ({ status: 255, payload: [] }), commands: [0x21, 0x22, 0x24, 0x24] },
+]) {
+  test('small upload digest retains exact full-read verification for ' + variant.name, async () => {
+    const f = await digestUploadHarness(variant);
+    await f.run();
+    assert.deepEqual(f.wire.requests.map(frame => frame[0]), variant.commands);
+    assert(f.digestCalls.every(call => call.version === variant.firmwareVersion && call.size === variant.size));
+    assert.equal(verificationNotifications(f).payloadBytes, variant.size * 2);
+    assert.deepEqual(f.vfs.bytes(f.target), Array.from(f.source));
+    assert.equal(f.app.transferHistory.at(-1).verified, true);
+    assert.deepEqual(f.wire.errors, []);
+  });
+}
+
+for (const failure of [
+  { name: 'device ERR', reply: { status: 1, payload: [] }, matches: error => error.cmd === 0x21 && error.status === 1 },
+  { name: '31-byte reply', reply: { payload: new Uint8Array(31) }, matches: /Invalid backup digest length/ },
+  { name: '33-byte reply', reply: { payload: new Uint8Array(33) }, matches: /response exceeds the byte limit/, disconnected: true },
+  { name: 'SHA mismatch', reply: { payload: new Uint8Array(32) }, matches: { code: 'UPLOAD_VERIFY' } },
+]) {
+  test('small upload digest fails before publication without a full-read fallback on ' + failure.name, async () => {
+    const f = await digestUploadHarness({ digestReply: () => failure.reply });
+    await assert.rejects(f.run(), failure.matches);
+    assert.deepEqual(f.wire.requests.map(frame => frame[0]), [0x21]);
+    assert.equal(f.vfs.nodes.has(f.target), false);
+    assert.equal(f.vfs.nodes.has('E:/tags/~uabcdef012345'), !!failure.disconnected);
+    assert.equal(f.vfs.log.some(entry => entry.op === 'rename'), false);
+    assert.equal(f.app.transferHistory.at(-1).status, failure.disconnected ? 'interrupted' : 'failed');
+    assert.equal(f.app.pendingUploads, 0);
+    assert.equal(f.progress.includes(100), false);
+  });
+}
+
+test('small upload digest never reports verified success when the final target SHA fails', async () => {
+  const f = await digestUploadHarness({ digestReply: ({ path, hashBytes }) =>
+    path === 'E:/tags/a.bin' ? { status: 1, payload: [] } : { payload: hashBytes } });
+  await assert.rejects(f.run(), error => error.cmd === 0x21 && error.status === 1);
+  assert(f.wire.requests.every(frame => frame[0] === 0x21));
+  assert.deepEqual(f.vfs.bytes(f.target), Array.from(f.source));
+  assert.equal(f.app.transferHistory.at(-1).status, 'failed');
+  assert.equal(f.app.transferHistory.some(entry => entry.verified), false);
+  assert.equal(f.progress.includes(100), false);
+});
+
+test('small upload digest adapter rejects both an already stale session and a valid SHA from a replaced session', async () => {
+  const early = await digestUploadHarness({ replace: true });
+  const stale = early.app.transfer_adapters(early.app.sessionGeneration);
+  ++early.app.sessionGeneration;
+  await assert.rejects(stale.readFileDigest(early.target, 540), /sessionChanged/);
+  assert.equal(early.digestCalls.length, 0); assert.equal(early.wire.requests.length, 0);
+
+  const gate = deferred(), entered = deferred();
+  const late = await digestUploadHarness({ replace: true, digestReply: input => { entered.resolve(input); return gate.promise; } });
+  const current = late.app.transfer_adapters(late.app.sessionGeneration);
+  const pending = current.readFileDigest(late.target, 540);
+  const { hashBytes } = await entered.promise;
+  ++late.app.sessionGeneration;
+  gate.resolve({ payload: hashBytes });
+  await assert.rejects(pending, /sessionChanged/);
+  assert.deepEqual(late.wire.requests.map(frame => frame[0]), [0x21]);
+});
+
+test('small upload digest cannot publish a staged file after a connection changes during its SHA read', async () => {
+  const gate = deferred(), entered = deferred();
+  const f = await digestUploadHarness({ digestReply: input => { entered.resolve(input); return gate.promise; } });
+  const pending = f.run(), input = await entered.promise;
+  f.app.on_ble_disconnected();
+  gate.resolve({ payload: input.hashBytes });
+  await assert.rejects(pending, /sessionChanged/);
+  assert.deepEqual(f.wire.requests.map(frame => frame[0]), [0x21]);
+  assert.equal(f.vfs.log.some(entry => entry.op === 'rename'), false);
+  assert.equal(f.vfs.nodes.has(f.target), false);
+  assert.equal(f.vfs.nodes.has('E:/tags/~uabcdef012345'), true);
+  assert.equal(f.progress.includes(100), false);
+});
 
 test('an OLED connection keeps its updater board hint through a missing boot read and disconnect', async () => {
   let version = '2.22.0-DE3.81-OLEDt3';
@@ -514,7 +719,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.58.2'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.65.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -526,7 +731,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.58.2.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.65.0.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -613,7 +818,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.58.2.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.65.0.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -724,7 +929,7 @@ test('3.22.2 graceful disconnect clears device controls immediately but keeps re
   assert.equal(app.connected,false);assert.equal(app.disconnecting,true);assert.equal(app.firmwareVersion,'');
   assert.equal(app.current_dir,'');assert.equal(app.tableData.length,0);assert.equal(app.connBtnText,'info.disconnecting');
   app.on_btn_ble_connect();assert.equal(picks,0);
-  assert.match(appSource,/:disabled="remoteActive \|\| disconnecting \|\| connectionDisconnectLocked/);
+  assert.match(appSource,/:disabled="remoteActive \|\| streamActive \|\| disconnecting \|\| connectionDisconnectLocked/);
   state='disconnected';h.listeners.get('ble_disconnect_complete')();
   assert.equal(app.disconnecting,false);assert.equal(app.connBtnText,'conn.connect');app.on_btn_ble_connect();assert.equal(picks,1);
 });
@@ -1795,10 +2000,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.58.2.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.65.0.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.58.2.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.65.0.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2644,12 +2849,12 @@ test('3.32 preview disconnect cannot paint old image or unlock replacement sessi
 test('3.32 corrupt and truncated previews never assign an otherwise plausible figure image',async()=>{
  for(const bytes of [new Uint8Array(540).buffer,figureBytes(532)]){const h=harness({vfs_helper_read_file(path,yes){yes(bytes);}}),app=connected(h);await app.select_file_row(0,figureRow());assert.equal(app.previewSelection.id,null);assert.ok(['invalid','failed'].includes(app.previewSelection.state));}
 });
-test('3.32 all six workspaces remain mounted and navigation preserves table selection, jobs and preview',()=>{
+test('all seven workspace shells preserve table selection, jobs and preview',()=>{
  const h=harness(),app=connected(h);const selection={name:'keep'};app.table_selection=[selection];app.previewSelection={row:selection};app.transfer={phase:'reading',done:9};
- for(const [name,ref] of Object.entries({files:'fileWorkspace',backup:'backupWorkspace',update:'updateWorkspace',remote:'remoteWorkspace',device:'devicePanel',catalogue:'catalogueWorkspace'})){app.$refs[ref]={open:false,scrollIntoView(){},querySelector:()=>({focus(){}}),focus(){}};app.show_workspace(name);assert.equal(app.activeWorkspace,name);assert.equal(app.table_selection[0],selection);assert.equal(app.transfer.done,9);assert.equal(app.previewSelection.row,selection);assert.match(descriptor.template.content,new RegExp(`v-show="activeWorkspace === '${name}'"`));}
+ for(const [name,ref] of Object.entries({files:'fileWorkspace',backup:'backupWorkspace',update:'updateWorkspace',remote:'remoteWorkspace',stream:'streamWorkspace',device:'devicePanel',catalogue:'catalogueWorkspace'})){app.$refs[ref]={open:false,scrollIntoView(){},querySelector:()=>({focus(){}}),focus(){}};app.show_workspace(name);assert.equal(app.activeWorkspace,name);assert.equal(app.table_selection[0],selection);assert.equal(app.transfer.done,9);assert.equal(app.previewSelection.row,selection);assert.match(descriptor.template.content,new RegExp(`v-show="activeWorkspace === '${name}'"`));}
  assert.equal(app.catalogueOpen,true);assert.equal(h.disconnects(),0);
  app.show_workspace('files');
- assert.deepEqual([...app.visitedWorkspaces].sort(),['backup','catalogue','device','files','remote','update']);
+ assert.deepEqual([...app.visitedWorkspaces].sort(),['backup','catalogue','device','files','remote','stream','update']);
  for(const [child,area] of [['MigrationAssistant','backup'],['RemoteControl','remote'],['StartupDiagnostics','device']]) {
    assert.ok(descriptor.template.content.includes(`<${child} v-if="visitedWorkspaces.has('${area}')"`));
  }
@@ -2713,7 +2918,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.58.2');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.65.0');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });
@@ -3020,3 +3225,177 @@ test('T1 a delayed picker belongs to its captured ZIP and cannot confirm a newer
   assert.equal(old.savedConfirmed,true);assert.equal(app.lastBackup,fresh);assert.equal(fresh.savedConfirmed,undefined);
   let prevented=0;app.on_before_unload({preventDefault(){prevented++;}});assert.equal(prevented,1);
 });
+
+test('App668 combined diagnostic passes the exact reported firmware identity to the MTUD selector',async()=>{
+ const versions=[];
+ const app=connected(harness({get_mtu_diagnostics:async version=>{versions.push(version);return null;},
+  vfs_storage_info_extended:async()=>({status:255})}));
+ app.firmwareVersion='2.22.0-DE3.95';await app.read_all_diagnostics();
+ assert.deepEqual(versions,['2.22.0-DE3.95']);
+ assert.equal(app.fullDiagnosticSnapshot.sections.mtu.state,'unavailable');
+});
+
+
+const test669Link = () => require('../src/lib/device-extra-diagnostics.js').parseMtuDiagnostics(Uint8Array.from(Buffer.from(JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/ble-link-diagnostic-v3.json'),'utf8')).responsePayloadHex,'hex')));
+const test669Archive = () => ({blob:new Blob(['zip']),filename:'private.zip',manifest:{completed:true,files:2,bytes:1000,resume:{reusedFiles:1,reusedBytes:540}},
+ profile:{schema:1,phasesMs:{listing:1,reading:2,verifying:1,packing:1,total:5},operations:{listingCalls:1,fileReads:1,digestReplies:1,rawMetadataReads:0,verificationListingCalls:1,previousZipFiles:1},transport:null}});
+const flush669 = async () => { for(let n=0;n<20;n++)await Promise.resolve(); };
+const idle669 = () => ({connectionState:'connected',activeCommand:null,queuedCommands:0,fileTransferActive:false,queuedFileTransfers:0});
+
+test('App669 backup binds only two endpoint link reads to the completed profile and exports no private file identity',async()=>{
+ const calls=[];
+ const h=harness({get_mtu_diagnostics:async version=>{assert.equal(version,'2.22.0-DE3.96');calls.push('link');return test669Link();},
+ createBackup:async options=>{calls.push('backup-start');await options.readDirectory('E:/');calls.push('backup-finish');return test669Archive();}}),app=connected(h);
+ app.firmwareVersion='2.22.0-DE3.96';await app.on_backup();
+ assert.deepEqual(calls,['link','backup-start','backup-finish','link']);assert.equal(app.transferHistory.length,1);
+ const receipt=app.lastTransfer;assert.equal(receipt.status,'success');assert.equal(receipt.verified,false);
+ assert.equal(receipt.measurement.readFileBytes,460);assert.equal(receipt.measurement.reusedFileBytes,540);
+ assert.equal(receipt.measurement.link.before.data.schemaVersion,3);assert.equal(receipt.measurement.link.after.data.schemaVersion,3);
+ app.save_diagnostics();const report=JSON.parse(app.diagnosticsJson);assert.equal(report.recentTransfers[0].measurement.files,2);
+ assert.doesNotMatch(app.diagnosticsJson,/private\.zip|private-test-device/);assert.equal(app.busy,false);
+});
+
+test('App669 completed ZIP survives a disconnected final link read without a fake failed receipt or replacement-session measurement',async()=>{
+ const gate=deferred();let reads=0;
+ const h=harness({get_mtu_diagnostics:async()=>++reads===1?test669Link():gate.promise,createBackup:async()=>test669Archive()}),app=connected(h);
+ app.firmwareVersion='2.22.0-DE3.96';const pending=app.on_backup();await flush669();
+ assert.equal(reads,2);assert.equal(app.lastTransfer.status,'success');assert.equal(app.lastBackup.filename,'private.zip');
+ app.on_ble_disconnected();assert.equal(app.transferHistory.length,1,'post-backup diagnostic is not a failed file operation');
+ app.connected=true;app.firmwareVersion='2.22.0-DE3.96';app.transferHistory=[];app.infoLoading=true;
+ gate.resolve(test669Link());await pending;
+ assert.equal(app.transferHistory.length,0);assert.equal(app.infoLoading,true);assert.equal(app.lastBackup.filename,'private.zip');
+});
+
+test('App669 failed or cancelled backup never captures a completed profile, and old backups add no link requests',async()=>{
+ for(const cancel of [false,true]){
+  let reads=0,app;const h=harness({get_mtu_diagnostics:async()=>{reads++;return test669Link();},createBackup:async()=>{if(cancel)app._backupController.abort();throw Error('unfinished');}});app=connected(h);app.firmwareVersion='2.22.0-DE3.96';await app.on_backup();
+  assert.equal(reads,1);assert.equal(app.lastTransfer.status,cancel?'cancelled':'failed');assert.equal(app.lastTransfer.measurement,undefined);
+ }
+ let reads=0;const h=harness({get_mtu_diagnostics:async()=>{reads++;return test669Link();},createBackup:async()=>test669Archive()}),app=connected(h);
+ app.firmwareVersion='2.22.0-DE3.94';await app.on_backup();assert.equal(reads,0);assert.equal(app.lastTransfer.measurement.link.before.state,'unavailable');
+});
+
+test('App669 file adapter rejects a late write acknowledgement from a replacement session',async()=>{
+ let acknowledge;const h=harness({vfs_helper_write_file:(path,blob,progress,yes)=>{acknowledge=yes;}}),app=connected(h),generation=app.sessionGeneration;
+ const pending=app.transfer_adapters(generation).writeFile('E:/test',new Uint8Array([1]));const failed=assert.rejects(pending);
+ app.sessionGeneration++;acknowledge();await failed;
+});
+
+test('App669 phone test uses the real bounded module through the real App adapters and fresh capability guard',async()=>{
+ const {memoryVfs}=await import('./helpers/memory-vfs.mjs'),vfs=memoryVfs(),removed=[];
+ const h=harness({get_transport_diagnostics:idle669,get_mtu_diagnostics:async()=>test669Link(),
+ vfs_read_folder:async path=>({status:0,data:await vfs.api.readDirectory(path)}),
+ vfs_create_folder:async path=>{await vfs.api.createDirectory(path);return{status:0};},
+ vfs_helper_write_file:(path,blob,progress,yes,no)=>blob.arrayBuffer().then(buffer=>vfs.api.writeFile(path,new Uint8Array(buffer))).then(yes,no),
+ vfs_helper_read_file:(path,yes,no,done,options)=>vfs.api.readFile(path,{maxBytes:options.max_bytes}).then(yes,no),
+ vfs_remove:async path=>{removed.push(path);vfs.nodes.delete(path);return{status:0};}}),app=connected(h);
+ app.firmwareVersion='2.22.0-DE3.95';await assert.rejects(app.run_lcd_storage_test(),{code:'BLE_TEST_UNSUPPORTED'});assert.equal(vfs.log.length,0);
+ app.firmwareVersion='2.22.0-DE3.96';h.proto.get_transport_diagnostics=()=>({...idle669(),queuedCommands:1});await assert.rejects(app.run_lcd_storage_test(),{code:'BLE_TEST_BUSY'});assert.equal(vfs.log.length,0);
+ h.proto.get_transport_diagnostics=idle669;const result=await app.run_lcd_storage_test();assert.equal(result.status,'passed');assert.equal(result.verified,true);assert.equal(result.removed,true);assert.equal(result.bytes,512);
+ assert.equal(result.radioBefore.data.schemaVersion,3);assert.equal(result.firmwareVersion,'2.22.0-DE3.96');
+ assert.equal(removed.length,2);assert.equal(removed[0],result.folder+'/probe.txt');assert.equal(removed[1],result.folder);
+ assert(vfs.nodes.has('E:/tags'));assert.equal(vfs.nodes.size,2);app.open_lcd_test_report(result);assert.equal(app.diagnosticsDialog,true);assert.equal(JSON.parse(app.diagnosticsJson).freeAfterBytes,2097152);
+});
+
+
+for (const [normalCounter, normalVersion] of [[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100'],[674,'2.22.0-DE3.101'],[675,'2.22.0-DE3.102']]) {
+// Exercise the normal LCD UI entry point, backup engine, wire queue and ZIP
+// reader together. Only the peripheral and the browser boundary are simulated.
+async function app671BackupHarness(settings={}) {
+ const {createBackup,createBackupCheckpoint}=await import('../src/lib/backup.js');
+ const {memoryVfs}=await import('./helpers/memory-vfs.mjs');
+ const {readDigestWire}=require('./helpers/read-digest-wire.cjs');
+ const vfs=memoryVfs();vfs.nodes.delete('E:/tags');
+ for(let i=0;i<6;i++)vfs.put('E:/f'+i+'.bin',new Uint8Array(540).fill(i));
+ let revision='000000010000002a';
+ const packet=Buffer.from(JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/ble-link-diagnostic-v2.json'),'utf8')).responsePayloadHex,'hex');
+ const wire=await readDigestWire(vfs,{batch:true,revision:()=>revision,...settings,linkReply:bytes=>{
+  assert.deepEqual([...bytes],[1],'normal backup reads MTUD v2 and never a test selector or setting');return{payload:packet};
+ }});
+ const h=harness({loadBackupTools:()=>({createBackup,createBackupCheckpoint}),
+  vfs_read_folder:async path=>({status:0,data:await vfs.api.readDirectory(path)}),
+  vfs_small_create_revision:(...args)=>wire.api.vfs_small_create_revision(...args),
+  vfs_backup_digest:(...args)=>wire.api.vfs_backup_digest(...args),
+  vfs_read_small_batch:(...args)=>wire.api.vfs_read_small_batch(...args),
+  vfs_digest_small_batch:(...args)=>wire.api.vfs_digest_small_batch(...args),
+  vfs_helper_read_file:(...args)=>wire.api.vfs_helper_read_file(...args),
+  get_transport_diagnostics:()=>wire.api.get_transport_diagnostics(),
+  get_mtu_diagnostics:(...args)=>wire.api.get_mtu_diagnostics(...args)
+ });
+ const app=connected(h);app.firmwareVersion=normalVersion;app.storeBackup=false;
+ wire.bus.on('ble_disconnected',()=>app.on_ble_disconnected());
+ return{...h,app,vfs,wire,setRevision:value=>{revision=value;}};
+}
+
+test(`App${normalCounter} ordinary backup and cached ZIP use actual READ/DIGEST batches without a test panel`,async()=>{
+ const {loadBackupReference,loadBackupZip,readBackupArchiveFile}=await import('../src/lib/zip-import.js');
+ const JSZip=require('../public/dfu/vendor/jszip-3.10.2.min.js');
+ const f=await app671BackupHarness();
+ assert.equal(f.app.lcdTestSupported,false);assert.equal(f.app.lcdCleanupSupported,true);
+ await f.app.on_backup();
+ assert.equal(f.app.lastTransfer.status,'success');assert.equal(f.app.lastBackup.manifest.files,6);
+ assert.deepEqual(f.wire.requests.filter(r=>r[0]===0x26).map(r=>[r[4],r[5]]),[[0,4],[0,2]]);
+ assert.equal(f.wire.requests.filter(r=>r[0]===0x25).length,1);
+ assert.equal(f.wire.requests.filter(r=>[0x12,0x14,0x21,0x24].includes(r[0])).length,0);
+ assert.equal(f.app.lastTransfer.measurement.link.before.data.schemaVersion,2);
+ assert.equal(f.app.lastTransfer.measurement.link.after.data.schemaVersion,2);
+ assert.equal(f.app.lastTransfer.measurement.link.before.data.experiment,undefined);
+ const previousArchive=await loadBackupReference(f.app.lastBackup.blob,{JSZip});
+ f.vfs.put('E:/f1.bin',new Uint8Array(540).fill(91));
+ f.vfs.put('E:/f3.bin',new Uint8Array(540).fill(93));f.setRevision('000000010000002b');
+ f.wire.requests.length=0;f.wire.replies.length=0;
+ f.app.set_backup_export_options({previousArchive});await f.app.on_backup();
+ assert.equal(f.app.lastTransfer.status,'success');assert.equal(f.app.lastBackup.manifest.resume.reusedFiles,4);
+ const batches=f.wire.requests.filter(r=>r[0]===0x26);
+ assert.deepEqual(batches.map(r=>[r[4],r[5]]),[[1,4],[0,2],[1,2]]);
+ assert(batches.every(r=>r.readBigUInt64LE(6)===0x10000002bn),'cached capability never replaces the new backup revision');
+ assert.equal(f.wire.requests.filter(r=>r[0]===0x25).length,0);
+ assert.equal(f.wire.requests.filter(r=>[0x12,0x14,0x21,0x24].includes(r[0])).length,0);
+ const archive=await loadBackupZip(f.app.lastBackup.blob,{JSZip});
+ for(const entry of archive.entries.filter(e=>e.type==='file'))
+  assert.deepEqual(readBackupArchiveFile(archive,entry.sourcePath),f.vfs.nodes.get(entry.sourcePath).bytes);
+ assert.equal(f.wire.errors.length,0);assert.equal(f.wire.timers.size,0);assert.equal(f.app.busy,false);
+});
+
+test(`App${normalCounter} ordinary backup falls back only when batch capability is explicitly absent`,async()=>{
+ const f=await app671BackupHarness({batch:false});await f.app.on_backup();
+ assert.equal(f.app.lastTransfer.status,'success');assert.equal(f.app.lastBackup.manifest.files,6);
+ assert.equal(f.wire.requests.filter(r=>r[0]===0x25).length,1);
+ assert.equal(f.wire.requests.filter(r=>r[0]===0x26).length,0);
+ assert.equal(f.wire.requests.filter(r=>r[0]===0x24).length,6);
+ assert.equal(f.wire.errors.length,0);assert.equal(f.wire.timers.size,0);
+});
+
+test(`App${normalCounter} ordinary backup never caches a partial batch or continues after abort at the response boundary`,async()=>{
+ for(const mode of ['truncated','abort']){
+  let app;
+  const f=await app671BackupHarness({batchReply:({payload})=>{
+   if(mode==='abort')app._backupController.abort();
+   return{payload:mode==='truncated'?payload.subarray(0,payload.length-1):payload};
+  }});app=f.app;
+  await app.on_backup();
+  assert.equal(app.lastTransfer.status,mode==='abort'?'cancelled':'failed');
+  assert.equal(app.lastBackup,null);assert.equal(app._backupCheckpoint.summary().files,0);
+  assert.equal(f.wire.requests.filter(r=>r[0]===0x26).length,1);
+  assert.equal(f.wire.requests.filter(r=>[0x12,0x14,0x21,0x24].includes(r[0])).length,0);
+  assert.equal(f.wire.timers.size,0);assert.equal(app.busy,false);
+ }
+});
+
+test(`App${normalCounter} full diagnosis keeps normal PXGC while the experimental panel stays unavailable`,async()=>{
+ const {parseStorageGcDiagnostics}=require('../src/lib/device-extra-diagnostics.js');
+ const fixture=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/packed-gc-diagnostic-v1.json'),'utf8')).cases.find(x=>x.name==='clean');
+ const cleanup=parseStorageGcDiagnostics(Buffer.from(fixture.hex,'hex')),versions=[];
+ const h=harness({vfs_storage_info_extended:async()=>({status:0,data:storageInfo}),
+  vfs_storage_layout:async()=>({status:0,data:storageLayout}),
+  get_storage_gc_diagnostics:async version=>{versions.push(version);return cleanup;}}),app=connected(h);
+ app.firmwareVersion=normalVersion;await app.read_all_diagnostics();
+ assert.deepEqual(versions,[normalVersion]);assert.equal(app.lcdTestSupported,false);assert.equal(app.lcdCleanupSupported,true);
+ assert.equal(app.fullDiagnosticSnapshot.sections.storage.state,'available');
+ assert.equal(app.fullDiagnosticSnapshot.sections.storage.data.cleanup.cleanupState,'clean');
+ assert.equal(app.fullDiagnosticSnapshot.sections.storage.data.cleanup.lastGcResult,0);
+ const panel=descriptor.template.content.match(/<LcdTestPanel[^>]+>/)[0];
+ assert.match(panel,/v-if="visitedWorkspaces.has\('device'\) && lcdTestSupported"/);
+});
+
+}

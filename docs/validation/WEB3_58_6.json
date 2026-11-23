@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "scope": "Final local Web 3.58.6 / LCD App668 integration; publication and physical tests are separate",
+  "webVersion": "3.58.6",
+  "webBaseCommit": "dfc9b29fd1e132e9106414ac7ede31fa81a1cefe",
+  "deviceAccess": false,
+  "hardwareAcceptance": "pending",
+  "firmwareReference": {
+    "board": "LCD",
+    "firmwareVersion": "2.22.0-DE3.95",
+    "applicationCounter": 668,
+    "chipPart": 337970,
+    "sourceId": "75dafc809b6e2c883062f7c52d6e418bbabb83d404fde562d057bfab5acf7fec",
+    "productionCommit": "2bcb743180e645bdf0d84fa0dc0148a15bd07f00",
+    "sourceCommit": "805e445aa072281d8db8645ec80ccae4023c90ba",
+    "validationCommit": "08a266ee8072bc75878cdfe533e2dc5b5c22e7ad",
+    "otaSha256": "ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b",
+    "otaBytes": 362593,
+    "applicationBytes": 361992,
+    "applicationBinSha256": "cf1a310059338da51bc4acdcfc2cb4dd97ddbe6fb63491db6ea7d0de41b59bc9",
+    "artifactStatus": "experimental-signed-application",
+    "hardwareAcceptance": "pending"
+  },
+  "firmwareReferencePath": "web/public/dfu/lcd-private-reference.mjs",
+  "firmwareReferenceSha256": "6c9124d0d29bf97178c8787bea68488e4feaabcd8f16e87a81402ecc2b3a526d",
+  "ota": {
+    "path": "web/public/firmware/Allmiibo_LCD_DE3_95_668_NUR_APP.zip",
+    "bytes": 362593,
+    "sha256": "ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b"
+  },
+  "simulatorSources": {
+    "path": "web/public/sources/LCD_DE3_95_App668_Simulatorquellen.zip",
+    "bytes": 151894,
+    "sha256": "1cdab106676d84185f07a0686563f9e4c09e662ab2350264965729110358f776"
+  },
+  "fullWebTests": {
+    "log": "FULL_WEB_TESTS.log",
+    "logSha256": "29dde7044d926787b6d18906e9ab28c7851984908cfe464a7c9aa0aded85792d",
+    "tests": 1938,
+    "pass": 1935,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "status": "passed-with-explicit-skips",
+    "skips": [
+      {
+        "name": "Windows launchers keep two ports independent, reject altered tokens and preserve legacy state",
+        "reason": "Windows-only test on Linux"
+      },
+      {
+        "name": "Windows failed state persistence asks only the newly started server to stop itself",
+        "reason": "Windows-only test on Linux"
+      },
+      {
+        "name": "real immutable DE3.17 and recovery575 application archives pass without device access",
+        "reason": "Optional historical OTA fixtures absent; current App668/667/665/664 packages were tested"
+      }
+    ]
+  },
+  "finalReferenceTests": {
+    "log": "FINAL_REFERENCE_TESTS.log",
+    "logSha256": "fa60cf3a697920cb6f362c04844422438664c202f27ca9b16ad284b9e6c7835e",
+    "tests": 14,
+    "pass": 14,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "status": "passed"
+  },
+  "productionBuilds": {
+    "root": {
+      "log": "BUILD_ROOT_FINAL.log",
+      "logSha256": "871ce7d71930c38acc90871899f0a16ac7560367c7750c07ff09dfdbaee90515",
+      "tests": 36,
+      "pass": 36,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "status": "passed",
+      "deploymentBase": "/",
+      "directory": "/workspace/scratch/c35fb68b5579/pixl_web/web/dist",
+      "manifest": "DIST_ROOT_SHA256.json",
+      "manifestSha256": "72b339adcfbf40d19b661f37941b5b00baaed7b4a7f10e194cc2ae03be770a7c",
+      "files": 259,
+      "referenceSha256": "6c9124d0d29bf97178c8787bea68488e4feaabcd8f16e87a81402ecc2b3a526d",
+      "otaSha256": "ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b"
+    },
+    "pages": {
+      "log": "BUILD_PAGES_FINAL.log",
+      "logSha256": "75ca7845f94978fb3c23160883fa72fbd7e67479c5e73de60d752dbf5d5ca863",
+      "tests": 36,
+      "pass": 36,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "status": "passed",
+      "deploymentBase": "/pixl.js/",
+      "directory": "/workspace/scratch/c35fb68b5579/pixl_web/web/dist-pages",
+      "manifest": "DIST_PAGES_SHA256.json",
+      "manifestSha256": "9816eb44f0d68e81d63313431d80acb2a9bf8550ba515d1a16428caf8fa06c9a",
+      "files": 277,
+      "referenceSha256": "6c9124d0d29bf97178c8787bea68488e4feaabcd8f16e87a81402ecc2b3a526d",
+      "otaSha256": "ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b"
+    }
+  },
+  "localBrowser": {
+    "status": "blocked-before-page-start",
+    "uiAssertionsExecuted": 0,
+    "screenshots": 0,
+    "deviceAccess": false,
+    "log": "BROWSER_ROOT.log",
+    "logSha256": "a0a1e48193b613ee4cdaa7139897a17dcffbb7608f5fa523188d3b2f1bd50048",
+    "blocker": "Chromium process_singleton_posix.cc:297 socket() failed: Operation not permitted (1); ptrace also denied",
+    "workaroundAttempted": false,
+    "nextStep": "Review the published page in the permitted cloud browser"
+  },
+  "report": "docs/validation/WEB_APP668_TRANSFER_CAPACITY.md",
+  "limitations": [
+    "No physical device throughput, free-space, PHY or settings-menu acceptance implied.",
+    "The final public site is not checked by the blocked local browser run.",
+    "The three full-suite skips are named explicitly; all actual App668 final package gates passed."
+  ]
+}

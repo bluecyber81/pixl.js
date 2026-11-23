@@ -87,7 +87,7 @@ static void amiibo_scene_file_browser_text_input_create_folder_event_cb(mui_text
     app_amiibo_t *app = p_text_input->user_data;
     if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED) {
         const char *input_text = mui_text_input_get_input_text(p_text_input);
-        if (strlen(input_text) > 0) {
+        if (input_text[0] != '\0') {
             vfs_driver_t *p_driver = vfs_get_driver(app->current_drive);
             char path[VFS_MAX_PATH_LEN];
             if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), input_text)) {
@@ -113,7 +113,7 @@ static void amiibo_scene_file_browser_text_input_create_amiibo_event_cb(mui_text
     app_amiibo_t *app = p_text_input->user_data;
     if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED) {
         const char *input_text = mui_text_input_get_input_text(p_text_input);
-        if (strlen(input_text) > 0) {
+        if (input_text[0] != '\0') {
             vfs_driver_t *p_driver = vfs_get_driver(app->current_drive);
             char path[VFS_MAX_PATH_LEN];
             if (!cwalk_append_segment(path, string_get_cstr(app->current_folder), input_text)) {
@@ -221,7 +221,7 @@ static void amiibo_scene_file_browser_text_input_create_amiibo_batch_event_cb(mu
         const char *input_text = mui_text_input_get_input_text(p_text_input);
         uint32_t num_amiibo = 0;
 
-        if (strlen(input_text) == 0) {
+        if (input_text[0] == '\0') {
             mui_scene_dispatcher_previous_scene(app->p_scene_dispatcher);
             return;
         }
@@ -285,7 +285,7 @@ static void amiibo_scene_file_browser_menu_text_input_rename_folder_event_cb(mui
     int32_t res;
     if (event == MUI_TEXT_INPUT_EVENT_CONFIRMED) {
         const char *input_text = mui_text_input_get_input_text(p_text_input);
-        if (strlen(input_text) > 0 && strcmp(input_text, string_get_cstr(app->current_file)) != 0) {
+        if (input_text[0] != '\0' && strcmp(input_text, string_get_cstr(app->current_file)) != 0) {
             vfs_driver_t *p_driver = vfs_get_driver(app->current_drive);
             char path[VFS_MAX_PATH_LEN];
             char path2[VFS_MAX_PATH_LEN];

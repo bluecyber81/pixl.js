@@ -50,6 +50,118 @@ const settings_data_t def_settings_data = {.backlight = 0,
 
 settings_data_t m_settings_data = {0};
 static bool m_settings_save_allowed = false;
+static bool m_settings_init_attempted;
+static bool m_settings_file_absent;
+static void (*m_recovered)(const settings_data_t *previous);
+
+settings_load_state_t settings_load_state(void) {
+    return !m_settings_save_allowed ? SETTINGS_LOAD_PENDING :
+           m_settings_file_absent ? SETTINGS_LOAD_DEFAULTS : SETTINGS_LOAD_VERIFIED;
+}
+
+void settings_on_recovered(void (*apply)(const settings_data_t *previous)) {
+    m_recovered = apply;
+}
+/* Defaults are only the initial RAM fallback. A verified record replaces this
+ * base before pending choices are merged; failed writes never replace it. */
+static settings_data_t discard_base;
+static uint32_t save_generation;
+static uint32_t edited_fields;
+static uint16_t edited_apps;
+
+static void settings_clear_edits(void) {
+    edited_fields = 0;
+    edited_apps = 0;
+}
+
+void settings_set_byte(uint8_t offset, uint8_t value) {
+    if (offset >= sizeof(m_settings_data)) return;
+    edited_fields |= UINT32_C(1) << offset;
+    ((uint8_t *)&m_settings_data)[offset] = value;
+}
+
+void settings_toggle_byte(uint8_t offset) {
+    if (offset >= sizeof(m_settings_data)) return;
+    settings_set_byte(offset, !((uint8_t *)&m_settings_data)[offset]);
+}
+
+void settings_toggle_app(uint32_t app_id) {
+    if (app_id >= 16) return;
+    uint16_t bit = (uint16_t)(1u << app_id);
+    edited_apps |= bit;
+    m_settings_data.app_enable_bits ^= bit;
+}
+
+static void settings_remember(void) {
+    discard_base = m_settings_data;
+}
+
+static bool settings_byte_edited(uint8_t offset) {
+    return (edited_fields & (UINT32_C(1) << offset)) ||
+           ((uint8_t *)&m_settings_data)[offset] != ((uint8_t *)&discard_base)[offset];
+}
+
+void settings_checkpoint_byte(uint8_t offset, settings_byte_checkpoint_t *checkpoint) {
+    if (!checkpoint || offset >= sizeof(m_settings_data)) return;
+    *checkpoint = (settings_byte_checkpoint_t){save_generation,
+        ((uint8_t *)&m_settings_data)[offset], settings_byte_edited(offset)};
+}
+
+void settings_checkpoint(settings_checkpoint_t *checkpoint) {
+    if (!checkpoint) return;
+    checkpoint->save_generation = save_generation;
+    checkpoint->values = m_settings_data;
+    checkpoint->edited_fields = 0;
+    for (uint8_t i = 0; i < sizeof(m_settings_data); ++i)
+        if (settings_byte_edited(i)) checkpoint->edited_fields |= UINT32_C(1) << i;
+    checkpoint->edited_apps = edited_apps |
+        (m_settings_data.app_enable_bits ^ discard_base.app_enable_bits);
+}
+
+static void settings_restore_byte(uint8_t offset, bool keep_pending, uint8_t value) {
+    uint32_t bit = UINT32_C(1) << offset;
+    ((uint8_t *)&m_settings_data)[offset] = keep_pending ? value : ((uint8_t *)&discard_base)[offset];
+    edited_fields = (edited_fields & ~bit) | (keep_pending ? bit : 0);
+}
+
+static void settings_discard_notify(const settings_data_t *previous) {
+    if (m_recovered && memcmp(previous, &m_settings_data, sizeof(*previous))) m_recovered(previous);
+}
+
+void settings_discard_byte(uint8_t offset, const settings_byte_checkpoint_t *checkpoint) {
+    if (offset >= sizeof(m_settings_data)) return;
+    settings_data_t previous = m_settings_data;
+    bool keep = checkpoint && checkpoint->save_generation == save_generation && checkpoint->edited;
+    settings_restore_byte(offset, keep, keep ? checkpoint->value : 0);
+    settings_discard_notify(&previous);
+}
+
+void settings_discard_fields(uint32_t fields, uint16_t apps, const settings_checkpoint_t *checkpoint) {
+    settings_data_t previous = m_settings_data;
+    bool current = checkpoint && checkpoint->save_generation == save_generation;
+    /* App enables have bit-level ownership; never restore their padding/bytes. */
+    fields &= ~(SETTINGS_FIELD_MASK(app_enable_bits) | (SETTINGS_FIELD_MASK(app_enable_bits) << 1));
+    for (uint8_t i = 0; i < sizeof(m_settings_data); ++i) {
+        uint32_t bit = UINT32_C(1) << i;
+        if (fields & bit) {
+            bool keep = current && (checkpoint->edited_fields & bit);
+            settings_restore_byte(i, keep, keep ? ((const uint8_t *)&checkpoint->values)[i] : 0);
+        }
+    }
+    uint16_t keep = current ? checkpoint->edited_apps & apps : 0;
+    uint16_t restored = (discard_base.app_enable_bits & ~keep) |
+                        (keep ? checkpoint->values.app_enable_bits & keep : 0);
+    m_settings_data.app_enable_bits = (m_settings_data.app_enable_bits & ~apps) | (restored & apps);
+    edited_apps = (edited_apps & ~apps) | keep;
+    settings_discard_notify(&previous);
+}
+
+void settings_discard_chameleon_changes(void) {
+    /* Existing Chameleon exit semantics: restore its two accepted fields only.
+     * No UI recovery callback is needed for these non-runtime preferences. */
+    settings_restore_byte(offsetof(settings_data_t, chameleon_slot_num), false, 0);
+    settings_restore_byte(offsetof(settings_data_t, chameleon_default_slot_index), false, 0);
+}
 
 /* The persisted ABI uses short enums and one-byte bools. Read bytes before
  * interpreting bool objects: an invalid bool representation is not a value
@@ -81,6 +193,7 @@ uint8_t settings_lcd_dim_idle_seconds(void) {
     }
 }
 void settings_cycle_lcd_dim(void) {
+    edited_fields |= UINT32_C(1) << offsetof(settings_data_t, backlight);
     if (!settings_get_lcd_dim()) m_settings_data.backlight = LCD_DIM_IDLE_5;
     else if (m_settings_data.backlight == LCD_DIM_BEFORE_SLEEP) m_settings_data.backlight = 0;
     else if (m_settings_data.backlight == LCD_DIM_IDLE_30) m_settings_data.backlight = LCD_DIM_BEFORE_SLEEP;
@@ -150,9 +263,86 @@ static void validate_settings() {
     BOOL_VALIDATE(m_settings_data.swap_buttons, 0);
 }
 
+static void settings_apply_record(const unsigned char *raw, size_t length) {
+    memcpy(&m_settings_data, &def_settings_data, sizeof(m_settings_data));
+    if (length == LEGACY_SETTINGS_SIZE) {
+        /* Stock 2.16 has trailing padding at byte 23. It must not become the
+         * newly introduced no-sleep flag. DE1/DE2 use the 26-byte layout. */
+        memcpy(&m_settings_data, raw, offsetof(settings_data_t, no_sleep_mode));
+        if (m_settings_data.backlight > 1) m_settings_data.backlight = 0;
+    } else {
+        memcpy(&m_settings_data, raw, sizeof(settings_data_t));
+    }
+
+    validate_settings();
+    settings_remember();
+}
+
+/* Explicit choices override the recovered file even when equal to a default.
+ * Also preserve non-default RAM edits made by existing callers of settings_get_data.
+ * Padding and unedited flags retain their values from the recovered file. */
+static void settings_merge_initial_edits(const settings_data_t *pending) {
+    const uint8_t *edits = (const uint8_t *)pending;
+    const uint8_t *defaults = (const uint8_t *)&def_settings_data;
+    uint8_t *merged = (uint8_t *)&m_settings_data;
+    for (size_t i = 0; i < sizeof(*pending); i++) {
+        if (i > offsetof(settings_data_t, chameleon_default_slot_index) &&
+            i < offsetof(settings_data_t, amiidb_sort_column)) continue;
+        if ((edited_fields & (UINT32_C(1) << i)) || edits[i] != defaults[i]) merged[i] = edits[i];
+    }
+    uint16_t changed = edited_apps | (pending->app_enable_bits ^ def_settings_data.app_enable_bits);
+    m_settings_data.app_enable_bits = (m_settings_data.app_enable_bits & ~changed) |
+                                      (pending->app_enable_bits & changed);
+    validate_settings();
+}
+
+/* Only the first verified read after a missing or unavailable startup file
+ * adopts a new base. This preserves a restore performed before the first save. */
+static int32_t settings_resolve_record(vfs_driver_t *driver, const unsigned char *raw, int32_t length) {
+    if (m_settings_save_allowed && !m_settings_file_absent) return NRF_SUCCESS;
+    if ((!m_settings_init_attempted && !m_settings_save_allowed) || !driver->stat_file)
+        return NRF_ERROR_INVALID_STATE;
+    if (length < 0 && length != VFS_ERR_NOOBJ) return length;
+    vfs_obj_t object;
+    int32_t status = driver->stat_file(SETTINGS_FILE_NAME, &object);
+    if (status == VFS_ERR_NOOBJ && length == VFS_ERR_NOOBJ && m_settings_file_absent)
+        return NRF_SUCCESS;
+    if (status != VFS_OK) return status;
+    if (object.type != VFS_TYPE_REG ||
+        (length != LEGACY_SETTINGS_SIZE && length != sizeof(settings_data_t)) ||
+        (size_t)length != object.size) return NRF_ERROR_INVALID_STATE;
+
+    settings_data_t pending = m_settings_data;
+    settings_apply_record(raw, object.size);
+    settings_merge_initial_edits(&pending);
+    m_settings_file_absent = false;
+    m_settings_save_allowed = true;
+    if (m_recovered) m_recovered(&pending);
+    return NRF_SUCCESS;
+}
+
+int32_t settings_retry_load(void) {
+    if (m_settings_save_allowed && !m_settings_file_absent) return NRF_SUCCESS;
+    vfs_driver_t *driver = vfs_get_default_driver();
+    if (!driver || !driver->mounted()) return NRF_ERROR_INVALID_STATE;
+#ifdef VFS_PACKED_LFS_ENABLE
+    if (vfs_packed_recovery_required()) return NRF_ERROR_INVALID_STATE;
+#endif
+    int32_t result = vfs_persist_recover(driver);
+    if (result != VFS_OK) return result;
+    unsigned char raw[sizeof(settings_data_t) + 1];
+    result = driver->read_file_data(SETTINGS_FILE_NAME, raw, sizeof(raw));
+    return settings_resolve_record(driver, raw, result);
+}
+
 int32_t settings_init() {
+    ++save_generation;
+    settings_clear_edits();
+    m_settings_init_attempted = true;
+    m_settings_file_absent = false;
     m_settings_save_allowed = false;
     memcpy(&m_settings_data, &def_settings_data, sizeof(settings_data_t));
+    settings_remember();
     vfs_driver_t *p_driver = vfs_get_default_driver();
     if (p_driver == NULL) {
         return NRF_ERROR_NOT_SUPPORTED;
@@ -180,6 +370,7 @@ int32_t settings_init() {
     unsigned char raw[sizeof(settings_data_t) + 1] = {0};
     err = p_driver->read_file_data(SETTINGS_FILE_NAME, raw, sizeof(raw));
     if (err == VFS_ERR_NOOBJ) {
+        m_settings_file_absent = true;
         m_settings_save_allowed = true;
         return NRF_SUCCESS;
     }
@@ -187,16 +378,7 @@ int32_t settings_init() {
         return NRF_ERROR_INVALID_STATE;
     }
 
-    if (err == LEGACY_SETTINGS_SIZE) {
-        /* Stock 2.16 has trailing padding at byte 23. It must not become the
-         * newly introduced no-sleep flag. DE1/DE2 use the 26-byte layout. */
-        memcpy(&m_settings_data, raw, offsetof(settings_data_t, no_sleep_mode));
-        if (m_settings_data.backlight > 1) m_settings_data.backlight = 0;
-    } else {
-        memcpy(&m_settings_data, raw, sizeof(settings_data_t));
-    }
-
-    validate_settings();
+    settings_apply_record(raw, (size_t)err);
     m_settings_save_allowed = true;
 
     NRF_LOG_INFO("settings loaded!");
@@ -211,7 +393,7 @@ int32_t settings_save() {
         return NRF_ERROR_NOT_SUPPORTED;
     }
 
-    if (!p_driver->mounted() || !m_settings_save_allowed
+    if (!p_driver->mounted()
 #ifdef VFS_PACKED_LFS_ENABLE
         || vfs_packed_recovery_required()
 #endif
@@ -221,18 +403,20 @@ int32_t settings_save() {
     err = vfs_persist_recover(p_driver);
     if (err != VFS_OK) return err;
 
-    validate_settings();
     unsigned char old_settings_data[sizeof(settings_data_t) + 1] = {0};
     bool needs_write = false;
     bool needs_meta_update = false;
 
     err = p_driver->read_file_data(SETTINGS_FILE_NAME, old_settings_data, sizeof(old_settings_data));
+    int32_t state = settings_resolve_record(p_driver, old_settings_data, err);
+    if (state != NRF_SUCCESS) return state;
+    validate_settings();
     if (err == VFS_ERR_NOOBJ) {
         needs_write = true;
         needs_meta_update = true;
     } else if (err < 0) {
         NRF_LOG_WARNING("settings read failed (%d), preserving existing file", err);
-        return NRF_ERROR_INVALID_STATE;
+        return err;
     } else if (err == LEGACY_SETTINGS_SIZE) {
         needs_write = true;
     } else if ((size_t)err != sizeof(settings_data_t)) {
@@ -261,6 +445,10 @@ int32_t settings_save() {
         NRF_LOG_INFO("settings saved!");
     }
 
+    m_settings_file_absent = false;
+    settings_remember();
+    ++save_generation;
+    settings_clear_edits();
     return NRF_SUCCESS;
 }
 
@@ -275,7 +463,11 @@ int32_t settings_reset() {
     if (err != VFS_OK && err != VFS_ERR_NOOBJ) {
         return NRF_ERROR_INVALID_STATE;
     }
+    settings_clear_edits();
     memcpy(&m_settings_data, &def_settings_data, sizeof(settings_data_t));
+    settings_remember();
+    ++save_generation;
+    m_settings_file_absent = true;
     m_settings_save_allowed = true;
     return NRF_SUCCESS;
 }

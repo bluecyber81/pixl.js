@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {parseMenuDiagnostics, normalizeMenuDiagnostics, parseMtuDiagnostics, normalizeMtuDiagnostics, parseUiDiagnostics, normalizeUiDiagnostics} from '../src/lib/device-extra-diagnostics.js';
+import mtuLinkPacket from './mtu-link-fixture.cjs';
 
 test('menu trace validates each lifecycle state, flag order, optional fields and counter saturation', () => {
   const packet = (flags, app = 0) => Uint8Array.from([80,88,77,73,1,16,flags,app,0,0,0,0,0,0,0,0]);
@@ -75,6 +77,70 @@ test('MTU rejects unknown layouts, padding, flags and unsafe normalized inputs',
   for (const patch of [{schemaVersion:2},{scope:'radio-proof'},{sessionReady:1},{fileMode:'true'},
     {effectiveAttMtu:NaN},{gattValueCapacity:-1},{configuredMaxAttMtu:65536},{nextConnectionAttMtu:23.5}])
     assert.equal(normalizeMtuDiagnostics({...value,...patch}),null);
+});
+
+test('MTUD v2 retains exact GAP units and actual PHY independently of a pending request', () => {
+  const packet = mtuLinkPacket(), result = parseMtuDiagnostics(packet);
+  assert.equal(result.schemaVersion, 2); assert.equal(result.effectiveAttMtu, 250);
+  assert.deepEqual(result.link, {scope:'firmware-gap-link-snapshot', connected:true,
+    connectionIntervalUnits:6, slaveLatency:0, supervisionTimeoutUnits:400, rxPhy:2, txPhy:2,
+    phyRequestPending:false, phyRequestAttempts:1, lastPhyUpdateStatus:0, lastPhyRequestResult:0});
+  const padded = new Uint8Array(40); padded.set(packet, 3);
+  assert.deepEqual(parseMtuDiagnostics(padded.subarray(3,35)), result);
+  assert.deepEqual(parseMtuDiagnostics(packet.buffer), result);
+  assert(Object.isFrozen(result)); assert(Object.isFrozen(result.link));
+  packet[14] |= 8; packet[22] = packet[23] = 1; packet[15] = 255;
+  const pending = parseMtuDiagnostics(packet);
+  assert.equal(pending.link.phyRequestPending, true);
+  assert.equal(pending.link.rxPhy, 1); assert.equal(pending.link.txPhy, 1);
+  assert.equal(pending.link.lastPhyUpdateStatus, null);
+  assert.deepEqual(normalizeMtuDiagnostics({...result, privateAddress:'PRIVATE',
+    link:{...result.link, deviceName:'PRIVATE'}}), result);
+});
+
+test('MTUD v2 represents absent GAP observations and a disconnected link explicitly', () => {
+  const packet = mtuLinkPacket(), view = new DataView(packet.buffer);
+  packet[5] = 6; view.setUint16(6, 0, true); view.setUint16(12, 0, true);
+  packet.fill(0,14); packet[14] = 1; packet[15] = 255; view.setUint32(28,0xffffffff,true);
+  let result = parseMtuDiagnostics(packet);
+  assert.equal(result.sessionReady, false); assert.equal(result.link.connected, true);
+  for (const key of ['connectionIntervalUnits','slaveLatency','supervisionTimeoutUnits','rxPhy','txPhy','lastPhyUpdateStatus','lastPhyRequestResult'])
+    assert.equal(result.link[key], null);
+  packet[14] = 0; result = parseMtuDiagnostics(packet);
+  assert.equal(result.link.connected, false); assert.equal(result.link.phyRequestAttempts, 0);
+  assert.equal(result.link.phyRequestPending, false);
+  packet[15] = 0; assert.throws(() => parseMtuDiagnostics(packet));
+});
+
+test('MTUD v2 rejects corrupt lengths, link flags, incomplete fields and impossible bounds', () => {
+  for (const length of [16,31,33]) {
+    const packet = new Uint8Array(length); packet.set(mtuLinkPacket().subarray(0,length));
+    assert.throws(() => parseMtuDiagnostics(packet));
+  }
+  for (const [offset,value] of [[4,3],[14,16],[14,6],[14,5],[14,3],[22,0],[22,4],[23,3],
+    [24,4],[24,0],[25,1],[26,1],[27,1]]) {
+    const packet = mtuLinkPacket(); packet[offset] = value;
+    assert.throws(() => parseMtuDiagnostics(packet), `offset ${offset}, value ${value}`);
+  }
+  for (const [offset,value] of [[16,5],[16,3201],[18,500],[20,9],[20,3201]]) {
+    const packet = mtuLinkPacket(); new DataView(packet.buffer).setUint16(offset,value,true);
+    assert.throws(() => parseMtuDiagnostics(packet));
+  }
+  const result = parseMtuDiagnostics(mtuLinkPacket());
+  for (const patch of [{scope:'browser-estimate'},{connected:false},{rxPhy:3},{txPhy:null},
+    {connectionIntervalUnits:null},{slaveLatency:null},{supervisionTimeoutUnits:400.5},
+    {phyRequestAttempts:4},{lastPhyUpdateStatus:255},{lastPhyRequestResult:0xffffffff},
+    {phyRequestPending:true, lastPhyRequestResult:17}])
+    assert.equal(normalizeMtuDiagnostics({...result,link:{...result.link,...patch}}), null);
+});
+
+test('actual firmware C MTUD v2 serializer fixture matches the browser decoder', () => {
+  const fixture = JSON.parse(readFileSync(new URL('./fixtures/ble-link-diagnostic-v2.json',import.meta.url)));
+  assert.equal(fixture.source, 'actual C serializer'); assert.equal(fixture.device_access, false);
+  const result = parseMtuDiagnostics(new Uint8Array(Buffer.from(fixture.responsePayloadHex, 'hex')));
+  for (const [key,value] of Object.entries(fixture.expected))
+    assert.equal(result[key] ?? result.link[key], value, key);
+  assert.equal(result.link.connectionIntervalUnits * 1.25, 20);
 });
 
 test('UI packet maps every event and attempt field using little endian', () => {

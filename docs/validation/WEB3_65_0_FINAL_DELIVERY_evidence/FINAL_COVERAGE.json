@@ -1,0 +1,1956 @@
+{
+  "schema": 1,
+  "finalPagesCommit": "f1d69f020097f21487eef99314fe7da5257b41d7",
+  "finalPagesTree": "bc1f5f7cc4cf6296a08efab2f16715c5f702e070",
+  "manifestSha256": "9b1b8c41265057e2922ca807314770a969e6fd12c13e9507c25f4e17874444af",
+  "priorReport": "build_20261123/pages_http/results/HTTP_RESULTS.json",
+  "priorReportSha256": "17f11b6491ba4d4a612e8a38ef7a5be96870c84c1dabeaadf98eb7438d2778cc",
+  "freshReport": "build_20261123/pages_http_source/results/HTTP_RESULTS.json",
+  "freshReportSha256": "4953fb37750b3e457b2b65175a0f567d1dbcc534049a5ff1cabdbff0c2c423c8",
+  "files": [
+    {
+      "path": ".nojekyll",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "_redirects",
+      "bytes": 22,
+      "sha256": "faddc50d8b4f77f60a98186ba256e7ac0fd96f4bd68a26bd90b53fd4f24f4187",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/BackupComparison-C1OJc61t.js",
+      "bytes": 10117,
+      "sha256": "94556a1e97641831db050d23bdd105d1fc6334ead74000bc291d659190f38fa4",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/BackupComparison-_WGSlmtw.css",
+      "bytes": 1392,
+      "sha256": "f19e16e352385f8238d5cb83278249ac676e64e271cbffb286de1c95562f13d3",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/BackupExportOptions-C2_-YBd4.css",
+      "bytes": 620,
+      "sha256": "59a764723751e660c625a803250f54cee714dea8cf59cffe44ae3cd0243aa7f1",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/BackupExportOptions-CnKL6M5t.js",
+      "bytes": 4469,
+      "sha256": "612c8018f256fbf2778c0c6eae85cbd038eb9a932921fdeabe86963495ca0464",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/BatteryVoltageHistory-BcDxTt6A.js",
+      "bytes": 13337,
+      "sha256": "d1ae1e6600677ba2bd3fefd9de54282209e0c178cc42039326f70b85c8966c7d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/BatteryVoltageHistory-DvNaF5qe.css",
+      "bytes": 4758,
+      "sha256": "ce5b9062ab000218d89a1c41c74ebd88e6a23bac5951c6f8c3aa2a4143cd6232",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/BleImageSender-B64Jji0n.css",
+      "bytes": 7023,
+      "sha256": "fa6e057ce89995a91ed37dbef76dfbc778dd13fd353ea2376d5a50debeb3a2c0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/BleImageSender-DXryz6ix.js",
+      "bytes": 54483,
+      "sha256": "4b613b88b9df8de986b456888ab81ae76e5ef66c627ff50200f623fe0185afe7",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/CardSlotInspection-DJE_jGiF.css",
+      "bytes": 692,
+      "sha256": "cb3cbf2ff904ce1bf1e64ff858a0b3b1252aa0b34f7b50bbb7832ba80af75f54",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/CardSlotInspection-kyr_9TbL.js",
+      "bytes": 13396,
+      "sha256": "7e245edf62200f7697e82ff94399fa071535cd22f6809cfb1fd53e5e5d97aba8",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/CataloguePanel-6ZlCm7ab.js",
+      "bytes": 53920,
+      "sha256": "26845c91a8bd1b4dedc0dfa5c6dee7fae4cd4c2de2fca6980e08a19d3b5883e9",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/CataloguePanel-CD8Fd96n.css",
+      "bytes": 12634,
+      "sha256": "27bb92bb3c6d58151bd70a07ed8aabf1fb0e730596f947e2033194955e8f9b89",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/CollectionAssistant-C_meU31l.js",
+      "bytes": 114823,
+      "sha256": "e3d4f081a73662e878f4898667cc580c34010b936c6bd40551e036a2695f9796",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/CollectionAssistant-q6hXVjx8.css",
+      "bytes": 6616,
+      "sha256": "2e4a3d84b44e18dcdb26ab92016d6a20c0bc05be45e725c35e1f81c5f7baa35e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/CollectionBackupAudit-4pXXZMP9.js",
+      "bytes": 21928,
+      "sha256": "a070a437764dd95dfe2d38e8b92e9e5879897cc0fa5db172e3dcef9191ad3897",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/CollectionBackupAudit-BPpKTR_E.css",
+      "bytes": 1869,
+      "sha256": "1cdd20c49bc029b2c1a5d81fbd3ff21e73bfd32fe8213f30ef7e18b63c76104d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/CurrentLcdDownloads-9tgA3ug6.js",
+      "bytes": 2568,
+      "sha256": "0f6a9dae73ebf29b8962baeda9cafbc86b2101cf4a2c79e5588d817d8a0c69fd",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/CurrentLcdDownloads-vtYL0au4.css",
+      "bytes": 706,
+      "sha256": "501b7f825d138b6c2675e89c9851979676b0bc91b602bf4b97e7537bee9be4a6",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/DeviceSearch-R-5VJNNp.js",
+      "bytes": 15779,
+      "sha256": "52e498e34437651c696592832ee1cc4dacf01dd57d2814dd2a9efb4576eb241d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/DeviceSearch-aJlougZ8.css",
+      "bytes": 2192,
+      "sha256": "2e256cc6dfc2d974c715766507eed22c2bc3dcf7e8f9e4e68cae7ddb06f2f3a8",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/DiagnosticOverview-C7-dlKZB.css",
+      "bytes": 4399,
+      "sha256": "30c5bbb981e907b0b8b915359a9dfd1c11c184f382eec52f339200abe56a35ee",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/DiagnosticOverview-yketGIex.js",
+      "bytes": 32813,
+      "sha256": "909d22e1b0d00c352cc52459fb5852d9d53ffd671cfe994a10a59c1f0422027c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/DisplayPhoto-BaS8wQqT.css",
+      "bytes": 1759,
+      "sha256": "8060d0a1a3cf2edb789d75e45ecdadd396b508f0d5607186bdac046bea1b048f",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/DisplayPhoto-Bgskr3JD.js",
+      "bytes": 7490,
+      "sha256": "82c14fee0b2b5d9fe5aecf729dd7dd4abef3c6a4a56dad353fe9d3d43ec9edf9",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/FigureDetails-BBs8dMFK.js",
+      "bytes": 33666,
+      "sha256": "5ac1d499700eb52fe00a0b550503adba27c6e683f5801aadc79dc4c53d157e79",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/FigureDetails-kuDE1kq_.css",
+      "bytes": 4270,
+      "sha256": "35fc0f44cbda40993e13ae4a2beeebf18498a4a77c214963a5accd5fa7cebe5a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/FigureUsage-32QtU9i2.js",
+      "bytes": 7429,
+      "sha256": "cd113320902feb7ec3598e110ee477787ad4d98404e716f334634f59a0650442",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/FigureUsage-N7Req-GF.css",
+      "bytes": 1690,
+      "sha256": "7bc9d39516d1567eb7f64a72571751f8a144dca8653e4db30537f6d0d79ac546",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/FirmwareBoardChoice-BuGEXwMN.css",
+      "bytes": 1096,
+      "sha256": "c1fe3f5f0f02073caafebbafafa54345605acaac482d977b5a085cb268f79f49",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/FirmwareBoardChoice-r8PLgxdh.js",
+      "bytes": 4712,
+      "sha256": "feba2d4d9e97b41f99bfd040ca77d75e0769a51ef66b654fbc93a10fab40e99e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/GameFolder-BP17uDeu.js",
+      "bytes": 10557,
+      "sha256": "ebc1e48caf5704ad97dbe319d2e6a24cbd1cdf64609e9addf469d74672214185",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/GameFolder-qSwXhVzu.css",
+      "bytes": 874,
+      "sha256": "75a2ff067117a9b1ce34df83fcb38a5d687a09f6359ae3d39b88d73db80f189c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/GuidedDeviceCheck-BNexpmac.css",
+      "bytes": 6349,
+      "sha256": "9603baf13f0702ff528908b5d6cbb7ae038306769408c5e155a90d140d25f49e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/GuidedDeviceCheck-CcE7Gzgm.js",
+      "bytes": 29176,
+      "sha256": "bc911368d3d3210c93f51dbbdaa99196cfdd93bcf7008b35b73ba6ff1c0c1afe",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/GuidedReportComparison-BhhMld0u.css",
+      "bytes": 1418,
+      "sha256": "816491c04121c039cbc980de1574197a31952e6ae3f8a076b0ce66515373691f",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/GuidedReportComparison-CIlBoLAZ.js",
+      "bytes": 5527,
+      "sha256": "01b59c1a1735ec1ab0b66892977e6966689047b20c8672617e7f66918f04cf4d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/HardwareProfile-BuUO4l_T.css",
+      "bytes": 443,
+      "sha256": "285f615c524e6df3adb8276d7a043022c11972b408d73eac285cc9461aacd5d9",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/HardwareProfile-HkLXHIb3.js",
+      "bytes": 4045,
+      "sha256": "c55eb540d7b701abb0f58a735430ef9a9c72af4da1069fc14b7214cdf8fe533a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/IdentifierCopy-BVW2eEIP.js",
+      "bytes": 1080,
+      "sha256": "34cae87bc5d3945c4fa337f0114e115cb340d9fa053f454410fb4fc23cfd13e5",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/IdentifierCopy-Bs2_bB0i.css",
+      "bytes": 543,
+      "sha256": "0d877c7844f6d789e08bbea8d2af0a4bc5d560c787c11a51e6344a479e48ba4a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/LcdTestPanel-DvZlAYLg.js",
+      "bytes": 15471,
+      "sha256": "4d6a6602b4fe3436a3ca146d5962193fe42a2caa18fa88b8204a36735f4d9407",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/LcdTestPanel-QdggYZjo.css",
+      "bytes": 1300,
+      "sha256": "9a1f642c98335029feb316e51931f0ac39e7151375a0e6a206fbe80148350b62",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/MenuRunComparison-BiwC6dtn.css",
+      "bytes": 960,
+      "sha256": "e1b94137781ac1a86ab9c085cbe40a0b1470299a6ff02b6818a179907e130267",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/MenuRunComparison-eoXHs9-Z.js",
+      "bytes": 10419,
+      "sha256": "dc336ef2b823a04e13988e4d937b2d18380d4514dc4e72c6fc14bfcc3525daa2",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/MigrationAssistant-Fmliak7i.js",
+      "bytes": 71672,
+      "sha256": "b1b3cf96f9de29d026ad899cf243c79a2cedd898c57ad28e8011745294b86d8d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/MigrationAssistant-NG7SD6JS.css",
+      "bytes": 4519,
+      "sha256": "7163db8b76c9194cafacdef404e15b0e840f4f2a318e6e9d450dcec414fab1b6",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/RemoteControl-C2sKysIx.js",
+      "bytes": 39049,
+      "sha256": "601381bc79e760fa553906d546f060672a9703a1b92b2eceeb3e80a4f8bbbde1",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/RemoteControl-oYzZ6rVx.css",
+      "bytes": 4899,
+      "sha256": "e0c86299c7be24ff4e002e61941b56e16718b32cc61184c5da30805aeb9cce53",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/ScreenAwake-RWERWT7i.js",
+      "bytes": 3874,
+      "sha256": "f70555c08da5dd7df7e08580eaa7d836cf671d79e89bfdc3fafbe7022c0ef478",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/ScreenAwake-ypRNPhvM.css",
+      "bytes": 727,
+      "sha256": "e1755b2f842231ca459184b07b61c7cb9ff06ba346ed05c2543709939786ef2e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/SelectionPreview-CV5Wa_R8.js",
+      "bytes": 5182,
+      "sha256": "cb8edde52794ac2fac562f9f7d4c178a0bf06749603c8f97d583456403b59d44",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/SelectionPreview-DOUTkQrT.css",
+      "bytes": 1674,
+      "sha256": "c4c1398a559def8fa7f46aded7c861a914fbd0ff773d3b19508d6f12564d1b96",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/StartupDiagnostics-CEsNsfTH.css",
+      "bytes": 3815,
+      "sha256": "ae5871a81957f95886fcb2ad7835ee49641d44ca867078f2b3fa46b01ba62f88",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/StartupDiagnostics-DOz-r4ML.js",
+      "bytes": 11734,
+      "sha256": "62832d0e5e284262708ee4e3971db46524e19494a4679f3c1513852cff20108d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/TransferStatus-gvgeRE3P.js",
+      "bytes": 1902,
+      "sha256": "f3a9c05f69aa9d88ac79b2eb3b6bef9406245da341cdd4bb0cff72d18ff60bce",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/TransferStatus-nWAZERUQ.css",
+      "bytes": 1086,
+      "sha256": "fab2a74739d5553a89ebf48e008db5b398db75d1ff66e6b27a1f49d599fc6db7",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/UpdateCheck-BFM8nj5S.css",
+      "bytes": 3553,
+      "sha256": "dac4a632a3cde4cec25387823a47cf895f2f4309ba27b03558be3fa1e6dad1de",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/UpdateCheck-CSjc80AI.js",
+      "bytes": 20541,
+      "sha256": "cc3c778a16df711dcaf1e31fbeafffe74e21cf23d03949a04367356ba8208900",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/UploadNameReview-aoRnHNLP.js",
+      "bytes": 4611,
+      "sha256": "ae69b797ae4e0aa9e7b0da200aad38f04ec32b1b1b6e423d1248b0f1c97a7635",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/UploadNameReview-dImUFujJ.css",
+      "bytes": 1164,
+      "sha256": "8c4c0d282c0e48d75afeacdc0e93914b1a3b34bca75caf925d9e4c25fd88b701",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/backup-DLHv1tcJ.js",
+      "bytes": 20587,
+      "sha256": "3ea35fd63c33b2195cdb197c086df4243856707cf7c2b0d42b6eaa966b284caf",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/bytebuffer-DC-VISFN.js",
+      "bytes": 50858,
+      "sha256": "01bcd6c6350e4c32ec82a46fcfd9ebf4395db6fbe377c29b59657fb6c7d183b1",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/collection-audit-W6xC05aw.js",
+      "bytes": 7837,
+      "sha256": "b8cad41e977ed92fa64dcd4ffde188bb647d2be50c73c8d64febb43858b46823",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/csv-export-i82OsDJ4.js",
+      "bytes": 162,
+      "sha256": "c67d5b4bde1ce02582dcb9d8f127b0e99924489f4090dcb35996f434933ec870",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/figure-download-links-C_OTBFxN.js",
+      "bytes": 13761,
+      "sha256": "0e4b9766a4e9f7c2bd855f67d116ea01692a70ba3a0ea78ca0b83bd577719e54",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/figure-usage-BbxOsO5T.js",
+      "bytes": 133784,
+      "sha256": "c8861172fac9867b3762f3253d5a1d494034dd22f365d824144c102962d76429",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/firmware-releases-jmMAe5wz.js",
+      "bytes": 7611,
+      "sha256": "4f6b93d794d202b30dd0f8b7800252cebcbe986af4181287f5cea6037f696dd7",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/game-guides-CbSQy7ft.js",
+      "bytes": 18391,
+      "sha256": "6e61710b7e971eb97043f6f49c9878adbe8ffb66eecd0571de4cba8f8e96c389",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/guided-device-check-C-NVNxmV.js",
+      "bytes": 13451,
+      "sha256": "ad625b5cce3c7336af8603dcd375bb30d1053a15c6b08ec11fd026c5a0e5bbca",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/hardware-profile-DHVczsFR.js",
+      "bytes": 4976,
+      "sha256": "03e9529d4cd3bf64b999db3fe403d18d4069b344839754bbfcca6a51ef755a82",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/index-7M_70mxt.css",
+      "bytes": 183947,
+      "sha256": "0c259fbeaa0ab2c0b6d3f8aa8cafe206cc7376d1bf62a4f07dd5d45731461dc6",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/index-B3m0Xe-o.js",
+      "bytes": 1050135,
+      "sha256": "123cc6b1a30e3b900c2d1ba0f244c5415b94ee8340a243d32c076e11cbddc24e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/lcd-read-comparison-RDFUIb3o.js",
+      "bytes": 5565,
+      "sha256": "b08d579028425860f970fede6448fb769ad3bbba18fa58091ab7118f445e357c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/lcd-storage-self-test-DzilB7xY.js",
+      "bytes": 3870,
+      "sha256": "273922ece1cb6b7866dd6a2138b33ce7ef8e049c728146a83ed9c4472a43d84e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/migration-capacity-Cx_GzBAa.js",
+      "bytes": 10957,
+      "sha256": "4b65d60ff49f3e966c1c273f609ecad8359bf34c778085fb6b094c168981b3d0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/migration-capacity-worker-Eni-jiJA.js",
+      "bytes": 17812,
+      "sha256": "925bb69dc1d2edd3da97847c0cf6d0aa3115ebac56fd24ee17745c2f20e8ec25",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/stored-backup-DRg9CXyf.js",
+      "bytes": 4654,
+      "sha256": "6cba9902f431a6a1e20c5f56490e6c759afa516959f75f647dfbf133fd7cea22",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/zip-crc32-DjkMFiVs.js",
+      "bytes": 203,
+      "sha256": "b4f99544aea2e5f8b4398a8ac2179b9b07dd6a3ad5ffea5019b9a5c1ec577206",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "assets/zip-import-BdmozM5z.js",
+      "bytes": 17434,
+      "sha256": "7cf766e18bdf2b0e2aff84cc858be36b16098572c4736545314495bf17b14056",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/LICENSE.txt",
+      "bytes": 1158,
+      "sha256": "2afc378dc870b9cbade5270eeff6f86083fe3f99c2eb2583c74cad06db56538d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/bluetooth-access.mjs",
+      "bytes": 578,
+      "sha256": "405318a1987b65f811058e495e31345608cefab6d230b886baf5a5edc627e8dc",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/bundled-packages.js",
+      "bytes": 12585,
+      "sha256": "bfd2cc416d375a621baae13488ad8e881d651ae891e7250cea6a7b6f46d3aa49",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/lcd-app671-reference.mjs",
+      "bytes": 1356,
+      "sha256": "47a66f5a5893b0fe4d8bc9ea4d12715df29f2fff50f065edb9f1c3208f0070e3",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/lcd-app672-reference.mjs",
+      "bytes": 1357,
+      "sha256": "b22556cba587c26562c31a89bf3492bb8678d2fe4db94f2f89bcdcfed8553188",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/lcd-app673-reference.mjs",
+      "bytes": 1361,
+      "sha256": "284d97aaf337244383c5579619385b28ad5973c8e4d311caaca702e20075a898",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/lcd-app674-reference.mjs",
+      "bytes": 1361,
+      "sha256": "3199dcfda22e8de4a3b22ba6e464d2fa1349b73e4bf3f1e3d83066a7d2f8f66d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/lcd-private-reference.mjs",
+      "bytes": 7208,
+      "sha256": "e0eb0857abcd0dd6bc5d4b6addc9e8cba7c757846f6330912c5f8a52d6478961",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/lcd-release-reference.mjs",
+      "bytes": 1428,
+      "sha256": "c91d8ad4485023210dd6d2ab3c6286cd47091dcd9fa371991524277b881800e3",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/nrf-dfu-link.mjs",
+      "bytes": 5235,
+      "sha256": "63400ff280beedf6b066a0caf44e41060ec5ee2110e214ef8fda70174eda8a71",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/package.js",
+      "bytes": 14921,
+      "sha256": "ed6eb5fe35e2cd14e159c5cf682d007897d77f1e072a0c289b1b04a74935c9f8",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/package.json",
+      "bytes": 126,
+      "sha256": "f28f119ca25ddb307d1ed6c38431c0e9f4ad1427c3f107e873e04b9d5b17eea0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/page.js",
+      "bytes": 22305,
+      "sha256": "faf15d827a7c5806869fe07b942c50668432efb3150d138886316e0a23b9ffe4",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/phase-labels.js",
+      "bytes": 5531,
+      "sha256": "f1cae2bd91de8a68dd1331636de875a7723e53324a5ea0bfb6ae0c4ee1f8694e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/screen-awake.mjs",
+      "bytes": 3495,
+      "sha256": "d95a6a8fe27112c9b5379385deab50b478671e56184a20aef39c6c63c8bdcbaa",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/secure-dfu.js",
+      "bytes": 20274,
+      "sha256": "adf291bfb93d0a4042309420e69ab30134b8305f49a878507f95897313e1fb8f",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/updater.css",
+      "bytes": 5696,
+      "sha256": "df2ac54509803ef5e199c33ba1ac6e45ded2499fb6201eb73bdad9ec6be98848",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/updater.js",
+      "bytes": 5924,
+      "sha256": "6d2f0c0f47ef6eae678ce9b43f2c275b188a0e11e4abc8a4f48e1d209d52fdb1",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/validation-error.js",
+      "bytes": 435,
+      "sha256": "cb91c56140e37c897921ce572aa209a3c47c95595e3900c7e676915aa2b26555",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/vendor/CRC32-LICENSE.txt",
+      "bytes": 11355,
+      "sha256": "c542ba7851b5d39a5face477e47a27cb7c00a9759e321b66824e79718bffe1ac",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/vendor/JSZip-LICENSE.txt",
+      "bytes": 33753,
+      "sha256": "566c953c6090b1218ca6217dd7359d45dde46581968586dc607d59a78af6a9c4",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/vendor/SOURCES.json",
+      "bytes": 1367,
+      "sha256": "c676cd5bc18d21b784adebc4a1e13b78044da29b5549da2752ddea493fd3c452",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/vendor/crc32.js",
+      "bytes": 3566,
+      "sha256": "8450a98f18b8a24ed088d07d64c5134896e54079757f783945054167a9d2e75e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/vendor/jszip-3.10.2.min.js",
+      "bytes": 97781,
+      "sha256": "7f839b2d4688b845c105ebf5d2f9803075f91ea0fe72bdaac176c3a04dd3d2c1",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "dfu/web.html",
+      "bytes": 13072,
+      "sha256": "12ce6099d9c45f558f82325b177c3714dca9a2b2ab7b4c2c4e7d51b9da128a7a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.42.1/Allmiibo_DE3_66_Z19_Web3_42_1_ChatGPT_Pruefpaket.zip/index.html",
+      "bytes": 1532,
+      "sha256": "e7ef84111773e5c3270cdd56eb0e67d113c0773ed0bc42d0b0fcfdcfde124f26",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.42.1/Allmiibo_Dateimanager_3_42_1_Quellcode.zip/index.html",
+      "bytes": 1482,
+      "sha256": "1aae794f28a6b3edba12dd5c5a722872920d304a11ef94a1a10c24ed93fea7e2",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.42.2/Allmiibo_DE3_66_Z19_Web3_42_2_ChatGPT_Pruefpaket.zip/index.html",
+      "bytes": 1532,
+      "sha256": "9c78cfba1c9510fbead52b018a881c2f680f1a6d3a866723e58f607f239a40eb",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.42.2/Allmiibo_Dateimanager_3_42_2_Quellcode.zip/index.html",
+      "bytes": 1482,
+      "sha256": "f6e7ba1aba9fb54192ed7c89e577e19ea9dde51d1dffadb1a75b51d1716a0737",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.43.0/Allmiibo_DE3_67_Z19_Web3_43_0_ChatGPT_Pruefpaket.zip/index.html",
+      "bytes": 1532,
+      "sha256": "98bbaff686907984b73a564984c66f6f43a96dce173fd69905f24d2813bbb282",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.43.0/Allmiibo_Dateimanager_3_43_0_Quellcode.zip/index.html",
+      "bytes": 1482,
+      "sha256": "5f9728c0b6327570bc279957892ee1446fcde82f400bbde0833b0f61cce34296",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.43.1/Allmiibo_DE3_67_Z19_Web3_43_1_ChatGPT_Pruefpaket.zip/index.html",
+      "bytes": 1532,
+      "sha256": "57e0fb4d417a952db835062af608c4203324807125dd538e68d82b2dd207e4e5",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.43.1/Allmiibo_Dateimanager_3_43_1_Quellcode.zip/index.html",
+      "bytes": 1482,
+      "sha256": "9cdfa242663b08280a3549c896b048afb7b9472aaca1cb755934b060fbdfe97d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.44.0/Allmiibo_DE3_67_Z19_Web3_44_0_ChatGPT_Pruefpaket.zip/index.html",
+      "bytes": 1532,
+      "sha256": "6b3a0a56ed52fb5b92c005577ba3b151e7e7ab942d654c4d178b63e9dc9cde87",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.44.0/Allmiibo_Dateimanager_3_44_0_Quellcode.zip/index.html",
+      "bytes": 1482,
+      "sha256": "58a966136ef07e7ba5bbf8628c483aa01cd6d23f6677b8010d0d9830b3827f7c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.45.0/Allmiibo_DE3_68_Z19_Web3_45_0_ChatGPT_Pruefpaket.zip/index.html",
+      "bytes": 1532,
+      "sha256": "065dd9ae077853e8b36a5ffa0f9c3b52c122d63a868e9899e330d174d1683da0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.45.0/Allmiibo_Dateimanager_3_45_0_Quellcode.zip/index.html",
+      "bytes": 1482,
+      "sha256": "c0454f5315bd8972023f3f6a54f2abebf61e5c6fe04a378550615f67182325f9",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.46.0/Allmiibo_DE3_69_Z19_Web3_46_0_ChatGPT_Pruefpaket.zip/index.html",
+      "bytes": 1532,
+      "sha256": "2dd7020a30a25e33df5407adf938d386cbfc791a04274af59479829d203f53b0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.46.0/Allmiibo_Dateimanager_3_46_0_Quellcode.zip/index.html",
+      "bytes": 1482,
+      "sha256": "0768181cf4723a37ecc764a989670b063541ca8aad66af04d3ea14dfbf2b2aa6",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.47.0/Allmiibo_DE3_70_Z19_Web3_47_0_ChatGPT_Pruefpaket.zip/index.html",
+      "bytes": 1532,
+      "sha256": "6f9f4be35f46ac6e173fe54d4cce769fb52913752f25804736a031712e83227e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.47.0/Allmiibo_Dateimanager_3_47_0_Quellcode.zip/index.html",
+      "bytes": 1482,
+      "sha256": "237673d4264db09d90b246b8d79d85c0a9406558cedd8d86867682d5f29fce20",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.48.0/Allmiibo_DE3_71t1_Z19_Web3_48_0_ChatGPT_Pruefpaket.zip/index.html",
+      "bytes": 1542,
+      "sha256": "c89498b53c8df49a3bc312b7111f6dfab071676e3e6f9b6e2e9a378dfef0e99d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.48.0/Allmiibo_Dateimanager_3_48_0_Quellcode.zip/index.html",
+      "bytes": 1482,
+      "sha256": "737c8602543c161d0a03bc4b4d57b6201a46edc58040e5b74d785e5f7fe49917",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip",
+      "bytes": 12444903,
+      "sha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+      "bytes": 21249310,
+      "sha256": "de82839b8cdc90f7226b1229119ebbd60a1a5cd67deb4c80e0902a640d8c487c",
+      "verification": "fresh-final-pages-get"
+    },
+    {
+      "path": "downloads/web3.65.0/MANIFEST.json",
+      "bytes": 4992,
+      "sha256": "06328dd7541e981cfad55b285ef52ffdf8ad3f3005db1c391dc56e1769ec2508",
+      "verification": "fresh-final-pages-get"
+    },
+    {
+      "path": "downloads/web3.65.0/SHA256SUMS.txt",
+      "bytes": 297,
+      "sha256": "a944211b8c9b6750d10e55f341b4ac771a0fa04207ce71792f808158c2e3b790",
+      "verification": "fresh-final-pages-get"
+    },
+    {
+      "path": "firmware/Allmiibo_DE3_71t1_App644_NUR_APP_SIGNIERT.zip",
+      "bytes": 249137,
+      "sha256": "e3ff29fa751333a2acaec9a94f24455c0d7105d337b41f17d430d1021b065fcb",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_100_673_NUR_APP.zip",
+      "bytes": 361681,
+      "sha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_101_674_NUR_APP.zip",
+      "bytes": 361953,
+      "sha256": "76a8c23a954a96a244b59b185fd147aae30f03b59017baa40d1aeeedb952dbca",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+      "bytes": 362493,
+      "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip",
+      "bytes": 362167,
+      "sha256": "01df3896f73cc5776e0a72318742fd44803e2899625c26de5a33fee15c535fb2",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_66_638_NUR_APP.zip",
+      "bytes": 362663,
+      "sha256": "7fac25c2d7f32d8347375cc5d0e8b00160b0b46e16dd67757d3e0260db03baed",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_67_639_NUR_APP.zip",
+      "bytes": 364719,
+      "sha256": "014ecc5cee9c01014c89c021fc22400a94d2e7e517134f4b3e3f06c004738e14",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_68_640_NUR_APP.zip",
+      "bytes": 364755,
+      "sha256": "891762b78ffbd6c7b30b4719e3539a9007b58918aea4ed19397a5f44b1ebc8fc",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_69_641_NUR_APP.zip",
+      "bytes": 359351,
+      "sha256": "8056bc504552f20c14fc34b6b6677a1b3bba83afc3727208939d0eda59c83d00",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_70_642_NUR_APP.zip",
+      "bytes": 359815,
+      "sha256": "03c438a1e4b561a6ddf9ed8c787ce82a4899c2bd416eb08f588bff5111a4f080",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_72_645_NUR_APP.zip",
+      "bytes": 249275,
+      "sha256": "e002d6c7952be898bdaafc691e9e92b40ad1c34681b93f5029b85358a3a57adc",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_73_App646_TEST_DFU.zip",
+      "bytes": 250473,
+      "sha256": "e23432be1eafff9e9bb0626fc3facd3c797b9840934094e8b4e7fff48dfb42fe",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_74_647_NUR_APP.zip",
+      "bytes": 250805,
+      "sha256": "58c07409e502ae13934da8b1ba4b788514e5d6a99f2040f47b8b2c396d35bdc6",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip",
+      "bytes": 246554,
+      "sha256": "603d99133331fdb425647e27106b043f9f7f3347e889475153bfe7e828f1dafd",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_76_649_NUR_APP.zip",
+      "bytes": 259536,
+      "sha256": "41d07d2b4d4ca6092432beb5573a5c43e801cfa69f26499aadbae284991bd585",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_77_650_NUR_APP.zip",
+      "bytes": 249524,
+      "sha256": "72e30a092424e4414014b508c39f143f5896d11362719cd53ffb66c2b12f73f3",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_79_652_NUR_APP.zip",
+      "bytes": 259921,
+      "sha256": "161b568441db51b7579e5966a9b839d621cb5f9d9af22b6ed95811c5f84e4d14",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_80_653_NUR_APP.zip",
+      "bytes": 259943,
+      "sha256": "caea5f63c47d47b18fdd6484ecc8adc7d0bd0dcd392f83db290185e4f0c73342",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip",
+      "bytes": 249923,
+      "sha256": "6a7aa822329e5e703e120234e0161f7d0f49576255aba38e601bd8f5fadc5719",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_84_657_NUR_APP.zip",
+      "bytes": 246116,
+      "sha256": "6ad764feacd8f2a3b411f7606f24cdb414a5b659057d4072b1357195975accc4",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_85_658_NUR_APP.zip",
+      "bytes": 247377,
+      "sha256": "a7f8b4aa6e01469c88433e40437618f199a47421e6a602e92c72eac0862fb411",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_86_659_NUR_APP.zip",
+      "bytes": 248604,
+      "sha256": "af7c277a7cd6ac9935b747ff08496d61b5e7335f8c9601bbbc51f0c720f3aa58",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip",
+      "bytes": 249952,
+      "sha256": "8095ffe24d75dae91ba0b1dbb81dcc974cd6cdc73807d329002866d7393e82a0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip",
+      "bytes": 252473,
+      "sha256": "75543dc92ca18d55a81f8070a5ac72f58195419510bba893d7540b343b8fe2c0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip",
+      "bytes": 252544,
+      "sha256": "366686156e8b8c369018082e3a6e4743c0f3f4a416e416229b7b520308d6a4ab",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_91_664_NUR_APP.zip",
+      "bytes": 253238,
+      "sha256": "b3b0c8f967d3b3886680cfb5049635b5297591c16495dd74e1779654cfd0687e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_92_665_NUR_APP.zip",
+      "bytes": 365125,
+      "sha256": "65e9321309dc059b88adc490963c787fdbc01e35e201765b7cbb8d3ecd66e3a0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_94_667_NUR_APP.zip",
+      "bytes": 361633,
+      "sha256": "f00ddc2c86225d86e5c9ef50bad9d45b84250b287a4f3df4d2f169357a9688c4",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_95_668_NUR_APP.zip",
+      "bytes": 362593,
+      "sha256": "ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip",
+      "bytes": 363913,
+      "sha256": "021d1a35b00b6cb344702c48df609060e51b55bcecaa9781071d1bcd87829b1f",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+      "bytes": 364489,
+      "sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+      "bytes": 364781,
+      "sha256": "3df205ce3979227a119473807e55d261c00789c6415534d48375876698b90138",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip",
+      "bytes": 364877,
+      "sha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
+      "bytes": 343768,
+      "sha256": "2b2162693351e8d5ebd47b08b359cfffb1de3159d590da864b60934fbacb3e13",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_OLED_DE3_84_Test4_APP.zip",
+      "bytes": 248400,
+      "sha256": "8a4addb91ddf95e37493ab624ebd0c414187bb56ec9d9886a216a1d18b54b5f7",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_OLED_DE3_85_Test5_APP.zip",
+      "bytes": 249461,
+      "sha256": "16e019fde2cd5283a462bba31fe4ee65fafc7dcddaa7c4bccd200f334af26a1f",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/Allmiibo_OLED_DE3_87_Test6_APP.zip",
+      "bytes": 251986,
+      "sha256": "eaf4e645a04521268d4e39f03f5448048d43c7b66a5a5b9f48bcee91db2abaa8",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/releases.js",
+      "bytes": 11115,
+      "sha256": "a45ff97ee47583b2ac7f0b54bce7dd15777814a293d949290f38aef948ab2fc6",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "firmware/releases.json",
+      "bytes": 10986,
+      "sha256": "81ca7d0c26450398cbf3c690e8d200b847852a322a61af29a47e516db01f8638",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "guide/LCD-DE3.86.txt",
+      "bytes": 1192,
+      "sha256": "6e359d79f908b529f3061c0a231602fab2fcea88c6991b397d5376b76fbd36a5",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "guide/LCD-DE3.87.txt",
+      "bytes": 882,
+      "sha256": "2f884812dfdb9de9ebb95e56222993b9b1d75b7aedf85ab85bbd2387c03d1daf",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "guide/en.html",
+      "bytes": 42369,
+      "sha256": "601ddb58fc8ed10304ead78efae1a3c9ba094e70893e380a5ee85142780d620a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "guide/guide.css",
+      "bytes": 5612,
+      "sha256": "d6bd795b55b39a5a668b02f138bc1cb3bffa25ff89dcef577fe492bd71af8051",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "guide/index.html",
+      "bytes": 45135,
+      "sha256": "75cab6f661496586f9e2b43fb6f708cd8e73bf2907b0c5f6877a23a96536a57d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "guide/language.js",
+      "bytes": 879,
+      "sha256": "c3b48c33b4c0be2dede16424b4d1b0c886c597a131da401ee8e389ec81d0d4ba",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "index.html",
+      "bytes": 807,
+      "sha256": "5dc487a4ff0d8e79dc012bfa8380d0938786c0c82b75074672496ef6ca034e45",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "language-preference.js",
+      "bytes": 2797,
+      "sha256": "4aa17dd8ea395dccee4c0fb6fa167363364490e93c30fa8dafaf18fde714c3a6",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-current.wasm",
+      "bytes": 63992,
+      "sha256": "50466efc477831b665df8f07ae2a2d45f004a655c5198f71f237a46cb3f5a105",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de344.wasm",
+      "bytes": 60644,
+      "sha256": "06500c5b69bd61310352cecc07eadb50a17b0eecd22c9381d1118c3cf0f8ec9f",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de345.wasm",
+      "bytes": 67117,
+      "sha256": "a4cfd3b1d823f2d596ba67625364260bbe74979b28c7123fc863e549b7199c99",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de350.wasm",
+      "bytes": 67215,
+      "sha256": "0a2802690d575b2db70cbe49e2b6f0fd895b98eafcdf9cc2c654c98789cb611b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de355.wasm",
+      "bytes": 63067,
+      "sha256": "652dfaab0f7078ffa5def2186b1cf962387097e431dd9513579aa0d7cf3388f9",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de389.wasm",
+      "bytes": 63590,
+      "sha256": "e62f5857d60acea148edc365b85aaa22756fba8bd7f566d03d2f70ef605cad5c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de391.wasm",
+      "bytes": 63530,
+      "sha256": "91ca3ef469ea6ecfca1dc18c80ad39d60977fc591b823274324c516bb7024548",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de392.wasm",
+      "bytes": 64369,
+      "sha256": "08428602391b6d9f8ee1bfb28abf683a5a774b97d75242da70d8d0f2f6314d16",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de393.wasm",
+      "bytes": 64351,
+      "sha256": "f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de395.wasm",
+      "bytes": 64830,
+      "sha256": "311519a0da49474b57376908f836f2f45deccb90a9bbda855ae09343633b151c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de396.wasm",
+      "bytes": 64830,
+      "sha256": "d3a2e2d9378440c58051349502c51a7977ef7863d1cb2eec303d002b659a8a56",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de397.wasm",
+      "bytes": 65280,
+      "sha256": "d77286b2176a369b957b7259305df82da5f950c6e33b3a90ce54c21bf7e8ec4c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de398.wasm",
+      "bytes": 65569,
+      "sha256": "30bca7ffb0b1db1773b4bb6dcb05aaa861f5e9d9dc13eca96b3324e760f26273",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-de399.wasm",
+      "bytes": 65585,
+      "sha256": "068e6f033c6e3ee95c8be2c7c6ba633daa6821c67ca38ace68a66cd5fece604c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity-previous.wasm",
+      "bytes": 59194,
+      "sha256": "410f213e0818a3a5e1d0ce381e202514f7dd3b834b1cec854d5fe6f180574b1f",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "lfs-capacity.wasm",
+      "bytes": 61305,
+      "sha256": "8830aece6d900679ccfec27e4b1321ffc160aba9381023cd26c397d3e0dcb1d4",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/index.html",
+      "bytes": 24536,
+      "sha256": "35d7a7012f2bff23979ffebb7df6014fca64a8b3f034a8b35d06a798bd24a762",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/language.js",
+      "bytes": 384,
+      "sha256": "a708c9e1e2fa45a0daf6112304282cad0609849d00c90abcc6938a7031a2c819",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/qrcode-generator-MIT.txt",
+      "bytes": 1071,
+      "sha256": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/qrcode-generator-provenance.json",
+      "bytes": 916,
+      "sha256": "94be890bfbe9af7c95b7bd73820ca2dfa32e2302e13a417f8ee427044abbfe29",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/amiiboapi/LICENSE",
+      "bytes": 1065,
+      "sha256": "9b56b63c5868ea07cc41314159b614cf689474e5b92bde94f3f32821ff9e05d3",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/amiiboapi/SOURCE.txt",
+      "bytes": 838,
+      "sha256": "c217ab4016098f4bc76f85c2143d349856c8b5dff2bc067ebad97932cd334999",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/SOURCES.json",
+      "bytes": 34151,
+      "sha256": "a25d59460b7c434db0b689f4f8d0c342b8c8a98fa4132cbc18541beeead121fc",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/async-validator-4.2.5/LICENSE.md",
+      "bytes": 1083,
+      "sha256": "5d0427088e37071c4b942de990f6365d5c2d195f3e957ce925322d184784e2eb",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__helper-string-parser-7.29.11/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__helper-string-parser-7.29.7/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__helper-validator-identifier-7.29.7/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__parser-7.29.12/LICENSE",
+      "bytes": 1086,
+      "sha256": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__parser-7.29.9/LICENSE",
+      "bytes": 1086,
+      "sha256": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__types-7.29.11/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/babel__types-7.29.8/LICENSE",
+      "bytes": 1106,
+      "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/bytebuffer-5.0.1/LICENSE",
+      "bytes": 11560,
+      "sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/csstype-3.2.3/LICENSE",
+      "bytes": 1062,
+      "sha256": "11d55bd4541c75ee7879547ac49089c489163dae49551389713c3d026cab383e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/ctrl__tinycolor-4.2.1/LICENSE",
+      "bytes": 1072,
+      "sha256": "40623170cffa92890b9a2decc5456de6bba6d4f75a7a7b7abc60cc9fdaf78b65",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/ctrl__tinycolor-4.2.2/LICENSE",
+      "bytes": 1072,
+      "sha256": "40623170cffa92890b9a2decc5456de6bba6d4f75a7a7b7abc60cc9fdaf78b65",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/dayjs-1.11.23/LICENSE",
+      "bytes": 1072,
+      "sha256": "5faab7526d055651be3aab769d58897be6bd91f3d39d137f25f12dba1b31d5dc",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/detect-libc-2.1.2/LICENSE",
+      "bytes": 11357,
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/element-plus-2.14.7/LICENSE",
+      "bytes": 1077,
+      "sha256": "0790118bb4d66681db1d63181f72ef68e632d632f6db0373ef87cf328561af27",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/element-plus__icons-vue-2.3.2/LICENSE",
+      "bytes": 1121,
+      "sha256": "5db4ebb3abd8353774ae148723ccc14087d6dab99473f77a7b799b55defd8dfe",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/entities-7.0.1/LICENSE",
+      "bytes": 1260,
+      "sha256": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/estree-walker-2.0.2/LICENSE",
+      "bytes": 1126,
+      "sha256": "8a6dcbabe7179f9c8489c08a7d874d0f1e093ae7449e03756ccf87cb9d0e296e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/fdir-6.5.0/LICENSE",
+      "bytes": 1053,
+      "sha256": "9a39f2aadab11a3697edd668ff2d8ad885b649737b7ab4d3bf12b34e5ada0c86",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/floating-ui__core-1.8.0/LICENSE",
+      "bytes": 1089,
+      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/floating-ui__dom-1.8.0/LICENSE",
+      "bytes": 1089,
+      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/floating-ui__utils-0.2.12/LICENSE",
+      "bytes": 1089,
+      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/intlify__core-base-11.4.19/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/intlify__devtools-types-11.4.19/LICENSE",
+      "bytes": 1083,
+      "sha256": "8f431e584baf8dc943c4188a9e3c27cf4b6a5b540b2d0801468023db86345e7d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/intlify__message-compiler-11.4.19/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/intlify__shared-11.4.19/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/jridgewell__sourcemap-codec-1.6.0/LICENSE",
+      "bytes": 1080,
+      "sha256": "769d154fbde32a915af110b1123650bc79f4cbe675acc66e005265bf069c6c6c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/lightningcss-1.33.0/LICENSE",
+      "bytes": 15648,
+      "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/lightningcss-win32-x64-msvc-1.33.0/LICENSE",
+      "bytes": 15648,
+      "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/lodash-4.18.1/LICENSE",
+      "bytes": 1952,
+      "sha256": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/lodash-es-4.18.1/LICENSE",
+      "bytes": 1952,
+      "sha256": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/long-3.2.0/LICENSE",
+      "bytes": 11560,
+      "sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/magic-string-0.30.21/LICENSE",
+      "bytes": 1051,
+      "sha256": "1cbe51b907662f6cb1492b16c359384a595180bf0e4d101603ed525e75c4e484",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/memoize-one-6.0.0/LICENSE",
+      "bytes": 1073,
+      "sha256": "b1c501095de70182748cb8e8d97ac5577701a4ef3b755ba30d59fd87b24bdb0f",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/nanoid-3.3.20/LICENSE",
+      "bytes": 1095,
+      "sha256": "da4db1480d9beea3483a2eda5c53b22238d0827d57da162b48f122e04d2d9987",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/normalize-wheel-es-1.2.0/LICENSE",
+      "bytes": 1527,
+      "sha256": "658d037c5c078a24c27ab1e0f37050d407ad6628be94886a4e48f3e761f47f7d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/oxc-project__types-0.155.0/LICENSE",
+      "bytes": 1119,
+      "sha256": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/oxc-project__types-0.156.0/LICENSE",
+      "bytes": 1119,
+      "sha256": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/picocolors-1.1.1/LICENSE",
+      "bytes": 787,
+      "sha256": "6582629e2979466878f6014313dcc2f3756c9616148682227ce3063dde310750",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/picomatch-4.0.7/LICENSE",
+      "bytes": 1091,
+      "sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/postcss-8.5.31/LICENSE",
+      "bytes": 1095,
+      "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/postcss-8.5.32/LICENSE",
+      "bytes": 1095,
+      "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/rolldown-1.2.15/LICENSE",
+      "bytes": 1302,
+      "sha256": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/rolldown-1.2.18/LICENSE",
+      "bytes": 1302,
+      "sha256": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/rolldown-1.2.18/THIRD-PARTY-LICENSE",
+      "bytes": 2209,
+      "sha256": "a877291d800ed43692f3f9ae09d8e01cc6f7293ad39d43896059c188ffbb8b7c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/rolldown__pluginutils-1.0.1/LICENSE",
+      "bytes": 1106,
+      "sha256": "e1919b3b98b8bf6c1b99fcc60a0ed46027c97ac947432e1278446c9606f50161",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/source-map-js-1.2.2/LICENSE",
+      "bytes": 1526,
+      "sha256": "6cb0631f71c7749763fd3dd1d5bee52dd1070ec17f2edc1710079ad070bd2fbd",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/sxzz__popperjs-es-2.11.8/LICENSE.md",
+      "bytes": 1082,
+      "sha256": "bf67e2c9b7974543bb18ced3a0b37f53729aaff953b442dd89a3adaf90fd93e8",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/tinyglobby-0.2.17/LICENSE",
+      "bytes": 1076,
+      "sha256": "22c68811e174cbbfb3813d4135918df4f540959c14d872e601d9abe83d3cde8f",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/types__lodash-4.17.27/LICENSE",
+      "bytes": 1141,
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/types__lodash-es-4.17.12/LICENSE",
+      "bytes": 1141,
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/types__web-bluetooth-0.0.21/LICENSE",
+      "bytes": 1141,
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vite-8.3.8/LICENSE.md",
+      "bytes": 98196,
+      "sha256": "a22152baa1aef74402443008e767e7c689a524c0909d19b0431d97f5ab066a13",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vitejs__plugin-vue-6.0.10/LICENSE",
+      "bytes": 1103,
+      "sha256": "29b68325fe026047d13e187b44c33b2acacf7dc647dec4583702e59f235e13b5",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue-component-type-helpers-3.3.13/LICENSE",
+      "bytes": 1076,
+      "sha256": "ac07310d94980d9819cf2c28b3a2f63d11db283f48f02f67208b549f44860ac0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue-component-type-helpers-3.3.14/LICENSE",
+      "bytes": 1076,
+      "sha256": "ac07310d94980d9819cf2c28b3a2f63d11db283f48f02f67208b549f44860ac0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue-i18n-11.4.19/LICENSE",
+      "bytes": 1083,
+      "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__compiler-core-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__compiler-dom-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__compiler-sfc-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__compiler-ssr-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__reactivity-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__runtime-core-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__runtime-dom-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__server-renderer-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vue__shared-3.5.44/LICENSE",
+      "bytes": 1091,
+      "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vueuse__core-15.0.0/LICENSE",
+      "bytes": 1101,
+      "sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vueuse__metadata-15.0.0/LICENSE",
+      "bytes": 1101,
+      "sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/npm/licenses/vueuse__shared-15.0.0/LICENSE",
+      "bytes": 1101,
+      "sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-current/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-current/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de344/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de344/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de345/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de345/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de350/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de350/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de355/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de355/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de389/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de389/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de391/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de391/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de392/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de392/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de392/SOURCE.txt",
+      "bytes": 2481,
+      "sha256": "5407659d5d9655bdda01d8052d7af4e75cf9b152bc9eb6301ff50b4de9c6b160",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de393/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de393/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de393/SOURCE.txt",
+      "bytes": 2067,
+      "sha256": "e5fca9ea8c29153b83906f96fb8ee660fa9c310fa1bc9807921c942e0e5c4bd0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de395/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de395/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de395/SOURCE.txt",
+      "bytes": 2134,
+      "sha256": "0fd1645b78cc4b857b8012c2d0ad4394ee867a6a613c22240b43b77e071c23c4",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de396/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de396/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de396/SOURCE.txt",
+      "bytes": 2540,
+      "sha256": "fabd97011a7b0cc35dd70efb632d5ec8fc81802fd3691f5ded8d649f26ebb8d4",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de397/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de397/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de397/SOURCE.txt",
+      "bytes": 2708,
+      "sha256": "90c3f012444e45b55b8571be6d7c5e7ad05956a45b99f2f8c3c1eeeabf6a160d",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de398/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de398/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de398/SOURCE.txt",
+      "bytes": 476,
+      "sha256": "ce4902174cb610d223cc5eb62c7bf06a97f943000fe90e5d7b646d273f4dc695",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de399/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de399/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-de399/SOURCE.txt",
+      "bytes": 502,
+      "sha256": "e5fbb7d41e4f2f6557a3a29e3f9412fa826d7a1620b9acddcc81301eac6d08ea",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-previous/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator-previous/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator/GPL-2.0-LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/packed-simulator/LITTLEFS-LICENSE.md",
+      "bytes": 1548,
+      "sha256": "439019c66097e2a9da9bc737b071db89d0232343f102ec0a47fcccca2ab04e9a",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/project/LICENSE",
+      "bytes": 18431,
+      "sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "licenses/third-party/qrcode-generator/LICENSE",
+      "bytes": 1071,
+      "sha256": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "release.json",
+      "bytes": 490,
+      "sha256": "f7f4fed0d12fd80dd3574b8b18dd7e8a20e4dbf7ac35a013ca83e604cb31441b",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "remote-lcd-v1.json",
+      "bytes": 1194,
+      "sha256": "43ecb1980ca1840ab499c2828cc08420a34e5e41f13853a8de6316afda9fda4f",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "remote-protocol-v1.json",
+      "bytes": 7870,
+      "sha256": "466a406be11f010e452eca096ab3a01f6177f1078e8332d4473629e6931d0df3",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "sources/LCD_DE3_100_App673_Simulatorquellen.zip",
+      "bytes": 161898,
+      "sha256": "f7e503ef1c8b5687e6de1321ed21ccdfb6daecf8009b5d840ce0637505e7b6d0",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "sources/LCD_DE3_101_App674_Simulatorquellen.zip",
+      "bytes": 159107,
+      "sha256": "ce30ce50ae50242327cbafe3e1d40b434db08773dac33c019c79b15202bbe052",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "sources/LCD_DE3_102_App675_Simulatorquellen.zip",
+      "bytes": 162752,
+      "sha256": "877a352b067e6580c6fc7b126d3a49e19b18f6f19f13e6320f320261b403982e",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "sources/LCD_DE3_91_App664_Simulatorquellen.zip",
+      "bytes": 79230,
+      "sha256": "526cc3383762009fb51fa70f0056930640ec2419ea224a9f29e17ab7722bec09",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "sources/LCD_DE3_92_App665_Simulatorquellen.zip",
+      "bytes": 109332,
+      "sha256": "e87a623229d2670af4e89891a33386905b3a488f79a97a5c0557ee5a5ece55c8",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "sources/LCD_DE3_94_App667_Simulatorquellen.zip",
+      "bytes": 113186,
+      "sha256": "f0ed195280830e35f7f4008841d572b131c8321a376bbc813d96b3064bd965e6",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "sources/LCD_DE3_95_App668_Simulatorquellen.zip",
+      "bytes": 151894,
+      "sha256": "1cdab106676d84185f07a0686563f9e4c09e662ab2350264965729110358f776",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "sources/LCD_DE3_96_App669_TEST1_Simulatorquellen.zip",
+      "bytes": 153464,
+      "sha256": "e135cea2079c45668a0392939dc3cf951b4270e6cdef6dcfe95e21f9211054dc",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "sources/LCD_DE3_97_App670_TEST1_Simulatorquellen.zip",
+      "bytes": 153666,
+      "sha256": "a468091c0bba25424b2ba7ebcbfe9e147f7aeacb3c457ce808c5a63001d55608",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "sources/LCD_DE3_98_App671_Simulatorquellen.zip",
+      "bytes": 153022,
+      "sha256": "49d6874f3562073b06081e80a5cfc09c871eaaac105b2e47583cd1ae66e164c6",
+      "verification": "prior-get-unchanged-git-blob"
+    },
+    {
+      "path": "sources/LCD_DE3_99_App672_Simulatorquellen.zip",
+      "bytes": 151971,
+      "sha256": "dceecd21e37d0b02fd5bafc25f16bf7a90a7a8f0792d4479ea75878f5fb0c3bc",
+      "verification": "prior-get-unchanged-git-blob"
+    }
+  ]
+}

@@ -114,6 +114,149 @@ const de389={...current,url:'/lfs-capacity-de389.wasm',wasmSha256:'e62f5857d60ac
   firmwareVersion:'2.22.0-DE3.89',applicationCounter:662,
   approvedApplications:[{firmwareVersion:'2.22.0-DE3.89',applicationCounter:662}],
   geometry:{...current.geometry},layout:{...current.layout,engineSha256:'b0ae389e7fac3c7ce5f28607de7cd1cadad5465ab2ad4c1e2dc853fbfa2533da'}}
+const de391 = {
+  ...de389,
+  url: '/lfs-capacity-de391.wasm',
+  wasmSha256: '91ca3ef469ea6ecfca1dc18c80ad39d60977fc591b823274324c516bb7024548',
+  firmwareVersion: '2.22.0-DE3.91',
+  applicationCounter: 664,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.91', applicationCounter: 664}],
+  geometry: {...de389.geometry},
+  layout: {...de389.layout, engineSha256: 'a0d15c28160774dd83ba80a71e8aad61fb41cd7ae0209eeec5486be7ea00d7a2'},
+}
+// Private App665 has its own exact GC engine and separately pinned WASI toolchain.
+const de392 = {
+  ...de391,
+  url: '/lfs-capacity-de392.wasm',
+  wasmSha256: '08428602391b6d9f8ee1bfb28abf683a5a774b97d75242da70d8d0f2f6314d16',
+  firmwareVersion: '2.22.0-DE3.92',
+  applicationCounter: 665,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.92', applicationCounter: 665}],
+  geometry: {...de391.geometry},
+  layout: {...de391.layout, engineSha256: '605356ff74646392adcfb26adf5c7d39fe7138272e84b4e4a0f167b94e34c2c1'},
+}
+// App666 keeps the PFS1 layout and has its own exact collection engine.
+const de393 = {
+  ...de392,
+  approved: true,
+  url: '/lfs-capacity-de393.wasm',
+  wasmSha256: 'f63157b7c22552cf0b23e9502e1c047cc40a205e198b908633bef8a8921e9c96',
+  firmwareVersion: '2.22.0-DE3.93',
+  applicationCounter: 666,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.93', applicationCounter: 666}],
+  geometry: {...de392.geometry},
+  layout: {...de392.layout, engineSha256: '7c7f2d25b90892980e9ce76e18cdaaa3782f18b940d95b8e37be6eb40831318e'},
+}
+// App667 reuses the exact DE393 engine/WASM with its own linked ARM qualification
+// in docs/validation/DE3_94_PFS.json. Approval is specific to the new application.
+const de394 = {
+  ...de393,
+  approved: true,
+  firmwareVersion: '2.22.0-DE3.94',
+  applicationCounter: 667,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.94', applicationCounter: 667}],
+  geometry: {...de393.geometry},
+  layout: {...de393.layout},
+}
+// App668 has its own bounded-catalog engine and a separately reproduced WASM.
+// Exact linked LCD qualification: docs/validation/DE3_95_PFS.json.
+const de395 = {
+  ...de394,
+  approved: true,
+  url: '/lfs-capacity-de395.wasm',
+  wasmSha256: '311519a0da49474b57376908f836f2f45deccb90a9bbda855ae09343633b151c',
+  firmwareVersion: '2.22.0-DE3.95',
+  applicationCounter: 668,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.95', applicationCounter: 668}],
+  geometry: {...de394.geometry},
+  layout: {...de394.layout, engineSha256: 'a9bdec38eaa41680e1c9fdebd5fd12995e9d38ff070560ff605fd387d471dabd'},
+}
+// App669 TEST1 keeps an exact separate snapshot; approval follows fresh WASM,
+// App668/App669 cross-mount and final linked LCD layout qualification.
+// Evidence: docs/validation/DE3_96_PFS.json (hardware acceptance remains pending).
+const de396 = {
+  ...de395,
+  approved: true,
+  url: '/lfs-capacity-de396.wasm',
+  wasmSha256: 'd3a2e2d9378440c58051349502c51a7977ef7863d1cb2eec303d002b659a8a56',
+  firmwareVersion: '2.22.0-DE3.96',
+  applicationCounter: 669,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.96', applicationCounter: 669}],
+  geometry: {...de395.geometry},
+  layout: {...de395.layout, engineSha256: '3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d'},
+}
+// App670 TEST1: exact CRC-loop engine snapshot with fresh App669/App670
+// cross-mount and linked ARM qualification in docs/validation/DE3_97_PFS.json.
+const de397 = {
+  ...de396,
+  approved: true,
+  url: '/lfs-capacity-de397.wasm',
+  wasmSha256: 'd77286b2176a369b957b7259305df82da5f950c6e33b3a90ce54c21bf7e8ec4c',
+  firmwareVersion: '2.22.0-DE3.97',
+  applicationCounter: 670,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.97', applicationCounter: 670}],
+  geometry: {...de396.geometry},
+  layout: {...de396.layout, engineSha256: 'a5aa9c1b7374c77a0a66f44e1287fd5e18f69a43f46797ed74b99e01de631788'},
+}
+// Normal App671 keeps PFS1 and has a separate exact runtime-diagnostics engine.
+// Fresh WASM, cross-mount and linked ARM qualification: docs/validation/DE3_98_PFS.json.
+const de398 = {
+  ...de397,
+  approved: true,
+  url: '/lfs-capacity-de398.wasm',
+  wasmSha256: '30bca7ffb0b1db1773b4bb6dcb05aaa861f5e9d9dc13eca96b3324e760f26273',
+  firmwareVersion: '2.22.0-DE3.98',
+  applicationCounter: 671,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.98', applicationCounter: 671}],
+  geometry: {...de397.geometry},
+  layout: {...de397.layout, engineSha256: 'a645c8556c6b2e7dd9c35af621822a4ab2cb45a4315f116fe07ed7c03898098d'},
+}
+// Normal App672: exact engine with deferred-GC scan suppression.
+// Qualified against linked ARM output and de398/de399 cross-mount evidence.
+const de399 = {
+  ...de398,
+  approved: true,
+  url: '/lfs-capacity-de399.wasm',
+  wasmSha256: '068e6f033c6e3ee95c8be2c7c6ba633daa6821c67ca38ace68a66cd5fece604c',
+  firmwareVersion: '2.22.0-DE3.99',
+  applicationCounter: 672,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.99', applicationCounter: 672}],
+  geometry: {...de398.geometry},
+  layout: {...de398.layout, engineSha256: '3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f'},
+}
+// App673 reuses the byte-identical App672 PFS engine and its existing WASM.
+// Enabled only after binding the actual App673 ARM output: DE3_100_PFS.json.
+const de3100 = {
+  ...de399,
+  approved: true,
+  firmwareVersion: '2.22.0-DE3.100',
+  applicationCounter: 673,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.100', applicationCounter: 673}],
+  geometry: {...de399.geometry},
+  layout: {...de399.layout},
+}
+// App674 changes LCD menu icons and reuses the exact App672/App673 PFS engine.
+// Its own linked ARM output is bound in docs/validation/DE3_101_PFS.json.
+const de3101 = {
+  ...de3100,
+  approved: true,
+  firmwareVersion: '2.22.0-DE3.101',
+  applicationCounter: 674,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.101', applicationCounter: 674}],
+  geometry: {...de3100.geometry},
+  layout: {...de3100.layout},
+}
+// App675 keeps the App672 engine. Its own SourceID, ELF/BIN/HEX and ARM layout
+// are independently bound in docs/validation/DE3_102_PFS.json.
+const de3102 = {
+  ...de3101,
+  approved: true,
+  firmwareVersion: '2.22.0-DE3.102',
+  applicationCounter: 675,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.102', applicationCounter: 675}],
+  geometry: {...de3101.geometry},
+  layout: {...de3101.layout},
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -127,7 +270,31 @@ export const DE350_MIGRATION_CAPACITY_TARGET=freezeTarget(de350)
 export const DE354_MIGRATION_CAPACITY_TARGET=freezeTarget(de354)
 export const MIGRATION_CAPACITY_TARGET=freezeTarget(current)
 export const DE389_MIGRATION_CAPACITY_TARGET=freezeTarget(de389)
+export const DE391_MIGRATION_CAPACITY_TARGET=freezeTarget(de391)
+export const DE392_MIGRATION_CAPACITY_TARGET=freezeTarget(de392)
+export const DE393_MIGRATION_CAPACITY_TARGET=freezeTarget(de393)
+export const DE394_MIGRATION_CAPACITY_TARGET=freezeTarget(de394)
+export const DE395_MIGRATION_CAPACITY_TARGET=freezeTarget(de395)
+export const DE396_MIGRATION_CAPACITY_TARGET=freezeTarget(de396)
+export const DE397_MIGRATION_CAPACITY_TARGET=freezeTarget(de397)
+export const DE398_MIGRATION_CAPACITY_TARGET=freezeTarget(de398)
+export const DE399_MIGRATION_CAPACITY_TARGET=freezeTarget(de399)
+export const DE3100_MIGRATION_CAPACITY_TARGET=freezeTarget(de3100)
+export const DE3101_MIGRATION_CAPACITY_TARGET=freezeTarget(de3101)
+export const DE3102_MIGRATION_CAPACITY_TARGET=freezeTarget(de3102)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de3102')return DE3102_MIGRATION_CAPACITY_TARGET
+  if(profile==='de3101')return DE3101_MIGRATION_CAPACITY_TARGET
+  if(profile==='de3100')return DE3100_MIGRATION_CAPACITY_TARGET
+  if(profile==='de399')return DE399_MIGRATION_CAPACITY_TARGET
+  if(profile==='de398')return DE398_MIGRATION_CAPACITY_TARGET
+  if(profile==='de397')return DE397_MIGRATION_CAPACITY_TARGET
+  if(profile==='de396')return DE396_MIGRATION_CAPACITY_TARGET
+  if(profile==='de395')return DE395_MIGRATION_CAPACITY_TARGET
+  if(profile==='de394')return DE394_MIGRATION_CAPACITY_TARGET
+  if(profile==='de393')return DE393_MIGRATION_CAPACITY_TARGET
+  if(profile==='de392')return DE392_MIGRATION_CAPACITY_TARGET
+  if(profile==='de391')return DE391_MIGRATION_CAPACITY_TARGET
   if(profile==='current')return MIGRATION_CAPACITY_TARGET
   if(profile==='de389')return DE389_MIGRATION_CAPACITY_TARGET
   if(profile==='de354')return DE354_MIGRATION_CAPACITY_TARGET

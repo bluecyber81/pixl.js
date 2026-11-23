@@ -19,9 +19,10 @@ import sys
 import tempfile
 import time
 import webbrowser
+from release_version import release_version
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '3.58.2'
+VERSION = release_version(ROOT)
 HEALTH = '/.well-known/allmiibo-dateimanager'
 
 

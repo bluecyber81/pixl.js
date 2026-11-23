@@ -40,6 +40,7 @@ typedef void (*nus_tx_ready_handler_t)(void);
 
 
 /* Session snapshots; foreground policy never treats a disconnect request as completion. */
+void ble_set_standby_timeout(uint16_t seconds);
 uint32_t ble_session_generation(void);
 uint32_t ble_link_generation(void);
 bool ble_remote_mode_active(void);
@@ -96,10 +97,52 @@ size_t ble_nus_max_data_length(void);
  * two reserved zero bytes. Setting requires an active Pixl.js session. */
 #define BLE_MTU_DIAGNOSTIC_SIZE 16u
 bool ble_mtu_diagnostic(uint16_t requested_mtu, uint8_t *snapshot, size_t capacity);
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+/* INFO05 selector 1: read-only MTUD v2. First 14 bytes retain v1 layout.
+ * Byte14: GAP connected/parameters valid/PHY valid/local request pending bits.
+ * Byte15: last PHY_UPDATE HCI status, FF if none. LE u16 at16/18/20:
+ * interval (1.25 ms), slave latency, supervision timeout (10 ms).
+ * Bytes22/23: observed RX/TX PHY (0 unknown,1 1M,2 2M). Byte24: local
+ * request attempts. Bytes25..27 reserved0. LE u32 at28: last local request
+ * result, FFFFFFFF if none. Disconnect clears all current-link observations.
+ * No radio query, new negotiation, flash I/O, or throughput claim on read. */
+#define BLE_LINK_DIAGNOSTIC_SIZE 32u
+bool ble_link_diagnostic(uint8_t *snapshot, size_t capacity);
+#if defined(PIXL_TEST_DIAGNOSTICS)
+/* INFO05 selector 2: MTUDv3, v2 prefix (version=3), byte32 flags
+ * test-profile=1/configured-event-extension-enabled=2; byte33 reserved0;
+ * LEu16 at34 nominal event_length in 1.25ms units, LEu32 at36 last explicit
+ * option API result (FFFFFFFF before a request). No negotiated airtime claim.
+ * requested_extension=-1 reads,0 disables,1 enables; caller must gate mutations
+ * on VFS idle. An API rejection is reported without changing the last successful
+ * setting. The global SoftDevice option survives reconnects until changed or
+ * the stack/application restarts; it is never a persistent setting. */
+#define BLE_TEST_DIAGNOSTIC_SIZE 40u
+bool ble_test_diagnostic(int8_t requested_extension, uint8_t *snapshot, size_t capacity);
+#endif
+#endif
 /* Fail a foreground file-transfer session without retaining a lost TX frame. */
 void ble_nus_abort_transfer(void);
 void ble_get_addr_str(char addr_fmt[]);
 
 
+
+
+/* LCD miniapps use the existing S112 stack. Callbacks run only in the
+ * foreground. Stop cancels callbacks; busy includes deferred restoration. */
+#include "../../app/switch2_wake/switch2_protocol.h"
+typedef void (*ble_raw_adv_done_cb_t)(uint32_t result);
+typedef void (*ble_switch2_scan_cb_t)(bool found, const ble_switch2_scan_result_t *result);
+uint32_t ble_raw_adv_start(const uint8_t mac[6], const uint8_t *data, uint8_t length,
+                          bool connectable, uint16_t duration, ble_raw_adv_done_cb_t callback);
+void ble_raw_adv_stop(void);
+bool ble_raw_adv_is_active(void);
+bool ble_miniapp_radio_busy(void);
+uint32_t ble_switch2_scan_start(uint16_t seconds, ble_switch2_scan_cb_t callback);
+void ble_switch2_scan_stop(void);
+bool ble_switch2_scan_is_active(void);
+void ble_switch2_scan_process(void);
+/* Stream-only foreground probe; starts RSSI sampling when not yet active. */
+bool ble_stream_rssi(int8_t *rssi);
 
 #endif /* BLE_H_ */

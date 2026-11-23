@@ -1,0 +1,206 @@
+{
+  "CI_RUN_45030117214_REPORT.txt": {
+    "bytes": 5139,
+    "sha256": "2a1b5bd2f3a9c69ee42d31d5536ed41e0aa2d32479610f0cad618b822d71ec09"
+  },
+  "CI_RUN_45030117214_RESULT.json": {
+    "bytes": 27736,
+    "sha256": "26891603560127ccf81a7b32e0c3098bf103e2aa8fb9c44eee816d5602342397"
+  },
+  "app672-ci-final-application-evidence.zip": {
+    "bytes": 1217873,
+    "sha256": "63b612531c91caae70ed042349bbff94c19cffbb0ed19a4e226f7c9ad2593b1b"
+  },
+  "app672-ci-final-z19-evidence.zip": {
+    "bytes": 1217286,
+    "sha256": "8cea826a7f09e52fbd53b691e316816abf2a20b89a6a5b1320655d4d831c1d6e"
+  },
+  "app672-ci-final-z21-evidence.zip": {
+    "bytes": 1103931,
+    "sha256": "916c9b430bfe3c93f2ba535fa7fd9a5390563d8ecb679b3ae87b0483fc876ba0"
+  },
+  "extracted/app672-ci-final-application-evidence/AES_ELF.txt": {
+    "bytes": 263,
+    "sha256": "3654cbf2e3fb067a0a2f00afc5c43d808fa10f35cb9f71a9ff18c4d05858b5d1"
+  },
+  "extracted/app672-ci-final-application-evidence/BUILD_FAULT.json": {
+    "bytes": 1534,
+    "sha256": "b32dd76ad964435816b1e7a25d699442a015f35ac6acc888fe0f246e6f430c13"
+  },
+  "extracted/app672-ci-final-application-evidence/BUILD_RESULT.json": {
+    "bytes": 2107,
+    "sha256": "d194b0773ad5c9eb62c2a50f8020d6f7abf643281964b714bbfd24f45f3020a8"
+  },
+  "extracted/app672-ci-final-application-evidence/DISPLAY_PROFILE_ELF.txt": {
+    "bytes": 159,
+    "sha256": "dc26270b22897cc794697e743d2902f6a628b979441d29cba54f1ff93b5bef86"
+  },
+  "extracted/app672-ci-final-application-evidence/FIRMWARE_TESTS.json": {
+    "bytes": 273416,
+    "sha256": "24b6c1549b46c0c5adcb61771dbe4f4f53c659d8c2447473a42906176800998c"
+  },
+  "extracted/app672-ci-final-application-evidence/FIRST_MENU_ELF.txt": {
+    "bytes": 201,
+    "sha256": "d4024ecbdf4b2f8d8bc2ca326cf6ddb65e9fea464c10c2363c84c87cef8fa7f9"
+  },
+  "extracted/app672-ci-final-application-evidence/FLASH_JEDEC_ELF.txt": {
+    "bytes": 93,
+    "sha256": "4451f004e90c5a5a4e2263507009cfb8f11c858e99dbf8b9eafbe45d4f3623ca"
+  },
+  "extracted/app672-ci-final-application-evidence/GAME_ROTATION.json": {
+    "bytes": 13271,
+    "sha256": "043ee58b2eb54914d5243502f6036abbfae688950fc0140c630a982aeba8f9cc"
+  },
+  "extracted/app672-ci-final-application-evidence/LCD_DEVICE_TEST.json": {
+    "bytes": 4885,
+    "sha256": "18f7d77416f15fe1c93279ceeb53f03fd17b8ef754fb6b42d393be379f777894"
+  },
+  "extracted/app672-ci-final-application-evidence/SIGNED_OTA.json": {
+    "bytes": 836,
+    "sha256": "24e4ac4e1acfc6f04014ac312be0dc342bc821bb28f9cae6dec833c8e962f3a5"
+  },
+  "extracted/app672-ci-final-application-evidence/STACK_ELF.txt": {
+    "bytes": 150,
+    "sha256": "de48e363daa09a5372d5f3290d48e1e7419e4825839630f10aa6f2d63ec90953"
+  },
+  "extracted/app672-ci-final-application-evidence/Z21_PREVIEW_RESUME.json": {
+    "bytes": 748,
+    "sha256": "841762b8bd868c1793cb9bb22b587268cd2b747de7be54d47370b2ee5fd28945"
+  },
+  "extracted/app672-ci-final-application-evidence/production-inputs.json": {
+    "bytes": 85213,
+    "sha256": "231fc70ce48f666caa2ae8cdedce4e8aa48f47962157de6568cfcf8ba660692a"
+  },
+  "extracted/app672-ci-final-z19-evidence/_build/BUILD_RESULT.json": {
+    "bytes": 1370,
+    "sha256": "07ee02a6db9a20097fec0035ba4dff30b91f0aa0e0aaffd74824206ef133a402"
+  },
+  "extracted/app672-ci-final-z19-evidence/_build/compiler.txt": {
+    "bytes": 82,
+    "sha256": "c5b52314a002a0906a0c280259b12e4fdd2213971bdc5e0e6d7e169bbbdbbae2"
+  },
+  "extracted/app672-ci-final-z19-evidence/_build/size.txt": {
+    "bytes": 114,
+    "sha256": "b28c997fb787127508b325b0ee5be24d9411c151581995d2ec32d9fe09b5fda7"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/RUN_RESULT.json": {
+    "bytes": 3401,
+    "sha256": "d190daf28c30283bb47885e63a99610451186aac7abbd237bdf4c71eb171df8f"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/application-resume.json": {
+    "bytes": 1013,
+    "sha256": "4361f12452f08d5a4bf96f1dbbbbaa3cc19b5f4a4a72d83e13a8af714a33515f"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/arm-crypto.json": {
+    "bytes": 35483,
+    "sha256": "54599dab29617c7ea8ce79d233431161ae02b0d63ec91a5db3aa46409b1fbae1"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/arm-ui.json": {
+    "bytes": 16090,
+    "sha256": "043c3e37ca4a5fcf8bd8a9af6fcc18db4b81521513c0dae3c8b75221610362b9"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/current-release-input.json": {
+    "bytes": 605,
+    "sha256": "11ac429f711de9a97458c22e05650cad9a1c3e79e454e54ddb2793dbf1ca7f6f"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/current-release-resume.json": {
+    "bytes": 1014,
+    "sha256": "0af6489a0ed699fa17b7fc0d6cb2867a51ef9376e0dd1888afcd91760c4f21ed"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/display.json": {
+    "bytes": 5311,
+    "sha256": "7243975bf24a925dc16ce23617b88d6a6ad14c3638ba69d6915d255a85b5cb7e"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/final-phases/RESULT.json": {
+    "bytes": 2118,
+    "sha256": "811d4a4dfebe383e2fecf6902aeb7cbb3566f1a39df79a3e5e84da7505440e78"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/historical-stream-modes.json": {
+    "bytes": 1811,
+    "sha256": "5ada905b9bcdfabfdfa65c4e5fc8aeb5861fbdf571e1c6b099648eb68ffbbec5"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/ingress.json": {
+    "bytes": 1706,
+    "sha256": "0bfe7c21f5c41f7e464ad25ecab0a06c787bbdced258aee45cc3e7aa7f727ce1"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/reset/bound.json": {
+    "bytes": 2234,
+    "sha256": "8e225c0ab11f8c9786efc499b00889ebeee50e751cd5060e2e4835f137403f27"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/sanitizer-control.log": {
+    "bytes": 869,
+    "sha256": "3a70302bea59a83b71f8b061c92f99d77eb2c503055ac2306931f095c8977c5b"
+  },
+  "extracted/app672-ci-final-z19-evidence/_checks/session/session_results.json": {
+    "bytes": 3628,
+    "sha256": "7d5fa8a22a282e00333a0cf7deb5016ca0cb288df5d30a7b7e52de2028840724"
+  },
+  "extracted/app672-ci-final-z21-evidence/_build/BUILD_RESULT.json": {
+    "bytes": 1370,
+    "sha256": "190f1f6852438ce1b51b8f190ec406bfcc13956f79880d3021333d3ac78481ce"
+  },
+  "extracted/app672-ci-final-z21-evidence/_build/compiler.txt": {
+    "bytes": 82,
+    "sha256": "c5b52314a002a0906a0c280259b12e4fdd2213971bdc5e0e6d7e169bbbdbbae2"
+  },
+  "extracted/app672-ci-final-z21-evidence/_build/size.txt": {
+    "bytes": 114,
+    "sha256": "3892a2ae5bc87673dfedf194b1f7c6faca7bcbec8d93c7b366452d517d480bfa"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/RUN_RESULT.json": {
+    "bytes": 3906,
+    "sha256": "696f0fd6c9d2213cc5b4fbbe1c7a7221af5dfdab3da3bc6155b1a91bd31d437d"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/arm-crypto.json": {
+    "bytes": 35442,
+    "sha256": "103812c1ee6a604b7bd61f4d64395cf1544f3542b143a542286c866a775fe899"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/arm-resume-event.json": {
+    "bytes": 334,
+    "sha256": "63b212f86b3c8049764aa839f59c15bbe8edae1f056b3e5c6b84034019fd6463"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/arm-ui.json": {
+    "bytes": 18334,
+    "sha256": "b1556fe5f088f471c430371bdd70c293ec992a12ddea9088737d339ebdbec879"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/checkpoint-resume.json": {
+    "bytes": 747,
+    "sha256": "c5a629d220f9cdaf2d8c0f93d7fafb0f33ff3a9133ff25855e1c468ca1b49303"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/display.json": {
+    "bytes": 5311,
+    "sha256": "7243975bf24a925dc16ce23617b88d6a6ad14c3638ba69d6915d255a85b5cb7e"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/final-phases/RESULT.json": {
+    "bytes": 2118,
+    "sha256": "811d4a4dfebe383e2fecf6902aeb7cbb3566f1a39df79a3e5e84da7505440e78"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/ingress.json": {
+    "bytes": 1706,
+    "sha256": "0bfe7c21f5c41f7e464ad25ecab0a06c787bbdced258aee45cc3e7aa7f727ce1"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/reset/bound.json": {
+    "bytes": 2234,
+    "sha256": "beb224019f3e9c9bb7bb50a3c86aec8c39619d25fdf01afa3df4be5a1ad384bc"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/resume-display/RESULTS.json": {
+    "bytes": 3485,
+    "sha256": "ca353dd91638301ad5df034e8bd5a0a489dfbd735b6fcdd77a6f2ac2a9999f98"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/sanitizer-control.log": {
+    "bytes": 869,
+    "sha256": "2056494c1d09567ebf09a7e43870d380cccb56d9468add54dd3f2e926b5e0900"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/session/session_results.json": {
+    "bytes": 3751,
+    "sha256": "7b1e4ee3045dec2872d999fcf34441f61869361ac50b08ce6d944a8976e89825"
+  },
+  "extracted/app672-ci-final-z21-evidence/_checks/system-checkpoint-resume.json": {
+    "bytes": 744,
+    "sha256": "0dfbf038ae2481cc51ad59637d4dfb85db738bc9dae831d360348768d2ed23e4"
+  },
+  "run45030117214_final.json": {
+    "bytes": 21563,
+    "sha256": "9ec6f57ff6fff7dcc0950f398f5db44c9b420bdb69468bac0eb3e20b02114700"
+  }
+}

@@ -1,0 +1,271 @@
+{
+  "schema": 1,
+  "passed": true,
+  "board": "LCD",
+  "version": "2.22.0-DE3.97",
+  "applicationCounter": 670,
+  "previousApplicationCounter": 669,
+  "bootloaderCounter": 21,
+  "softDevice": "S112 7.3.0",
+  "softDeviceFwid": 294,
+  "package": {
+    "file": "fw/releases/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip",
+    "bytes": 364489,
+    "sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+    "manifestImages": [
+      "application"
+    ],
+    "applicationOnly": true,
+    "containsBootloader": false,
+    "containsSoftDevice": false,
+    "datSha256": "514d03a728b3f14c72aed32f935a2bf5dd094ba29d47102b54467cb1d5eb9448",
+    "signatureType": "ECDSA P-256",
+    "hardwareVersion": 52,
+    "softDeviceRequirements": [
+      294
+    ],
+    "bootValidation": "GENERATED_CRC"
+  },
+  "application": {
+    "bytes": 363888,
+    "sha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+    "matchesFinalIndependentBuilds": true,
+    "sourceId": "b5da931da1f22110ed60d36af7cfdfda090f5191a070acb6e8c550b8b77eddbe"
+  },
+  "signatureVerifiedByActualZ21Arm": true,
+  "signatureHashCrcCases": 7,
+  "signedInitAcceptanceCases": 2,
+  "acceptedStates": [
+    "App669 present",
+    "empty application bank"
+  ],
+  "paddedBootloaderSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+  "bootloaderElfBinding": {
+    "elf_path": "/workspace/scratch/c35fb68b5579/firmware_validation_de395/DFU/Z21_reproduction/bootloader.out",
+    "elf_sha256": "9149e4ab189ebde7acce738c43f4b2a146e2bc7489b94d1fd5cf5582a3b2bd54",
+    "bin_path": "/workspace/scratch/c35fb68b5579/firmware_validation_de395/DFU/Z21_reproduction/BOOTLOADER_UNSIGNED_ANALYSIS.bin",
+    "bin_sha256": "bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c",
+    "physical_boot_payload_matches": true,
+    "boot_payload_bytes": 26932,
+    "initial_data_lma": "0x7d8ec",
+    "ram_data_start": "0x20005968",
+    "ram_initialized_end": "0x200059b0",
+    "bss_start": "0x200059b0",
+    "bss_end": "0x200084c0",
+    "stack_limit": "0x2000f000",
+    "stack_top": "0x20010000",
+    "loaded_sections": [
+      {
+        "name": ".text",
+        "vma": "0x77000",
+        "bytes": 26764,
+        "zeroed": false
+      },
+      {
+        "name": ".dfu_trans",
+        "vma": "0x7d88c",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".svc_data",
+        "vma": "0x7d894",
+        "bytes": 12,
+        "zeroed": false
+      },
+      {
+        "name": ".nrf_balloc",
+        "vma": "0x7d8a0",
+        "bytes": 20,
+        "zeroed": false
+      },
+      {
+        "name": ".sdh_ble_observers",
+        "vma": "0x7d8b4",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".sdh_req_observers",
+        "vma": "0x7d8bc",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".sdh_state_observers",
+        "vma": "0x7d8c4",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".sdh_stack_observers",
+        "vma": "0x7d8cc",
+        "bytes": 16,
+        "zeroed": false
+      },
+      {
+        "name": ".sdh_soc_observers",
+        "vma": "0x7d8dc",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".ARM.exidx",
+        "vma": "0x7d8e4",
+        "bytes": 8,
+        "zeroed": false
+      },
+      {
+        "name": ".data",
+        "vma": "0x20005968",
+        "bytes": 52,
+        "zeroed": false
+      },
+      {
+        "name": ".uicr_bootloader_start_address",
+        "vma": "0x10001014",
+        "bytes": 4,
+        "zeroed": false
+      },
+      {
+        "name": ".uicr_mbr_params_page",
+        "vma": "0x10001018",
+        "bytes": 4,
+        "zeroed": false
+      },
+      {
+        "name": ".fs_data",
+        "vma": "0x2000599c",
+        "bytes": 20,
+        "zeroed": false
+      },
+      {
+        "name": ".bss",
+        "vma": "0x200059b0",
+        "bytes": 11024,
+        "zeroed": true
+      }
+    ],
+    "exact_function_symbols": {
+      "nrf_dfu_validation_signature_check": "0x7a9c1",
+      "nrf_dfu_validation_hash_ok": "0x7a641",
+      "nrf_dfu_validation_boot_validate": "0x7aac9",
+      "uECC_verify": "0x7cd8d",
+      "sha256_transform": "0x77561"
+    }
+  },
+  "systemInputBinding": {
+    "input": "/workspace/scratch/0af425ec2cbb/app670_fw/fw/releases/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
+    "packageSha256": "2b2162693351e8d5ebd47b08b359cfffb1de3159d590da864b60934fbacb3e13",
+    "signedSystemPhaseSha256": "aba8a0bedb8ad8cef3a00cdb865bdaaa8d7af0ed7daef4888c1ec6e4192694d0",
+    "softdevicePayloadSha256": "176e583106ce74c71c621e0ad14f9cecdcd83dcd6ac097df3c970223e7a0aff2",
+    "softdeviceBytes": 98068,
+    "softdeviceLoadAddress": 4096,
+    "softdeviceFwid": 294,
+    "mbrPage": "Erased in simulation; neither MBR nor SoftDevice code is executed."
+  },
+  "originalVerifierSha256": "81d5426fc0a0118d0e54366b9915f516a566b4884cf9e7f86495c913ae73f885",
+  "derivedVerifierSha256": "37eab0ea935387c51ac807fcdd11bbba245f1fd93d047bdef733cb3985ad0e05",
+  "verifierDerivation": {
+    "path": "Z21/VERIFIER_DERIVATION.json",
+    "sha256": "447484c0578aedccebdc4ae39a37eb2831065f6f7a589df0dfff2bc18608034a",
+    "exactDiffIncluded": true,
+    "onlyCountersLabelsAndExpectedApplicationSha256Changed": true
+  },
+  "inputHashes": {
+    "/workspace/scratch/0af425ec2cbb/app670_fw/docs/validation/DE3_96_TEST1_evidence/verify_z21_app669.py": {
+      "sha256": "81d5426fc0a0118d0e54366b9915f516a566b4884cf9e7f86495c913ae73f885",
+      "bytes": 7211
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_validation/Z21/verify_z21_app670.py": {
+      "sha256": "37eab0ea935387c51ac807fcdd11bbba245f1fd93d047bdef733cb3985ad0e05",
+      "bytes": 7211
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/tools/verify_z21_application.py": {
+      "sha256": "5d80b97657bd12ce8c7606e53f04488f58a2281bdd2ef5691731889c7d365467",
+      "bytes": 6507
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/bootloader-z19/tests/elf_crypto_regression.py": {
+      "sha256": "794d6a9de8b4c7814d46248308675caf2b967c25f5791c3b412b6832fc6daa51",
+      "bytes": 19114
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/bootloader-z19/tests/arm_update_model.py": {
+      "sha256": "0fadd5d7f50f4526793fe9308592d38bf57413af188010de4b40301bdb43c26b",
+      "bytes": 4600
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/bootloader-z21/SOURCE_BINDING.json": {
+      "sha256": "8b2665ba9051eed507827a4bf845b57ed824449b060608fa2796acc62ba6188c",
+      "bytes": 2994
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/fw/releases/Allmiibo_LCD_DE3_97_670_TEST1_NUR_APP.zip": {
+      "sha256": "ff2c056d66f423afade03a47b730f92033645f0db9d74f946cbafd65734d7786",
+      "bytes": 364489
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_validation/OTA_VERIFICATION.json": {
+      "sha256": "64ae144fee8969096a1b14d36e36c1ff437572de182f907b56482834c43d0d7a",
+      "bytes": 1837
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/fw/releases/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip": {
+      "sha256": "2b2162693351e8d5ebd47b08b359cfffb1de3159d590da864b60934fbacb3e13",
+      "bytes": 343768
+    },
+    "/workspace/scratch/0af425ec2cbb/app670_fw/fw/releases/Allmiibo_LCD_DE3_96_669_TEST1_NUR_APP.zip": {
+      "sha256": "021d1a35b00b6cb344702c48df609060e51b55bcecaa9781071d1bcd87829b1f",
+      "bytes": 363913
+    },
+    "/workspace/scratch/c35fb68b5579/firmware_validation_de395/DFU/Z21_reproduction/BUILD_RESULT.json": {
+      "sha256": "069f0c51c6572e41a7a66acb834dbb8808bc797ba7ea5fa36f2758c835b152c9",
+      "bytes": 1432
+    },
+    "/workspace/scratch/c35fb68b5579/firmware_validation_de395/DFU/Z21_reproduction/bootloader.out": {
+      "sha256": "9149e4ab189ebde7acce738c43f4b2a146e2bc7489b94d1fd5cf5582a3b2bd54",
+      "bytes": 1396448
+    },
+    "/workspace/scratch/c35fb68b5579/firmware_validation_de395/DFU/Z21_reproduction/BOOTLOADER_UNSIGNED_ANALYSIS.bin": {
+      "sha256": "bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c",
+      "bytes": 26932
+    }
+  },
+  "inputsUnchangedDuringVerification": true,
+  "evidence": {
+    "Z21/VERIFIER_DERIVATION.json": {
+      "path": "Z21/VERIFIER_DERIVATION.json",
+      "sha256": "447484c0578aedccebdc4ae39a37eb2831065f6f7a589df0dfff2bc18608034a",
+      "bytes": 8516
+    },
+    "Z21/Z21_APP670_CRYPTO.json": {
+      "path": "Z21/Z21_APP670_CRYPTO.json",
+      "sha256": "176b47cda1ea5c70853f42842ed94f48e303bf43ad64b6d4f26a5c2c336bed0c",
+      "bytes": 6255
+    },
+    "Z21/Z21_APP670_INIT_ACCEPTANCE.json": {
+      "path": "Z21/Z21_APP670_INIT_ACCEPTANCE.json",
+      "sha256": "08c1ceea1e3c2aa0b49c79d8506d943f0ccb3e9605d21c066dea3f9a1f992245",
+      "bytes": 1517
+    },
+    "Z21/Z21_APPLICATION_VERIFICATION.log": {
+      "path": "Z21/Z21_APPLICATION_VERIFICATION.log",
+      "sha256": "6483a0dd25c2f279e285347ce28519d247786084f12127176cac91540a44c3d7",
+      "bytes": 133
+    },
+    "Z21/verify_z21_app670.py": {
+      "path": "Z21/verify_z21_app670.py",
+      "sha256": "37eab0ea935387c51ac807fcdd11bbba245f1fd93d047bdef733cb3985ad0e05",
+      "bytes": 7211
+    },
+    "OTA_VERIFICATION.json": {
+      "path": "OTA_VERIFICATION.json",
+      "sha256": "64ae144fee8969096a1b14d36e36c1ff437572de182f907b56482834c43d0d7a",
+      "bytes": 1837
+    }
+  },
+  "physicalDeviceAccess": false,
+  "privateKeyAccess": false,
+  "hardwareAcceptance": "pending",
+  "webDeployment": "pending",
+  "limits": [
+    "Actual linked Z21 ARM crypto, full-image hash/CRC and signed-init bank selection executed with simulated memory/flash/radio.",
+    "No physical installation, RF transfer, power-loss completion or App670 runtime acceptance is claimed.",
+    "The public previously qualified system-phase input supplies exact S1127.3.0 bytes; the simulated MBR page stays erased and no MBR or SoftDevice code is executed."
+  ]
+}

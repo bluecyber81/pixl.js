@@ -1,0 +1,9 @@
+Abschließende Web3.65-Lieferung
+
+Pages f1d69f020097f21487eef99314fe7da5257b41d7, Tree bc1f5f7cc4cf6296a08efab2f16715c5f702e070, Lauf 45198958839 erfolgreich. Geändert wurden nur das neue Quellpaket und zwei Download-Metadatendateien.
+
+FINAL_COVERAGE_SUMMARY.json und FINAL_COVERAGE.json verbinden 321 frühere kanonische HTTP-Erfolge ausschließlich bei identischen Git-Blobs mit drei neuen kanonischen GETs. Das ergibt 324 Dateien / 50.829.377 Byte, keine Behauptung von 324 neuen Abrufen. Die drei neuen Abrufe sind in HTTP_RESULTS.json vollständig erhalten; alle HTTP 200, ohne Retry, Cachebuster oder Redirect.
+
+Die ursprünglichen 323 HTTP-Nachweise und neun UI-Beobachtungen bleiben unter ../WEB3_65_0_evidence/ erhalten. Zwei frühere Download-Metadatensätze wurden durch die neuen Ergebnisse ersetzt. Web-Produktdateien (320) und Portable blieben unverändert; es erfolgte kein erneuter Produktbuild oder UI-Lauf.
+
+Vorbereitungs-/Publikationsreceipts sind Originalaufzeichnungen mit ihren damaligen offenen Statusfeldern. Die tatsächlichen abgeschlossenen Belege werden in WEB3_65_0_FINAL_DELIVERY.json zusammengeführt. Der GitHub-Lauf 45198533066 übertrug ausschließlich das bereits geprüfte Quell-ZIP-Objekt und ersetzt keine Source-CI.

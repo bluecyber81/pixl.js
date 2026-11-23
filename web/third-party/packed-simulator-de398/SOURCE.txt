@@ -1,0 +1,5 @@
+Exact PFS1 source snapshot for LCD DE3.98 / App671.
+The normal firmware retains RAM-only GC diagnostics; the freestanding capacity simulator omits BOARD_LCD and all firmware diagnostics.
+The storage format and constants are unchanged. Source binding, engine identity, and compiler hashes are in the adjacent JSON files.
+Use web/scripts/build-capacity-de398.py with the pinned official WASI SDK 34.
+No physical device timing, RAM, or acceptance claim is made by the simulator.

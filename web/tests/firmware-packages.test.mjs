@@ -26,10 +26,11 @@ test('DFU handoff preserves board and valid observed counters for OLED and LCD',
   assert.equal(dfuReference(null, 123456), '');
 });
 
-test('the final signed package reaches Android and is compared when only the device version is available', () => {
+test('the retained App662 signed package reaches Android and is compared when only the device version is available', () => {
   const { packages } = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url)));
   const candidate = packages.find(item => item.version === '2.22.0-DE3.89');
-  assert.equal(candidate, packages[0]);
+  assert.equal(packages[0].counter, 675);
+  assert.notEqual(candidate, packages[0]);
   assert.equal(candidate.channel, undefined);
   const android = new URL(nrfDfuLink(candidate));
   assert.equal(android.searchParams.get('file'), 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/' + candidate.file);
@@ -39,7 +40,7 @@ test('the final signed package reaches Android and is compared when only the dev
   assert.equal(packagePresentation(packages.find(item => item.counter === 637), {connected:true, firmwareVersion:candidate.version}).newer, true);
   assert.equal(packagePresentation(candidate, {connected:true, firmwareVersion:'2.22.0-DE3.82'}).newer, false);
   assert.equal(packagePresentation(candidate).releaseNotesUrl,'https://github.com/bluecyber81/pixl.js/releases/tag/de3.89');
-  assert.deepEqual(packages.map(item=>item.counter),[662,654,661,660,659,658,657,86,85,84,648,653,652,650,649,647,637,646,645]);
+  assert.deepEqual(packages.map(item=>item.counter),[675,674,673,672,671,662,654,661,660,659,658,657,86,85,84,648,653,652,650,649,647,637,646,645]);
   const test657 = packages.find(item => item.counter === 657);
   assert.equal(test657.channel, 'prerelease');
   assert.equal(test657.bootloader, 'Z21');
@@ -128,15 +129,15 @@ test('only a named LCD app release can be handed to nRF DFU', () => {
  }
 });
 
-test('current LCD download choices respect the installed application, system profile and OLED variant', () => {
- const current = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url))).packages[0];
+test('retained App662 download choices respect the installed application, system profile and OLED variant', () => {
+ const current = JSON.parse(readFileSync(new URL('../src/data/firmware-releases.json', import.meta.url))).packages.find(item => item.id === 'de3.89-lcd-app');
  const bytes = bootPacket(), view = new DataView(bytes.buffer);
  view.setUint32(32,7003000,true); view.setUint16(36,294,true); view.setUint32(60,654,true);
  view.setUint32(64,21,true); bytes.set(Buffer.from('d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb','hex'),80);
  const choices = (firmwareVersion,boot = parseBootDiagnostics(bytes)) => currentLcdDownloads(current,{connected:true,firmwareVersion},boot);
  assert.deepEqual(currentLcdDownloads(current,{connected:false},null),{app:true,combo:true});
  assert.deepEqual(choices(current.version),{app:true,combo:false});
- for (const version of ['2.22.0-DE3.90','2.22.0-DE3.91','2.22.0-DE3.92']) assert.deepEqual(choices(version),{app:false,combo:false});
+ for (const version of ['2.22.0-DE3.90','2.22.0-DE3.91','2.22.0-DE3.92','2.22.0-DE3.93','2.22.0-DE3.94']) assert.deepEqual(choices(version),{app:false,combo:false});
  assert.deepEqual(choices('2.22.0-DE3.81-OLEDt1'),{app:false,combo:false});
  for (const version of ['2.22.0-DE3.81-OLEDt2','2.23.0-DE3.91-OLEDt10']) {
    assert.deepEqual(choices(version),{app:false,combo:false});

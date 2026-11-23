@@ -38,6 +38,10 @@ typedef struct {
     volatile bool field_on;
     volatile bool pending;
     bool save_failed, delivering_write;
+#if defined(BOARD_LCD)
+    /* Fits the existing alignment gap before generation, no new static buffer. */
+    volatile uint8_t rf_session;
+#endif
     volatile uint32_t generation;
     volatile uint32_t pending_generation;
     void (*volatile action)(void *);
@@ -95,6 +99,18 @@ static const uint8_t N2E_SELECT_BANK[1] = {0x0a};
 #define N2_CMD_FAST_WRITE 0xAE
 // see https://wiki.yobi.be/index.php/N2_Elite
 
+/* Only a data reply with a later TX completion or an accepted data write
+ * establishes use. Field loss alone and protocol/control replies do not. */
+enum { RF_READ_PENDING = 1u, RF_DATA_USED = 2u, RF_SESSION_COMPLETE = 4u };
+static ret_code_t ntag_read_reply(const uint8_t *data, size_t size) {
+    ret_code_t result = hal_nfc_send(data, size);
+#if defined(BOARD_LCD)
+    if (result == NRF_SUCCESS && ntag_emu.field_on)
+        ntag_emu.rf_session |= RF_READ_PENDING;
+#endif
+    return result;
+}
+
 /* One shared snapshot, never allocated on the limited embedded stack. */
 static ntag_t m_snapshot;
 
@@ -102,6 +118,11 @@ static void ntag_emu_deliver(bool changing);
 
 static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint8_t *plain) {
     nrf_pwr_mgmt_feed();
+#if defined(BOARD_LCD)
+    /* A newer command replaces the pending reply; never credit its TX to an
+     * older READ. The HAL also clears TXFRAMEEND when starting a new reply. */
+    ntag_emu.rf_session &= (uint8_t)~RF_READ_PENDING;
+#endif
 
     if (p_data == NULL || plain == NULL || data_length == 0) {
         ntag_emu.is_selecting_sector = false;
@@ -156,7 +177,7 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
                 /* NTAG215 PWD/PACK pages are never readable over RF. */
                 chunk_data[i] = offset >= 133 * 4 ? 0 : plain[offset];
             }
-            APP_ERROR_CHECK(hal_nfc_send(chunk_data, sizeof(chunk_data)));
+            APP_ERROR_CHECK(ntag_read_reply(chunk_data, sizeof(chunk_data)));
         } else if (ntag_emu.ntag.type != NTAG_215 && full_block >= 0 &&
                    read_offset <= tag_size && tag_size - read_offset >= 16) {
             static uint8_t chunk_data[16] = {0};
@@ -170,7 +191,7 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
                 chunk_data[6] |= 0b1000;
             }
 
-            APP_ERROR_CHECK(hal_nfc_send(chunk_data, 16));
+            APP_ERROR_CHECK(ntag_read_reply(chunk_data, 16));
         } else {
             hal_send_ack_nack(0x0);
         }
@@ -210,6 +231,9 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
                     plain[full_block_num * 4 + i] = p_data[i + 2];
                 }
             }
+#if defined(BOARD_LCD)
+            if (ntag_emu.field_on) ntag_emu.rf_session |= RF_DATA_USED;
+#endif
             hal_send_ack_nack(0xA);
         } else {
             hal_send_ack_nack(0x0);
@@ -261,7 +285,7 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
                 size_t offset = fast_offset + i;
                 response[i] = offset >= 133 * 4 ? 0 : plain[offset];
             }
-            hal_nfc_send(response, fast_length);
+            ntag_read_reply(response, fast_length);
         } else if (ntag_emu.ntag.type == NTAG_I2C_PLUS_2K && start_page == 0xed && end_page == 0xed) {
             static uint8_t ed_page[4] = {0};
             memcpy(ed_page, &plain[start_page*4], 4);
@@ -269,9 +293,9 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
             // set NS_REG.SRAM_RF_READY
             // switch 2 will poll until this is set, and *then* read sram pages
             ed_page[2] |= 0b1000;
-            hal_nfc_send(ed_page, 4);
+            ntag_read_reply(ed_page, 4);
         } else {
-            hal_nfc_send(&plain[start_page*4], page_count*4);
+            ntag_read_reply(&plain[start_page*4], page_count*4);
         }
         break;
     case NFC_CMD_PWD_AUTH:
@@ -311,6 +335,9 @@ static void nfc_received_process(const uint8_t *p_data, size_t data_length, uint
         for (int i = 0; i < datasize; i++) {
             plain[block_num * 4 + i] = p_data[i + 4];
         }
+#if defined(BOARD_LCD)
+        if (datasize && ntag_emu.field_on) ntag_emu.rf_session |= RF_DATA_USED;
+#endif
         hal_send_ack_nack(0xA);
         break;
     case NFC_CMD_SECTOR_SELECT:
@@ -348,10 +375,18 @@ static void nfc_callback(void *p_context, hal_nfc_event_t event, const uint8_t *
 
     switch (event) {
     case HAL_NFC_EVENT_FIELD_ON:
+#if defined(BOARD_LCD)
+        ntag_emu.rf_session = 0;
+#endif
         ntag_emu.field_on = true;
         bsp_board_led_on(BSP_BOARD_LED_0);
         break;
     case HAL_NFC_EVENT_FIELD_OFF:
+#if defined(BOARD_LCD)
+        if (ntag_emu.field_on && (ntag_emu.rf_session & RF_DATA_USED))
+            ntag_emu.rf_session |= RF_SESSION_COMPLETE;
+        ntag_emu.rf_session &= (uint8_t)~RF_READ_PENDING;
+#endif
         bsp_board_led_off(BSP_BOARD_LED_0);
         ntag_emu.field_on = false;
         ntag_emu.sector = 0;
@@ -364,6 +399,10 @@ static void nfc_callback(void *p_context, hal_nfc_event_t event, const uint8_t *
         nfc_received_process(p_data, data_length, ntag_emu.ntag.data);
         break;
     case HAL_NFC_EVENT_DATA_TRANSMITTED:
+#if defined(BOARD_LCD)
+        if (ntag_emu.field_on && (ntag_emu.rf_session & RF_READ_PENDING))
+            ntag_emu.rf_session = (ntag_emu.rf_session & (uint8_t)~RF_READ_PENDING) | RF_DATA_USED;
+#endif
         // NRF_LOG_INFO("NFC EVENT Data Transmitted");
         break;
     default:
@@ -375,6 +414,9 @@ static void nfc_callback(void *p_context, hal_nfc_event_t event, const uint8_t *
 bool ntag_emu_set_update_cb(ntag_update_cb_t cb, void *context) {
     if (!ntag_emu_prepare_change()) return false;
     CRITICAL_REGION_ENTER();
+#if defined(BOARD_LCD)
+    ntag_emu.rf_session = 0;
+#endif
     ntag_emu.update_cb = cb;
     ntag_emu.cb_context = context;
     ++ntag_emu.generation;
@@ -431,6 +473,9 @@ static void ntag_emu_deliver(bool changing) {
 void ntag_emu_save_failed(void) {
     CRITICAL_REGION_ENTER();
     if (ntag_emu.update_cb && (!ntag_emu.busy || ntag_emu.delivering_write)) {
+#if defined(BOARD_LCD)
+        ntag_emu.rf_session = 0;
+#endif
         ntag_emu.save_failed = true;
         ntag_emu.dirty = true;
         ntag_emu.paused = true;
@@ -440,6 +485,19 @@ void ntag_emu_save_failed(void) {
     CRITICAL_REGION_EXIT();
 }
 bool ntag_emu_save_pending(void) { return ntag_emu.save_failed; }
+
+bool ntag_emu_session_used(void) {
+#if defined(BOARD_LCD)
+    bool used;
+    CRITICAL_REGION_ENTER();
+    used = !ntag_emu.field_on && !ntag_emu.save_failed &&
+           (ntag_emu.rf_session & RF_SESSION_COMPLETE) != 0;
+    CRITICAL_REGION_EXIT();
+    return used;
+#else
+    return false;
+#endif
+}
 
 bool ntag_emu_remote_input_safe(void) {
     bool safe;
@@ -463,6 +521,9 @@ bool ntag_emu_discard_changes(void) {
      * storage write, reset or delete is performed here. */
     if (ntag_emu.busy || !ntag_emu.save_failed) return false;
     CRITICAL_REGION_ENTER();
+#if defined(BOARD_LCD)
+    ntag_emu.rf_session = 0;
+#endif
     ntag_emu.dirty = false;
     ntag_emu.save_failed = false;
     ntag_emu.pending = false;
@@ -478,6 +539,9 @@ bool ntag_emu_prepare_change(void) {
      * replace its source, detach its owner or tear down the application. */
     if (ntag_emu.busy && ntag_emu.delivering_write) return false;
     CRITICAL_REGION_ENTER();
+#if defined(BOARD_LCD)
+    ntag_emu.rf_session = 0;
+#endif
     ntag_emu.paused = true;
     ntag_emu.action = NULL;
     CRITICAL_REGION_EXIT();
@@ -551,6 +615,9 @@ void ntag_emu_uninit(void) {
 bool ntag_emu_set_tag(const ntag_t *ntag) {
     if (!ntag || !ntag_emu_prepare_change()) return false;
     CRITICAL_REGION_ENTER();
+#if defined(BOARD_LCD)
+    ntag_emu.rf_session = 0;
+#endif
     if (ntag != &ntag_emu.ntag) memcpy(&(ntag_emu.ntag), ntag, sizeof(ntag_t));
     ntag_emu.dirty = false;
     ++ntag_emu.generation;

@@ -1,4 +1,4 @@
-"""Bind the existing capacity WASM to an actual LCD build and fresh cross-mount result."""
+"""Bind the existing capacity WASM to an actual LCD build and attributed cross-mount evidence."""
 import argparse
 import hashlib
 import json
@@ -93,7 +93,10 @@ def layout_cases(sym, binary, engine_hash, constants):
                 c['BLOCK_COUNT']*c['BLOCK_SIZE'], c['BLOCK_SIZE'], c['BLOCK_COUNT'],
                 c['CACHE_SIZE'], c['CACHE_SIZE'], c['CACHE_SIZE'], c['META_SIZE'],
                 c['SHARD_TARGET'], c['MAX_SHARDS'], c['PATH_MAX'], c['NAME_MAX'], c['MAX_HANDLES'], 7)
-            assert bytes(cpu.mem_read(out,72)) == expected + bytes.fromhex(engine_hash)
+            actual = bytes(cpu.mem_read(out,72))
+            assert actual == expected + bytes.fromhex(engine_hash), (
+                'linked PFS layout mismatch', drive, geometry, mounted,
+                'expected engine', engine_hash, 'actual layout72', actual.hex())
             case['layout72Hex'] = bytes(cpu.mem_read(out,72)).hex()
         else:
             assert cpu.mem_read(out,72) == bytes([0xa5])*72
@@ -105,28 +108,59 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, default=ROOT, help='complete source tree used by the firmware build')
     parser.add_argument('--build', type=Path, required=True)
-    parser.add_argument('--cross', type=Path, required=True, help='fresh check-pfs-compatibility.py output directory')
+    cross_input = parser.add_mutually_exclusive_group(required=True)
+    cross_input.add_argument('--cross', type=Path, help='fresh check-pfs-compatibility.py output directory')
+    cross_input.add_argument('--reuse-cross-report', type=Path,
+                             help='previous cross-mount JSON, only for an explicitly bound byte-identical App673/App674/App675 engine')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--profile', choices=['de355', 'de389'], default='de355')
+    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394', 'de395', 'de396', 'de397', 'de398', 'de399', 'de3100', 'de3101', 'de3102'], default='de355')
     args = parser.parse_args()
     fw = args.source / 'fw'
     record = read(args.build/'BUILD_RESULT.json')
     prod = read(args.build/'production-inputs.json')
     assert record['exit_code'] == 0 and record['board'] == 'LCD'
+    if args.profile == 'de394':
+        assert record['version'] == '2.22.0-DE3.94' and record['counter'] == 667
+    if args.profile == 'de395':
+        assert record['version'] == '2.22.0-DE3.95' and record['counter'] == 668
+    if args.profile == 'de396':
+        assert record['version'] == '2.22.0-DE3.96' and record['counter'] == 669
+    if args.profile == 'de397':
+        assert record['version'] == '2.22.0-DE3.97' and record['counter'] == 670
+    if args.profile == 'de398':
+        assert record['version'] == '2.22.0-DE3.98' and record['counter'] == 671
+    if args.profile == 'de399':
+        assert record['version'] == '2.22.0-DE3.99' and record['counter'] == 672
+    if args.profile == 'de3100':
+        assert record['version'] == '2.22.0-DE3.100' and record['counter'] == 673
+    if args.profile == 'de3101':
+        assert record['version'] == '2.22.0-DE3.101' and record['counter'] == 674
+    if args.profile == 'de3102':
+        assert record['version'] == '2.22.0-DE3.102' and record['counter'] == 675
     assert source_hashes(fw) == prod and fingerprint(prod) == record['source_id_sha256']
     artifacts = {name:digest(args.build/name) for name in ('pixljs.bin','pixljs.hex','pixljs.out','pixljs.map')}
     assert artifacts == record['artifacts_sha256']
     manifest, engine = identity(fw/'application/src/mod/vfs', fw/'components/littlefs')
     engine_record = dict(manifest=manifest, engineSha256=engine)
-    simulator = ROOT/'web/third-party'/('packed-simulator-'+args.profile)
+    simulator_profile = {'de394': 'de393', 'de3100': 'de399', 'de3101': 'de399', 'de3102': 'de399'}.get(args.profile, args.profile)
+    simulator = ROOT/'web/third-party'/('packed-simulator-'+simulator_profile)
     assert engine_record == read(simulator/'ENGINE_IDENTITY.json')
     binding = read(simulator/'SOURCE_BINDING.json')
     assert all(digest(simulator/name) == sha for name,sha in binding['sourceFiles'].items())
-    wasm_sha = digest(ROOT/'web/public'/('lfs-capacity-'+args.profile+'.wasm'))
+    wasm_sha = digest(ROOT/'web/public'/('lfs-capacity-'+simulator_profile+'.wasm'))
     assert wasm_sha == binding['wasmSha256']
-    cross = read(args.cross/'PFS_CROSS_VERSION.json')
+    cross_path = args.reuse_cross_report or args.cross/'PFS_CROSS_VERSION.json'
+    cross = read(cross_path)
     assert cross['passed'] and cross['syntheticDataOnly'] and cross['engines']['new'] == engine
-    assert len(cross['cases']) == 6 and all(case['exitCode'] == 0 and digest(args.cross/case['log']) == case['logSha256'] for case in cross['cases'])
+    assert len(cross['cases']) == 6 and all(case['exitCode'] == 0 for case in cross['cases'])
+    if args.reuse_cross_report:
+        assert args.profile in ('de3100', 'de3101', 'de3102'), 'Reuse requires an explicit identical-engine release profile'
+        previous = read(ROOT/'docs/validation/DE3_99_PFS.json')
+        assert previous['engine'] == engine_record and previous['wasmSha256'] == wasm_sha
+        assert previous['crossMountReportSha256'] == digest(cross_path)
+        assert previous['adapterSha256'] == prod['fw/application/src/mod/vfs/vfs_driver_packed.c']
+    else:
+        assert all(digest(args.cross/case['log']) == case['logSha256'] for case in cross['cases'])
     binary = (args.build/'pixljs.bin').read_bytes()
     assert binary.count(fingerprint(prod).encode() + b'\0') == 1
     elf = args.build/'pixljs.out'
@@ -136,8 +170,8 @@ def main():
         assert extracted.read_bytes() == binary
     rows = (line.split() for line in subprocess.check_output([tool('nm'), '-n', elf], text=True).splitlines())
     symbols = {row[2]:int(row[0],16) for row in rows if len(row) == 3}
-    report = dict(firmware=record['version'], counter=record['counter'], scope='Linked LCD layout and synthetic cross-mount verification of the identical storage engine',
-        engine=engine_record, wasmSha256=wasm_sha, sourceId=fingerprint(prod), sourceFiles=len(prod), buildArtifacts=artifacts,
+    report = dict(firmware=record['version'], counter=record['counter'], capacityProfile=args.profile, simulatorProfile=simulator_profile, scope='Linked LCD layout and synthetic cross-mount verification of the identical storage engine',
+        engine=engine_record, wasmSha256=wasm_sha, crossMountReportSha256=digest(cross_path), sourceId=fingerprint(prod), sourceFiles=len(prod), buildArtifacts=artifacts,
         adapterSha256=prod['fw/application/src/mod/vfs/vfs_driver_packed.c'], elfLoadBytesCompared=len(binary),
         intelHex=check_hex(args.build/'pixljs.hex',symbols['__isr_vector'],binary),
         capacityCrossMount=dict(cases=len(cross['cases']),files=cross['filesInitially'],folders=cross['directoriesInitially'],synthetic=True),
@@ -145,6 +179,17 @@ def main():
         limits=['Mounted state and flash geometry are modeled in the linked ARM layout test.',
                 'Live settings CRC, exact version/counter and layout, archive identity and a fresh fit proof are required.',
                 'Host simulations do not measure physical free space or device acceptance.'])
+    if args.profile in ('de396', 'de397'):
+        report['limits'].append('BOARD_LCD/PIXL_TEST_DIAGNOSTICS instrumentation is omitted from the RAM-only simulator; no SDK timing or firmware RAM claim.')
+    if args.profile in ('de398', 'de399', 'de3100', 'de3101', 'de3102'):
+        report['limits'].append('BOARD_LCD/runtime GC diagnostics are omitted from the RAM-only simulator; no SDK timing or firmware RAM claim.')
+    if args.reuse_cross_report:
+        report['scope'] = f"Fresh linked App{record['counter']} ARM layout binding to the unchanged App672 engine and previously executed cross-mount evidence"
+        report['crossMountEvidenceMode'] = 'reused-identical-engine'
+        report['crossMountOriginFirmware'] = '2.22.0-DE3.99'
+        report['previousQualificationPath'] = 'docs/validation/DE3_99_PFS.json'
+        report['previousQualificationSha256'] = digest(ROOT/report['previousQualificationPath'])
+        report['limits'].append(f"The six cross-mount cases were executed for App672; they were not rerun or relabeled as fresh App{record['counter']} tests.")
     args.output.write_text(json.dumps(report,indent=2)+'\n')
 
 

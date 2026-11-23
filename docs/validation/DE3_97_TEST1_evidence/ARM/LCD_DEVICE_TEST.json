@@ -1,0 +1,180 @@
+{
+  "passed": true,
+  "binarySha256": "2e0db2e1303730d1042bb88619c0f6364f2824d59e306b69fb244b6fc8cbe9b9",
+  "elfSha256": "c324b98ab7dac7d11e4c4342dbc90ca31dd2863c80615b40751eb48bf143a32f",
+  "unicornVersion": "2.1.4",
+  "modelSha256": "b28f0cd16678f849d58aece28c98314684d0695fc0eec2ebbf3d1ca3308caeb8",
+  "validationScriptSha256": "3f54f31df7a7c068bb3183c277f26e0871d709eebad6be9b3b25f57dac2a7c2f",
+  "peripheralModel": {
+    "interface": "native Unicorn mmio_map with shadow register banks",
+    "ranges": [
+      "0x40000000..0x400fffff",
+      "0x50000000..0x50000fff"
+    ],
+    "memoryAccessHooks": false,
+    "instructionLimitPerCall": 1500000
+  },
+  "elfMatchesBin": true,
+  "cases": [
+    {
+      "language": 0,
+      "rotation": 0,
+      "info": [
+        "2.22.0-DE3.97",
+        "ID b5da931da1f2",
+        "VFS: kein Fehler",
+        "Links",
+        "Mitte",
+        "Rechts",
+        "Mitte:weiter; lang:Ende"
+      ],
+      "remote": [
+        "Fernbedienung",
+        "Remote: aus",
+        "Einstellungen > Remote",
+        "Mitte:weiter; lang:Ende"
+      ],
+      "dim": [
+        "Lichttest",
+        "Soll 5% / Ist 5%",
+        "L: Dunkel  R: Hell",
+        "Mitte:weiter; lang:Ende"
+      ],
+      "bright": [
+        "Lichttest",
+        "Soll 100% / Ist 100%",
+        "L: Dunkel  R: Hell",
+        "Mitte:weiter; lang:Ende"
+      ],
+      "dimFrameSha256": "31f9240fa1f031aaf7e67281fdaab65e4adc96281c6a14a74209d93b74c2ae67",
+      "brightFrameSha256": "118ab6139579932040432dfa00abf9f8d266310977768b42b0ca3ba8bb69ad3c"
+    },
+    {
+      "language": 1,
+      "rotation": 0,
+      "info": [
+        "2.22.0-DE3.97",
+        "ID b5da931da1f2",
+        "VFS: no error",
+        "Left",
+        "Center",
+        "Right",
+        "Center:next; hold:back"
+      ],
+      "remote": [
+        "Remote control",
+        "Remote: off",
+        "Settings > Remote",
+        "Center:next; hold:back"
+      ],
+      "dim": [
+        "Backlight test",
+        "Set 5% / PWM 5%",
+        "L: Dim  R: Bright",
+        "Center:next; hold:back"
+      ],
+      "bright": [
+        "Backlight test",
+        "Set 100% / PWM 100%",
+        "L: Dim  R: Bright",
+        "Center:next; hold:back"
+      ],
+      "dimFrameSha256": "78ce76522f14aaa87d09fa80508243f6244818cb22183f5f3135825cde6f68c9",
+      "brightFrameSha256": "5da56496bad166ce2d6c9fa1b4f9eac95ec4694378017414174fec611c59dbb0"
+    },
+    {
+      "language": 0,
+      "rotation": 1,
+      "info": [
+        "2.22.0-DE3.97",
+        "ID b5da931da1f2",
+        "VFS: kein Fehler",
+        "Links",
+        "Mitte",
+        "Rechts",
+        "Mitte:weiter; lang:Ende"
+      ],
+      "remote": [
+        "Fernbedienung",
+        "Remote: aus",
+        "Einstellungen > Remote",
+        "Mitte:weiter; lang:Ende"
+      ],
+      "dim": [
+        "Lichttest",
+        "Soll 5% / Ist 5%",
+        "L: Dunkel  R: Hell",
+        "Mitte:weiter; lang:Ende"
+      ],
+      "bright": [
+        "Lichttest",
+        "Soll 100% / Ist 100%",
+        "L: Dunkel  R: Hell",
+        "Mitte:weiter; lang:Ende"
+      ],
+      "dimFrameSha256": "aa09647f772f4a28fae72d1990cfba2292f1bca8053df8a587a082f0716c2c5e",
+      "brightFrameSha256": "09fa81698c56cf66b34d0cffec0ea186c712e43ee8575bea1e36c1d955f9825a"
+    },
+    {
+      "language": 1,
+      "rotation": 1,
+      "info": [
+        "2.22.0-DE3.97",
+        "ID b5da931da1f2",
+        "VFS: no error",
+        "Left",
+        "Center",
+        "Right",
+        "Center:next; hold:back"
+      ],
+      "remote": [
+        "Remote control",
+        "Remote: off",
+        "Settings > Remote",
+        "Center:next; hold:back"
+      ],
+      "dim": [
+        "Backlight test",
+        "Set 5% / PWM 5%",
+        "L: Dim  R: Bright",
+        "Center:next; hold:back"
+      ],
+      "bright": [
+        "Backlight test",
+        "Set 100% / PWM 100%",
+        "L: Dim  R: Bright",
+        "Center:next; hold:back"
+      ],
+      "dimFrameSha256": "8b7dea205ac4be820ce6087068faf33cce236b244492225876ed68739f16d9e9",
+      "brightFrameSha256": "b66647459b65f94742411f62ca673d84b8d4b4b040a142de536861fe1b0cc70f"
+    }
+  ],
+  "fixedPatternPixels": 1568,
+  "savedPwmUnchanged": 65,
+  "savedContrastUnchanged": 80,
+  "pwmPeriodTicks": 3200,
+  "newerPwmWinsOverFailedRestore": [
+    0,
+    80
+  ],
+  "failedNewPwmKeepsRestoreTarget": 30,
+  "restoration": [
+    "short center",
+    "long center",
+    "forced view change",
+    "actual settings destructor",
+    "display shutdown/wake"
+  ],
+  "negativeControlRejected": "no-op app_pwm_channel_duty_set",
+  "negativeControlsRejected": [
+    "no-op app_pwm_channel_duty_set",
+    "incorrect SPIM MOSI register"
+  ],
+  "boundary": "linked UI, ST7567/HAL/Nordic SPIM DMA and actual PWM SDK/TIMER1/PPI/GPIOTE registers",
+  "notTested": [
+    "physical LCD brightness",
+    "electrical timing",
+    "real hardware sleep",
+    "settings filesystem writes"
+  ]
+}

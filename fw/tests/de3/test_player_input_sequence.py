@@ -55,6 +55,9 @@ typedef int mui_layer_t;
 #define ICON_FILE 0xe1ed
 #define ICON_HOME 0xe1f0
 #define ICON_ERROR 0xe1bb
+#define ICON_OPTION 0xe1dc
+#define PLAYER_OPTION_LOOP 1
+#define PLAYER_OPTION_COUNTER 2
 #define _T(x) #x
 #define NRF_LOG_DEBUG(...) ((void)0)
 static void ble_remote_local_activity(void) {}
@@ -94,7 +97,9 @@ void mui_list_view_add_item(mui_list_view_t *v,uint32_t icon,const char *text,vo
  item->icon=icon;item->user_data=data;string_init_set_str(item->text,text);string_init(item->sub_text);
 }
 bool mui_list_view_try_add_item_ext(mui_list_view_t *v,uint32_t icon,const char *text,const char *sub,void *data){
- mui_list_view_add_item(v,icon,text,data);return true;
+ mui_list_view_add_item(v,icon,text,data);
+ if(sub)string_set_str(mui_list_item_array_get(v->items,mui_list_item_array_size(v->items)-1)->sub_text,sub);
+ return true;
 }
 static int open_dir(const char *path,vfs_dir_t *dir){assert(strcmp(path,"/player")==0);dir_cursor=0;return VFS_OK;}
 static int read_dir(vfs_dir_t *dir,vfs_obj_t *obj){if(dir_cursor++)return VFS_ERR_EOF;
@@ -129,9 +134,22 @@ int main(int argc,char **argv){
                          {1,player_scene_play_on_enter,player_scene_play_on_exit}};
  scenes.p_scene_defines=defs;scenes.scene_num=2;scenes.user_data=&app;
  mui_scene_dispatcher_next_scene(&scenes,PLAYER_SCENE_FILE_BROWSER);
- assert(list.focus_index==0 && mui_list_item_array_size(list.items)==2);
+ assert(list.focus_index==0 && mui_list_item_array_size(list.items)>=2);
+ unsigned file_index=0;
+ for(unsigned i=0;i<mui_list_item_array_size(list.items);i++)
+  if(mui_list_item_array_get(list.items,i)->icon==ICON_FILE)file_index=i;
+ assert(file_index>0);
+ if(file_index==3){
+  assert(!player.loop&&!player.show_counter);
+  for(unsigned option=1;option<=2;option++){
+   list.focus_index=option;key(INPUT_KEY_CENTER,BSP_BTN_EVENT_PRESSED);key(INPUT_KEY_CENTER,BSP_BTN_EVENT_RELEASED);key(INPUT_KEY_CENTER,BSP_BTN_EVENT_SHORT);
+   assert(views.p_active_view==&list_view&&list.focus_index==option&&!starts&&!kills);
+   assert(!strcmp(string_get_cstr(mui_list_item_array_get(list.items,option)->sub_text),"ON"));
+  }
+  assert(player.loop&&player.show_counter);
+ }
  for(unsigned button=0;button<3;button++){
-  list.focus_index=1;assert(views.p_active_view==&list_view);
+  list.focus_index=file_index;assert(views.p_active_view==&list_view);
   key(INPUT_KEY_CENTER,BSP_BTN_EVENT_PRESSED);key(INPUT_KEY_CENTER,BSP_BTN_EVENT_RELEASED);
   assert(views.p_active_view==&list_view && starts==button);
   key(INPUT_KEY_CENTER,BSP_BTN_EVENT_SHORT);

@@ -232,8 +232,10 @@ static void mui_text_input_set_input_text(mui_text_input_t*i,const char*s){asser
 static void mui_text_input_set_header(mui_text_input_t*i,const char*s){(void)i;(void)s;}
 static void mui_text_input_set_event_cb(mui_text_input_t*i,void(*cb)(int,mui_text_input_t*)){i->cb=cb;}
 static bool isChineseLanguage(void){return false;}
-const char *get_amiibo_display_name(const db_amiibo_t*a){return a->name_en;}
-const db_game_t game_list[]={{1,0,"Zulu game","",0,0},{2,0,"Alpha game","",0,0},{0}};
+const char *get_amiibo_display_name(const db_amiibo_t*a){return db_amiibo_name_en(a);}
+const char db_amiibo_name_pool[]="\0Record";
+const char db_game_name_pool[]="\0Zulu game\0Alpha game";
+const db_game_t game_list[]={{1,0,1,0,0,0},{2,0,11,0,0,0},{0}};
 static db_amiibo_t records[305];
 static unsigned recent_count;
 uint8_t amiidb_recent_copy(const db_amiibo_t *items[AMIIDB_RECENT_LIMIT]){
@@ -253,7 +255,7 @@ int32_t amiidb_api_db_game_window(uint8_t parent,bool all,bool by_name,uint32_t 
 static mui_list_item_t *find(mui_list_view_t *v,unsigned icon){for(unsigned i=0;i<v->count;i++)if(v->items[i].icon==icon)return &v->items[i];return NULL;}
 static void choose(mui_list_view_t*v,unsigned icon){mui_list_item_t item=*find(v,icon);search_selected(MUI_LIST_VIEW_EVENT_SELECTED,v,&item);}
 int main(void){
- for(unsigned i=0;i<305;i++){records[i]=(db_amiibo_t){i,2,"Record",""};}
+ for(unsigned i=0;i<305;i++){records[i]=(db_amiibo_t){i,2,1,0};}
  mui_list_view_t list={0};mui_text_input_t input={0};app_amiidb_t app={.p_list_view=&list,.p_text_input=&input};input.user_data=&app;list.user_data=&app;string_init(app.search_str);
  amiidb_scene_amiibo_search_on_enter(&app);assert(app.result_count==AMIIDB_RESULT_PAGE_SIZE && app.result_total==305 && app.search_page==0 && !find(&list,ICON_PREV));
  choose(&list,ICON_NEXT);assert(app.search_page==1 && app.result_items[0]==&records[AMIIDB_RESULT_PAGE_SIZE] && app.result_items[AMIIDB_RESULT_PAGE_SIZE-1]==&records[2*AMIIDB_RESULT_PAGE_SIZE-1]);

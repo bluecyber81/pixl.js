@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "verifiedAt": "2026-11-21T19:00:43.690869+00:00",
+  "localCommit": "b3849cbe03fae75df0a6ae6a07cec21bd70ebf40",
+  "localTree": "155663c88245d3f048a79d920c319592b51309bc",
+  "qualifiedWebSubtree": "e3ac900d892ddbab2c69ab3a708a1b4e2fd3678a",
+  "parent": "d52fa4ccdf438d923196947fa967bd9b1cc767d7",
+  "fileCount": 1107,
+  "sourceCanonicalSha256": "4573fcd01699fba9a25f1d2a58cafcce055ee438256ba682317d8e154a4e839e",
+  "allManifestPathsExactlyMatchCommittedTree": true,
+  "allCommittedBlobIdsVerifiedAgainstQualifiedBytes": true,
+  "workingTreeCleanAtVerification": true,
+  "builds": [
+    "BUILD_NORMAL_ROOT.log",
+    "BUILD_NORMAL_PAGES.log"
+  ],
+  "distManifests": [
+    "DIST_NORMAL_ROOT.json",
+    "DIST_NORMAL_PAGES.json"
+  ],
+  "scope": "Software qualification only. Public commit and live delivery are separate receipts."
+}

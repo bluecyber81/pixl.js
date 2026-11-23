@@ -1,0 +1,11 @@
+{
+  "repository": "bluecyber81/pixl.js",
+  "branch": "gh-pages",
+  "commit": "f1d69f020097f21487eef99314fe7da5257b41d7",
+  "tree": "bc1f5f7cc4cf6296a08efab2f16715c5f702e070",
+  "publishedRef": true,
+  "sourceReceipt": "build_20261123/publication/PAGES_SOURCE_PUBLICATION.json",
+  "sourceReceiptSha256": "db6da2d43a4612e722d08ba2d629d669e212cb6223723d408b375b3d7a5e916f",
+  "publicRefEvidence": "PUBLIC_REF.json",
+  "publicRefEvidenceSha256": "a4968336c6b67575216a30b0ac0a333c567956476ca648efc3793f8873adb10f"
+}

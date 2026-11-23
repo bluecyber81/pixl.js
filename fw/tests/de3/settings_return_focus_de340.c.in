@@ -18,6 +18,8 @@
 #define NULL_USER_DATA ((void *)-1)
 #define MUI_LIST_VIEW_EVENT_SELECTED 0
 #define MUI_MSG_BOX_EVENT_SELECT_LEFT 0
+#define MUI_MSG_BOX_EVENT_SELECT_CENTER 1
+#define MUI_MSG_BOX_EVENT_SELECT_RIGHT 2
 #define INPUT_TYPE_SHORT 2
 #define INPUT_TYPE_LONG 3
 #define MINI_APP_ID_SETTINGS 3
@@ -38,9 +40,7 @@ enum { SETTINGS_VIEW_ID_MAIN, SETTINGS_VIEW_ID_MSG_BOX };
 enum { SETTINGS_SCENE_MAIN, SETTINGS_SCENE_VERSION, SETTINGS_SCENE_SLEEP_TIMEOUT,
        SETTINGS_SCENE_LCD_BACKLIGHT, SETTINGS_SCENE_OLED_CONTRAST, SETTINGS_SCENE_LANGUAGE,
        SETTINGS_SCENE_STORAGE, SETTINGS_SCENE_ABOUT, SETTINGS_SCENE_APP_MANAGEMENT, SETTINGS_SCENE_MAX };
-#ifndef LANGUAGE_STRING_ID_H
-enum { _L_OFF_F, _L_OFF, _L_15S, _L_30S, _L_45S, _L_1MIN, _L_2MIN, _L_3MIN, _L_BACK };
-#endif
+@STRING_IDS@
 typedef int mui_list_view_event_t, mui_msg_box_event_t;
 typedef struct { void *user_data; uint16_t icon; char text[96],subtext[96]; } mui_list_item_t;
 typedef struct mui_list_view_s mui_list_view_t;
@@ -53,6 +53,7 @@ typedef void mui_progress_bar_t, mui_toast_view_t, mui_view_dispatcher_t;
 typedef struct { void *user_data; } mui_view_t;
 @DISPATCH_TYPES@
 typedef struct {bool valid;} settings_storage_snapshot_t;
+typedef int settings_checkpoint_t;
 @APP_STRUCT@
 static unsigned device_tests;
 static void settings_device_test_open(app_settings_t *app){assert(app);++device_tests;}
@@ -61,7 +62,7 @@ static bool settings_get_lcd_dim(void){return dim_before_sleep;}
 static uint8_t settings_lcd_dim_idle_seconds(void){return dim_before_sleep ? 5 : 0;}
 static void settings_cycle_lcd_dim(void){dim_before_sleep=!dim_before_sleep;}
 typedef struct { bool bat_mode,show_mem_usage,hibernate_enabled,anim_enabled,no_sleep_mode,
-                     flip_display,swap_buttons; uint8_t language,oled_contrast,lcd_backlight;
+                     flip_display,swap_buttons; uint8_t language,oled_contrast,lcd_backlight,backlight;
                  uint16_t sleep_timeout_sec; } settings_data_t;
 typedef struct {bool avaliable;uint32_t total_bytes,free_bytes;} vfs_stat_t;
 typedef struct {int unused;} vfs_driver_t;
@@ -70,7 +71,15 @@ static settings_data_t data;
 static bool fixture_remote_enabled;
 static bool ble_remote_enabled(void){return fixture_remote_enabled;}
 static bool ble_remote_set_enabled(bool enabled){fixture_remote_enabled=enabled;return true;}
-static unsigned saves,resets,runtime_timeout_sets,language_sets;
+static unsigned saves,resets,runtime_timeout_sets,language_sets,explicit_edits,app_edits;
+static uint16_t edited_app_bits;
+#define ICON_BACK 0xe069
+static void settings_toggle_app(uint8_t id){app_edits++;edited_app_bits |= (uint16_t)(1u << id);}
+static void settings_scene_app_management_reload(void *app){(void)app;}
+
+#define APP_SETTINGS_CHANGED(app,field) ((app)->changed_fields |= UINT32_C(1)<<offsetof(settings_data_t,field))
+#define SETTINGS_SET(field, value) (explicit_edits++, settings_get_data()->field = (value))
+#define SETTINGS_TOGGLE(field) SETTINGS_SET(field, !settings_get_data()->field)
 static settings_data_t *settings_get_data(void){return &data;}
 static int settings_save(void){saves++;return 0;}
 static int settings_reset(void){resets++;return 0;}
@@ -78,17 +87,25 @@ static void settings_storage_snapshot_invalidate(settings_storage_snapshot_t*p){
 static vfs_driver_t driver;
 static vfs_stat_t fixture_drive={true,2048,1024};
 static vfs_driver_t *vfs_get_default_driver(void){return &driver;}
-static int32_t settings_storage_snapshot_read(settings_storage_snapshot_t*p,vfs_driver_t*d,vfs_stat_t*s){
- (void)p;(void)d;*s=fixture_drive;return VFS_OK;
+static const vfs_stat_t *settings_storage_snapshot_peek(const settings_storage_snapshot_t*p,const vfs_driver_t*d){
+ (void)p;(void)d;return &fixture_drive;
 }
 static void *version_get(void){return NULL;}
+typedef enum { SETTINGS_LOAD_PENDING, SETTINGS_LOAD_DEFAULTS, SETTINGS_LOAD_VERIFIED } settings_load_state_t;
+static settings_load_state_t settings_load_state(void){return SETTINGS_LOAD_VERIFIED;}
 static const char *fixture_version="DE3.40";
 static const char *version_get_version(void*p){(void)p;return fixture_version;}
 static const char *getLangDesc(unsigned n){assert(n<LANGUAGE_COUNT);return n?"English":"Deutsch";}
+#ifndef FOCUS_TEST_LINKED_STRINGS
 static const char *getLangString(int n){(void)n;return "label";}
+#else
+static const char *getLangString(int n){return strings[n];}
+#endif
 static void setLanguage(unsigned n){assert(n<LANGUAGE_COUNT);language_sets++;}
 static int nrf_pwr_mgmt_get_timeout(void){return data.sleep_timeout_sec;}
+#define ble_set_standby_timeout nrf_pwr_mgmt_set_timeout
 static void nrf_pwr_mgmt_set_timeout(int n){(void)n;runtime_timeout_sets++;}
+#define ble_set_standby_timeout nrf_pwr_mgmt_set_timeout
 static void mui_u8g2_set_flip_display(bool n){(void)n;}
 static void mui_u8g2_set_contrast_level(int n){(void)n;}
 static unsigned mui_u8g2_set_backlight_level(int n){(void)n;return NRF_SUCCESS;}
@@ -97,6 +114,8 @@ static void *mui(void){return NULL;}
 static void mui_update_now(void*p){(void)p;}
 static void mui_show_memory_error(void*p){(void)p;assert(0);}
 static void *mini_app_launcher(void){return NULL;}
+static void *mini_app_launcher_get_app_handle(void*p,unsigned id){(void)p;(void)id;return NULL;}
+static void settings_scene_main_exit_choice(mui_msg_box_event_t event,mui_msg_box_t *box);
 static void mini_app_launcher_kill(void*p,unsigned id){(void)p;(void)id;assert(0);}
 static bool system_reboot(void){assert(0);return false;}
 static void go_sleep(void){assert(0);}
@@ -162,6 +181,12 @@ int main(void){
  assert(!settings_get_lcd_dim()&&!strcmp(list.items->row[new_row].subtext,_T(OFF)));
  activate(&list,new_row);assert(settings_get_lcd_dim()&&!strcmp(list.items->row[new_row].subtext,"5 s"));
  activate(&list,new_row);assert(!settings_get_lcd_dim()&&!saves);
+ mui_list_item_t app_item={.icon=0,.user_data=(void *)(uintptr_t)1};
+ settings_scene_app_management_list_view_on_selected(0,&list,&app_item);
+ settings_scene_app_management_list_view_on_selected(0,&list,&app_item);
+ app_item.user_data=(void *)(uintptr_t)MINI_APP_ID_SETTINGS;
+ settings_scene_app_management_list_view_on_selected(0,&list,&app_item);
+ assert(app_edits==2 && edited_app_bits==(1u<<1));
  const unsigned menus[]={SETTINGS_MAIN_MENU_VERSION,SETTINGS_MAIN_MENU_BACK_LIGHT,
   SETTINGS_MAIN_MENU_OLED_CONTRAST,SETTINGS_MAIN_MENU_LANGUAGE,SETTINGS_MAIN_MENU_SLEEP_TIMEOUT,
   SETTINGS_MAIN_MENU_STORAGE,SETTINGS_MAIN_MENU_ABOUT,SETTINGS_MAIN_MENU_APP_MANAGEMENT};
@@ -177,9 +202,9 @@ int main(void){
   SETTINGS_MAIN_MENU_FLIP_DISPLAY,SETTINGS_MAIN_MENU_SWAP_BUTTONS};
  for(unsigned i=0;i<sizeof(toggles)/sizeof(*toggles);i++){
   unsigned row=find(&list,toggles[i]);mui_list_view_set_focus(&list,row);list.scroll_offset=(row-1)*13;
-  before=data;activate(&list,row);assert(memcmp(&data,&before,sizeof(data))!=0);
+  unsigned edits=explicit_edits;before=data;activate(&list,row);assert(memcmp(&data,&before,sizeof(data))!=0);
   assert(list.focus_index==row&&list.scroll_offset==(row-1)*13);
-  activate(&list,row);assert(!memcmp(&data,&before,sizeof(data)));
+  activate(&list,row);assert(!memcmp(&data,&before,sizeof(data)) && explicit_edits==edits+2);
  }
  /* A stale index or viewport cannot leave the selected item off screen. */
  app.main_focus=65535;app.main_scroll=65535;settings_scene_main_on_enter(&app);
@@ -191,14 +216,14 @@ int main(void){
  /* All supported timeouts focus the active item. Opening and Back write nothing. */
  const unsigned values[]={0,15,30,45,60,120,180};
  for(unsigned i=0;i<7;i++){
-  data.sleep_timeout_sec=values[i];before=data;unsigned old_runtime=runtime_timeout_sets;
+  data.sleep_timeout_sec=values[i];before=data;unsigned old_runtime=runtime_timeout_sets,old_edits=explicit_edits;
   unsigned row=find(&list,SETTINGS_MAIN_MENU_SLEEP_TIMEOUT);mui_list_view_set_focus(&list,row);
   activate(&list,row);assert(list.focus_index==i&&list.items->size==8);
   assert(!memcmp(&data,&before,sizeof(data))&&runtime_timeout_sets==old_runtime);
   activate(&list,7);assert(!memcmp(&data,&before,sizeof(data))&&runtime_timeout_sets==old_runtime);
   assert(list.focus_index==row);
   activate(&list,row);activate(&list,i);assert(data.sleep_timeout_sec==values[i]);
-  assert(runtime_timeout_sets==old_runtime+1&&list.focus_index==row);
+  assert(runtime_timeout_sets==old_runtime+1&&explicit_edits==old_edits+1&&list.focus_index==row);
  }
  data.sleep_timeout_sec=17;before=data;
  activate(&list,find(&list,SETTINGS_MAIN_MENU_SLEEP_TIMEOUT));assert(list.focus_index==0);

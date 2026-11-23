@@ -12,13 +12,18 @@
 #undef assert
 #define assert(expr) do { if (!(expr)) { fprintf(stderr,"Assertion failed at %d: %s\n",__LINE__,#expr);exit(71); } } while (0)
 typedef enum {MUI_LIST_VIEW_EVENT_SELECTED,MUI_LIST_VIEW_EVENT_LONG_SELECTED} mui_list_view_event_t;
-typedef struct {void *user_data;unsigned icon;string_t text;} mui_list_item_t;
+typedef struct {void *user_data;unsigned icon;string_t text,sub_text;} mui_list_item_t;
 typedef struct {void *user_data;mui_list_item_t items[16];unsigned count;} mui_list_view_t;
-typedef struct {string_t selected_file;void *p_scene_dispatcher;mui_list_view_t *p_list_view;} app_player_t;
+typedef struct {bool loop,show_counter;} player_view_t;
+typedef struct {string_t selected_file;void *p_scene_dispatcher;mui_list_view_t *p_list_view;player_view_t *p_player_view;} app_player_t;
 #define ICON_FILE 1
 #define ICON_HOME 2
 #define ICON_ERROR 3
 #define ICON_FOLDER 4
+#define ICON_OPTION 5
+#define PLAYER_OPTION_LOOP 1
+#define PLAYER_OPTION_COUNTER 2
+#define HAS_OPTIONS @HAS_OPTIONS@
 #define PLAYER_SCENE_PLAY 1
 #define MINI_APP_ID_PLAYER 1
 #define _T(x) #x
@@ -29,15 +34,16 @@ static void mui_scene_dispatcher_next_scene(void *d,unsigned id){(void)d;assert(
 static void *mini_app_launcher(void){return NULL;}
 static void mini_app_launcher_kill(void *l,unsigned id){(void)l;(void)id;kills++;}
 static void *mui(void){return NULL;}
+static void mui_update(void*m){(void)m;}
 static void mui_show_memory_error(void *m){(void)m;errors++;}
 static void mui_list_view_clear_items(mui_list_view_t *list){
- for(unsigned i=0;i<list->count;i++) string_clear(list->items[i].text);
+ for(unsigned i=0;i<list->count;i++){string_clear(list->items[i].text);string_clear(list->items[i].sub_text);}
  list->count=0;
 }
 static bool mui_list_view_try_add_item_ext(mui_list_view_t *list,unsigned icon,const char *text,const char *sub,void *user){
- (void)sub;if(++append_calls==append_fail)return false;
+ if(++append_calls==append_fail)return false;
  assert(list->count<16);mui_list_item_t *item=&list->items[list->count++];
- item->icon=icon;item->user_data=user;string_init_set_str(item->text,text);return true;
+ item->icon=icon;item->user_data=user;string_init_set_str(item->text,text);string_init_set_str(item->sub_text,sub?sub:"");return true;
 }
 static void mui_list_view_add_item(mui_list_view_t *list,unsigned icon,const char *text,void *user){
  if(!mui_list_view_try_add_item_ext(list,icon,text,NULL,user))mui_show_memory_error(mui());
@@ -76,17 +82,28 @@ static void path_case(unsigned length,bool low,bool reuse){
  string_clear(item.text);string_clear(app.selected_file);cases++;
 }
 static void list_case(unsigned count,int read_fail,int open_fail,int close_fail,unsigned fail_append){
- mui_list_view_t list={0};app_player_t app={.p_list_view=&list};list.user_data=&app;
+ mui_list_view_t list={0};player_view_t player={0};app_player_t app={.p_list_view=&list,.p_player_view=&player};list.user_data=&app;
  entries=count;reads=closes=append_calls=0;read_error_at=read_fail;open_error=open_fail;close_error=close_fail;append_fail=fail_append;
  unsigned e=errors;player_scene_file_browser_reload_folders(&app);
- assert(closes==((open_fail||fail_append==1)?0:1));
+ unsigned fixed_rows=HAS_OPTIONS?3:1;
+ assert(closes==((open_fail||(fail_append&&fail_append<=fixed_rows))?0:1));
  if(fail_append){assert(errors==e+1&&list.count==0);}
  else if(open_fail||read_fail>=0||close_fail){
   assert(errors==e&&list.count==2&&list.items[0].icon==ICON_HOME&&list.items[1].icon==ICON_ERROR);
   assert(!strcmp(string_get_cstr(list.items[1].text),open_fail?"OPEN_FOLDER_FAILED":"READ_FILE_FAILED"));
   unsigned before=kills;player_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&list.items[0]);assert(kills==before+1);
- }else if(count==0){assert(list.count==2&&!strcmp(string_get_cstr(list.items[1].text),"NO_ANIMATION_FILES"));}
- else {assert(list.count==count+1&&list.items[1].icon==ICON_FILE);}
+ }else if(count==0){assert(list.count==fixed_rows+1&&!strcmp(string_get_cstr(list.items[fixed_rows].text),"NO_ANIMATION_FILES"));}
+ else {assert(list.count==count+fixed_rows&&list.items[fixed_rows].icon==ICON_FILE);}
+ if(HAS_OPTIONS&&!fail_append&&!open_fail&&read_fail<0&&!close_fail){
+  assert(list.items[1].icon==ICON_OPTION&&list.items[2].icon==ICON_OPTION&&!player.loop&&!player.show_counter);
+  for(unsigned option=1;option<=2;option++){
+   player_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&list.items[option]);
+   assert(!strcmp(string_get_cstr(list.items[option].sub_text),"ON"));
+  }
+  assert(player.loop&&player.show_counter);
+  player_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_LONG_SELECTED,&list,&list.items[1]);assert(player.loop);
+  player_scene_file_browser_on_selected(MUI_LIST_VIEW_EVENT_SELECTED,&list,&list.items[1]);assert(!player.loop&&player.show_counter);
+ }
  mui_list_view_clear_items(&list);cases++;
 }
 int main(int argc,char **argv){
@@ -99,7 +116,7 @@ int main(int argc,char **argv){
   list_case(0,-1,0,0,0);list_case(3,-1,0,0,0);
   list_case(3,0,0,0,0);list_case(3,2,0,0,0);list_case(0,-1,VFS_ERR_FAIL,0,0);
   list_case(0,-1,0,VFS_ERR_FAIL,0);list_case(3,-1,0,VFS_ERR_FAIL,0);
-  for(unsigned f=1;f<=4;f++)list_case(3,-1,0,0,f);
+  for(unsigned f=1;f<=(HAS_OPTIONS?6:4);f++)list_case(3,-1,0,0,f);
   list_case(0,-1,0,0,2);list_case(3,1,0,0,3);list_case(3,1,0,0,4);
  }
  mui_mem_monitor(&after);assert(before.free_size==after.free_size&&before.used_cnt==after.used_cnt);

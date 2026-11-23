@@ -1,5 +1,71 @@
 # Allmiibo Dateimanager
 
+## Normale Ausgabe 3.65.0 und LCD DE3.102 / App675
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signierte App-ZIP](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip).
+
+Der Bildsender merkt die Bildoptionen, behält eine ausgewählte Datei beim Bereichwechsel vorübergehend und ergänzt Drehung, Punktraster sowie Drag & Drop. Der lokale Playerexport erzeugt aus Bild, Demo oder Videoausschnitt eine PIXV-BIN mit Vorschau der Dateigröße, Fortschritt und Abbruch. Die fertige Datei wird ausdrücklich gespeichert und anschließend über den Dateibereich nach **E:/player/** übertragen. Eine Datei bis 128 MiB wird höchstens 30 Minuten in der geöffneten Seite gemerkt; ein Export ist auf 1 MiB begrenzt.
+
+App675 ergänzt die optionalen Player-Einstellungen **Endlosschleife** und **Bildzähler** und reduziert unnötige Neuzeichnungen im BLE-Bildempfang. Der Websender bleibt mit App673+ kompatibel. LCD/ST7567 verwendet PFS1, Z21 und S112 7.3.0; OLED bleibt ein eigener Pfad. Bildübertragung und Export starten nach einem Bereichwechsel nicht automatisch.
+
+Der Katalog vereinheitlicht bereits vorhandene Ocarina-/Fatal-Fury-Hinweise in Filter, Spielübersicht und Figurendetails. Nintendo-belegte Kirby-Zuordnungen kommen hinzu. Bestehende Übersetzungen, Shadow-Link-Einschränkung, Yoshi-Webzuordnungen und die Unterscheidung von Switch und 3DS bleiben erhalten. Die Webdaten erfinden keine Firmwaregruppen oder Geräte-Spielordner.
+
+[Bedienung und Änderungen](LIESMICH_3_65_0.txt) · [Deutsche Anleitung](public/guide/index.html#bild-video) · [English guide](public/guide/en.html#bild-video) · [Web-Prüfbericht](../docs/validation/WEB3_65_0.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [App675-Simulatorquellen](public/sources/LCD_DE3_102_App675_Simulatorquellen.zip) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_102_PFS.json).
+
+Die PFS1-Engine und die Simulator-WASM bleiben bytegleich zu App672. Die tatsächliche App675 besitzt eigene BIN-/HEX-/OTA-/SourceID-Bindungen und einen frischen ARM-Layoutnachweis. Frühere Crossmount-Prüfungen sind ausdrücklich als wiederverwendete Prüfung derselben Engine gekennzeichnet. Hardwareabnahme und native Windowsausführung werden getrennt von lokalen Softwaretests berichtet.
+
+## Archiv: normale Ausgabe 3.64.0 und LCD DE3.101 / App674
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App674 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.101-lcd-app#board=LCD) · [Signierte App-ZIP](https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.64.0/Allmiibo_Dateimanager_3_64_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app674.zip)
+
+## Bild & Video direkt im Browser
+
+[Bildsender öffnen](https://bluecyber81.github.io/pixl.js/?workspace=stream). Wähle im neuen Bereich **Bild & Video** eine lokale Bild-/Videodatei oder die vorbereitete Demo. Die Vorschau zeigt 128 × 64 monochrome Pixel; Einpassen, Ausschnitt, Strecken, Schwellwert und Inversion lassen sich einstellen. Es wird keine Mediendatei hochgeladen.
+
+Trenne die Dateiverbindung oben auf der Seite beziehungsweise die Fernbedienung. Öffne auf dem LCD **BLE-Bildempfang** (ab DE3.100/App673), klicke **Mit Bildempfang verbinden** und starte danach ausdrücklich **Bild senden**, **Video senden** oder **Demo senden**. Die voreingestellten 5 Bilder/s sind ein Zielwert; die tatsächliche Rate hängt von Funkverbindung und Bildinhalt ab. Stoppen, Ausblenden der Seite und Verlassen des Bereichs trennen den Sender. Mit der Mitteltaste am Gerät kehrst du zur normalen Bedienung zurück. Es gibt keine automatische Wiederaufnahme.
+
+App674 ergänzt eigene Menüsymbole für **Switch 2 wecken** und **BLE-Bildempfang**. Das App673-Bildprotokoll und die PFS1-Speicherengine bleiben erhalten. Der Browser-Bildsender funktioniert bereits mit App673; OLED ist dafür kein unterstütztes Ziel. Die neue Firmware und der Sender benötigen eine eigene praktische Abnahme. [Deutsche Anleitung](public/guide/index.html#bild-video) · [English guide](public/guide/en.html#bild-video).
+
+## Weitere vorhandene Funktionen
+
+Unter **Figurenkatalog → PC und Gerät vergleichen** lassen sich lokale Figurendateien, ein lokaler Ordner oder eine Sicherungs-ZIP mit einer geprüften Gerätesammlung vergleichen. Unvollständige oder veraltete Prüfungen belegen keine fehlenden Figuren. Derselbe Figurenbezeichner kann unterschiedliche UID-, Spielstand- oder Fahrzeugdaten haben. Eine lokale Auswahl wird auf Wunsch an die vorhandene Ordnersynchronisation übergeben; Vorschau, Konfliktentscheidung und Übertragung bleiben dort getrennte Schritte.
+
+Die Nintendo-Ergänzung enthält 25 Hinweise für Link’s Awakening und acht passende Yoshi-/Poochy-/Bowser-Jr.-Zuordnungen für Yoshi and the Mysterious Book. Nur das Link’s-Awakening-Link-Amiibo erhält die Shadow-Link-Zuordnung. Die acht neuen Yoshi-Zeilen gelten nur im Web; sie erfinden keine Firmwaregruppen-ID und können keinen nicht vorhandenen Geräte-Spielordner erzeugen. Die bestehenden 55 deutschen Übersetzungen bleiben unverändert.
+
+[Bedienung und Änderungen](LIESMICH_3_64_0.txt) · [Web-Prüfbericht](../docs/validation/WEB3_64_0.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3101-app674) · [Simulatorquellen und App674-Bindung](public/sources/LCD_DE3_101_App674_Simulatorquellen.zip) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_101_PFS.json)
+
+App674 verwendet dieselbe PFS1-Engine und bytegleiche Simulator-WASM wie App672. Seine tatsächliche Firmware und der neue Standarddownload sind separat an BIN, OTA, Produktionsquellen und SourceID gebunden. Der normale Dateimanager erhält die vorhandenen Sicherungs-, Fernbedienungs- und Diagnosefunktionen. Experimentelle Funksetter bleiben für die normale Firmware gesperrt. Frühere normale, private und OLED-Ausgaben behalten ihre eigenen Quellen und Pakete; praktische Geräteabnahme und native Windowsausführung werden gesondert berichtet.
+
+## Frühere Ausgaben
+
+Die folgenden Abschnitte dokumentieren den jeweiligen damaligen Stand.
+
+## Archiv: normale Ausgabe 3.62.0 und LCD DE3.99 / App672
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App672 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.99-lcd-app#board=LCD) · [Signierte App-ZIP](public/firmware/Allmiibo_LCD_DE3_99_672_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.62.0/Allmiibo_Dateimanager_3_62_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app672.zip)
+
+Diese normale Ausgabe behebt den lokalen Python-/CMD-Start über eine gemeinsame Versionsquelle und prüft den tatsächlich gepackten Portable-Lieferweg. Der Akkuverlauf ergänzt aktive Loggerzeit und Pausendauer innerhalb des sichtbaren Protokollfensters. App672 behält die vorhandenen Batch-/Digest-Pfade und erhält eine eigene exakte Paket- und Simulatorbindung. Experimentelle Funksetter bleiben für die normale Firmware gesperrt.
+
+[Bedienung und Änderungen](LIESMICH_3_62_0.txt) · [Web-Prüfbericht](../docs/validation/WEB3_62_0.json) · [Prüfung der Downloadlieferung](../docs/validation/WEB3_62_0_DOWNLOAD_DELIVERY.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/9fb9d84b51365cf33f745896243f4cd6e934e637) · [Simulatorquellen](third-party/packed-simulator-de399/SOURCE.txt) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_99_PFS.json)
+
+Die vorherigen normalen, privaten und OLED-Ausgaben behalten ihre eigenen Quellen und Pakete. Praktische Geräteabnahme und native Windowsausführung werden getrennt von den hier dokumentierten Softwareprüfungen berichtet.
+
+## Archiv: private Ausgabe 3.58.6 – LCD DE3.95 / App668
+
+Das aktuelle private LCD-Paket lässt sich am Handy über **„App668 direkt laden und prüfen“** auf der DFU-Seite öffnen. Die vollständige ZIP wird vor der getrennten Bluetooth-Auswahl mit Größe, SHA-256, Inhalt und Zielprofil geprüft. [Direkt zur App668-Auswahl](https://bluecyber81.github.io/pixl.js/dfu/web.html?v=3.58.6&package=de3.95-lcd-app).
+
+Diese Ausgabe enthält das tatsächliche signierte LCD-Prüfpaket DE3.95 / App668. Der Web-Dateimanager behebt einen hängenden Upload nach lokalem Dateileseabbruch und beendet noch laufende lokale Dateileser beim Verbindungsabbruch. Die Diagnose zeigt das von App668 gemeldete Bluetooth-Verbindungsintervall und den tatsächlich ausgehandelten RX-/TX-Funkmodus; eine 2M-Anforderung wird getrennt von ihrem Ergebnis behandelt. Eine Funkdatenrate ist keine Messung des Dateidurchsatzes.
+
+App667 bleibt mit unveränderten Paketbytes und eigenem Direktlink in der privaten Auswahl. App665 und App664 bleiben ebenfalls erkennbar. Die stabile LCD-Auswahl bleibt App662; OLED verwendet seine eigenen Profile. [Bedienung, Paketidentitäten und Prüfgrenzen](LIESMICH_LCD_APP668_PRIVAT.txt).
+
+Das neue Profil `de395` verwendet eigene [App668-Enginequellen](third-party/packed-simulator-de395/SOURCE.txt) und `lfs-capacity-de395.wasm`. Der [ARM-/ELF-Nachweis](../docs/validation/DE3_95_PFS.json) bindet die Engine an die tatsächliche App668-SourceID und deren BIN/HEX. Das [App668-Simulatorquellenpaket](public/sources/LCD_DE3_95_App668_Simulatorquellen.zip) enthält die vollständigen Quellen, Lizenzen, Compilerpins, das Reproduktionsskript und die neue Firmwarebindung. App667 behält sein separates `de394`-Profil und seine bisherigen Quellen. Die physische Geräteabnahme steht aus.
+
+## Private Ausgabe 3.58.2 für LCD DE3.92 / App665
+
+Diese lokale Ausgabe ergänzt die App665-Diagnose, die signierte App-ZIP und einen separat qualifizierten Speicherbedarfssimulator. Die vorherige private App664 und alle öffentlichen Profile bleiben enthalten. [Bedienung und Prüfgrenzen](LIESMICH_LCD_APP665_PRIVAT.txt) · [Exakte Simulatorquellen und neuer Toolchain-Pin](third-party/packed-simulator-de392/SOURCE.txt). Der Gerätetest von App665 steht noch aus.
+
+Der App664-Ausgangspunkt wurde aus dem Übergabepatch mit identischem Tree `c750b905e2639fd96bca315a6ad56b2d7a9fb333` neu lokal committed; der frühere Commit `1cc7701484de6a32a247fa3958dc600632c20344` wurde nicht rekonstruiert.
+
 ## Dateimanager 3.58.2 und LCD DE3.89 / App662
 
 Die stabile Ausgabe unterstützt die verifizierte Ordnerübertragung mit App661 und App662. Für App662 ist ein eigener Speicherbedarfssimulator enthalten. [Anleitung auf Deutsch und Englisch](LIESMICH_3_58_2.txt) · [Dateimanager und Quellcode](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2) · [LCD-App, Komplettpaket und Prüfnachweise](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89) · [Frühere Testausgabe](https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1)
@@ -329,3 +395,13 @@ Figureninformationen, keine Gerätebefehle. Die ältere lokale Route
 Die Web-Tests verwenden simuliertes Bluetooth und reale lokale WASM-Kerne. Für die stabile App DE3.65 sind Bluetooth-Auslesung, NFC, Scrollbalken und Aufwachen am LCD bestätigt. Mit DE3.66 und Web 3.40.0 wurden das Displayfoto sowie die Fortsetzung einer Sicherung mit zwei Dateien über Windows-Bluetooth bestätigt. [Geräteprüfung und Testumfang](https://github.com/bluecyber81/pixl.js/blob/main/docs/validation/DE3_66_LCD_READBACK.md). [Gerätebefund DE3.65](https://github.com/bluecyber81/pixl.js/blob/web3.39.5/docs/validation/DE3_65_LCD_READBACK.json) · [Prüfnachweise DE3.66](https://github.com/bluecyber81/pixl.js/blob/de3.66/docs/validation/DE3_66.json)
 
 Gerät & Diagnose: DE3.59 meldet den unberührten Stack ab Anwendungseinstieg. Bei älteren Versionen ist das Feld unbekannt. Unter Startzeiten lassen sich 3 bis 20 gespeicherte Berichte unterschiedlicher Neustarts derselben Firmware bei gleicher Sammlung vergleichen (Median und Minimum–Maximum). Mehrfache Abrufe desselben Starts zählen nicht mehrfach.
+
+## Archiv: normale Ausgabe 3.61.0 und LCD DE3.98 / App671
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [App671 im Web-Updater auswählen](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.98-lcd-app#board=LCD) · [Signierte App-ZIP](public/firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip)
+
+Die normale Ausgabe übernimmt die bereits in App670 erprobten Batch-/Digest-Pfade und bindet die neue LCD-Firmware App671 exakt an ihre signierten Paketbytes und den zugehörigen Speicherbedarfssimulator. Normale Link-, Start- und Speicherdiagnosen bleiben verfügbar. Experimentelle Funk- und Profilingfunktionen werden für App671 nicht angeboten.
+
+[Versionshinweise](LIESMICH_3_61_0.txt) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de398-app671) · [Simulatorquellen](third-party/packed-simulator-de398/SOURCE.txt) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_98_PFS.json)
+
+Die vorherigen Testpfade bleiben getrennt erhalten. LCD/ST7567, OLED/SH1106 und historische private Ausgaben behalten eigene Paket- und Versionsbindungen. Die physische Erprobung der neuen App671 ist von den vorhandenen App670-Gerätebelegen getrennt.

@@ -1,0 +1,11 @@
+✔ normal App671 folder publication requires its own qualified engine and never accepts a test or future identity (2.199798ms)
+✔ normal App671 qualification binds the frozen production inputs and fresh cross-mount evidence without a device claim (2.47924ms)
+✔ App671 capacity binding matches the linked firmware and the qualified simulator (3.859912ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 131.457424

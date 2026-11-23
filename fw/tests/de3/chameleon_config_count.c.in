@@ -21,7 +21,13 @@
 typedef struct { uint8_t chameleon_slot_num; } settings_data_t;
 static settings_data_t m_settings_data;
 static const settings_data_t def_settings_data = {8};
-static bool m_settings_save_allowed;
+static void settings_clear_edits(void) {}
+static bool m_settings_save_allowed,m_settings_file_absent;
+static void settings_remember(void){}
+static unsigned save_generation;
+static bool m_tag_data_loaded;
+static int32_t retry_result;
+static int32_t settings_retry_load(void) { return retry_result; }
 static settings_data_t *settings_get_data(void) { return &m_settings_data; }
 static tag_specific_type_t tag_specific_type_old2new_hf_values[][2]={TAG_SPECIFIC_TYPE_OLD2NEW_HF_VALUES};
 static tag_specific_type_t tag_specific_type_old2new_lf_values[][2]={TAG_SPECIFIC_TYPE_OLD2NEW_LF_VALUES};
@@ -66,10 +72,12 @@ static void calc_14a_crc_lut(uint8_t *p, unsigned n, uint8_t *out) {
  uint16_t crc=0;for(unsigned i=0;i<n;i++)crc=(uint16_t)((crc*31)^p[i]);memcpy(out,&crc,2);
 }
 @settings_reset@
+static int32_t fds_save_failure(uint16_t id, bool writing, int32_t code) { (void)id; (void)writing; (void)code; return -1; }
 @fds_map_file_name@
 @fds_read_config@
 @fds_write_sync@
 @tag_emulation_decode_config@
+@tag_emulation_discard@
 @tag_emulation_load_config@
 static int32_t fds_compare_sync(uint16_t id,uint16_t key,uint16_t length,const uint8_t *data) {
  unsigned stored_length=TAG_SLOT_CONFIG_SIZE(settings_get_data()->chameleon_slot_num);
@@ -108,6 +116,11 @@ static void assert_roundtrip(void) {
  assert_navigation_bounded();cases++;
 }
 int main(void) {
+ /* No slot reductions while the saved count is unknown. */
+ fixture(50,49,8);retry_result=-1;tag_slot_config_t original=slotConfig;
+ assert(tag_emulation_load_config()==-1 && !memcmp(&slotConfig,&original,sizeof(original)));
+ assert(file_size==404 && file[1]==49 && writes==0);retry_result=0;
+
  _Static_assert(sizeof(tag_slot_config_t)==404,"real firmware config ABI");
  fixture(50,49,50);
  assert(settings_reset()==0&&settings_removes==1&&m_settings_data.chameleon_slot_num==8);

@@ -42,7 +42,7 @@
         </el-dropdown-menu></template>
       </el-dropdown>
     </div>
-<el-button :type="connBtnType || 'primary'" size="small" @click="on_btn_ble_connect" :disabled="remoteActive || disconnecting || connectionDisconnectLocked || (!!browserIssue && !connected && !connecting)">{{
+<el-button :type="connBtnType || 'primary'" size="small" @click="on_btn_ble_connect" :disabled="remoteActive || streamActive || disconnecting || connectionDisconnectLocked || (!!browserIssue && !connected && !connecting)">{{
               connBtnText
             }}</el-button></div>
     </header>
@@ -78,15 +78,17 @@
       <button type="button" @click="show_workspace('backup')" :aria-current="activeWorkspace === 'backup' ? 'page' : undefined" aria-controls="backup-workspace"><span class="workspace-icon" aria-hidden="true">↓</span><span><strong>{{ $t('workflow.backupShort') }}</strong><small>{{ $t('workflow.backupBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('update')" :aria-current="activeWorkspace === 'update' ? 'page' : undefined" aria-controls="update-workspace"><span class="workspace-icon" aria-hidden="true">↻</span><span><strong>{{ $t('workflow.updateShort') }}</strong><small>{{ $t('workflow.updateBrief') }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('remote')" :aria-current="activeWorkspace === 'remote' ? 'page' : undefined" aria-controls="remote-workspace"><span class="workspace-icon" aria-hidden="true">↔</span><span><strong>{{ language === 'de_DE' ? 'Fernbedienung' : 'Remote control' }}</strong><small>{{ language === 'de_DE' ? 'Menü am Gerät bedienen' : 'Operate the device menu' }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
+      <button type="button" @click="show_workspace('stream')" :aria-current="activeWorkspace === 'stream' ? 'page' : undefined" aria-controls="stream-workspace"><span class="workspace-icon" aria-hidden="true">▧</span><span><strong>{{ language === 'de_DE' ? 'Bild & Video' : 'Image & video' }}</strong><small>{{ language === 'de_DE' ? 'Auf dem LCD anzeigen' : 'Display on the LCD' }}</small></span><span class="workspace-arrow" aria-hidden="true">↗</span></button>
       <button type="button" @click="show_workspace('device')" :aria-current="activeWorkspace === 'device' ? 'page' : undefined" aria-controls="device-overview"><span class="workspace-icon" aria-hidden="true">◉</span><span><strong>{{ language === 'de_DE' ? 'Gerät & Diagnose' : 'Device & diagnostics' }}</strong><small>{{ language === 'de_DE' ? 'RAM, Speicher und Bluetooth' : 'RAM, storage and Bluetooth' }}</small></span></button>
       <button type="button" @click="show_workspace('catalogue')" :aria-current="activeWorkspace === 'catalogue' ? 'page' : undefined" aria-controls="catalogue-workspace"><span class="workspace-icon" aria-hidden="true">◇</span><span><strong>{{ language === 'de_DE' ? 'Figurenkatalog' : 'Figure catalogue' }}</strong><small>{{ language === 'de_DE' ? 'Neuheiten, Sammlungsprüfung und Downloads' : 'New figures, collection checks and downloads' }}</small></span></button>
-      <DeviceStorageCard :connected="connected" :nickname="deviceNickname" :firmware-version="firmwareVersion" :drive="statusDriveInfo" :directory="current_dir" :entries="folderEntryCount" :locale="language" :upload-disabled="btn_disabled()" @upload="on_btn_upload" />
+      <DeviceStorageCard :connected="connected" :nickname="deviceNickname" :firmware-version="firmwareVersion" :drive="statusDriveInfo" :directory="current_dir" :entries="folderEntryCount" :locale="language" :upload-disabled="btn_disabled()" :cleanup-supported="lcdCleanupSupported" :cleanup="storageCleanup" :cleanup-observed-at="storageCleanupObservedAt" @upload="on_btn_upload" />
     </nav>
     <div class="workspace-body">
     <ScreenAwake :active="screenAwakeActive" :locale="language" />
     <p v-if="collectionBusy" class="background-work" role="status">{{ language === 'de_DE' ? 'Sammlungsprüfung oder Figurenübertragung läuft …' : 'Collection check or figure transfer running …' }} <button type="button" @click="show_workspace('catalogue')">{{ language === 'de_DE' ? 'Vorgang anzeigen' : 'Show operation' }}</button></p>
     <p v-if="searchBusy" class="background-work" role="status">{{ language === 'de_DE' ? 'Gerätesuche läuft…' : 'Device search running…' }} <button type="button" @click="show_workspace('files')">{{ language === 'de_DE' ? 'Suche anzeigen' : 'Show search' }}</button></p>
-    <details v-show="activeWorkspace === 'remote'" id="remote-workspace" ref="remoteWorkspace" class="remote-workspace"><summary>{{ language === 'de_DE' ? 'Fernbedienung · Menü und Dateien' : 'Remote control · menu and files' }}</summary><RemoteControl v-if="visitedWorkspaces.has('remote')" :locale="language" :blocked="connected || connecting || disconnecting || busy" :handoff-file-connection="on_remote_file_handoff" @active="remoteActive = $event" /></details>
+    <details v-show="activeWorkspace === 'remote'" id="remote-workspace" ref="remoteWorkspace" class="remote-workspace"><summary>{{ language === 'de_DE' ? 'Fernbedienung · Menü und Dateien' : 'Remote control · menu and files' }}</summary><RemoteControl v-if="visitedWorkspaces.has('remote')" :locale="language" :blocked="connected || connecting || disconnecting || busy || streamActive" :handoff-file-connection="on_remote_file_handoff" @active="remoteActive = $event" /></details>
+    <details v-show="activeWorkspace === 'stream'" id="stream-workspace" ref="streamWorkspace" class="workspace-panel"><summary>{{ language === 'de_DE' ? 'Bild & Video · BLE-Bildempfang' : 'Image & video · BLE image receiver' }}</summary><BleImageSender v-if="activeWorkspace === 'stream'" :locale="language" :blocked="connected || connecting || disconnecting || busy || remoteActive" @active="streamActive = $event" @sending="streamSending = $event" @exporting="streamExporting = $event" /></details>
     <section v-if="transfer && !upload_diag_visible && !zipDialog && !syncDialog" class="transfer-panel">
       <span class="visually-hidden" role="status" aria-live="polite">{{ $t('tools.' + transfer.phase) }}</span>
       <strong>{{ $t('tools.' + transfer.phase) }}</strong>
@@ -337,6 +339,7 @@
         <p v-if="nicknameStatus" role="status">{{ $t('info.' + nicknameStatus) }}</p>
       </form>
       <DiagnosticOverview v-if="visitedWorkspaces.has('device')" :connected="connected" :firmware-version="firmwareVersion" :blocked="busy && !fullDiagnosticBusy || upload_diag_visible || diagnosticsBusy" :loading="fullDiagnosticBusy" :snapshot="fullDiagnosticSnapshot" :progress="fullDiagnosticProgress" :read-clock="readClock" :interrupted="fullDiagnosticInterrupted" :locale="language" @read="read_all_diagnostics" @export="save_diagnostics" />
+      <LcdTestPanel v-if="visitedWorkspaces.has('device') && lcdTestSupported" :connected="connected" :firmware-version="firmwareVersion" :generation="sessionGeneration" :locale="language" :blocked="busy && !bleTestBusy || upload_diag_visible || diagnosticsBusy || disconnecting" :read-diagnostics="read_ble_test_diagnostics" :set-extension="set_ble_test_extension" :run-storage-test="run_lcd_storage_test" :run-read-comparison="run_lcd_read_comparison" @busy="bleTestBusy = $event" @export="open_lcd_test_report" />
       <details class="guided-check-panel" @toggle="guidedCheckOpened ||= $event.target.open">
         <summary>{{ language === 'de_DE' ? 'Geräteprüfung: Rückkehr und Aufwachen' : 'Device check: list return and wake-up' }}</summary>
         <GuidedDeviceCheck v-if="guidedCheckOpened" :snapshot="fullDiagnosticSnapshot" :firmware-version="firmwareVersion" :connected="connected" :reading="fullDiagnosticBusy" :export-busy="diagnosticsBusy" :locale="language" @export="open_guided_report" />
@@ -437,7 +440,7 @@
     <section v-show="activeWorkspace === 'catalogue'" ref="catalogueWorkspace" id="catalogue-workspace" tabindex="-1" class="extra-tools" :aria-label="$t('workflow.extraTools')"><h2>{{ $t('workflow.extraTools') }}</h2><p>{{ $t('workflow.catalogueHint') }}</p>
     <button class="catalogue-toggle" type="button" :aria-expanded="catalogueOpen" aria-controls="figure-catalogue" @click="catalogueOpen = !catalogueOpen">{{ $t('info.catalogueOpen') }}</button>
     <CollectionAssistant v-if="visitedWorkspaces.has('catalogue')" ref="figureImport" :read-clock="readClock" :connected="connected" :blocked="(busy && !collectionBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :generation="sessionGeneration" :directory="current_dir" :locale="language" :get-session="device_search_session" :get-transfer-session="collection_transfer_session" :revision="collectionRevision" :selected-figure="collectionSelected" @import-ready="$nextTick(focus_pending_figure_import)" @busy="collectionBusy = $event" @writing="collectionWriting = $event" @catalogue="on_collection_catalogue" @report="on_collection_report" @report-stale="on_collection_stale" @changed="on_collection_changed" @recovery="remember_recovery">
-      <template #backup-audit><CollectionBackupAudit :locale="language" :catalogue="collectionCatalogue" /></template>
+      <template #backup-audit><CollectionBackupAudit :locale="language" :catalogue="collectionCatalogue" :device-report="collectionReport" :device-stale="collectionStale || collectionWriting || mutating || pendingUploads > 0 || syncing || zipBusy || migrationBusy" :connected="connected" :blocked="busy || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible || remoteActive" :directory="current_dir" @open-sync="open_collection_sync" @open-device="show_workspace('files')" /></template>
     </CollectionAssistant>
     <details class="extra-tools" @toggle="gameFolderOpened = gameFolderOpened || $event.currentTarget.open">
       <summary>{{ language === 'de_DE' ? 'Spielordner auf dem LCD anlegen' : 'Create a game folder on the LCD' }}</summary>
@@ -596,9 +599,10 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.58.2 (ZIP)' : 'Windows 3.58.2 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.58.2 (ZIP)' : '3.58.2 source code (ZIP)' }}</a>
-    <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web-app675" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.65.0' : '3.65.0 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.65.0 (ZIP)' : 'Windows 3.65.0 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.65.0 (ZIP)' : '3.65.0 source code (ZIP)' }}</a>
+    <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
   </footer>
@@ -627,7 +631,7 @@ import { diagnosticSectionKeys, collectDiagnosticSnapshot, createCombinedDiagnos
 import { buildDiagnosticBoard } from "./lib/lcd-build-diagnostics.js"
 import { supportsFlashDiagnostics } from "./lib/flash-diagnostics.js"
 import { hasBatteryLabel, setBatteryLabel, batteryLabelReport, displayBuildReference, firmwareBoard, supportsFolderPublication } from "./lib/hardware-profile.js"
-import { supportsMenuDiagnostics } from "./lib/device-extra-diagnostics.js"
+import { supportsMenuDiagnostics, supportsBleTestDiagnostics, supportsLinkDiagnostics, supportsStorageGcDiagnostics, normalizeMtuDiagnostics } from "./lib/device-extra-diagnostics.js"
 import { assertPortableEntryName, assertWritableDevicePath, portableNameKey, devicePathSpace, backupPathSpace } from "./lib/portable-names.js"
 import { editMetadataFlags } from "./lib/raw-metadata.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
@@ -635,6 +639,7 @@ import { uploadNameTree, reviewUploadNames } from "./lib/upload-names.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
 import { newFolderUploadRoot, executeNewFolderUpload } from "./lib/new-folder-upload.js"
 import { HISTORY_FILENAME, folderBinding, readSyncHistory, createSyncHistory } from "./lib/sync-history.js"
+import { captureTransferLink, createBackupTransferObservation, normalizeTransferObservation } from "./lib/transfer-observation.js"
 import { createTransferMeter } from "./lib/transfer-meter.js"
 import { TAG_LENGTHS, inspectTagStructure, metadataFigureId } from "./lib/figure-info.js"
 import { directoryBreadcrumbs, checkedPageSize } from "./lib/folder-navigation.js"
@@ -651,6 +656,8 @@ import catalogueBaseline from "./data/catalogue.json"
 
 export default {
   components: {
+    BleImageSender: defineAsyncComponent(() => import('./components/BleImageSender.vue')),
+    LcdTestPanel: defineAsyncComponent(() => import('./components/LcdTestPanel.vue')),
     CurrentLcdDownloads: defineAsyncComponent(() => import('./components/CurrentLcdDownloads.vue')),
     FirmwareBoardChoice: defineAsyncComponent(() => import('./components/FirmwareBoardChoice.vue')),
     BatteryVoltageHistory: defineAsyncComponent(() => import('./components/BatteryVoltageHistory.vue')),
@@ -664,9 +671,9 @@ export default {
       diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: '', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       zipPathAdvice: null, renameDraft: '', backupReferenceLoading: false, backupResumeInfo: null, storeBackup:false, storedBusy:false, storedHead:null, storedError:'', persistStatus:'',
       zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
-      activeWorkspace: 'files', visitedWorkspaces: new Set(['files']), figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false,
+      activeWorkspace: 'files', visitedWorkspaces: new Set(['files']), figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false, streamActive: false, streamSending: false, streamExporting: false,
       renameNotice: null,
-      powerInfo: null, powerState: 'unknown', devicePanelOpen: false, startupBusy: false, displayPhotoBusy: false, guidedCheckOpened: false, guidedComparisonOpened: false,
+      powerInfo: null, powerState: 'unknown', devicePanelOpen: false, startupBusy: false, displayPhotoBusy: false, bleTestBusy: false, guidedCheckOpened: false, guidedComparisonOpened: false,
       flashInfo:null, flashState:'unknown', storageLayoutBytes:null, batteryLabelConfirmed:false, hardwareProfileError:false,
       fullDiagnosticSnapshot: null, fullDiagnosticBusy: false, fullDiagnosticProgress: null, fullDiagnosticInterrupted: false, readClock: 0,
       tableData: [], demoMode: false, catalogueOpen: false, migrationBusy: false,
@@ -722,7 +729,7 @@ export default {
   },
   computed: {
     lcdGameFolderSupported() { return buildDiagnosticBoard(this.firmwareVersion) === 'LCD'; },
-    screenAwakeActive() { return this.connected && (this.backingUp || this.fullDiagnosticBusy || this.startupBusy || this.collectionBusy || this.searchBusy || this.migrationBusy || this.syncing || this.zipBusy || this.pendingUploads > 0 || this.pendingDownloads > 0); },
+    screenAwakeActive() { return this.streamSending || this.streamExporting || this.connected && (this.backingUp || this.fullDiagnosticBusy || this.startupBusy || this.collectionBusy || this.searchBusy || this.migrationBusy || this.syncing || this.zipBusy || this.pendingUploads > 0 || this.pendingDownloads > 0); },
     catalogueObservationHistorical() { return !this.connected && !this.connecting && !this.collectionStale && !!this.collectionObservation; },
     cataloguePresenceReport() { return this.catalogueObservationHistorical ? this.collectionObservation.report : this.collectionReport; },
     catalogueObservationAt() { return this.catalogueObservationHistorical ? this.collectionObservation.checkedAt : ''; },
@@ -746,7 +753,11 @@ export default {
     elementLocale() { return getElementLocale(this.language) },
     breadcrumbs() { return directoryBreadcrumbs(this.current_dir); },
     figureInfoSupported() { return this.meta_form.row?.type === 'REG' && TAG_LENGTHS.includes(this.meta_form.row?.sizeBytes); },
-    busy() { return this.displayPhotoBusy || this.fullDiagnosticBusy || this.collectionBusy || this.previewBusy || this.searchBusy || this.startupBusy || this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
+    lcdTestSupported() { return supportsBleTestDiagnostics(this.firmwareVersion); },
+    lcdCleanupSupported() { return supportsStorageGcDiagnostics(this.firmwareVersion); },
+    storageCleanup() { return this.fullDiagnosticSnapshot?.sections.storage?.data?.cleanup || null; },
+    storageCleanupObservedAt() { return this.storageCleanup ? this.fullDiagnosticSnapshot.sections.storage.observedAt : null; },
+    busy() { return this.bleTestBusy || this.displayPhotoBusy || this.fullDiagnosticBusy || this.collectionBusy || this.previewBusy || this.searchBusy || this.startupBusy || this.migrationBusy || this.table_loading || this.infoLoading || this.mutating || this.dialogPending || this.enteringDfu || this.syncing || this.zipBusy || this.backingUp || this.pendingUploads > 0 || this.pendingDownloads > 0 },
     lastTransfer() { return this.transferHistory.at(-1) || null; },
     connectionDisconnectLocked() { return this.collectionWriting || this.migrationBusy || this.zipBusy || this.syncing || (this.safeUploads && this.pendingUploads > 0); },
     zipPageCount() { return Math.max(1, Math.ceil((this.zipPlan?.entries.length || 0) / 100)); },
@@ -1084,7 +1095,7 @@ export default {
       target.scrollIntoView({ block: 'start' });
     },
     show_workspace(name) {
-      const refs = { files: 'fileWorkspace', backup: 'backupWorkspace', update: 'updateWorkspace', remote: 'remoteWorkspace', device: 'devicePanel', catalogue: 'catalogueWorkspace' };
+      const refs = { files: 'fileWorkspace', backup: 'backupWorkspace', update: 'updateWorkspace', remote: 'remoteWorkspace', stream: 'streamWorkspace', device: 'devicePanel', catalogue: 'catalogueWorkspace' };
       const panel = Object.hasOwn(refs, name) ? this.$refs[refs[name]] : null;
       if (!panel || (this.migrationBusy && name !== 'backup')) return;
       this.figureImportFocusPending = false;
@@ -1127,11 +1138,14 @@ export default {
       if (!value || !previous || value.phase !== previous.phase || value.path !== previous.path ||
           value.complete || value.done === value.total) this.refresh_local_metrics();
     },
-    remember_transfer(kind, status, bytes = 0, verified = false) {
-      this.transferHistory.push({ kind, status, bytes, verified });
+    remember_transfer(kind, status, bytes = 0, verified = false, measurement = null) {
+      const normalized = kind === 'backup' && status === 'success' ? normalizeTransferObservation(measurement) : null;
+      this.transferHistory.push({ kind, status, bytes, verified, ...(normalized ? {measurement:normalized} : {}) });
       this.transferHistory = this.transferHistory.slice(-20);
+      return this.transferHistory.at(-1);
     },
     remember_interruption() {
+      if (this.backingUp && this._backupCompletedGeneration === this.sessionGeneration) return;
       const kind = (this.zipBusy || this.syncing) ? 'sync' : this.backingUp ? 'backup' : this.pendingDownloads ? 'download' : this.pendingUploads ? 'upload' : null;
       const intent = this._disconnectIntent?.generation === this.sessionGeneration ? this._disconnectIntent.reason : null;
       if (!kind || intent === 'dfu') return;
@@ -1204,8 +1218,13 @@ export default {
         assertSession: () => this.assert_session(generation),
         readDirectory: async path => { this.assert_session(generation); const data = this.checked(await proto.vfs_read_folder(path)); this.assert_session(generation); return data; },
         readFile: async (path, options = {}) => { this.assert_session(generation); const data = await this.read_device_file(path, {max_bytes:options.maxBytes, exact_size:options.exactBytes, firmware_version:this.firmwareVersion, progress_cb:options.onProgress}); this.assert_session(generation); return data; },
+        readFileDigest: async (path, size) => {
+          this.assert_session(generation);
+          const digest = await proto.vfs_backup_digest(path, size, this.firmwareVersion);
+          this.assert_session(generation); return digest;
+        },
         writeFile: (path, bytes, options = {}) => new Promise((resolve, reject) => {
-          try { this.assert_session(generation); proto.vfs_helper_write_file(path, new Blob([bytes]), options.onProgress || (() => {}), resolve, reject, {rawMeta128:options.rawMeta128, beforeWrite:options.beforeWrite}); }
+          try { this.assert_session(generation); proto.vfs_helper_write_file(path, new Blob([bytes]), options.onProgress || (() => {}), () => { try { this.assert_session(generation); resolve(); } catch(error) { reject(error); } }, reject, {rawMeta128:options.rawMeta128, beforeWrite:options.beforeWrite}); }
           catch(error) { reject(error); }
         }),
         rename: async (from, to) => { this.assert_session(generation); this.checked(await proto.vfs_rename(from,to)); this.assert_session(generation); },
@@ -1307,6 +1326,12 @@ export default {
         if(this._zipController===controller)this._zipController=null;
         if(generation===this.sessionGeneration){this.workflowCancelling=false;this.zipBusy=false;this.zipPlan=null;this.zipSelected=[];this.set_transfer(null);await this.refresh_current();}
       }
+    },
+    open_collection_sync(selection) {
+      if (!this.connected || this.busy || this.upload_diag_visible || this.remoteActive || this.syncDialog || this.zipDialog || this.meta_diag_visible ||
+          !Array.isArray(selection?.files) || !selection.files.length) return;
+      this.open_sync();
+      if (this.syncDialog) this.on_sync_files({ target: { files: selection.files, value: '' } }, selection.folderContents === true);
     },
     open_sync() {
       if (this.btn_disabled() || this.upload_diag_visible) return;
@@ -1632,6 +1657,71 @@ export default {
         if (this.session_current(generation)) { this.flashState = 'failed'; this.show_transfer_error(error); }
       } finally { if (generation === this.sessionGeneration) this.infoLoading = false; }
     },
+    assert_lcd_test_idle(generation) {
+      this.assert_session(generation);
+      if (!supportsBleTestDiagnostics(this.firmwareVersion)) throw Object.assign(new Error('Test firmware required.'), {code:'BLE_TEST_UNSUPPORTED'});
+      const state=proto.get_transport_diagnostics();
+      if (this.disconnecting || state.connectionState !== 'connected' || state.activeCommand !== null || state.queuedCommands || state.fileTransferActive || state.queuedFileTransfers)
+        throw Object.assign(new Error('Bluetooth operation active.'), {code:'BLE_TEST_BUSY'});
+    },
+    async read_ble_test_diagnostics() {
+      const generation=this.sessionGeneration; this.assert_lcd_test_idle(generation);
+      const data=await proto.get_mtu_diagnostics(this.firmwareVersion); this.assert_session(generation); return data;
+    },
+    async set_ble_test_extension(enabled) {
+      const generation=this.sessionGeneration; this.assert_lcd_test_idle(generation);
+      this.fullDiagnosticSnapshot=null;
+      const result=await proto.set_ble_test_extension(this.firmwareVersion,enabled); this.assert_session(generation); return result;
+    },
+    async run_lcd_storage_test() {
+      const generation=this.sessionGeneration; this.assert_lcd_test_idle(generation);
+      const firmwareVersion=this.firmwareVersion;
+      const mtu=normalizeMtuDiagnostics(await proto.get_mtu_diagnostics(firmwareVersion));
+      const observedAt=new Date().toISOString();
+      this.assert_lcd_test_idle(generation);
+      if (mtu?.schemaVersion!==3 || !mtu.experiment?.testBuild) throw Object.assign(new Error('Test capability missing.'), {code:'BLE_TEST_UNSUPPORTED'});
+      if (!mtu.sessionReady || !mtu.fileMode || !mtu.transferIdle) throw Object.assign(new Error('File session is not idle.'), {code:'BLE_TEST_BUSY'});
+      const {runLcdStorageSelfTest}=await import('./lib/lcd-storage-self-test.js'); this.assert_lcd_test_idle(generation);
+      this.fullDiagnosticSnapshot=null;
+      const radioBefore={observedAt,data:mtu};
+      const context={firmwareVersion,radioBefore,limitations:['The radio snapshot was read before the functional test. It does not establish sustained radio mode or file throughput.']};
+      try {
+        const result=await runLcdStorageSelfTest({adapters:this.transfer_adapters(generation)});
+        return {...result,...context};
+      } catch(error) {
+        if(error?.testReport) error.testReport={...error.testReport,...context};
+        throw error;
+      }
+    },
+    async run_lcd_read_comparison(options = {}) {
+      const generation=this.sessionGeneration; this.assert_lcd_test_idle(generation);
+      const firmwareVersion=this.firmwareVersion;
+      const {runLcdReadComparison}=await import('./lib/lcd-read-comparison.js');
+      this.assert_lcd_test_idle(generation);
+      try {
+      const result=await runLcdReadComparison({rootPath:this.current_dir?.startsWith('E:/')?this.current_dir:'E:/',
+        signal:options.signal,onProgress:options.onProgress,adapters:{
+          assertSession:()=>this.assert_session(generation),
+          probeBatch:()=>proto.vfs_probe_small_batch(firmwareVersion),
+          readRevision:()=>proto.vfs_small_create_revision(firmwareVersion),
+          readDirectory:async path=>this.checked(await proto.vfs_read_folder(path)),
+          readSingle:(path,size)=>proto.vfs_read_small_file(path,size),
+          readBatch:(files,revision)=>proto.vfs_read_small_batch(files,revision,firmwareVersion),
+          digestBatch:(files,revision)=>proto.vfs_digest_small_batch(files,revision,firmwareVersion),
+          readLink:()=>proto.get_mtu_diagnostics(firmwareVersion),
+          transport:()=>proto.get_transport_diagnostics()
+        }});
+      this.assert_session(generation);return {...result,firmwareVersion,applicationVersion:webVersion};
+      } catch(error) {
+        if(error?.testReport)error.testReport={...error.testReport,firmwareVersion,applicationVersion:webVersion};
+        throw error;
+      }
+    },
+    open_lcd_test_report(report) {
+      if (!report || this.diagnosticsSaving || this.diagnosticsCopying) return;
+      this.diagnosticsJson=JSON.stringify(report,null,2); this.diagnosticsFilename=report.kind==='lcd-small-read-comparison'?'Allmiibo-LCD-App670-Kurzvergleich.json':'Allmiibo-LCD-Test1.json';
+      this.diagnosticsStatus='info.diagnosticReady'; this.diagnosticsDialog=true;
+    },
     async read_all_diagnostics() {
       if (!this.connected || this.busy || this.upload_diag_visible || this.diagnosticsBusy) return;
       const generation=this.sessionGeneration;
@@ -1672,9 +1762,13 @@ export default {
                 const result=await proto.vfs_storage_layout('E'); this.assert_session(generation);
                 if(result?.status!==255) layout=this.checked(result);
               }
+              if (info.backend===3 && supportsStorageGcDiagnostics(this.firmwareVersion)) {
+                const cleanup=await proto.get_storage_gc_diagnostics(this.firmwareVersion); this.assert_session(generation);
+                return {info,layout,cleanup};
+              }
               return {info,layout};
             }),
-            mtu:read(()=>proto.get_mtu_diagnostics?.()), ui:read(()=>proto.get_ui_diagnostics?.()),
+            mtu:read(()=>proto.get_mtu_diagnostics?.(this.firmwareVersion)), ui:read(()=>proto.get_ui_diagnostics?.()),
             ...(includeBuild ? {build:read(()=>proto.get_lcd_build_diagnostics(this.firmwareVersion))} : {}),
             ...(includeFlash ? {flash:read(()=>proto.get_flash_diagnostics(this.firmwareVersion))} : {}),
             ...(includeMenu ? {menu:read(()=>proto.get_menu_diagnostics(this.firmwareVersion))} : {})
@@ -1810,7 +1904,7 @@ export default {
       try { return await action(); }
       finally { if (generation === this.sessionGeneration) this.dialogPending = false; }
     },
-    assert_session(generation) { if (!this.session_current(generation)) throw new Error(this.$t('tools.sessionChanged')); },
+    assert_session(generation) { if (!this.session_current(generation)) throw Object.assign(new Error(this.$t('tools.sessionChanged')), {code:'SESSION_CHANGED'}); },
     read_device_file(path, options = {}) {
       return new Promise((resolve, reject) => {
         try { proto.vfs_helper_read_file(path, resolve, reject, undefined, options); }
@@ -1899,7 +1993,7 @@ export default {
       if (persistent) this.storedError = '';
       // A previous ZIP remains downloadable if this attempt is interrupted.
       if (this.lastBackup) this.lastBackup.sessionGeneration = null;
-      this.backingUp = true; this.cancellingBackup = false;
+      this.backingUp = true; this.cancellingBackup = false; this._backupCompletedGeneration = null;
       const controller = new AbortController(); this._backupController = controller;
       this.set_transfer({ phase: 'listing', path: rootPath, done: 0, total: null });
       try {
@@ -1913,6 +2007,13 @@ export default {
           this.backupResumeInfo = null;
           checkpointState = this._backupCheckpoint = freshCheckpoint;
         }
+        // Read only at the operation boundaries; never inject diagnostic commands
+        // into listing, file reads, verification or archive creation.
+        const linkReader=supportsLinkDiagnostics(context.firmwareVersion) ? () => proto.get_mtu_diagnostics(context.firmwareVersion) : undefined;
+        const before=linkReader ? await captureTransferLink({read:linkReader,isCurrent:()=>this.session_current(generation)})
+          : {state:'unavailable',observedAt:new Date().toISOString(),data:null,errorCode:null};
+        this.assert_session(generation); if (controller.signal.aborted) return;
+        const measuredStartedAt=new Date().toISOString();
         const run = storedBackup => createBackup({ ...context, ...this._backupExportOptions, exporterVersion: webVersion, progressIntervalMs: 100, readTransportStats: proto.get_transport_diagnostics, checkpointState, storedBackup, signal: controller.signal,
           readStorageRevision: async () => {
             this.assert_session(generation);
@@ -1929,6 +2030,16 @@ export default {
             const digest = await proto.vfs_backup_digest(path, size, this.firmwareVersion);
             this.assert_session(generation); return digest;
           },
+          readFilesBatch: typeof proto.vfs_read_small_batch === 'function' ? async (files, {revision}) => {
+            this.assert_session(generation);
+            const result = await proto.vfs_read_small_batch(files, revision, context.firmwareVersion);
+            this.assert_session(generation); return result;
+          } : undefined,
+          readFileDigestsBatch: typeof proto.vfs_digest_small_batch === 'function' ? async (files, {revision}) => {
+            this.assert_session(generation);
+            const result = await proto.vfs_digest_small_batch(files, revision, context.firmwareVersion);
+            this.assert_session(generation); return result;
+          } : undefined,
           readFile: async (path, options) => {
             this.assert_session(generation);
             const bytes = await this.read_device_file(path, { max_bytes: options.maxBytes, exact_size: options.maxBytes, firmware_version: this.firmwareVersion, progress_cb: options.onProgress });
@@ -1943,7 +2054,15 @@ export default {
         const result = persistent ? await (await import('./lib/stored-backup.js')).withStoredBackup(context, expected, run) : await run();
         this.assert_session(generation); this.lastBackup = { ...result, sessionGeneration: generation, savedConfirmed: false, downloadRequested: false, saving: false, saveStatus: '' };
         if (result.storedCompletionError) this.storedError = this.stored_backup_problem(result.storedCompletionError);
-        this.remember_transfer('backup', 'success', result.manifest.bytes || 0);
+        const measuredCompletedAt=new Date().toISOString();
+        this._backupCompletedGeneration=generation;
+        const receipt=this.remember_transfer('backup', 'success', result.manifest.bytes || 0);
+        const after=linkReader ? await captureTransferLink({read:linkReader,isCurrent:()=>this.session_current(generation)})
+          : {state:'unavailable',observedAt:new Date().toISOString(),data:null,errorCode:null};
+        if (!this.session_current(generation)) return; // Keep the completed ZIP, never attach to a replacement connection.
+        const measurement=createBackupTransferObservation({manifest:result.manifest,profile:result.profile,
+          startedAt:measuredStartedAt,completedAt:measuredCompletedAt,before,after});
+        if (measurement) receipt.measurement=measurement;
         // Keep the archive in memory until the user's explicit Save click.
         // This preserves browser activation and allows a cancelled save to retry.
         this.$message({ type: 'success', message: this.$t('tools.backupReady', { files: result.manifest.files }) });
@@ -1957,6 +2076,7 @@ export default {
         }
       } finally {
         if (this._backupController === controller) this._backupController = null;
+        if (this._backupCompletedGeneration === generation) this._backupCompletedGeneration = null;
         if (persistent) await this.refresh_stored_backup(true);
         else if (this._backupCheckpoint === checkpointState) this.refresh_backup_checkpoint();
         if (generation === this.sessionGeneration) { this.backingUp = false; this.cancellingBackup = false; this.set_transfer(null); }
@@ -2050,14 +2170,14 @@ export default {
       this.$message({ type: 'error', message });
     },
     on_remote_file_handoff(session) {
-      if (this.connected || this.connecting || this.disconnecting || this.busy) throw new Error('File connection is busy');
+      if (this.connected || this.connecting || this.disconnecting || this.busy || this.streamActive) throw new Error('File connection is busy');
       if (this.demoMode) this.toggle_preview();
       const accepted = pixl.adopt_remote_connection(session);
       if (accepted) this.show_workspace('files');
       return accepted;
     },
     on_btn_ble_connect() {
-      if (this.remoteActive) return;
+      if (this.remoteActive || this.streamActive) return;
       if (this.disconnecting) return;
       if (this.connectionDisconnectLocked) { this.cancel_transfer(); return; }
       if (this.connected || this.connecting) {
@@ -2856,6 +2976,11 @@ export default {
     proto.init();
 
     this._unsubscribeLanguage = window.AllmiiboLanguage.subscribe(this.apply_language);
+    try {
+      if (new URL(window.location.href).searchParams.get('workspace') === 'stream') {
+        this.$nextTick(() => this.show_workspace('stream'));
+      }
+    } catch { /* A missing or non-URL location leaves the regular file workspace selected. */ }
   },
   beforeUnmount() {
     this._activeFolderUpload = null; this.syncResume = null;

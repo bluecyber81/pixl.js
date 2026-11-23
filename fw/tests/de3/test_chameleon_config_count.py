@@ -20,6 +20,8 @@ class ChameleonConfigCountTests(unittest.TestCase):
             code = code.replace('@' + name + '@', support.definition(tag, name, result))
         for name, result in [('fds_map_file_name', 'void'), ('fds_read_config', 'int32_t'), ('fds_write_sync', 'bool')]:
             code = code.replace('@' + name + '@', support.definition(port, name, result))
+        discard = support.definition(tag, 'tag_emulation_discard', 'void') if 'void tag_emulation_discard(' in tag else ''
+        code = code.replace('@tag_emulation_discard@', discard)
         code = code.replace('@settings_reset@', support.definition(settings, 'settings_reset', 'int32_t'))
         if os.environ.get('PIXL_CONFIG_COUNT_REPRO') == '1':
             code = '#define EXPECT_OLD_CORRUPTION 1\n' + code

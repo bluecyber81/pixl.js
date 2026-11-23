@@ -1,0 +1,21 @@
+{
+  "source": "actual C serializer",
+  "device_access": false,
+  "command": 5,
+  "requestHex": "01",
+  "responsePayloadHex": "4d5455440207fa00fa00fa00f700070010000000900102020100000000000000",
+  "expected": {
+    "schemaVersion": 2,
+    "effectiveAttMtu": 250,
+    "nextConnectionAttMtu": 250,
+    "configuredMaxAttMtu": 250,
+    "gattValueCapacity": 247,
+    "connectionIntervalUnits": 16,
+    "slaveLatency": 0,
+    "supervisionTimeoutUnits": 400,
+    "rxPhy": 2,
+    "txPhy": 2,
+    "phyRequestAttempts": 1,
+    "lastPhyRequestResult": 0
+  }
+}

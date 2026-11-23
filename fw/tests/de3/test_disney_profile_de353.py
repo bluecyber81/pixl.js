@@ -76,7 +76,42 @@ class DisneyProfileTests(unittest.TestCase):
         event = definition(src, 'chameleon_scene_menu_on_event', 'void')
         enter = definition(src, 'chameleon_scene_menu_on_enter', 'void')
         self.assertRegex(event, r'case CHAMELEON_MENU_DISNEY_PROFILE:\s*chameleon_scene_disney_profile_confirm\(app\);\s*break;')
-        self.assertIn('(void *)CHAMELEON_MENU_DISNEY_PROFILE', enter)
+        # Exercise the fixed rows through the same helper that passes actions
+        # to list selection. Dynamic card fields above them are not involved.
+        scenes = FW / 'application/src/app/chameleon/scene'
+        header = (scenes / 'chameleon_scene.h').read_text()
+        row_type = re.search(r'typedef struct \{[^{}]+\} chameleon_menu_row_t;', header).group()
+        action_enum = re.search(r'typedef enum \{[^{}]+\} chameleon_menu_item_t;', src).group()
+        add_rows = definition((scenes / 'chameleon_scene.c').read_text(), 'chameleon_add_menu_rows', 'void')
+        fixed_rows = enter[enter.index('static const chameleon_menu_row_t'):
+                           enter.index('mui_list_view_set_selected_cb(')]
+        compile_actual(self, f'''
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "{FW / 'application/src/i18n/string_id.h'}"
+#include "{FW / 'application/src/mui/mui_icons.h'}"
+{row_type}
+{action_enum}
+typedef struct {{ unsigned profiles; }} mui_list_view_t;
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+#define getLangString(id) (id)
+static void mui_list_view_add_item(mui_list_view_t *list, unsigned icon, L_StringID label, void *action) {{
+    bool profile = label == _L_APP_CHAMELEON_DISNEY_PROFILE;
+    assert(profile == ((uintptr_t)action == CHAMELEON_MENU_DISNEY_PROFILE));
+    if (profile) list->profiles++;
+}}
+{add_rows}
+int main(void) {{
+    mui_list_view_t list = {{0}};
+    struct {{ mui_list_view_t *p_list_view; }} state = {{&list}}, *app = &state;
+    {fixed_rows}
+    assert(list.profiles == 1);
+    puts("PASS visible Disney profile row carries its confirmation action");
+    return 0;
+}}
+''')
         self.assertNotIn('tag_helper_apply_disney_profile', enter)
         with (FW/'data/i18n.csv').open(encoding='utf8', newline='') as file:
             rows = list(csv.DictReader(file))

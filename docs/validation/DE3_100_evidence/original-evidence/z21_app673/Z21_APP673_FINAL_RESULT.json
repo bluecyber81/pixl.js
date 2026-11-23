@@ -1,0 +1,167 @@
+{
+  "schema": 1,
+  "observedAt": "2026-11-22T17:51:00.777559+00:00",
+  "status": "PASS_WITH_EXPLICIT_LOCAL_LSAN_LIMITATION",
+  "validForFinalCorrectedApp673": true,
+  "board": "LCD/ST7567 nRF52832",
+  "baseCommit": "96cc712f67b8d1376b1f86b30034da1209f82e0e",
+  "workingBranch": "work/lcd-de3100-app673",
+  "applicationSourceIdSha256": "33d41ccf675ff8b359cd616fbc66376de9df76d73f0896a61ab9ea0ce7a50778",
+  "application": {
+    "counter": 673,
+    "bytes": 361080,
+    "binarySha256": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+    "otaBytes": 361681,
+    "otaSha256": "1df27f31fd62380019e17d7d661d9b055b2bbae9e649423cc74f664db0338378",
+    "initSha256": "0dffe35c98c0add32cd04eeb3d222bb5296edd421ef89e31cf28a91daa90439d",
+    "inputBinding": "APP673_FINAL_INPUT_BINDING.json"
+  },
+  "previousApplication": {
+    "counter": 672,
+    "binarySha256": "3d36f2d879c3c338369464bd106dca3d179552d920705473f5f97aaa7ae6b6e7",
+    "otaSha256": "4ba3ccc2770e49998d4e2e5dcaecb43eae3b8d001b5a96929a48688ddc4f1704",
+    "binding": "PREVIOUS_APP672_READBACK.json"
+  },
+  "bootloader": {
+    "counter": 21,
+    "reproduced": true,
+    "payloadBytes": 26932,
+    "payloadSha256": "bca730da5b5c8c4201e6a1f36f3484661b783fff3923a4414ad33f6d082e876c",
+    "paddedRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+    "flashHeadroomBytes": 1740,
+    "hexSha256": "73c41cb59738ff988d419af9030df0ceda440c2a53614f912b3fb6d623df01c4",
+    "elfSha256": "a46ded28ef09d5fa8acff59fec4476d52afd0d6e213d5d414d76fe5b20921185",
+    "elfPhysicalBootPayloadMatches": true,
+    "sourceFilesChecked": 23,
+    "testFilesChecked": 61,
+    "sourceAndTestBindingsStillMatch": true,
+    "sourceProductAndCheckerFilesUnchanged": true,
+    "buildResult": "build/BUILD_RESULT.json"
+  },
+  "softdevice": {
+    "version": "S1127.3.0",
+    "fwid": "0x0126",
+    "archiveSha256": "af3e558dd752311fb71e3623d12c37711b9664d485b8bc5cd9164620c0ae1ca4",
+    "hexSha256": "92bcdc1aa51142ed212bb0dbcdf57093a1bad391f1cf5adca60effe14bdb7ec6",
+    "binding": "SOFTDEVICE_READBACK.json",
+    "vendorArchiveUnmodified": true
+  },
+  "armCases": {
+    "cryptoHashCrcCasesPassed": 7,
+    "cryptoHashCrcCasesTotal": 7,
+    "cases": [
+      {
+        "name": "signed init",
+        "expected": 1,
+        "actual": 1,
+        "passed": true
+      },
+      {
+        "name": "changed signature",
+        "expected": 5,
+        "actual": 5,
+        "passed": true
+      },
+      {
+        "name": "changed init",
+        "expected": 5,
+        "actual": 5,
+        "passed": true
+      },
+      {
+        "name": "full BIN hash",
+        "expected": 1,
+        "actual": 1,
+        "passed": true
+      },
+      {
+        "name": "changed BIN hash",
+        "expected": 0,
+        "actual": 0,
+        "passed": true
+      },
+      {
+        "name": "boot CRC",
+        "expected": 1,
+        "actual": 1,
+        "passed": true
+      },
+      {
+        "name": "changed BIN boot CRC",
+        "expected": 0,
+        "actual": 0,
+        "passed": true
+      }
+    ],
+    "initBankCasesPassed": 2,
+    "initBankCasesTotal": 2,
+    "initStates": [
+      "App672 present",
+      "empty application bank"
+    ],
+    "actualLinkedArmCode": true,
+    "unicornVersion": "2.1.4",
+    "cryptoResult": "application_final/Z21_APP673_CRYPTO.json",
+    "initResult": "application_final/Z21_APP673_INIT_ACCEPTANCE.json",
+    "run": "APPLICATION_FINAL_RUN.json"
+  },
+  "resume": {
+    "passed": true,
+    "scope": "Native C data phase after accepted init; modeled flash/BLE/reset; actual current application bytes",
+    "payloadBytes": 361080,
+    "cutOffsets": [
+      40,
+      180264,
+      360488
+    ],
+    "resumeOffsets": [
+      0,
+      131072,
+      327680
+    ],
+    "cutKinds": [
+      "link",
+      "link",
+      "cold-restart"
+    ],
+    "checkpointCount": 5,
+    "additionalPageErases": 10,
+    "duplicateExecuteExtraErases": 0,
+    "finalCrc32": 301201889,
+    "allFinalBytesCompared": true,
+    "modeledLinkCutsDuringCheckpoint": 5,
+    "modeledCheckpointPowerCuts": 455,
+    "modeledAdmissionOrCompletionFailures": 8,
+    "result": "Z21_APP673_RESUME_FINAL.json",
+    "run": "RESUME_FINAL_RUN.json"
+  },
+  "sanitizers": {
+    "address": "PASS",
+    "undefined": "PASS",
+    "leak": "UNAVAILABLE_LOCAL_PTRACE",
+    "leakCheckEnabledInResume": false,
+    "actualDefaultControl": "SANITIZER_DEFAULT_CONTROL.json",
+    "actualDefaultControlLog": "sanitizer_default_control/sanitizer-control.log",
+    "explicitCheckerFlag": "--no-leak-check",
+    "testDefaultsOrSourcesChanged": false,
+    "successfulLocalLeakCheckClaim": false
+  },
+  "supersededInput": {
+    "validForFinalAcceptance": false,
+    "record": "superseded_run_1/SUPERSEDED.json",
+    "oldSourceId": "90246372932e34239615fc4fcccba145d21c459545b85fdfc1a2040f65302cdb",
+    "oldBinarySha256": "5cee147a15fef420cd6b6fcdcc004735020a04cd1eae9cd3452a6ce97beb1821",
+    "reason": "Makefile had to restrict five miniapp sources to BOARD_LCD. Final corrected inputs were tested again from scratch."
+  },
+  "physicalDeviceAccess": false,
+  "privateSigningKeysReadOrModified": false,
+  "signedPackageProducedByThisAgent": false,
+  "limits": [
+    "This is software validation using actual ARM bootloader code and a native C transfer model. Hardware/radio/flash operations are modeled.",
+    "No complete hardware acceptance or device-measured firmware hash.",
+    "No new complete Z21 test suite; requested seven crypto/CRC cases, two init/bank cases, and current application resume only.",
+    "No local LSan success; actual default control failed under ptrace.",
+    "The first withdrawn application input is excluded from final acceptance."
+  ],
+  "next": "Root merges these final-input-specific results into the integrated App673 qualification and delivery. No new source or build changes required by this subtask."
+}

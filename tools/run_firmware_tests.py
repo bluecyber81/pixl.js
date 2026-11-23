@@ -14,6 +14,15 @@ import tempfile
 from build_lcd import SDK_ARCHIVE_SHA256, make_archive, sha256, source_hashes
 
 
+# These frozen references are consumed by firmware compatibility/remote tests.
+# Copy only the named inputs, never the browser build, dependency tree or keys.
+TEST_REFERENCE_FILES = tuple(
+    "web/third-party/packed-simulator-de355/" + path
+    for path in ("core/packed_fs.c", "core/packed_fs.h", "littlefs/lfs.c",
+                 "littlefs/lfs.h", "littlefs/lfs_util.c", "littlefs/lfs_util.h")
+) + ("web/tests/fixtures/remote-lcd-de374-vectors.txt",)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--sdk-archive', type=Path, required=True)
@@ -43,11 +52,18 @@ def main():
             parser.error('Preserve previous evidence; choose a new --report path.')
     report.parent.mkdir(parents=True, exist_ok=True)
     before = source_hashes(root / 'fw')
+    references = {name: sha256(root / name) for name in TEST_REFERENCE_FILES}
     with tempfile.TemporaryDirectory(prefix='allmiibo-host-') as tmp:
         folder = Path(tmp)
         make_archive(root, folder / 'source.tar')
         with tarfile.open(folder / 'source.tar') as archive:
             archive.extractall(folder, filter='data')
+        for name, digest in references.items():
+            copied = folder / name
+            copied.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(root / name, copied)
+            if sha256(copied) != digest:
+                raise RuntimeError('Test reference changed while copying: ' + name)
         sdk = folder / 'sdk'
         sdk.mkdir()
         with tarfile.open(args.sdk_archive) as archive:
@@ -64,7 +80,8 @@ def main():
                 log.write(line); log.flush()
                 print(line, end='', flush=True)
             status = child.wait()
-    unchanged = before == source_hashes(root / 'fw')
+    unchanged = (before == source_hashes(root / 'fw') and
+                 references == {name: sha256(root / name) for name in TEST_REFERENCE_FILES})
     metadata = {'observedUTC': datetime.now(timezone.utc).isoformat(), 'python': sys.version,
                 'profile': args.profile, 'unicorn': unicorn_version, 'deviceAccess': False,
                 'isolation': 'temporary Linux source and SDK copies',
@@ -72,6 +89,7 @@ def main():
                 'armCompiler': (subprocess.check_output(['arm-linux-gnueabihf-gcc', '--version'], text=True).splitlines()[0]
                                 if 'arm-linux-gnueabihf-gcc' in commands else None),
                 'sdkArchiveSHA256': SDK_ARCHIVE_SHA256, 'productionInputsUnchanged': unchanged,
+                'frozenTestReferences': references,
                 'productionInputs': before, 'exitCode': status}
     report.with_suffix('.environment.json').write_text(json.dumps(metadata, indent=2) + '\n', encoding='utf-8')
     return status if unchanged else 1

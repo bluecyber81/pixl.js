@@ -1,0 +1,14 @@
+{
+  "command": "node --test tests/device-info.test.mjs tests/update-check.test.mjs tests/launcher.test.cjs tests/dfu-page.test.cjs tests/private-lcd-669.test.mjs tests/private-lcd-670.test.mjs tests/ui-modern.test.cjs",
+  "exitCode": 0,
+  "counts": {
+    "tests": 327,
+    "pass": 325,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 2,
+    "todo": 0
+  },
+  "logSha256": "c36c916d508317e1ea07b4bba22b467e9480c969f57cddef0bc2e728f3850cc9",
+  "scope": "Version, launcher, DFU, device report, update check and App integration regression suite"
+}

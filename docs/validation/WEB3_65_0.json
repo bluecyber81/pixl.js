@@ -1,0 +1,523 @@
+{
+  "schema": 1,
+  "date": "2026-11-23",
+  "recordedAtUtc": "2026-11-23T14:13:41.879646+00:00",
+  "version": "3.65.0",
+  "channel": "normal",
+  "branch": "web-app675",
+  "status": "published-and-software-qualified",
+  "baselineCommit": "b364222005f493a7d898560592fe1bd1423fa510",
+  "qualificationCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "firmware": {
+    "board": "LCD/ST7567",
+    "version": "2.22.0-DE3.102",
+    "counter": 675,
+    "productionCommit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+    "releaseHead": "ad4a328551e9c138de2e75be6d7ab8ef06c74b7b",
+    "sourceId": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+    "softwareCiRun": 45169716170,
+    "hardwareAcceptance": "pending",
+    "finalMetadataCiRun": 45171665915
+  },
+  "node": {
+    "tests": 2273,
+    "pass": 2270,
+    "fail": 0,
+    "skipped": 3,
+    "log": "web_full_node_release.log",
+    "logSha256": "1def6512aca6ba02010c32c169a980bbdda50e53e752205d024544ef328cdb61",
+    "node": "24.22.3",
+    "npm": "11.19.1",
+    "platform": "linux",
+    "skipReasons": [
+      "Two native Windows launcher cases are covered separately by Windows CI.",
+      "One optional historical Nordic DFU ZIP fixture is absent."
+    ],
+    "counting": "Targeted subsets are included where applicable; they are not added to this total.",
+    "executionScope": "original local qualification; public CI uses Node 26.13.0 and is recorded under ci.web"
+  },
+  "distributions": {
+    "root": {
+      "tests": 57,
+      "pass": 57,
+      "fail": 0,
+      "skipped": 0,
+      "log": "web_dist_root_final.log",
+      "logSha256": "2a44d05d2d49be26100e1b7088e2cc0ffd869c38d8b7027c0c2fc7d6b4f2b88d",
+      "releaseManifest": {
+        "schema": 1,
+        "application": "allmiibo-dateimanager",
+        "version": "3.65.0",
+        "base": "/",
+        "channel": "normal",
+        "packageManifestSha256": "3d64af5e5ad1e6c17b665c4d860c8ea4cd84c963523bad45a0ea597c4d304175",
+        "firmware": {
+          "id": "de3.102-lcd-app",
+          "version": "2.22.0-DE3.102",
+          "counter": 675,
+          "path": "firmware/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+          "bytes": 362493,
+          "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746"
+        }
+      },
+      "releaseManifestSha256": "93949dace6d6be3a6ee36ee412b7233c1794524f9e626032d035073a7e1c8515"
+    },
+    "pages": {
+      "tests": 57,
+      "pass": 57,
+      "fail": 0,
+      "skipped": 0,
+      "log": "web_build_pages.log",
+      "logSha256": "6ad5c32ee56989fadf8072fe4cb9f192cdde8001a05770846a5e32bd5505332e",
+      "releaseManifest": {
+        "schema": 1,
+        "application": "allmiibo-dateimanager",
+        "version": "3.65.0",
+        "base": "/pixl.js/",
+        "channel": "normal",
+        "packageManifestSha256": "3d64af5e5ad1e6c17b665c4d860c8ea4cd84c963523bad45a0ea597c4d304175",
+        "firmware": {
+          "id": "de3.102-lcd-app",
+          "version": "2.22.0-DE3.102",
+          "counter": 675,
+          "path": "firmware/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+          "bytes": 362493,
+          "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746"
+        }
+      },
+      "releaseManifestSha256": "f7f4fed0d12fd80dd3574b8b18dd7e8a20e4dbf7ac35a013ca83e604cb31441b"
+    }
+  },
+  "linuxLauncher": {
+    "passed": true,
+    "tests": 26,
+    "platform": "linux",
+    "nativeWindowsExecuted": false,
+    "logSha256": "81148dd6087c01dfbcb7b89e2f17defdb08f900406ab5718a80fbdee0a423ad7"
+  },
+  "portable": {
+    "schema": 1,
+    "version": "3.65.0",
+    "archive": "Allmiibo_Dateimanager_3_65_0_Portable.zip",
+    "bytes": 12444903,
+    "sha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd",
+    "files": 315,
+    "portableManifestSha256": "e051fbc10f186f46cd0a4e9317b8dd39259d3e5f776f2c785858b79bc937773d",
+    "nativeExecutable": false,
+    "verification": {
+      "path": "PORTABLE_VERIFICATION.json",
+      "sha256": "f783623a9b3f7e35ac2cff191a775238ee3fea293a56dfa2052dc406e44bba45"
+    },
+    "liveVerification": "docs/validation/WEB3_65_0_evidence/HTTP_STRICT_VALIDATION.json"
+  },
+  "portableVerification": {
+    "schema": 1,
+    "passed": true,
+    "version": "3.65.0",
+    "archiveSha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd",
+    "verifiedFiles": 313,
+    "normalControllerStartReuseStop": true,
+    "downloads": [
+      {
+        "path": "index.html",
+        "bytes": 767,
+        "sha256": "02dd39b11d5cbb281ca6383859356d4d971105b722a8d64bb3a8386f2999155d"
+      },
+      {
+        "path": "release.json",
+        "bytes": 482,
+        "sha256": "93949dace6d6be3a6ee36ee412b7233c1794524f9e626032d035073a7e1c8515"
+      },
+      {
+        "path": "firmware/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+        "bytes": 362493,
+        "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746"
+      }
+    ],
+    "platform": "linux",
+    "nativeWindowsExecuted": false,
+    "limits": [
+      "Loopback HTTP and the real Python controller only; no device or Bluetooth transfer.",
+      "CMD/PowerShell native execution is covered separately by the Windows CI job."
+    ]
+  },
+  "sender": {
+    "targetedTests": 74,
+    "failed": 0,
+    "actualCHeaderParser": true,
+    "actualCPlayerDrawing": true,
+    "pixelCases": 144,
+    "pixelComparisons": 1179648,
+    "physicalDeviceAccess": false,
+    "proof": "WEB3_65_0_evidence/SENDER_PIXELS.json"
+  },
+  "catalogue": {
+    "proof": "WEB_CATALOGUE_20261123.json",
+    "figures": 956,
+    "associations": 1414,
+    "groups": 86,
+    "ordinaryOcarinaDetailNotesAligned": 33,
+    "fatalFuryDetailNotesAligned": 10,
+    "additionalKirbyAssociations": 15,
+    "correction": "Ocarina and Fatal Fury already existed in filters and guides; this release aligns figure details and avoids duplicate guide text."
+  },
+  "firmwareIntegration": {
+    "targetedTests": 452,
+    "failed": 0,
+    "proof": "APP675_WEB365_BINDING.json",
+    "armLayoutsFresh": 4,
+    "crossMountCases": 6,
+    "crossMountScope": "Historical App672 results reused only for the byte-identical engine; not rerun."
+  },
+  "ci": {
+    "web": {
+      "passed": 2270,
+      "runId": 45184306115,
+      "attempt": 1,
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45184306115",
+      "sourceCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+      "sourceTree": "2efcb146aabdbbedd3d717a888f007e91435923c",
+      "webProductTree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+      "total": 2273,
+      "failed": 0,
+      "skipped": 3,
+      "rootDistributionPassed": 57,
+      "pagesDistributionPassed": 57,
+      "linuxLauncherPython": {
+        "total": 26,
+        "passed": 26,
+        "skipped": 0,
+        "failed": 0,
+        "seconds": 4.841
+      },
+      "windowsLauncherPython": {
+        "total": 26,
+        "passed": 24,
+        "skipped": 2,
+        "failed": 0,
+        "seconds": 14.927,
+        "skipDetails": [
+          "test_linux_bind_behavior_is_preserved (__main__.LauncherTests.test_linux_bind_behavior_is_preserved) ... skipped 'Linux/POSIX socket behavior check'",
+          "test_real_direct_start_ctrl_c_and_unchanged_state (__main__.LauncherTests.test_real_direct_start_ctrl_c_and_unchanged_state) ... skipped 'POSIX signal integration; native Windows Ctrl+C is not tested here'"
+        ],
+        "scope": "24 passed out of 26 discovered cases; two POSIX-only cases are covered by the Linux launcher run."
+      },
+      "nativeWindowsPowershellPassed": 4,
+      "evidence": "docs/validation/WEB3_65_0_evidence/CI_SUMMARY.json",
+      "scope": "Actual successful GitHub CI on the public Web source commit. The inherited firmware regression subset is not a full App675 or combined-main qualification.",
+      "qualificationPassed": true
+    },
+    "nativeWindows": {
+      "passed": true,
+      "jobId": 137725846959,
+      "python": {
+        "total": 26,
+        "passed": 24,
+        "skipped": 2,
+        "failed": 0,
+        "seconds": 14.927,
+        "skipDetails": [
+          "test_linux_bind_behavior_is_preserved (__main__.LauncherTests.test_linux_bind_behavior_is_preserved) ... skipped 'Linux/POSIX socket behavior check'",
+          "test_real_direct_start_ctrl_c_and_unchanged_state (__main__.LauncherTests.test_real_direct_start_ctrl_c_and_unchanged_state) ... skipped 'POSIX signal integration; native Windows Ctrl+C is not tested here'"
+        ],
+        "scope": "24 passed out of 26 discovered cases; two POSIX-only cases are covered by the Linux launcher run."
+      },
+      "powershellNode": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 14484.6913,
+        "testNames": [
+          "local server identity, routes and authenticated self-stop reject wrong token, Origin and Host",
+          "Windows launchers keep two ports independent, reject altered tokens and preserve legacy state",
+          "Windows failed state persistence asks only the newly started server to stop itself",
+          "launcher wrappers forward arguments and have no PID-based termination"
+        ]
+      },
+      "proof": "WEB3_65_0_evidence/CI_WINDOWS_COUNTS.json"
+    },
+    "pages": {
+      "passed": true,
+      "status": "completed",
+      "conclusion": "success",
+      "runId": 45189684248,
+      "attempt": 1,
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45189684248",
+      "commit": "a70187159ec177c947c931d5dd7e3d1600841492",
+      "tree": "e9b30b9199efa2278985aa15b39f3f448c3d0c17",
+      "sourceCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+      "sourceCiRun": 45184306115,
+      "createdAtUtc": "2026-11-23T14:01:00Z",
+      "completedAtUtc": "2026-11-23T14:01:49Z",
+      "proof": "docs/validation/WEB3_65_0_evidence/PAGES_RUN_45189684248.json",
+      "initialPublicationReceipt": "docs/validation/WEB3_65_0_evidence/PAGES_INITIAL_PUBLICATION_RECEIPT.json",
+      "scope": "The actual GitHub Pages deployment completed successfully. This record covers deployment only; public HTTP byte comparison and interactive browser observations have separate evidence.",
+      "httpVerificationIncluded": false,
+      "browserVerificationIncluded": false
+    },
+    "combinedMain": null
+  },
+  "live": {
+    "http": {
+      "status": "passed",
+      "passed": true,
+      "sourceCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+      "pagesCommit": "a70187159ec177c947c931d5dd7e3d1600841492",
+      "pagesTree": "e9b30b9199efa2278985aa15b39f3f448c3d0c17",
+      "deploymentRun": 45189684248,
+      "files": 323,
+      "bytes": 29576556,
+      "requests": 323,
+      "retries": 0,
+      "redirects": 0,
+      "cacheBustingRequests": 0,
+      "failed": 0,
+      "allFirstCanonicalAttemptsHttp200": true,
+      "allSizesAndSha256Match": true,
+      "completedAtUtc": "2026-11-23T14:08:50.396846+00:00",
+      "summary": "docs/validation/WEB3_65_0_evidence/HTTP_SUMMARY.json",
+      "results": "docs/validation/WEB3_65_0_evidence/HTTP_RESULTS.json",
+      "strictValidation": "docs/validation/WEB3_65_0_evidence/HTTP_STRICT_VALIDATION.json",
+      "executedCheckerSnapshot": "docs/validation/WEB3_65_0_evidence/CHECKER_USED.py",
+      "manifest": "docs/validation/WEB3_65_0_evidence/PAGES_DELIVERY_MANIFEST.json",
+      "scope": "Ordinary HTTP GET byte/size/path verification; no browser, Bluetooth or device test."
+    },
+    "browser": {
+      "status": "passed",
+      "passed": true,
+      "checks": 9,
+      "observedAtUtc": "2026-11-23T14:10:00.129181+00:00",
+      "sourceCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+      "webProductTree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+      "pagesCommit": "a70187159ec177c947c931d5dd7e3d1600841492",
+      "proof": "docs/validation/WEB3_65_0_evidence/LIVE_WEB_UI.json",
+      "screenshot": "docs/validation/WEB3_65_0_evidence/Allmiibo_Web365_Bildsender.jpg",
+      "playerDownload": {
+        "file": "docs/validation/WEB3_65_0_evidence/demo_lcd.bin",
+        "bytes": 51216,
+        "sha256": "2e87ab889d7bc208d2ce63147f9345a455be176e02a1bb7c3f0198ff5089d369",
+        "magic": "0x50495856",
+        "frames": 50,
+        "fps": 5,
+        "width": 128,
+        "height": 64,
+        "reserved": 0,
+        "headerHex": "56584950320005008000400000000000",
+        "exactHeaderAndPayloadLength": true
+      },
+      "scope": "Nine scoped interactions on the actual published website, including option persistence/reset, DE/EN, player-file creation/download, App675 browser package hash verification, and catalogue detail association. No Bluetooth/device transfer or complete browser regression suite.",
+      "physicalDeviceAccess": false
+    },
+    "localPreviewHistory": {
+      "available": false,
+      "scope": "The earlier local cloud-browser preview was unavailable. It is not counted as a passed check; the later actual published-site interactions are documented separately above."
+    }
+  },
+  "openDeviceTests": [
+    "Real supported video codecs on the user device",
+    "LCD image/video transmission, inversion and reconnection",
+    "App675 player single run, loop, frame counter and exit",
+    "Switch 2 wake and normal miniapp transitions"
+  ],
+  "limits": [
+    "No physical LCD, OLED, NFC, Bluetooth or power measurement.",
+    "The portable package needs an existing Python 3.8+ runtime; it contains no native EXE.",
+    "Software and model coverage does not constitute hardware acceptance."
+  ],
+  "evidence": [
+    {
+      "path": "Allmiibo_Web365_Bildsender.jpg",
+      "bytes": 115422,
+      "sha256": "d406ae576dd393bf90166110251a233a3e476caf0870bdecd280f16a341f7991"
+    },
+    {
+      "path": "CHECKER_USED.py",
+      "bytes": 15827,
+      "sha256": "cc634cd63532267fb0bc4375570d6484030b4d0316982b617d3d29c513c6399f"
+    },
+    {
+      "path": "CI_LOG_EXCERPTS.txt",
+      "bytes": 7079,
+      "sha256": "b6796eafe9512acf2c6e097e81e36df9e44f9788893cdb782570eb7942dc17f6"
+    },
+    {
+      "path": "CI_PORTABLE_PACKAGE_FROM_LOG.json",
+      "bytes": 489,
+      "sha256": "4ffaf6f20da0e9e46656897dba1bf3c2e0f9223951218c5214ab42250c79b6ef"
+    },
+    {
+      "path": "CI_PORTABLE_VERIFICATION_FROM_LOG.json",
+      "bytes": 68,
+      "sha256": "a1cbada44224ce2b5329b43ce9045bbb187b6b6da97183d35dafd4c9cb350161"
+    },
+    {
+      "path": "CI_SUMMARY.json",
+      "bytes": 7408,
+      "sha256": "cf391cabd7613aca444d72db42e677ff21b9a24fc9849b0428956e39b9d0de1c"
+    },
+    {
+      "path": "CI_WINDOWS_COUNTS.json",
+      "bytes": 1436,
+      "sha256": "a6a201443bfe2d32d1c252e231389b0af5c31cb02b19fe0b08d8cdfc42d17ccb"
+    },
+    {
+      "path": "DISTRIBUTIONS.json",
+      "bytes": 1744,
+      "sha256": "74cbcc1da4e06ff596457cf62b05358abe408082ad1a3f9ab1e92531e8bbd004"
+    },
+    {
+      "path": "EVIDENCE_SCOPE.txt",
+      "bytes": 2704,
+      "sha256": "e4e7a65af425e54d9eafa4a533963d01aee5475d8507d10f03654054e01df0e0"
+    },
+    {
+      "path": "FIRMWARE_SUBSET_JOB_137725847454.log",
+      "bytes": 32852,
+      "sha256": "67f82a343bf96a54e871f68391b2a37cab39ca64b51c274943d03c65527947cd"
+    },
+    {
+      "path": "GITHUB_JOBS.json",
+      "bytes": 7319,
+      "sha256": "9dab43eed715696c3e26e5551b244cefa7d01050bec224b12e36bbe48bef242e"
+    },
+    {
+      "path": "GITHUB_RUN.json",
+      "bytes": 14239,
+      "sha256": "e1a9fe6165d7d5934d98e9737808af97e39a1831237e1917c9677af8a83dc1c4"
+    },
+    {
+      "path": "HTTP_RESULTS.json",
+      "bytes": 571263,
+      "sha256": "17f11b6491ba4d4a612e8a38ef7a5be96870c84c1dabeaadf98eb7438d2778cc"
+    },
+    {
+      "path": "HTTP_STRICT_VALIDATION.json",
+      "bytes": 1535,
+      "sha256": "c3a8bff2b9aab0cde2cd1fc8982d98b58dc6f493620feb90e7fdcee15e07a822"
+    },
+    {
+      "path": "HTTP_SUMMARY.json",
+      "bytes": 1875,
+      "sha256": "8a4c5f7714aca1f26538616dffb4b30adb08dea14035c9c8e9b8935d9c0c6021"
+    },
+    {
+      "path": "LINUX_LAUNCHER.json",
+      "bytes": 176,
+      "sha256": "c3ff85f9d567e92465919f93f34229959ea67237df2b761f2751b244c2fbc535"
+    },
+    {
+      "path": "LIVE_WEB_UI.json",
+      "bytes": 4173,
+      "sha256": "1e33bb6048cfac90234e04275bbf77e4772916c1c6055c4ba50e6077f365462d"
+    },
+    {
+      "path": "NODE_SUITE.json",
+      "bytes": 516,
+      "sha256": "7242f7389bdfae123dad5f4f4dbe19759f2432e3e409db035391f015b0dcd3a2"
+    },
+    {
+      "path": "PAGES_DELIVERY_MANIFEST.json",
+      "bytes": 58964,
+      "sha256": "fae4f758c857891d9053cad14f90048eca922ca74cad8f31a04a2f6007eb2821"
+    },
+    {
+      "path": "PAGES_DEPLOYMENT.json",
+      "bytes": 936,
+      "sha256": "ef91aa7b0e4e132466e2da282724ab7950b56d50cc18fa70aaafd9c76488ea47"
+    },
+    {
+      "path": "PAGES_INITIAL_PUBLICATION_RECEIPT.json",
+      "bytes": 543,
+      "sha256": "93c8267f2b80bcde39711f188a350af9814b2c60cbba26c9e36b3c2d6e249fba"
+    },
+    {
+      "path": "PAGES_RUN_45189684248.json",
+      "bytes": 14123,
+      "sha256": "c6c18e7c3ba574b3de2fb2d3c454082c0835ba3afcbf86e337094a1262a487ed"
+    },
+    {
+      "path": "PHONE_DOWNLOAD.json",
+      "bytes": 539,
+      "sha256": "e7c8fab378032ce1c936f9c2de3b6cbee2e60eceddc1cfc2150129aec6122c3c"
+    },
+    {
+      "path": "PORTABLE_PACKAGE.json",
+      "bytes": 489,
+      "sha256": "4ffaf6f20da0e9e46656897dba1bf3c2e0f9223951218c5214ab42250c79b6ef"
+    },
+    {
+      "path": "PORTABLE_VERIFICATION.json",
+      "bytes": 955,
+      "sha256": "f783623a9b3f7e35ac2cff191a775238ee3fea293a56dfa2052dc406e44bba45"
+    },
+    {
+      "path": "SENDER_IMPLEMENTATION.json",
+      "bytes": 9391,
+      "sha256": "9e443a09c2aa185d190d1d65d4ee1d247ece8b32c0a846f558d9bd88baa26ce0"
+    },
+    {
+      "path": "SENDER_PIXELS.json",
+      "bytes": 25946,
+      "sha256": "a7c24023af84a920d4780ff9b81bb451109dd943b2442c32490560cbc3f43f65"
+    },
+    {
+      "path": "WEB_JOB_137725847614.log",
+      "bytes": 371523,
+      "sha256": "8708e24b711d99aff855c685da4d605c48acfbbaf053ff0f8e39b6aa6ad0a01e"
+    },
+    {
+      "path": "WEB_PUBLICATION_RECEIPT.json",
+      "bytes": 486,
+      "sha256": "6fe821477cb84a2eab657775b7a70018ce3960de0acc3555357b84a02f95a055"
+    },
+    {
+      "path": "WINDOWS_JOB_137725846959.log",
+      "bytes": 25705,
+      "sha256": "b9b8adcfabf241ee81330e6296b1b36652d4600e9efbfdcf6a5a7253d0af63ec"
+    },
+    {
+      "path": "demo_lcd.bin",
+      "bytes": 51216,
+      "sha256": "2e87ab889d7bc208d2ce63147f9345a455be176e02a1bb7c3f0198ff5089d369"
+    }
+  ],
+  "qualificationTree": "2efcb146aabdbbedd3d717a888f007e91435923c",
+  "webProductTree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+  "sourcePublication": {
+    "published": true,
+    "commit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+    "tree": "2efcb146aabdbbedd3d717a888f007e91435923c",
+    "webProductTree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+    "originalLocalFinalCommit": "9a4bc95487c56ef2373cc23481347848a7c60b20",
+    "localQualifiedProductCommit": "76676c008f4c9bff41fd0ba23329f35e86f3bb57",
+    "identicalToOriginalLocalFinalTree": true,
+    "url": "https://github.com/bluecyber81/pixl.js/commit/a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+    "proof": "docs/validation/WEB3_65_0_evidence/WEB_PUBLICATION_RECEIPT.json"
+  },
+  "publicationHistory": {
+    "priorToolRejection": {
+      "operation": "GitHub create_tree",
+      "result": "user rejected MCP tool call",
+      "additionalReason": null,
+      "sourceBranchCreated": false,
+      "retryAttempted": false
+    },
+    "originalLocalFinalCommit": "9a4bc95487c56ef2373cc23481347848a7c60b20",
+    "renewedUserAuthorizationConfirmedByRoot": true,
+    "scope": "Earlier tool rejection is historical. After renewed user authorization, the exact reviewed source tree was published at a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4 and passed the public Source checks workflow. It is not the current publication status."
+  },
+  "localQualification": {
+    "commit": "76676c008f4c9bff41fd0ba23329f35e86f3bb57",
+    "webProductTree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+    "scope": "The local Node/distribution/launcher/portable records below remain their original local observations. Public CI is recorded separately with its actual runtime and logs; both qualify the same Web product tree."
+  },
+  "remainingGates": [
+    "Both complete CIs on the eventual combined main commit",
+    "Physical LCD/Stream/Player/Switch2 acceptance"
+  ],
+  "qualificationScope": "Original local qualification plus actual public source CI, Pages deployment, complete manifest HTTP verification, and nine scoped browser checks. Public source qualification stays pinned to a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4 with Web product tree 17920de14a71fc2a07b00b644e88e6956bfe7d06; later metadata-only commits do not relabel or rerun those observations."
+}

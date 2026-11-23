@@ -1,0 +1,8 @@
+{
+  "original": "firmware_validation_de395/DFU/verify_z21_app668.py",
+  "originalSha256": "9a8d287f6cdfd13f1376adaa1df3b9a54be7a1dbdf8e11f5efc91a8c026b6f8f",
+  "adaptedSha256": "81d5426fc0a0118d0e54366b9915f516a566b4884cf9e7f86495c913ae73f885",
+  "changes": "Only package labels/counters668->669 and667->668 plus exact final application SHA256; same Z21 ABI, crypto and bank acceptance checks.",
+  "bootloaderArtifact": "firmware_validation_de395/DFU/Z21_reproduction",
+  "productionChanges": false
+}

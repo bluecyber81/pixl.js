@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "recordedAt": "2026-11-21T18:34:34.263998+00:00",
+  "baselineCommit": "d52fa4ccdf438d923196947fa967bd9b1cc767d7",
+  "scope": "Änderungszuordnung für normalen Web 3.61.0 / LCD App671; finale Paket- und Commitbindung separat.",
+  "alreadyFixedBeforeApp671": {
+    "symptom": "Teststatus lesen meldete bei App670 unter Web TEST1, die Testfunktion sei nicht bestätigt.",
+    "cause": "UI und gemeinsamer Helper kannten DE3.97; vier pixl.proto-Gates verglichen weiter ausschließlich DE3.96. INFO05 wurde deshalb ohne Selektor gesendet und lieferte korrekt MTUD v1 statt des benötigten Testprofils v3.",
+    "functions": [
+      "get_mtu_diagnostics",
+      "set_ble_test_extension",
+      "get_startup_diagnostics",
+      "get_storage_gc_diagnostics"
+    ],
+    "fixedIn": "Web 3.60.0-test.2; im aktuellen App671-Basiscommit bereits enthalten.",
+    "regressionEvidence": {
+      "path": "app670_status_hotfix/HOTFIX_REPORT.json",
+      "sha256": "1cb19aab5e22098474c43162e8d4a881ee9622f9d3b0c860d9a42a050dfd4e77",
+      "before": {
+        "tests": 8,
+        "pass": 4,
+        "fail": 4
+      },
+      "after": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0
+      },
+      "targetedSuite": {
+        "tests": 254,
+        "pass": 254,
+        "fail": 0
+      },
+      "counting": "Die acht grünen Fälle sind Teil der 254. Alte Resultate werden nicht als neue App671-Prüfung gezählt."
+    },
+    "coverageGap": "Bisherige Wiretests stuften DE3.97 als nicht unterstützt ein; UI-Tests verwendeten fertige v3-Mockantworten und prüften die falsche echte Selektorauswahl dadurch nicht."
+  },
+  "adoptedUnchanged": {
+    "backup": "Batch-READ und Batch-DIGEST wurden schon in App670 in createBackup und die normalen App.vue-Backupadapter eingebunden. Sie werden für App671 durch seine exakt bekannte Firmwareerkennung weitergenutzt; keine neue Backup-Engine und keine neue Sammel-API.",
+    "transport": "Die vorhandenen Payload-, Revision-, Sitzungs-, Abort- und BLE-TX/RX-Grenzen bleiben bestehen.",
+    "tests": "Neu hinzugefügte App671-Integrationstests führen die bestehenden Adapter, createBackup, echte Protokollfunktionen und ZIP-Inhalte gemeinsam aus. Nur Gerät/Browser sind simuliert.",
+    "wireFunctionsUnchanged": [
+      "vfs_probe_small_batch",
+      "vfs_read_small_batch",
+      "vfs_digest_small_batch"
+    ],
+    "unchangedFiles": [
+      {
+        "path": "web/src/lib/backup.js",
+        "bytes": 38021,
+        "sha256": "98d67a3b0c76f5b4716755f77b3abae83c4ad1417f9333921f85b45df27d6e8b",
+        "identicalToBase": true
+      },
+      {
+        "path": "web/src/lib/pixl.ble.js",
+        "bytes": 12876,
+        "sha256": "2edfa69f2f8e19fbd6191ca4e141ab3dc1d68dc5676d62e1284a6843a7fcaa65",
+        "identicalToBase": true
+      },
+      {
+        "path": "web/src/lib/stored-backup.js",
+        "bytes": 8541,
+        "sha256": "a820611e7ee26be12a0fe6876660807b082a953a595abdddb76a3ec5808eb4e3",
+        "identicalToBase": true
+      },
+      {
+        "path": "web/src/lib/lcd-read-comparison.js",
+        "bytes": 8640,
+        "sha256": "3a93a4b21e79f24b3e02bfc00097f0e5fff29c1403edaee47a0db42bb7e42797",
+        "identicalToBase": true
+      },
+      {
+        "path": "web/src/components/LcdTestPanel.vue",
+        "bytes": 19272,
+        "sha256": "271ff06ea6cea4f8759b767b66805ec964b40c0002b7c71490b09aea8db54eba",
+        "identicalToBase": true
+      }
+    ]
+  },
+  "newNormalReleaseChanges": [
+    {
+      "area": "Diagnose",
+      "change": "Getrennte genaue Normal-Gates: MTUD v2 via INFO05 [1], Startup v4 via [3], PXGC v1. Alte .96/.97-Testfunktionen bleiben kompatibel; EVT! und das Testpanel werden für App671 nicht angeboten.",
+      "evidence": "TARGETED_CORE_INITIAL.log; 572 Fälle insgesamt, darunter echte App671-Wirebytes und normaler Diagnosefluss."
+    },
+    {
+      "area": "Kapazität",
+      "change": "Eigener de398-Engine-/WASM-Snapshot, genaue Allowlist, normaler sichtbarer Standard de398 und getrennte alte Profile.",
+      "evidence": "PROFILE_PHASE_REPORT.json; Prüfung des ersten Firmware-Builds. Nach dem zusätzlichen NFC-Guard aktualisiert Root den finalen ARM-/SourceID-/BIN-Beleg; betroffene Bindungsfälle werden erneut geprüft."
+    },
+    {
+      "area": "Downloads",
+      "change": "Normaler App671-Katalogeintrag als aktueller lokaler Download; altes App662-Komplettpaket mit eigenen Boot-/Downgrade-Grenzen und unveränderter echter URL.",
+      "evidence": "Kernphase prüft die UI mit ausdrücklich als UI-Daten gekennzeichnetem Deskriptor; echte signierte Metadaten kommen von Root."
+    },
+    {
+      "area": "DFU",
+      "change": "Vorbereitete Standardauswahl und Direkteinstieg auf App671, normale Root-Pages-URL und Quellenbranch release/lcd-de398-app671. Exakte normale Referenzen werden vor historischen Testreferenzen validiert; die normale App erhält kein privatePreview-Label.",
+      "evidence": "Laufprüfung noch offen, bis Root die echte signierte Referenz, OTA und Katalogbindung bereitstellt; keine Platzhalter als bestanden."
+    }
+  ],
+  "limits": [
+    "Kein neuer App671-Gerätetest durch diesen Agenten.",
+    "Kein neu gemessener App671-Durchsatzgewinn behauptet.",
+    "Synthetische Tests, alte App670-Gerätemessungen und aktuelle Firmware-Softwarequalifikation werden getrennt geführt.",
+    "Kein App671-Commit, Signieren, Firmwarebuild oder externe Veröffentlichung durch diesen Agenten."
+  ]
+}

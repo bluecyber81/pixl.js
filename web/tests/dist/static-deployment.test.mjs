@@ -6,10 +6,16 @@ import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { noticeFiles, webRoot } from '../../scripts/copy-license-notices.mjs'
+import { lcdPreview, lcdPreview669, lcdPreview668, lcdPreview667, lcdPreviewPackages } from '../../public/dfu/lcd-private-reference.mjs'
+import { lcdRelease } from '../../public/dfu/lcd-release-reference.mjs'
+import { lcdRelease as app674 } from '../../public/dfu/lcd-app674-reference.mjs'
+import { lcdRelease as app673 } from '../../public/dfu/lcd-app673-reference.mjs'
+import { lcdRelease as app672 } from '../../public/dfu/lcd-app672-reference.mjs'
+import { lcdRelease as app671 } from '../../public/dfu/lcd-app671-reference.mjs'
 
 const dist = path.resolve(process.env.ALLMIIBO_DIST_DIR || fileURLToPath(new URL('../../dist', import.meta.url)))
 const base = process.env.ALLMIIBO_TEST_BASE_PATH || '/'
-assert.ok(['/', '/pixl.js/'].includes(base))
+assert.ok(['/', '/pixl.js/', '/pixl.js/test/app670/'].includes(base))
 const origin = 'https://bluecyber81.github.io'
 const read = relative => fs.readFileSync(path.join(dist, relative), 'utf8')
 const sha = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -19,7 +25,7 @@ test(`${base}: both setup guides have working anchors and bundled destinations`,
     const here = new URL(base + 'guide/' + filename, origin)
     const guide = read('guide/' + filename)
     assert.ok(guide.includes('<html lang="' + lang + '"'))
-    for (const id of ['diagnose', 'programme', 'flash', 'littlefs', 'bootloader', 'hilfe']) {
+    for (const id of ['diagnose', 'programme', 'flash', 'lcd-de3102', 'lcd-de3101', 'lcd-de3100', 'bild-video', 'littlefs', 'bootloader', 'hilfe']) {
       assert.ok(guide.includes('id="' + id + '"'), id)
     }
     for (const [, href] of guide.matchAll(/\shref="([^"]+)"/g)) {
@@ -32,6 +38,10 @@ test(`${base}: both setup guides have working anchors and bundled destinations`,
         const packages = JSON.parse(read('firmware/releases.json')).packages
         assert.deepEqual([...target.searchParams.keys()], ['package'], href)
         assert.ok(packages.some(entry => '#board=' + entry.board === target.hash && entry.id === target.searchParams.get('package')), href)
+      } else if (target.searchParams.has('workspace')) {
+        assert.equal(target.pathname, base, href)
+        assert.deepEqual([...target.searchParams], [['workspace', 'stream']], href)
+        assert.equal(target.hash, '', href)
       } else if (target.hash) assert.ok(contents.includes(Buffer.from('id="' + target.hash.slice(1) + '"')), href)
     }
   }
@@ -70,12 +80,14 @@ test(`${base}: production index, lazy chunks and DFU assets resolve to real file
   assert.equal(new URL('../', origin + base + 'dfu/web.html').pathname, base)
 })
 
-test(`${base}: real bundled firmware loader hashes and parses deployed ZIP without starting Bluetooth`, async () => {
+for (const privateId of [null,...lcdPreviewPackages.map(entry=>entry.id)])
+test(`${base}: real ${privateId || 'stable'} firmware loader hashes and parses deployed ZIP without starting Bluetooth`, async () => {
   const require = createRequire(import.meta.url)
   const { Loader } = require(path.join(dist, 'dfu/bundled-packages.js'))
   const Package = require(path.join(dist, 'dfu/package.js'))
-  const catalog = JSON.parse(read('firmware/releases.json'))
-  const entry = catalog.packages[0]
+  const stable = JSON.parse(read('firmware/releases.json'))
+  const catalog = {...stable,packages:[...stable.packages,...lcdPreviewPackages]}
+  const entry = privateId ? catalog.packages.find(item=>item.id === privateId) : catalog.packages[0]
   let parsed, requests = 0, status = []
   const updater = { busy: false, package: null, async setPackage(file) {
     if (!file) { this.package = null; return false }
@@ -102,8 +114,11 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.deepEqual(fs.readFileSync(path.join(dist, 'licenses', file)), fs.readFileSync(path.join(webRoot, file)), file)
     assert.ok(index.includes(`href="${file}"`), file)
   }
+  assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip" download'))
+  assert.ok(index.includes('pixl.js/blob/web-app675/docs/VERSIONEN_WEB.md'))
+  assert.ok(index.includes('pixl.js/blob/release/lcd-de3102-app675/docs/VERSIONEN_FIRMWARE.md'))
+  assert.ok(!index.includes('releases/download/web3.65.0/'))
   for (const releaseFile of [
-    'web3.58.2/Allmiibo_Dateimanager_3_58_2_Quellcode.zip',
     'de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip',
     'de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip',
     'de3.75/Allmiibo_DE3_75_App648_Z19_Web3_52_1_ChatGPT_Pruefpaket.zip'
@@ -117,6 +132,38 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
   localFile(new URL('../dfu/LICENSE.txt', origin + base + 'licenses/index.html'))
   localFile(new URL('../dfu/vendor/SOURCES.json', origin + base + 'licenses/index.html'))
   assert.match(index, /historische/)
+})
+
+for (const [reference,profile,name] of [[lcdRelease,'de3102','LCD_DE3_102_App675_Simulatorquellen.zip'],[app674,'de3101','LCD_DE3_101_App674_Simulatorquellen.zip'],[app673,'de3100','LCD_DE3_100_App673_Simulatorquellen.zip'],[app672,'de399','LCD_DE3_99_App672_Simulatorquellen.zip'],[app671,'de398','LCD_DE3_98_App671_Simulatorquellen.zip'],[lcdPreview,'de397','LCD_DE3_97_App670_TEST1_Simulatorquellen.zip'],[lcdPreview669,'de396','LCD_DE3_96_App669_TEST1_Simulatorquellen.zip'],[lcdPreview668,'de395','LCD_DE3_95_App668_Simulatorquellen.zip'],[lcdPreview667,'de394','LCD_DE3_94_App667_Simulatorquellen.zip']])
+test(`${base}: the App${reference.applicationCounter} source download resolves to its complete archive and exact firmware binding`, async () => {
+  const index = read('licenses/index.html')
+  const links = [...index.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/g)].filter(match => match[1].endsWith(name))
+  assert.equal(links.length, 1)
+  assert.match(links[0][0], /\bdownload\b/)
+  const file = localFile(new URL(links[0][1], origin + base + 'licenses/index.html'))
+  const bytes = fs.readFileSync(file)
+  assert.deepEqual(bytes, fs.readFileSync(path.join(webRoot, 'public/sources', name)))
+  const referenceFile = reference === lcdRelease ? 'lcd-release-reference.mjs' : reference === app674 ? 'lcd-app674-reference.mjs' : reference === app673 ? 'lcd-app673-reference.mjs' : reference === app672 ? 'lcd-app672-reference.mjs' : reference === app671 ? 'lcd-app671-reference.mjs' : 'lcd-private-reference.mjs'
+  assert.deepEqual(fs.readFileSync(path.join(dist, 'dfu', referenceFile)),
+    fs.readFileSync(path.join(webRoot, 'public/dfu', referenceFile)))
+  const require = createRequire(import.meta.url)
+  const JSZip = require(path.join(dist, 'dfu/vendor/jszip-3.10.2.min.js'))
+  const archive = await JSZip.loadAsync(bytes, {checkCRC32:true})
+  const binding = JSON.parse(await archive.file(`APP${reference.applicationCounter}_BINDING.json`).async('string'))
+  assert.equal(binding.sourceId, reference.sourceId)
+  assert.equal(binding.applicationCounter, reference.applicationCounter)
+  assert.equal(binding.applicationBinSha256, reference.applicationBinSha256)
+  assert.equal(binding.applicationBytes, reference.applicationBytes)
+  if ([lcdRelease, app674, app673, app672, app671].includes(reference)) {
+    assert.equal(binding.firmwareChannel, 'normal')
+    assert.equal(binding.hardwareAcceptance, 'pending-for-this-build')
+    assert.equal(binding.productionCommit, reference.productionCommit)
+    assert.equal(binding.wasm.path, 'web/public/lfs-capacity-' + (['de3102', 'de3101', 'de3100'].includes(profile) ? 'de399' : profile) + '.wasm')
+  } else assert.equal(binding.capacityProfile, profile)
+  const qualification = await archive.file(binding.qualification.path).async('uint8array')
+  assert.equal(sha(qualification), binding.qualification.sha256)
+  assert.equal(JSON.parse(new TextDecoder().decode(qualification)).sourceId, reference.sourceId)
+  assert.equal(sha(fs.readFileSync(path.join(dist, binding.wasm.path.slice('web/public/'.length)))), binding.wasm.sha256)
 })
 
 test(`${base}: static build contains no local server, state, test, dependency tree or collection backup`, () => {

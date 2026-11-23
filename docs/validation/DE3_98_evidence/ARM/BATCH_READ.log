@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "deviceAccess": false,
+  "sourceId": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a",
+  "binSha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+  "cases": [
+    "linked_registration_and_exact_unchanged_PXSC_new_PXBR",
+    "actual_linked_READ_SHA_TLSF_empty_UTF8_max4x572_and_minimum_payload",
+    "linked_full_preflight_bounds_and_revision_errors_leave_TLSF_unchanged",
+    "linked_read_error_grow_shrink_postrevision_SHA_and_storage_readiness_guards",
+    "actual_TLSF_exhaustion_and_cleanup_restore_identical_free_space_and_largest_block"
+  ],
+  "expectedCounter": 671,
+  "firmwareCounter": 671,
+  "smallReadStaticBytes": 12,
+  "initialTlsfFree": 15236,
+  "maxResponseTlsfFreeDelta": 2296,
+  "finalTlsfFree": 15236,
+  "linkedCallMaxObservedStack": 688,
+  "scope": "Actual linked Cortex-M4 parser, guards, registry, TLSF, SHA256 and response chunking. Storage readiness/generation and read_file_data plus response capture are explicit modeled boundaries. No full BLE caller/interrupt stack, physical media/radio throughput or installation claim."
+}

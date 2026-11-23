@@ -11,6 +11,38 @@ export function nrfDfuLink(entry) {
             file: 'https://github.com/bluecyber81/pixl.js/releases/download/de3.' + oled[1] + '-oled-t' + oled[2] + '/' + entry.file
         });
     }
+    // Normal releases use exact profiles at the normal Pages root. Retained
+    // App671 links remain valid and cannot alias the newer application.
+    const normal = [
+        {id:'de3.98-lcd-app',version:'2.22.0-DE3.98',counter:671,file:'Allmiibo_LCD_DE3_98_671_NUR_APP.zip'},
+        {id:'de3.99-lcd-app',version:'2.22.0-DE3.99',counter:672,file:'Allmiibo_LCD_DE3_99_672_NUR_APP.zip'},
+        {id:'de3.100-lcd-app',version:'2.22.0-DE3.100',counter:673,file:'Allmiibo_LCD_DE3_100_673_NUR_APP.zip'},
+        {id:'de3.102-lcd-app',version:'2.22.0-DE3.102',counter:675,file:'Allmiibo_LCD_DE3_102_675_NUR_APP.zip'},
+        {id:'de3.101-lcd-app',version:'2.22.0-DE3.101',counter:674,file:'Allmiibo_LCD_DE3_101_674_NUR_APP.zip'}
+    ].find(profile => entry?.id === profile.id || entry?.version === profile.version);
+    if (normal) {
+        if (entry.board !== 'LCD' || entry.id !== normal.id || entry.version !== normal.version ||
+            entry.counter !== normal.counter || entry.channel || entry.applicationOnly !== true || entry.migrationRequired !== false ||
+            entry.storage !== 'PFS1' || entry.bootloader !== 'Z21' || entry.softDevice !== 'S112 7.3.0' ||
+            entry.file !== normal.file) return null;
+        return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({
+            file: 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file
+        });
+    }
+    // This isolated test distribution is intentionally not at the normal
+    // Pages root. Keep its native-app handoff bound to the exact test target.
+    const lcdTest = entry?.id === 'de3.96-lcd-app-test1' ? {minor:96,counter:669}
+        : entry?.id === 'de3.97-lcd-app-test1' ? {minor:97,counter:670} : null;
+    if (lcdTest) {
+        if (entry.board !== 'LCD' || entry.version !== `2.22.0-DE3.${lcdTest.minor}` || entry.counter !== lcdTest.counter ||
+            entry.channel !== 'prerelease' || entry.applicationOnly !== true || entry.migrationRequired !== false ||
+            entry.storage !== 'PFS1' || entry.bootloader !== 'Z21' || entry.softDevice !== 'S112 7.3.0' ||
+            entry.file !== `Allmiibo_LCD_DE3_${lcdTest.minor}_${lcdTest.counter}_TEST1_NUR_APP.zip`) return null;
+        return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({
+            file: `https://bluecyber81.github.io/pixl.js/test/app${lcdTest.counter}/firmware/` + entry.file
+        });
+    }
+    if (entry?.version === '2.22.0-DE3.97') return null; // No normal-root App670 alias.
     const release = /^2\.22\.0-DE3\.([1-9]\d{0,3}(?:t[1-9]\d{0,2})?)$/.exec(entry?.version);
     if (!release || release[1] === '86') return null; // App659 has no public Android offering.
     const trialCounter = { '84': 657, '85': 658, '87': 660, '88': 661 }[release[1]];

@@ -13,8 +13,8 @@ const gattOwnership = require(path.join(process.env.PIXL_SOURCE_DIR || path.join
 
 function load(name, bindings, sourceRoot = process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../src/lib')) {
     const source = fs.readFileSync(path.join(sourceRoot, name), 'utf8');
-    const exports = [...source.matchAll(/export function (\w+)\(/g)].map(match => match[1]);
-    const code = source.replace(/^import .*$/gm, '').replace(/export function /g, 'function ');
+    const exports = [...source.matchAll(/export (?:async )?function (\w+)\(/g)].map(match => match[1]);
+    const code = source.replace(/^import .*$/gm, '').replace(/export ((?:async )?function )/g, '$1');
     const context = { ...require(path.join(sourceRoot,'hardware-profile.js')), ByteBuffer, EventEmitter, Promise, Error, ArrayBuffer, Uint8Array, DataView, TextDecoder, TextEncoder,
         // Production isolates consumer callback failures. Assertions inside a
         // mocked UI callback must nevertheless fail this regression harness.
@@ -46,19 +46,20 @@ function bleFixture(notificationPromise=Promise.resolve()) {
     return {api,bus,device,rx,tx,service,writes,navigator,timers};
 }
 function protocolFixture(i18n={global:{t:key=>key}}, codec={}) {
-    const bus=load('event.js',{}).sharedEventDispatcher(), writes=[], timers=new Map(), readers=[];
+    const bus=load('event.js',{}).sharedEventDispatcher(), writes=[], writeModes=[], timers=new Map(), readers=[];
     let timerId=0, disconnects=0, writeImpl=() => Promise.resolve();
-    const pixl={get_connection_state:()=> 'connected',tx_data(data){writes.push(Array.from(new Uint8Array(data)));return writeImpl(data);},
+    const pixl={get_connection_state:()=> 'connected',tx_data(data,withoutResponse){writes.push(Array.from(new Uint8Array(data)));writeModes.push(withoutResponse);return writeImpl(data,withoutResponse);},
         disconnect(){disconnects++;bus.emit('ble_disconnected');}};
     class FileReader {
-        constructor(){readers.push(this);}
+        constructor(){readers.push(this);this.abortCalls=0;}
+        abort(){++this.abortCalls;this.onabort?.();}
         readAsArrayBuffer(file){this.file=file;if(file.error){this.error=new Error('FileReader failed');this.onerror();}
             else if(!file.pending){this.result=Uint8Array.from(file.bytes || []).buffer;this.onload();}}
     }
-    const api=load('pixl.proto.js',{pixl,FileReader,i18n,...codec,metadataNoteInfo:load('metadata-note.js',{},path.join(__dirname,'../src/lib')).metadataNoteInfo,parseStartupDiagnostics:load('startup-diagnostics.js',{}).parseStartupDiagnostics,parseBootDiagnostics:load('boot-diagnostics.js',{}).parseBootDiagnostics,parsePowerDiagnostics:load('power-diagnostics.js',{}).parsePowerDiagnostics,sharedEventDispatcher:() => bus,
+    const api=load('pixl.proto.js',{pixl,FileReader,i18n,...codec,supportsBleTestDiagnostics:load('device-extra-diagnostics.js',{}).supportsBleTestDiagnostics,supportsLinkDiagnostics:load('device-extra-diagnostics.js',{}).supportsLinkDiagnostics,supportsStorageGcDiagnostics:load('device-extra-diagnostics.js',{}).supportsStorageGcDiagnostics,metadataNoteInfo:load('metadata-note.js',{},path.join(__dirname,'../src/lib')).metadataNoteInfo,parseStartupDiagnostics:load('startup-diagnostics.js',{}).parseStartupDiagnostics,parseBootDiagnostics:load('boot-diagnostics.js',{}).parseBootDiagnostics,parsePowerDiagnostics:load('power-diagnostics.js',{}).parsePowerDiagnostics,sharedEventDispatcher:() => bus,
         setTimeout:cb=>{const id=++timerId;timers.set(id,cb);return id;},clearTimeout:id=>timers.delete(id)});
     api.init();
-    return {api,bus,writes,timers,readers,get disconnects(){return disconnects;},setWrite:fn=>{writeImpl=fn;},
+    return {api,bus,writes,writeModes,timers,readers,get disconnects(){return disconnects;},setWrite:fn=>{writeImpl=fn;},
         rx:(cmd,payload=[],chunk=0,status=0) => bus.emit('ble_rx_data',Uint8Array.from([cmd,status,chunk&255,chunk>>8,...payload]).buffer)};
 }
 const bytes = value => Array.from(new Uint8Array(value));
@@ -88,6 +89,17 @@ test('small-file capability requires an LCD generation and a strictly valid posi
     assert.equal(await enableNative(f),'0000000700000001');
     f.bus.emit('ble_disconnected');
     assert.throws(()=>f.api.vfs_small_create(nativePath,new Uint8Array(1),'00'.repeat(32),'0000000700000001'));
+});
+for (const [counter,version] of [[667,'2.22.0-DE3.94'],[668,'2.22.0-DE3.95'],[669,'2.22.0-DE3.96'],[670,'2.22.0-DE3.97'],[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100'],[674,'2.22.0-DE3.101'],[675,'2.22.0-DE3.102']])
+test(`App${counter} explicitly probes the existing small-file capability without allowing future or OLED versions`, {timeout:5000}, async () => {
+    const f = protocolFixture();
+    for (const unsupported of ['2.22.0-DE3.103',version + '-OLEDt7'])
+        assert.equal(await f.api.vfs_small_create_revision(unsupported),null);
+    assert.equal(f.writes.length,0);
+    const query = f.api.vfs_small_create_revision(version);
+    assert.deepEqual(f.writes,[[0x22,0,0,0]]);
+    f.rx(0x22,nativeCap);
+    assert.equal(await query,'0000000700000001');
 });
 test('small-file wire sends the exact local bytes and checks every offset, persistent hash and revision',async()=>{
     const f=protocolFixture(), rev=await enableNative(f);
@@ -255,8 +267,8 @@ test('DE3.62 mount profile reads selector2 with bounded80B, rejects invalid data
 test('qualified LCD versions request cache-slot detail; rejected optional selector retries v3', async () => {
  const packet=new Uint8Array(84);packet.set(startupPacket());packet.set([4,84],4);
  packet[40]=23;packet.set([8,6,0,1],80);
- for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85','2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88']) {
-  const expandedCache = ['2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88'].includes(version);
+ for (const version of ['2.22.0-DE3.82','2.22.0-DE3.83','2.22.0-DE3.84','2.22.0-DE3.85','2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92','2.22.0-DE3.93','2.22.0-DE3.94','2.22.0-DE3.95']) {
+  const expandedCache = ['2.22.0-DE3.86','2.22.0-DE3.87','2.22.0-DE3.88','2.22.0-DE3.89','2.22.0-DE3.91','2.22.0-DE3.92','2.22.0-DE3.93','2.22.0-DE3.94','2.22.0-DE3.95'].includes(version);
   packet.set(expandedCache ? [26,26,0,1] : [8,6,0,1],80);
   const f=protocolFixture(), p=f.api.get_startup_diagnostics(version);
   assert.deepEqual(f.writes,[[9,0,0,0,3]]);
@@ -1055,12 +1067,25 @@ test('FileReader failure releases upload queue; successful upload requires succe
     await flush();f.rx(0x12,[1]);await flush();f.rx(0x15);await flush();f.rx(0x13,[],0,1);await flush();
     assert.deepEqual([success,error],[0,2]);
 });
+test('local FileReader abort settles the current upload and releases the following file',async()=>{
+    const f=protocolFixture();let errors=0,success=0;
+    f.api.vfs_helper_write_file('E:/cancel.bin',{pending:true},undefined,()=>success++,()=>errors++);
+    f.api.vfs_helper_write_file('E:/next.bin',{bytes:[3]},undefined,()=>success++,()=>errors++);
+    f.readers[0].abort();await flush();
+    assert.equal(errors,1);assert.equal(success,0);
+    assert.equal(f.writes.length,1);assert.equal(f.writes[0][0],0x12);
+    f.rx(0x12,[1]);await flush();f.rx(0x15);await flush();f.rx(0x13);await flush();
+    assert.equal(success,1);assert.equal(errors,1);
+});
+
 test('disconnect cancels pending FileReader and queued files once, never writes after reconnect',async()=>{
     const f=protocolFixture();let errors=0,success=0;
     f.api.vfs_helper_write_file('E:/a.bin',{pending:true},()=>{},()=>success++,()=>errors++);
     f.api.vfs_helper_write_file('E:/b.bin',{bytes:[2]},()=>{},()=>success++,()=>errors++);
+    const lateLoad=f.readers[0].onload;
     f.bus.emit('ble_disconnected');assert.equal(errors,2);
-    f.readers[0].result=Uint8Array.from([1]).buffer;f.readers[0].onload();await flush();
+    assert.equal(f.readers[0].abortCalls,1);assert.equal(f.readers[0].onload,null);
+    f.readers[0].result=Uint8Array.from([1]).buffer;lateLoad();await flush();
     assert.equal(f.writes.length,0);assert.equal(errors,2);assert.equal(success,0);
 });
 test('successful upload reports progress and completion exactly once',async()=>{
@@ -1224,6 +1249,62 @@ test('two downloads serialize full open/read/close transactions, never replace t
     f.rx(0x12,[0]);await flush();f.rx(0x14,[2]);await flush();f.rx(0x13);await second;
     assert.deepEqual(downloads,[[1],[2]]);
 });
+// Invalid caller paths must finish through callbacks without stranding the
+// shared file queue, even when the small-read capability path would apply.
+for (const [label, invalidPath] of [
+    ['null', null], ['undefined', undefined], ['number', 7], ['object', {}],
+    ['relative', 'relative.bin'], ['embedded NUL', 'E:/bad\0name.bin'],
+    ['long filename', 'E:/' + 'a'.repeat(48)],
+    ['long path', 'E:/' + 'a'.repeat(31) + '/' + 'b'.repeat(31)]
+]) for (const [mode, options] of [
+    ['legacy', {}],
+    ['small-read candidate', {exact_size:1,max_bytes:1,firmware_version:nativeVersion}]
+]) test(`invalid download path ${label} (${mode}) finishes once and permits the next download`, async () => {
+    const f=protocolFixture();let failed=0,done=0,settled=0,rejected=0,received;
+    const invalid=f.api.vfs_helper_read_file(invalidPath,()=>assert.fail('invalid path succeeded'),
+        error=>{assert(error instanceof Error);failed++;},()=>done++,options)
+        .then(()=>settled++,()=>rejected++);
+    await flush();
+    assert.deepEqual([failed,done,settled,rejected],[1,1,1,0]);
+    assert.deepEqual(f.writes,[],'invalid paths must not probe, open or close a device handle');
+    assert.equal(f.api.get_transport_diagnostics().fileTransferActive,false);
+    assert.equal(f.api.get_transport_diagnostics().queuedFileTransfers,0);
+    assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
+    const next=f.api.vfs_helper_read_file('E:/next.bin',data=>{received=bytes(data);},error=>assert.fail(error));
+    assert.deepEqual(f.writes.map(frame=>frame[0]),[0x12]);
+    f.rx(0x12,[7]);await flush();f.rx(0x14,[42]);await flush();f.rx(0x13);await next;await invalid;
+    assert.deepEqual(received,[42]);
+    assert.deepEqual([failed,done,settled,rejected],[1,1,1,0]);
+    assert.deepEqual(f.writes.map(frame=>frame[0]),[0x12,0x14,0x13]);
+    assert.deepEqual(f.writes.at(-1).slice(4),[7]);
+    assert.equal(f.api.get_transport_diagnostics().fileTransferActive,false);
+    assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
+});
+
+test('an invalid queued download cannot close another download handle or block the following file',async()=>{
+    const f=protocolFixture(),received=[];let errors=0,done=0;
+    const first=f.api.vfs_helper_read_file('E:/first.bin',data=>received.push(bytes(data)),error=>assert.fail(error));
+    f.rx(0x12,[5]);await flush();
+    const invalid=f.api.vfs_helper_read_file(null,()=>assert.fail('invalid path succeeded'),()=>errors++,()=>done++);
+    const next=f.api.vfs_helper_read_file('E:/next.bin',data=>received.push(bytes(data)),error=>assert.fail(error));
+    assert.deepEqual(f.writes.map(frame=>frame[0]),[0x12,0x14]);
+    assert.deepEqual([errors,done],[0,0]);
+    assert.equal(f.api.get_transport_diagnostics().queuedFileTransfers,2);
+    f.rx(0x14,[1]);await flush();
+    assert.deepEqual(f.writes.at(-1),[0x13,0,0,0,5]);
+    assert.deepEqual([errors,done],[0,0]);
+    f.rx(0x13);await first;await flush();
+    assert.deepEqual([errors,done],[1,1]);
+    assert.deepEqual(f.writes.map(frame=>frame[0]),[0x12,0x14,0x13,0x12]);
+    f.rx(0x12,[9]);await flush();f.rx(0x14,[2]);await flush();f.rx(0x13);
+    await Promise.all([invalid,next]);
+    assert.deepEqual(received,[[1],[2]]);assert.deepEqual([errors,done],[1,1]);
+    assert.deepEqual(f.writes.filter(frame=>frame[0]===0x13).map(frame=>frame[4]),[5,9]);
+    assert.equal(f.api.get_transport_diagnostics().fileTransferActive,false);
+    assert.equal(f.api.get_transport_diagnostics().queuedFileTransfers,0);
+    assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
+});
+
 test('download and upload share one complete file-transaction queue',async()=>{
     const f=protocolFixture();let uploaded=0;
     const read=f.api.vfs_helper_read_file('E:/one.bin',()=>{},e=>assert.fail(e),()=>{});
@@ -1682,5 +1763,121 @@ test('known LCD660 and OLED small downloads keep legacy OPEN/READ/CLOSE without 
         await flush();assert.equal(f.writes.at(-1)[0],0x12);
         f.rx(0x12,[0]);await flush();f.rx(0x14,[7,0]);await flush();f.rx(0x13);await p;
         assert.deepEqual(value,[7,0]);assert.deepEqual(f.writes.map(x=>x[0]),[0x12,0x14,0x13]);
+    }
+});
+
+const batchVersion = '2.22.0-DE3.97';
+const batchRevision = '0000000700000009';
+const batchCapability = [80,88,66,82,1,4,60,2,1,0,0,0,7,0,0,0];
+async function enableBatch(f, maximum=243, gatt=247) {
+    const transport=f.api.negotiate_transport();
+    f.rx(0x03,[80,88,68,70,1,3,maximum&255,maximum>>8,gatt&255,gatt>>8]);await transport;
+    const probe=f.api.vfs_probe_small_batch(batchVersion);f.rx(0x25,batchCapability);await probe;
+}
+
+test('App670 batch capability is explicit, strict, session-bound and absent on older firmware',async()=>{
+    const f=protocolFixture();
+    for(const version of ['2.22.0-DE3.96','2.22.0-DE3.97-OLED','2.22.0-DE3.999'])
+        assert.equal(await f.api.vfs_probe_small_batch(version),null);
+    assert.equal(f.writes.length,0);
+    const first=f.api.vfs_probe_small_batch(batchVersion),second=f.api.vfs_probe_small_batch(batchVersion);
+    assert.equal(f.writes.length,1);f.rx(0x25,batchCapability);
+    assert.equal((await first).maxCount,4);assert.equal(await first,await second);
+    assert.equal((await f.api.vfs_probe_small_batch(batchVersion)).observedRevision,'0000000700000001');
+    assert.equal(f.writes.length,1);
+    f.bus.emit('ble_disconnected');
+    const absent=f.api.vfs_probe_small_batch(batchVersion);f.rx(0x25,[],0,255);
+    assert.equal(await absent,null);assert.equal(await f.api.vfs_probe_small_batch(batchVersion),null);
+    assert.equal(f.writes.length,2);
+    for(const index of [0,4,5,6,8]){
+        const bad=protocolFixture(),payload=batchCapability.slice();
+        if(index===8)payload.fill(0,8);else payload[index]++;
+        const rejected=assert.rejects(bad.api.vfs_probe_small_batch(batchVersion));bad.rx(0x25,payload);await rejected;
+        const retry=bad.api.vfs_probe_small_batch(batchVersion);bad.rx(0x25,batchCapability);assert.equal((await retry).maxFileBytes,572);
+    }
+});
+
+test('App670 batch READ owns its request and stages ordered empty/Unicode/max-size members until RX and TX finish',async()=>{
+    const f=protocolFixture();await enableBatch(f);
+    const gate=deferred();f.setWrite(()=>gate.promise);
+    const files=[{path:'E:/ä.bin',size:2},{path:'E:/empty',size:0},{path:'E:/max',size:572}];
+    let settled=false;
+    const result=f.api.vfs_read_small_batch(files,batchRevision,batchVersion).then(value=>{settled=true;return value;});
+    files[0].path='E:/changed';files[2].size=1;
+    await flush();
+    const request=Buffer.from(f.writes.at(-1)).subarray(4);
+    assert.equal(request[0],0);assert.equal(request[1],3);assert.equal(request.readBigUInt64LE(2),0x700000009n);
+    assert.equal(request.readUInt16LE(10),Buffer.byteLength('E:/ä.bin'));
+    assert.equal(request.subarray(12,12+request.readUInt16LE(10)).toString(),'E:/ä.bin');
+    assert.equal(f.writeModes.at(-1),true);
+    const body=[1,2,...new Array(572).fill(7)];
+    f.rx(0x26,body.slice(0,243),0x8000);await flush();assert.equal(settled,false);
+    f.rx(0x26,body.slice(243,486),0x8001);f.rx(0x26,body.slice(486),2);await flush();assert.equal(settled,false);
+    gate.resolve();const value=await result;
+    assert.deepEqual(value.map(entry=>entry.path),['E:/ä.bin','E:/empty','E:/max']);
+    assert.deepEqual(value.map(entry=>entry.bytes.length),[2,0,572]);assert.deepEqual(bytes(value[0].bytes),[1,2]);
+    assert.equal(value[2].bytes[571],7);
+});
+
+test('App670 batch DIGEST binds exact digest slots and never reuses the capability probe revision',async()=>{
+    const f=protocolFixture();await enableBatch(f);
+    const files=[{path:'E:/a',size:0},{path:'E:/b',size:540}];
+    const result=f.api.vfs_digest_small_batch(files,batchRevision,batchVersion);await flush();
+    assert.equal(f.writes.at(-1)[4],1);assert.equal(Buffer.from(f.writes.at(-1)).readBigUInt64LE(6),0x700000009n);
+    f.rx(0x26,[...new Array(32).fill(0xab),...new Array(32).fill(0xcd)]);
+    assert.deepEqual((await result).map(entry=>entry.sha256),['ab'.repeat(32),'cd'.repeat(32)]);
+});
+
+test('App670 batch rejects malformed input and falls back before a too-small negotiated request',async()=>{
+    const f=protocolFixture();
+    for(const files of [[],new Array(5).fill({path:'E:/x',size:1}),[{path:'E:/x',size:573}],
+        [{path:'E:/x',size:1},{path:'E:/x',size:1}],[{path:'E:/\ud800',size:1}],
+        Array.from({length:4},(_,i)=>({path:'E:/'+'d'.repeat(14)+'/'+String(i).repeat(47),size:1}))])
+        await assert.rejects(f.api.vfs_read_small_batch(files,batchRevision,batchVersion));
+    await assert.rejects(f.api.vfs_read_small_batch([{path:'E:/x',size:1}],'0000000000000000',batchVersion));
+    assert.equal(f.writes.length,0);
+    await enableBatch(f,40);const count=f.writes.length;
+    assert.equal(await f.api.vfs_read_small_batch([{path:'E:/long-first-name',size:1},{path:'E:/long-second-name',size:1}],batchRevision,batchVersion),null);
+    assert.equal(f.writes.length,count);
+});
+
+test('App670 batch final error, truncation, oversized reply and chunk disorder never expose partial members',async()=>{
+    for(const mode of ['device','short','long','order']){
+        const f=protocolFixture();await enableBatch(f);
+        let successes=0;const result=f.api.vfs_read_small_batch([{path:'E:/a',size:2},{path:'E:/b',size:3}],batchRevision,batchVersion)
+            .then(value=>{successes++;return value;});
+        const rejected=assert.rejects(result);await flush();
+        if(mode==='device'){f.rx(0x26,[1,2],0x8000);f.rx(0x26,[],1,1);}
+        else if(mode==='short')f.rx(0x26,[1,2,3,4]);
+        else if(mode==='long')f.rx(0x26,[1,2,3,4,5,6]);
+        else f.rx(0x26,[1,2],1);
+        await rejected;assert.equal(successes,0);
+        assert.equal(f.api.get_transport_diagnostics().fileTransferActive,false);
+        assert.equal(f.api.get_transport_diagnostics().queuedFileTransfers,0);
+    }
+});
+
+test('App670 batch waits for a previous handle transaction and disconnect cancels active plus queued batches',async()=>{
+    const f=protocolFixture();await enableBatch(f);
+    const previous=new Promise((resolve,reject)=>f.api.vfs_helper_read_file('E:/large',resolve,reject,undefined,{max_bytes:1}));
+    const batch=f.api.vfs_read_small_batch([{path:'E:/a',size:1}],batchRevision,batchVersion);
+    await flush();assert.equal(f.writes.at(-1)[0],0x12);
+    f.rx(0x12,[1]);await flush();assert.equal(f.writes.at(-1)[0],0x14);
+    f.rx(0x14,[9]);await flush();assert.equal(f.writes.at(-1)[0],0x13);
+    f.rx(0x13);await previous;await flush();assert.equal(f.writes.at(-1)[0],0x26);
+    const next=f.api.vfs_digest_small_batch([{path:'E:/b',size:1}],batchRevision,batchVersion);
+    const failures=[assert.rejects(batch),assert.rejects(next)];
+    f.rx(0x26,[],0x8000);f.bus.emit('ble_disconnected');await Promise.all(failures);await flush();
+    const count=f.writes.length;f.rx(0x26,[8],1);await flush();assert.equal(f.writes.length,count);
+    assert.equal(f.api.get_transport_diagnostics().queuedFileTransfers,0);
+});
+
+test('App670 SmallRead WNR is limited to a confirmed single-frame protocol request',async()=>{
+    for(const gatt of [247,20]){
+        const f=protocolFixture();await enableBatch(f,243,gatt);
+        const cap=f.api.vfs_small_create_revision(batchVersion),withRead=nativeCap.slice();withRead[5]=7;f.rx(0x22,withRead);await cap;
+        const before=f.writes.length,result=f.api.vfs_read_small_file('E:/long-enough-name',1);await flush();
+        assert(f.writeModes.slice(before).every(value=>value===(gatt===247)));
+        f.rx(0x24,[7]);assert.deepEqual(bytes(await result),[7]);
     }
 });

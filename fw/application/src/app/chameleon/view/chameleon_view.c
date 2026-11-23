@@ -25,17 +25,8 @@ static void chameleon_view_on_draw(mui_view_t *p_view, mui_canvas_t *p_canvas) {
     const tag_specific_type_name_t *tag_name = tag_helper_get_tag_type_name(tag_type);
     const nfc_tag_14a_coll_res_reference_t *coll_res = tag_helper_get_active_coll_res_ref();
 
-    if (*(coll_res->size) == NFC_TAG_14A_UID_SINGLE_SIZE) {
-        sprintf(buff, "[%02d]%02x:%02x:%02x:%02x", slot + 1, coll_res->uid[0], coll_res->uid[1], coll_res->uid[2],
-                coll_res->uid[3]);
-    } else if (*(coll_res->size) == NFC_TAG_14A_UID_DOUBLE_SIZE) {
-        sprintf(buff, "[%02d]%02x:%02x:%02x:%02x:%02x:%02x:%02x", slot + 1, coll_res->uid[0], coll_res->uid[1],
-                coll_res->uid[2], coll_res->uid[3], coll_res->uid[4], coll_res->uid[5], coll_res->uid[6]);
-    } else {
-        sprintf(buff, "[%02d]%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", slot + 1, coll_res->uid[0],
-                coll_res->uid[1], coll_res->uid[2], coll_res->uid[3], coll_res->uid[4], coll_res->uid[5],
-                coll_res->uid[6], coll_res->uid[7], coll_res->uid[8], coll_res->uid[9]);
-    }
+    int prefix = sprintf(buff, "[%02u]", (unsigned)slot + 1);
+    tag_helper_format_uid(buff + prefix, coll_res->uid, *coll_res->size);
     mui_canvas_draw_utf8(p_canvas, 0, y + 10, buff);
 
     mui_canvas_set_draw_color(p_canvas, 1);

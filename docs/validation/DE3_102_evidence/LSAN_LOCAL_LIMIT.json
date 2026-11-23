@@ -1,0 +1,9 @@
+{
+  "available": false,
+  "positiveControlPassed": false,
+  "observedError": "LeakSanitizer does not work under ptrace (strace, gdb, etc)",
+  "strictRunnerExitCode": 1,
+  "controlLogSha256": "aec3a8844a6853408001b9f1f5ecf5db6b6f20db08514ed4b1442a6783de231c",
+  "localFallback": "Explicit ASan/UBSan-only current-App675 data-path run; no local LSan PASS is claimed.",
+  "independentCurrentCiRequired": true
+}

@@ -30,20 +30,31 @@ function mount(overrides={}){
 }
 async function load(h){await h.input().props.onChange({target:{files:[{name:'saved.zip'}],value:'saved.zip'}});await Vue.nextTick()}
 
-test('the local App662 default remains visible alongside the connected DE3.65 identity',async()=>{
+test('the normal App675 default retains separate test and historical choices and the connected DE3.65 identity',async()=>{
  const h=mount({approved:true,capacity:async()=>({passed:true})})
  try {
   const options=flat(h.root).filter(n=>n.type==='option')
-  assert.equal(options[0].props.value,'de389')
-  assert.equal(text(options[0]),'DE3.89 / 662')
-  assert.match(text(h.root),/DE3.89 \/ 662/)
+  assert.equal(options[0].props.value,'de3102')
+  assert.equal(text(options[0]),'DE3.102 / 675')
+  for(const [index,id,label] of [[1,'de3101','DE3.101 / 674'],[2,'de3100','DE3.100 / 673'],[3,'de399','DE3.99 / 672'],[4,'de398','DE3.98 / 671'],[5,'de397','DE3.97 / 670 · Test 1'],[6,'de396','DE3.96 / 669 · Test 1'],[7,'de395','DE3.95 / 668'],[8,'de394','DE3.94 / 667'],[9,'de392','DE3.92 / 665'],[10,'de391','DE3.91 / 664']]) {
+    assert.equal(options[index].props.value,id);assert.equal(text(options[index]),label)
+  }
+  assert.equal(h.vm.selectedCapacityOption.reference,'DE3.102 / 675')
+  assert.match(text(h.root),/normale Firmware verwendet weiterhin PFS1/)
+  assert.doesNotMatch(text(h.root),/Test 1 verwendet weiterhin/)
+  assert.match(text(h.root),/keine erneute Speicherumstellung/)
   await load(h);await h.vm.checkCapacity()
   h.vm.target={identity:{firmwareVersion:'2.22.0-DE3.65',applicationCounter:637},state:{mounted:true,ready:true}}
   await Vue.nextTick()
-  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.89 \/ 662/)
+  assert.match(text(h.root),/Simuliertes Prüfprofil DE3.102 \/ 675/)
   assert.match(text(h.root),/2.22.0-DE3.65 · Anwendungszähler 637/)
   h.props.language='en';await Vue.nextTick()
-  assert.match(text(h.root),/Simulated profile DE3.89 \/ 662/)
+  assert.match(text(h.root),/Simulated profile DE3.102 \/ 675/)
+  assert.match(text(h.root),/normal firmware continues to use PFS1/)
+  h.vm.changeCapacityProfile('de397');await Vue.nextTick()
+  assert.equal(h.vm.selectedCapacityOption.reference,'DE3.97 / 670 · Test 1')
+  assert.match(text(h.root),/Test 1 continues to use PFS1/)
+  assert.equal(h.vm.capacityProof,null)
  }finally{h.app.unmount()}
 })
 
@@ -246,7 +257,7 @@ test('3.26 already-Packed notice requires a fresh explicit storage response, nev
 
 test('3.26 capacity profile is explicit and changes invalidate prior proof without modifying a bound import',async()=>{
  let observed;const h=mount({approved:true,capacity:async(a,o)=>{observed=o.capacityProfile;return{passed:true}}});try{
-  await load(h);assert.equal(h.vm.capacityProfile,'de389');await h.vm.checkCapacity();assert.equal(observed,'de389');
+  await load(h);assert.equal(h.vm.capacityProfile,'de3102');await h.vm.checkCapacity();assert.equal(observed,'de3102');
   h.vm.target={identity:{},state:{mounted:false}};h.vm.changeCapacityProfile('legacy');assert.equal(h.vm.capacityProfile,'legacy');assert.equal(h.vm.capacityProof,null);assert.equal(h.vm.target,null);
   await h.vm.checkCapacity();assert.equal(observed,'legacy');h.vm.target={identity:{},state:{pending:true,bound:true}};
   h.vm.changeCapacityProfile('current');assert.equal(h.vm.capacityProfile,'legacy');assert(h.vm.capacityProof);

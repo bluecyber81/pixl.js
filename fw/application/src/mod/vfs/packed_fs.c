@@ -3,6 +3,9 @@
  * All publication is through one atomic replacement of the small manifest.
  */
 #include "packed_fs.h"
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+#include "../runtime_diag.h"
+#endif
 #include <limits.h>
 #include <string.h>
 
@@ -20,6 +23,10 @@
 #define STAGE "/.pfs_stage"
 #define BUSY LFS_ERR_BADF
 #define DISK (PFS_BLOCK_COUNT * PFS_BLOCK_SIZE)
+
+/* PINNED is a completed scan whose only remaining garbage is still owned by
+ * old readers. It uses the existing state byte and remains pending on wire. */
+enum { GC_CLEAN, GC_PENDING, GC_UNKNOWN, GC_PINNED };
 
 typedef struct {
   uint32_t generation, next_id, count, objects, pending, bound;
@@ -63,6 +70,11 @@ struct pfs {
   bool mounted, poisoned, transaction;
   uint8_t read_cache[PFS_CACHE_SIZE], prog_cache[PFS_CACHE_SIZE], lookahead[64],
       copy[PFS_CACHE_SIZE];
+  uint8_t gc_state;
+#if defined(BOARD_LCD) && (defined(PIXL_RUNTIME_DIAGNOSTICS) || defined(PIXL_TEST_DIAGNOSTICS))
+  bool gc_result_known;
+  int32_t gc_last_result;
+#endif
 };
 struct pfs_file {
   handle_t h;
@@ -124,25 +136,44 @@ typedef struct {
     0xb3667a2eu, 0xc4614ab8u, 0x5d681b02u, 0x2a6f2b94u, 0xb40bbe37u, 0xc30c8ea1u, 0x5a05df1bu, 0x2d02ef8du,
   };
 static uint32_t crc(uint32_t c, const void *data, size_t n) {
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+  uint32_t profile = runtime_diag_profile_begin();
+#endif
   /* The same reflected CRC32 and caller-owned seed/finalization as lfs_crc.
    * One byte per lookup avoids two nibble steps while mount validates every
    * payload twice (record and shard). The immutable 1-KiB table stays in flash;
    * no additional heap, stack buffer or mutable state is needed. */
 
   const uint8_t *bytes = data;
-  for (size_t i = 0; i < n; i++)
-    c = (c >> 8) ^ table[(c ^ bytes[i]) & 0xffu];
+  /* Keep the loop exit in the backedge: Cortex-M4 -Os otherwise emits an
+   * extra branch for every byte. Zero length still never touches data. */
+  if (n) {
+    do {
+      c = (c >> 8) ^ table[(c ^ *bytes++) & 0xffu];
+    } while (--n);
+  }
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+  runtime_diag_profile_end(MOUNT_PROFILE_CRC, profile);
+#endif
   return c;
 }
 static uint32_t crc_pair(uint32_t c, uint32_t *second, const void *data, size_t n) {
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+  uint32_t profile = runtime_diag_profile_begin();
+#endif
   const uint8_t *p = data;
   uint32_t d = *second;
-  for (size_t i = 0; i < n; i++) {
-    uint8_t b = p[i];
-    c = (c >> 8) ^ table[(c ^ b) & 255u];
-    d = (d >> 8) ^ table[(d ^ b) & 255u];
+  if (n) {
+    do {
+      uint8_t b = *p++;
+      c = (c >> 8) ^ table[(c ^ b) & 255u];
+      d = (d >> 8) ^ table[(d ^ b) & 255u];
+    } while (--n);
   }
   *second = d;
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+  runtime_diag_profile_end(MOUNT_PROFILE_CRC, profile);
+#endif
   return c;
 }
 
@@ -522,20 +553,34 @@ static int get_catalog(pfs_t *fs, unsigned slot, catalog_t **out) {
   *out = c;
   return 0;
 }
+/* Keep the bounded cache useful when the manifest has more groups than slots.
+ * A still-live collision is cheaper to search directly than to rebuild its full
+ * index and evict another live filter on every lookup. Mount already validated
+ * the immutable group; direct search still checks every index entry it reads.
+ * Obsolete/free entries may be replaced normally, including after compaction. */
+static bool manifest_has(const manifest_t *m, uint32_t id);
 static int lookup(pfs_t *fs, const manifest_t *m, const char *path,
                   pfs_info_t *info, location_t *loc) {
   uint32_t hash = path_hash(path);
   for (unsigned slot = 0; slot < m->count; slot++) {
-    catalog_t *cat;
-    int checked = get_catalog(fs, slot, &cat);
-    if (checked)
-      return checked;
-    unsigned bit = hash & 255u;
-    if (!(cat->filter[bit >> 5] & (1u << (bit & 31))))
-      continue;
-    bit = (hash >> 16) & 255u;
-    if (!(cat->filter[bit >> 5] & (1u << (bit & 31))))
-      continue;
+    catalog_t *cat = &fs->catalog[slot % CATALOG_SLOTS];
+    if (cat->id != m->ids[slot]) {
+      if (m->count > CATALOG_SLOTS && manifest_has(m, cat->id)) {
+        cat = NULL;
+      } else {
+        int checked = get_catalog(fs, slot, &cat);
+        if (checked)
+          return checked;
+      }
+    }
+    if (cat) {
+      unsigned bit = hash & 255u;
+      if (!(cat->filter[bit >> 5] & (1u << (bit & 31))))
+        continue;
+      bit = (hash >> 16) & 255u;
+      if (!(cat->filter[bit >> 5] & (1u << (bit & 31))))
+        continue;
+    }
     io_t io;
     char name[16];
     shard_name(m->ids[slot], name);
@@ -653,6 +698,7 @@ static int publish(pfs_t *fs, const manifest_t *m) {
   uint32_t n = MH + 4 * m->count;
   put32(b + n, ~crc(~0u, b, n));
   io_t io;
+  fs->gc_state = GC_PENDING;
   int r = io_open(fs, &io, NEXT, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_EXCL);
   if (r)
     return io_error(fs, r);
@@ -670,59 +716,134 @@ static int publish(pfs_t *fs, const manifest_t *m) {
   fs->current = *m;
   return 0;
 }
-static bool referenced(pfs_t *fs, uint32_t id) {
-  for (unsigned i = 0; i < fs->current.count; i++)
-    if (fs->current.ids[i] == id)
+static bool manifest_has(const manifest_t *m, uint32_t id) {
+  for (unsigned i = 0; i < m->count; i++)
+    if (m->ids[i] == id)
       return true;
+  return false;
+}
+static bool referenced(pfs_t *fs, uint32_t id, const handle_t *except) {
+  if (manifest_has(&fs->current, id))
+    return true;
   for (handle_t *h = fs->handles; h; h = h->next) {
+    if (h == except)
+      continue;
     if (h->kind == 1) {
       pfs_file_t *f = (pfs_file_t *)h;
       if (!f->writing && f->loc.shard == id)
         return true;
-    } else {
-      pfs_dir_t *d = (pfs_dir_t *)h;
-      for (unsigned i = 0; i < d->snapshot.count; i++)
-        if (d->snapshot.ids[i] == id)
-          return true;
+    } else if (manifest_has(&((pfs_dir_t *)h)->snapshot, id)) {
+      return true;
     }
   }
   return false;
 }
+#if defined(BOARD_LCD) && (defined(PIXL_RUNTIME_DIAGNOSTICS) || defined(PIXL_TEST_DIAGNOSTICS))
+/* Record the completed collector result, including a successful zero. This
+ * does not change publication's best-effort maintenance error contract. */
+static int collected(pfs_t *fs, int result) {
+  fs->gc_last_result = result;
+  fs->gc_result_known = true;
+  return result;
+}
+bool pfs_gc_diagnostic(const pfs_t *fs, pfs_gc_diagnostic_t *out) {
+  if (!out) return false;
+  memset(out, 0, sizeof(*out));
+  if (!fs || !fs->mounted) return true;
+  out->flags = 1u | (fs->poisoned ? 2u : 0u) |
+               (fs->transaction ? 4u : 0u) | (fs->writer ? 8u : 0u) |
+               (fs->gc_result_known ? 16u : 0u);
+  out->state = fs->gc_state == GC_UNKNOWN ? 0u : fs->gc_state == GC_CLEAN ? 2u : 1u;
+  out->generation = fs->current.generation;
+  out->last_result = fs->gc_result_known ? fs->gc_last_result : 0;
+  for (const handle_t *h = fs->handles; h; h = h->next) {
+    bool held = false;
+    if (h->kind == 1) {
+      const pfs_file_t *f = (const pfs_file_t *)h;
+      if (f->writing) continue;
+      out->readers++;
+      held = !manifest_has(&fs->current, f->loc.shard);
+    } else {
+      const manifest_t *snapshot = &((const pfs_dir_t *)h)->snapshot;
+      out->directories++;
+      for (unsigned i = 0; i < snapshot->count; i++)
+        if (!manifest_has(&fs->current, snapshot->ids[i])) { held = true; break; }
+    }
+    if (held) out->held_handles++;
+  }
+  return true;
+}
+#else
+static int collected(pfs_t *fs, int result) { (void)fs; return result; }
+#endif
 static int collect(pfs_t *fs) {
-  /* Restart iteration after removal: littlefs directory positions may shift. */
-  for (;;) {
-    lfs_dir_t dir;
-    int r = lfs_dir_open(&fs->lfs, &dir, "/");
-    if (r)
-      return io_error(fs, r);
-    struct lfs_info info;
-    bool found = false;
-    char path[48];
-    while ((r = lfs_dir_read(&fs->lfs, &dir, &info)) > 0) {
-      uint32_t id;
-      bool stale = shard_id(info.name, &id) && !referenced(fs, id);
-      stale |= !strcmp(info.name, NEXT + 1);
-      stale |= !fs->writer && !strcmp(info.name, STAGE + 1);
-      if (stale) {
-        if (info.type != LFS_TYPE_REG) {
-          r = LFS_ERR_CORRUPT;
-          break;
-        }
-        path[0] = '/';
-        memcpy(path + 1, info.name, strlen(info.name) + 1);
-        found = true;
+  /* Keep the request on error, and while a reader pins an obsolete group.
+   * A mounted volume starts UNKNOWN: ordinary reads must never initiate GC. */
+  fs->gc_state = GC_PENDING;
+  bool pinned = false;
+  /* Embedded littlefs 2.8 adjusts registered directory iterators after delete,
+   * including id/position and metadata-pair split/drop/relocation. Keep this
+   * iterator registered until completion instead of rescanning after each file. */
+  lfs_dir_t dir;
+  int r = lfs_dir_open(&fs->lfs, &dir, "/");
+  if (r)
+    return collected(fs, io_error(fs, r));
+  struct lfs_info info;
+  while ((r = lfs_dir_read(&fs->lfs, &dir, &info)) > 0) {
+    uint32_t id;
+    bool shard = shard_id(info.name, &id);
+    bool held = shard && referenced(fs, id, NULL);
+    if (held && !manifest_has(&fs->current, id))
+      pinned = true;
+    bool stale = shard && !held;
+    stale |= !strcmp(info.name, NEXT + 1);
+    stale |= !fs->writer && !strcmp(info.name, STAGE + 1);
+    if (stale) {
+      if (info.type != LFS_TYPE_REG) {
+        r = LFS_ERR_CORRUPT;
         break;
       }
+      char path[48];
+      path[0] = '/';
+      memcpy(path + 1, info.name, strlen(info.name) + 1);
+      r = lfs_remove(&fs->lfs, path);
+      if (r)
+        break;
     }
-    int closed = lfs_dir_close(&fs->lfs, &dir);
-    if (r < 0 || closed < 0)
-      return io_error(fs, r < 0 ? r : closed);
-    if (!found)
-      return 0;
-    r = lfs_remove(&fs->lfs, path);
-    if (r)
-      return io_error(fs, r);
   }
+  int closed = lfs_dir_close(&fs->lfs, &dir);
+  if (r < 0 || closed < 0)
+    return collected(fs, io_error(fs, r < 0 ? r : closed));
+  fs->gc_state = fs->writer ? GC_PENDING : pinned ? GC_PINNED : GC_CLEAN;
+  return collected(fs, 0);
+}
+/* A completed pinned-only scan has no reclaimable work until a last owner
+ * leaves. New staging/output/manifest files mark PENDING before creation. */
+static bool needs_collection(const pfs_t *fs) {
+  return fs->gc_state != GC_CLEAN && fs->gc_state != GC_PINNED;
+}
+/* Maintenance is best effort after publication. An I/O failure still poisons
+ * subsequent writes, but cannot turn a durable commit into a retryable failure. */
+static void maintain(pfs_t *fs) {
+  if (fs->gc_state == GC_PENDING && fs->mounted && !fs->poisoned &&
+      !fs->transaction && !fs->writer)
+    (void)collect(fs);
+}
+/* Skip a close-triggered scan unless this handle releases the last reference
+ * to at least one obsolete group. New metadata readers and overlapping directory
+ * snapshots cannot repeatedly scan the medium while another reader pins it. */
+static bool releases_obsolete(pfs_t *fs, const handle_t *h) {
+  if (fs->gc_state != GC_PENDING && fs->gc_state != GC_PINNED)
+    return false;
+  if (h->kind == 1) {
+    const pfs_file_t *file = (const pfs_file_t *)h;
+    return !file->writing && !referenced(fs, file->loc.shard, h);
+  }
+  const pfs_dir_t *dir = (const pfs_dir_t *)h;
+  for (unsigned i = 0; i < dir->snapshot.count; i++)
+    if (!referenced(fs, dir->snapshot.ids[i], h))
+      return true;
+  return false;
 }
 int pfs_gc(pfs_t *fs) {
   int r = ready(fs, true);
@@ -793,6 +914,7 @@ int pfs_unmount(pfs_t *fs) {
   if (!r) {
     fs->mounted = false;
     fs->poisoned = false;
+    fs->gc_state = GC_UNKNOWN;
   }
   return r;
 }
@@ -810,6 +932,10 @@ int pfs_mount(pfs_t *fs) {
     return LFS_ERR_INVAL;
   if (fs->mounted)
     return fs->poisoned ? LFS_ERR_IO : 0;
+#if defined(BOARD_LCD) && (defined(PIXL_RUNTIME_DIAGNOSTICS) || defined(PIXL_TEST_DIAGNOSTICS))
+  fs->gc_result_known = false;
+  fs->gc_last_result = 0;
+#endif
   int r = lfs_mount(&fs->lfs, &fs->cfg);
   if (r)
     return r;
@@ -854,6 +980,9 @@ int pfs_mount(pfs_t *fs) {
     if (!r && offset != SH + body)
       r = LFS_ERR_CORRUPT;
     uint32_t previous = 0, previous_offset = 0;
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+    uint32_t index_profile = runtime_diag_profile_begin();
+#endif
     for (unsigned j = 0; !r && j < count; j++) {
       uint8_t entry[IX];
       r = read_at(fs, &io, offset, entry, IX);
@@ -877,6 +1006,9 @@ int pfs_mount(pfs_t *fs) {
       sum = crc(sum, entry, IX);
       offset += IX;
     }
+#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+    runtime_diag_profile_end(MOUNT_PROFILE_INDEX, index_profile);
+#endif
     if (!r)
       r = read_at(fs, &io, offset, footer, 4);
     if (!r && u32(footer) != ~sum)
@@ -900,6 +1032,7 @@ int pfs_mount(pfs_t *fs) {
   }
   fs->mounted = true;
   fs->poisoned = false;
+  fs->gc_state = GC_UNKNOWN;
   return 0;
 }
 int pfs_format(pfs_t *fs) {
@@ -916,12 +1049,14 @@ int pfs_format(pfs_t *fs) {
     return r;
   fs->mounted = true;
   fs->poisoned = false;
+  fs->gc_state = GC_CLEAN;
   memset(fs->catalog, 0, sizeof(fs->catalog));
   manifest_t m = {0};
   m.generation = m.next_id = m.pending = 1;
   r = publish(fs, &m);
   if (r)
     fs->poisoned = true;
+  maintain(fs);
   return r;
 }
 int pfs_bind_import(pfs_t *fs, const uint8_t digest[32]) {
@@ -945,7 +1080,9 @@ int pfs_bind_import(pfs_t *fs, const uint8_t digest[32]) {
   m.bound = 1;
   memcpy(m.archive, digest, 32);
   m.generation++;
-  return publish(fs, &m);
+  r = publish(fs, &m);
+  maintain(fs);
+  return r;
 }
 int pfs_finish_import(pfs_t *fs) {
   if (!fs || !fs->mounted || !fs->current.bound)
@@ -962,7 +1099,9 @@ int pfs_finish_import(pfs_t *fs) {
   manifest_t m = fs->current;
   m.pending = 0;
   m.generation++;
-  return publish(fs, &m);
+  r = publish(fs, &m);
+  maintain(fs);
+  return r;
 }
 int pfs_space(pfs_t *fs, uint32_t *total, uint32_t *free_bytes) {
   if (!total || !free_bytes)
@@ -1058,6 +1197,8 @@ static int write_record(pfs_t *fs, io_t *output, const pfs_info_t *info,
   put32(h, ~sum);
   return r ? r : emit(fs, output, h, 4, NULL, NULL);
 }
+/* Keep the two IO caches local to rebuilding, never to planning/publication. */
+__attribute__((noinline))
 static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
                    uint32_t count, uint32_t body, bool add) {
   if (count > MAX_RECORDS)
@@ -1137,6 +1278,176 @@ static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
     r = lfs_file_sync(&fs->lfs, &output.f);
   return io_close(fs, &output, r);
 }
+/* Planning needs only record count and body length, not a complete Bloom
+ * filter. Reading a cold header avoids scanning every index and preserves the
+ * verified parent filters of other live groups in the bounded catalogue. */
+static int shard_dimensions(pfs_t *fs, unsigned slot, uint32_t *count,
+                            uint32_t *body) {
+  const catalog_t *cat = &fs->catalog[slot % CATALOG_SLOTS];
+  uint32_t id = fs->current.ids[slot];
+  if (cat->id == id) {
+    *count = cat->count;
+    *body = cat->body;
+    return 0;
+  }
+  io_t io;
+  char path[16];
+  shard_name(id, path);
+  int r = io_open(fs, &io, path, LFS_O_RDONLY);
+  if (r)
+    return r;
+  r = shard_header(fs, &io, id, count, body);
+  return io_close(fs, &io, r);
+}
+/* Only this bounded plan survives the planning cursor. Rebuild has its own
+ * IO caches and record buffer, and returns before publication. These explicit
+ * call boundaries prevent -Os from merging all three phases into one frame.
+ * No additional heap allocation or persistent workspace is introduced. */
+typedef struct {
+  bool affected[PFS_MAX_SHARDS];
+  uint32_t counts[PFS_MAX_SHARDS], bodies[PFS_MAX_SHARDS];
+  uint32_t objects, slots;
+  int addslot;
+} transaction_plan_t;
+
+__attribute__((noinline))
+static int plan_transaction(pfs_t *fs, const change_t *c,
+                            transaction_plan_t *plan) {
+  memset(plan, 0, sizeof(*plan));
+  int r;
+  pfs_info_t info;
+  location_t loc;
+  plan->objects = fs->current.objects;
+  for (unsigned i = 0; i < fs->current.count; i++) {
+    r = shard_dimensions(fs, i, &plan->counts[i], &plan->bodies[i]);
+    if (r)
+      return io_error(fs, r);
+  }
+  if (c->subtree) {
+    cursor_t cursor = {0};
+    while ((r = next_record(fs, &fs->current, &cursor, &info, &loc, 64)) > 0) {
+      if (!matches(c, info.path))
+        continue;
+      unsigned slot = cursor.shard;
+      plan->affected[slot] = true;
+      bool keep;
+      r = transform(c, &info, &keep);
+      if (r)
+        break;
+      plan->bodies[slot] -= loc.size;
+      if (keep) {
+        uint32_t size = record_size(&info);
+        if (size > DISK - plan->bodies[slot]) {
+          r = LFS_ERR_NOSPC;
+          break;
+        }
+        plan->bodies[slot] += size;
+      } else {
+        plan->counts[slot]--;
+        plan->objects--;
+      }
+    }
+    r = cursor_close(fs, &cursor, r < 0 ? r : 0);
+    if (r)
+      return io_error(fs, r);
+  } else if (c->exists) {
+    r = lookup(fs, &fs->current, c->path, &info, &loc);
+    if (r)
+      return io_error(fs, r);
+    unsigned slot = 0;
+    while (slot < fs->current.count && fs->current.ids[slot] != loc.shard)
+      slot++;
+    if (slot == fs->current.count)
+      return io_error(fs, LFS_ERR_CORRUPT);
+    plan->affected[slot] = true;
+    bool keep;
+    r = transform(c, &info, &keep);
+    if (r)
+      return r;
+    plan->bodies[slot] -= loc.size;
+    if (keep) {
+      uint32_t size = record_size(&info);
+      if (size > DISK - plan->bodies[slot])
+        return LFS_ERR_NOSPC;
+      plan->bodies[slot] += size;
+    } else {
+      plan->counts[slot]--;
+      plan->objects--;
+    }
+  }
+  plan->addslot = -1;
+  bool append = c->op == PUT && !c->exists;
+  if (append) {
+    uint32_t size = record_size(&c->info);
+    if (size > DISK - SH - 4)
+      return LFS_ERR_NOSPC;
+    if (fs->current.count &&
+        plan->bodies[fs->current.count - 1] + size + SH + 4 +
+                (plan->counts[fs->current.count - 1] + 1) * IX <=
+            PFS_SHARD_TARGET &&
+        plan->counts[fs->current.count - 1] < MAX_RECORDS)
+      plan->addslot = (int)fs->current.count - 1;
+    else if (fs->current.count < PFS_MAX_SHARDS)
+      plan->addslot = (int)fs->current.count;
+    else
+      return LFS_ERR_NOSPC;
+    plan->affected[plan->addslot] = true;
+    plan->bodies[plan->addslot] += size;
+    plan->counts[plan->addslot]++;
+    plan->objects++;
+  }
+  plan->slots = fs->current.count +
+                (append && plan->addslot == (int)fs->current.count);
+  return 0;
+}
+
+__attribute__((noinline))
+static int build_transaction(pfs_t *fs, const change_t *c, manifest_t *m,
+                             bool staged) {
+  transaction_plan_t plan;
+  int r = plan_transaction(fs, c, &plan);
+  if (r)
+    return r;
+  uint32_t needed = 8;
+  for (unsigned i = 0; i < plan.slots; i++)
+    if (plan.affected[i] && plan.counts[i])
+      needed += blocks_for(SH + plan.bodies[i] + plan.counts[i] * IX + 4);
+  r = reserve(fs, needed);
+  if (r == LFS_ERR_NOSPC && staged) {
+    r = collect(fs);
+    if (!r)
+      r = reserve(fs, needed);
+  }
+  if (r)
+    return r;
+  *m = fs->current;
+  m->count = 0;
+  m->objects = plan.objects;
+  m->generation++;
+  if (staged)
+    c->stage->commit_started = true;
+  fs->transaction = true;
+  fs->gc_state = GC_PENDING;
+  for (unsigned i = 0; !r && i < plan.slots; i++) {
+    if (!plan.affected[i]) {
+      m->ids[m->count++] = fs->current.ids[i];
+      continue;
+    }
+    if (!plan.counts[i])
+      continue;
+    if (m->next_id == UINT32_MAX) {
+      r = LFS_ERR_NOSPC;
+      break;
+    }
+    uint32_t id = m->next_id++;
+    r = rebuild(fs, c, i < fs->current.count ? fs->current.ids[i] : 0, id,
+                plan.counts[i], plan.bodies[i], (int)i == plan.addslot);
+    if (!r)
+      m->ids[m->count++] = id;
+  }
+  return r;
+}
+
 static int transact(pfs_t *fs, const change_t *c) {
   int r = ready(fs, true);
   if (r)
@@ -1153,139 +1464,25 @@ static int transact(pfs_t *fs, const change_t *c) {
    * only if the reserved transaction space actually needs them. A retry after
    * an earlier commit attempt must also collect its unpublished outputs. */
   bool staged = fs->writer && fs->writer == c->stage;
-  if (!staged || c->stage->commit_started) {
+  if (needs_collection(fs) && (!staged || c->stage->commit_started)) {
     r = collect(fs);
     if (r)
       return r;
   }
-  bool affected[PFS_MAX_SHARDS] = {0};
-  uint32_t counts[PFS_MAX_SHARDS] = {0}, bodies[PFS_MAX_SHARDS] = {0};
-  pfs_info_t info;
-  location_t loc;
-  uint32_t objects = fs->current.objects;
-  for (unsigned i = 0; i < fs->current.count; i++) {
-    catalog_t *cat;
-    r = get_catalog(fs, i, &cat);
-    if (r)
-      return io_error(fs, r);
-    counts[i] = cat->count;
-    bodies[i] = cat->body;
-  }
-  if (c->subtree) {
-    cursor_t cursor = {0};
-    while ((r = next_record(fs, &fs->current, &cursor, &info, &loc, 64)) > 0) {
-      if (!matches(c, info.path))
-        continue;
-      unsigned slot = cursor.shard;
-      affected[slot] = true;
-      bool keep;
-      r = transform(c, &info, &keep);
-      if (r)
-        break;
-      bodies[slot] -= loc.size;
-      if (keep) {
-        uint32_t size = record_size(&info);
-        if (size > DISK - bodies[slot]) {
-          r = LFS_ERR_NOSPC;
-          break;
-        }
-        bodies[slot] += size;
-      } else {
-        counts[slot]--;
-        objects--;
-      }
-    }
-    r = cursor_close(fs, &cursor, r < 0 ? r : 0);
-    if (r)
-      return io_error(fs, r);
-  } else if (c->exists) {
-    r = lookup(fs, &fs->current, c->path, &info, &loc);
-    if (r)
-      return io_error(fs, r);
-    unsigned slot = 0;
-    while (slot < fs->current.count && fs->current.ids[slot] != loc.shard)
-      slot++;
-    if (slot == fs->current.count)
-      return io_error(fs, LFS_ERR_CORRUPT);
-    affected[slot] = true;
-    bool keep;
-    r = transform(c, &info, &keep);
-    if (r)
-      return r;
-    bodies[slot] -= loc.size;
-    if (keep) {
-      uint32_t size = record_size(&info);
-      if (size > DISK - bodies[slot])
-        return LFS_ERR_NOSPC;
-      bodies[slot] += size;
-    } else {
-      counts[slot]--;
-      objects--;
-    }
-  }
-  int addslot = -1;
-  bool append = c->op == PUT && !c->exists;
-  if (append) {
-    uint32_t size = record_size(&c->info);
-    if (size > DISK - SH - 4)
-      return LFS_ERR_NOSPC;
-    if (fs->current.count &&
-        bodies[fs->current.count - 1] + size + SH + 4 +
-                (counts[fs->current.count - 1] + 1) * IX <=
-            PFS_SHARD_TARGET &&
-        counts[fs->current.count - 1] < MAX_RECORDS)
-      addslot = (int)fs->current.count - 1;
-    else if (fs->current.count < PFS_MAX_SHARDS)
-      addslot = (int)fs->current.count;
-    else
-      return LFS_ERR_NOSPC;
-    affected[addslot] = true;
-    bodies[addslot] += size;
-    counts[addslot]++;
-    objects++;
-  }
-  uint32_t needed = 8;
-  unsigned slots =
-      fs->current.count + (append && addslot == (int)fs->current.count);
-  for (unsigned i = 0; i < slots; i++)
-    if (affected[i] && counts[i])
-      needed += blocks_for(SH + bodies[i] + counts[i] * IX + 4);
-  r = reserve(fs, needed);
-  if (r == LFS_ERR_NOSPC && staged) {
-    r = collect(fs);
-    if (!r)
-      r = reserve(fs, needed);
-  }
-  if (r)
+  manifest_t m;
+  r = build_transaction(fs, c, &m, staged);
+  /* The builder sets transaction only after successful planning/reservation,
+   * at exactly the old boundary before the first unpublished shard is made.
+   * Early refusal therefore retains its old no-maintenance error path. */
+  if (!fs->transaction)
     return r;
-  manifest_t m = fs->current;
-  m.count = 0;
-  m.objects = objects;
-  m.generation++;
-  if (staged)
-    c->stage->commit_started = true;
-  fs->transaction = true;
-  for (unsigned i = 0; !r && i < slots; i++) {
-    if (!affected[i]) {
-      m.ids[m.count++] = fs->current.ids[i];
-      continue;
-    }
-    if (!counts[i])
-      continue;
-    if (m.next_id == UINT32_MAX) {
-      r = LFS_ERR_NOSPC;
-      break;
-    }
-    uint32_t id = m.next_id++;
-    r = rebuild(fs, c, i < fs->current.count ? fs->current.ids[i] : 0, id,
-                counts[i], bodies[i], (int)i == addslot);
-    if (!r)
-      m.ids[m.count++] = id;
-  }
   if (!r)
     r = publish(fs, &m);
   fs->transaction = false;
-  return io_error(fs, r);
+  r = io_error(fs, r);
+  /* A staged writer owns its scratch file until close/abort. */
+  maintain(fs);
+  return r;
 }
 static int create_leaf(pfs_t *fs, const char *path, const uint8_t *memory, size_t size) {
   int r = ready(fs, true);
@@ -1422,8 +1619,10 @@ static void attach(pfs_t *fs, handle_t *h, unsigned kind) {
   fs->handles = h;
   fs->handle_count++;
 }
-static void detach(handle_t *h) {
+static void detach(handle_t *h, bool cleanup) {
   pfs_t *fs = h->fs;
+  bool released = releases_obsolete(fs, h);
+  cleanup = cleanup && ((h->kind == 1 && ((pfs_file_t *)h)->writing) || released);
   handle_t **p = &fs->handles;
   while (*p && *p != h)
     p = &(*p)->next;
@@ -1432,6 +1631,12 @@ static void detach(handle_t *h) {
     fs->handle_count--;
   }
   fs->release(h);
+  /* A failed close still released the RAM owner. Defer I/O as before, but do
+   * not let the old pinned-only hint suppress the next mutation's cleanup. */
+  if (released)
+    fs->gc_state = GC_PENDING;
+  if (cleanup)
+    maintain(fs);
 }
 int pfs_open(pfs_t *fs, const char *path, int flags, pfs_file_t **output) {
   if (!output)
@@ -1484,11 +1689,13 @@ int pfs_open(pfs_t *fs, const char *path, int flags, pfs_file_t **output) {
   file->flags = flags;
   file->writing = writing;
   if (writing) {
-    r = collect(fs);
+    r = needs_collection(fs) ? collect(fs) : 0;
     if (!r)
       r = reserve(fs, 8 + blocks_for(flags & LFS_O_TRUNC ? 0 : info.size));
-    if (!r)
+    if (!r) {
+      fs->gc_state = GC_PENDING;
       r = io_open(fs, &file->io, STAGE, LFS_O_RDWR | LFS_O_CREAT | LFS_O_EXCL);
+    }
     if (!r && exists && !(flags & LFS_O_TRUNC)) {
       char name[16];
       shard_name(loc.shard, name);
@@ -1524,7 +1731,11 @@ int pfs_open(pfs_t *fs, const char *path, int flags, pfs_file_t **output) {
   if (r) {
     io_close(fs, &file->io, r);
     fs->release(file);
-    return writing ? io_error(fs, r) : r;
+    if (writing) {
+      r = io_error(fs, r);
+      maintain(fs);
+    }
+    return r;
   }
   attach(fs, &file->h, 1);
   if (writing)
@@ -1603,7 +1814,7 @@ int pfs_abort(pfs_file_t *file) {
   (void)r;
   if (fs->writer == file)
     fs->writer = NULL;
-  detach(&file->h);
+  detach(&file->h, true);
   return 0;
 }
 int pfs_close(pfs_file_t *file) {
@@ -1612,7 +1823,7 @@ int pfs_close(pfs_file_t *file) {
   pfs_t *fs = file->h.fs;
   if (!file->writing) {
     int r = io_close(fs, &file->io, 0);
-    detach(&file->h);
+    detach(&file->h, !r);
     return r;
   }
   if (fs->poisoned)
@@ -1633,12 +1844,12 @@ int pfs_close(pfs_file_t *file) {
   r = transact(fs, &c);
   if (r)
     return r;
-  /* Publication is durable. Cleanup is deferred to GC; no postcommit retry. */
+  /* Publication is durable: maintenance must never request a commit retry. */
   r = io_close(fs, &file->io, 0);
   if (r)
     fs->poisoned = true;
   fs->writer = NULL;
-  detach(&file->h);
+  detach(&file->h, true);
   return 0;
 }
 /* The existing PUT transaction publishes content and raw128 together. */
@@ -1712,6 +1923,6 @@ int pfs_closedir(pfs_dir_t *dir) {
   if (!dir)
     return LFS_ERR_BADF;
   int r = cursor_close(dir->h.fs, &dir->cursor, 0);
-  detach(&dir->h);
+  detach(&dir->h, !r);
   return r;
 }

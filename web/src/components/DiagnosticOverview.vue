@@ -59,6 +59,7 @@
   </section>
 </template>
 <script setup>
+import { storageCleanupPresentation } from '../lib/device-storage-display.js';
 import { computed } from 'vue';
 import IdentifierCopy from './IdentifierCopy.vue';
 import { diagnosticBuildIdentity } from '../lib/firmware-build-reference.js';
@@ -212,9 +213,11 @@ function drives(data) {
 }
 function storage(data) {
   const { info, layout } = data;
+  const cleanup = storageCleanupPresentation(data.cleanup, props.locale);
   return { summary: [[pick('Dateisystem E:', 'Filesystem E:'), ['—', 'SPIFFS', 'LittleFS', 'Packed LittleFS (PFS1)'][info.backend]],
-    [pick('Eingebunden', 'Mounted'), yesNo(info.mounted)]],
+    [pick('Eingebunden', 'Mounted'), yesNo(info.mounted)], ...(cleanup ? [cleanup.rows[0]] : [])],
     details: [
+      ...(cleanup ? cleanup.rows.slice(1) : []),
       [pick('Metadaten pro Eintrag', 'Metadata per entry'), bytes(info.metaLen)],
       [pick('Pfad-/Namensgrenze', 'Path/name limit'), `${number(info.pathMax)} / ${number(info.nameMax)} B`],
       ...(layout ? [
@@ -226,20 +229,46 @@ function storage(data) {
         [pick('Maximale Packdateien / offene Handles', 'Maximum packed files / open handles'), `${number(layout.maxShards)} / ${number(layout.maxHandles)}`],
         [pick('Speicherkern SHA-256', 'Storage engine SHA-256'), layout.engineSha256],
       ] : [[pick('Geometrie/Cachekonfiguration', 'Geometry/cache configuration'), t.value.absent]]),
-    ], note: pick('Konfigurationswerte des Geräts. Die Cachegröße ist keine Messung der Cachebelegung, Trefferquote oder gesamten RAM-Nutzung.', 'Device configuration values. Cache size does not measure cache occupancy, hit rate or total RAM use.'),
+    ], note: pick('Konfigurationswerte des Geräts. Die Cachegröße ist keine Messung der Cachebelegung, Trefferquote oder gesamten RAM-Nutzung.', 'Device configuration values. Cache size does not measure cache occupancy, hit rate or total RAM use.') + (cleanup ? ' ' + cleanup.note : ''),
   };
 }
-const mtu = data => ({
-  summary: [[pick('Aktuelle ATT-MTU laut Firmware', 'Current ATT MTU reported by firmware'), data.effectiveAttMtu === null ? t.value.absent : number(data.effectiveAttMtu)],
-    [pick('Aktuelle GATT-Wertkapazität', 'Current GATT value capacity'), data.gattValueCapacity === null ? t.value.absent : bytes(data.gattValueCapacity)]],
-  details: [[pick('Grenze für nächste Verbindung', 'Next connection limit'), number(data.nextConnectionAttMtu)],
-    [pick('Konfigurierte maximale ATT-MTU', 'Configured maximum ATT MTU'), number(data.configuredMaxAttMtu)],
-    [pick('Dateiclient bereit / Dateimodus', 'File client ready / file mode'), `${yesNo(data.sessionReady)} / ${yesNo(data.fileMode)}`],
-    [pick('Übertragung im Leerlauf', 'Transfer idle'), yesNo(data.transferIdle)]],
-  note: data.effectiveAttMtu === null
-    ? pick('Für diese Verbindung hat die Firmware keine aktuelle ATT-MTU gemeldet. Die unten angezeigten Grenzen sind Einstellungen für die Verbindung.', 'The firmware reported no current ATT MTU for this connection. The limits below are connection settings.')
-    : pick('Die Firmware meldet die ausgehandelte ATT-MTU. Die GATT-Wertkapazität gibt an, wie viele Bytes in einen einzelnen GATT-Wert passen.', 'The firmware reports the negotiated ATT MTU. The GATT value capacity gives the number of bytes one GATT value can hold.'),
-});
+function mtu(data) {
+  const link = data.link;
+  const phy = value => value === null ? t.value.absent : value === 2 ? '2M' : '1M';
+  const interval = units => units === null ? t.value.absent : `${String(units * 1.25).replace('.', pick(',', '.'))} ms`;
+  return {
+    summary: [[pick('Aktuelle ATT-MTU laut Firmware', 'Current ATT MTU reported by firmware'), data.effectiveAttMtu === null ? t.value.absent : number(data.effectiveAttMtu)],
+      [pick('Aktuelle GATT-Wertkapazität', 'Current GATT value capacity'), data.gattValueCapacity === null ? t.value.absent : bytes(data.gattValueCapacity)],
+      ...(link ? [
+        [pick('Ausgehandeltes Verbindungsintervall', 'Negotiated connection interval'), interval(link.connectionIntervalUnits)],
+        [pick('Aktueller Funkmodus RX / TX', 'Current radio PHY RX / TX'), `${phy(link.rxPhy)} / ${phy(link.txPhy)}`],
+      ] : [])],
+    details: [[pick('Grenze für nächste Verbindung', 'Next connection limit'), number(data.nextConnectionAttMtu)],
+      [pick('Konfigurierte maximale ATT-MTU', 'Configured maximum ATT MTU'), number(data.configuredMaxAttMtu)],
+      [pick('Dateiclient bereit / Dateimodus', 'File client ready / file mode'), `${yesNo(data.sessionReady)} / ${yesNo(data.fileMode)}`],
+      [pick('Übertragung im Leerlauf', 'Transfer idle'), yesNo(data.transferIdle)],
+      ...(data.experiment ? [
+        [pick('Test 1: Ereignisverlängerung konfiguriert','Test 1: event extension configured'),yesNo(data.experiment.eventLengthExtensionEnabled)],
+        [pick('Nominelle Ereignislänge (Konfiguration)','Nominal event length (configuration)'),interval(data.experiment.nominalEventLengthUnits)],
+        [pick('Letztes Ergebnis der Testumschaltung','Last test option request result'),data.experiment.lastOptionResult === null ? t.value.absent : hex(data.experiment.lastOptionResult)]
+      ] : []),
+      ...(link ? [
+        [pick('Funkverbindung aktiv', 'Radio link connected'), yesNo(link.connected)],
+        [pick('Auslassbare Verbindungsereignisse', 'Peripheral latency events'), link.slaveLatency === null ? t.value.absent : number(link.slaveLatency)],
+        [pick('Verbindungsüberwachung', 'Supervision timeout'), link.supervisionTimeoutUnits === null ? t.value.absent : ms(link.supervisionTimeoutUnits * 10)],
+        [pick('PHY-Anforderung ausstehend', 'PHY request pending'), yesNo(link.phyRequestPending)],
+        [pick('Lokale PHY-Anfragen', 'Local PHY requests'), number(link.phyRequestAttempts)],
+        [pick('Letztes lokales Anfrageergebnis', 'Last local request result'), link.lastPhyRequestResult === null ? t.value.absent : hex(link.lastPhyRequestResult)],
+        [pick('Letzter PHY-Ereignisstatus', 'Last PHY event status'), link.lastPhyUpdateStatus === null ? t.value.absent : hex(link.lastPhyUpdateStatus)],
+      ] : [])],
+    note: (data.effectiveAttMtu === null
+      ? pick('Für diese Verbindung hat die Firmware keine aktuelle ATT-MTU gemeldet. Die unten angezeigten Grenzen sind Einstellungen für die Verbindung.', 'The firmware reported no current ATT MTU for this connection. The limits below are connection settings.')
+      : pick('Die Firmware meldet die ausgehandelte ATT-MTU. Die GATT-Wertkapazität gibt an, wie viele Bytes in einen einzelnen GATT-Wert passen.', 'The firmware reports the negotiated ATT MTU. The GATT value capacity gives the number of bytes one GATT value can hold.')) +
+      (link ? pick(' Intervall und Funkmodus stammen aus Bluetooth-Verbindungsereignissen. 2M ist die Funkdatenrate, keine gemessene Dateiübertragungsgeschwindigkeit. Eine erfolgreiche Anfrage allein bestätigt noch keinen Wechsel auf 2M.',
+        ' Interval and PHY come from Bluetooth connection events. 2M is the radio data rate, not measured file throughput. A successful request alone does not confirm a switch to 2M.') : '') +
+      (data.experiment ? pick(' Die Testoption ist eine globale Funkstack-Konfiguration, keine ausgehandelte oder gemessene Funkzeit. Sie bleibt beim Neuverbinden bestehen; nach Geräteneustart ist sie AUS.', ' The test option is global radio-stack configuration, not negotiated or measured airtime. It persists across reconnection and is OFF after device restart.') : ''),
+  };
+}
 function ui(data) {
   if (data.sessions === 0) {
     return {

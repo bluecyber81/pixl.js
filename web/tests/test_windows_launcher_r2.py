@@ -26,7 +26,7 @@ class LauncherTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='Allmiibo Test ä & space ! ')
         self.root = Path(self.tmp.name)
-        for name in ['dateimanager_launcher.py', 'serve_local.py']:
+        for name in ['dateimanager_launcher.py', 'serve_local.py', 'release_version.py', 'package.json']:
             shutil.copyfile(SOURCE / name, self.root / name)
         (self.root / 'dist').mkdir()
         (self.root / 'dist/index.html').write_text('<!doctype html><title>T1</title>test', encoding='utf-8')
@@ -37,7 +37,8 @@ class LauncherTests(unittest.TestCase):
         self.original_state = None
         spec = importlib.util.spec_from_file_location('launcher_under_test', self.root / 'dateimanager_launcher.py')
         self.module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(self.module)
+        with patch.object(sys, 'path', [str(self.root), *sys.path]):
+            spec.loader.exec_module(self.module)
 
     def tearDown(self):
         if self.original_state:
@@ -80,12 +81,34 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(self.run_launcher('stop').returncode, 0)
         self.original_state = None
 
+    def test_manifest_version_drives_real_controller_and_health_outside_working_directory(self):
+        manifest_path = self.root / 'package.json'
+        manifest = json.loads(manifest_path.read_text())
+        manifest['version'] = '9.8.7'
+        manifest_path.write_text(json.dumps(manifest), encoding='utf-8')
+        started = self.start()
+        self.assertIn('Dateimanager 9.8.7:', started.stdout)
+        self.assertEqual(self.module.request(self.port)['version'], '9.8.7')
+        repeated = self.run_launcher('start')
+        self.assertEqual(repeated.returncode, 0, repeated.stderr)
+        self.assertIn('laeuft bereits', repeated.stdout)
+
+    def test_missing_version_manifest_fails_before_starting_a_server(self):
+        (self.root / 'package.json').unlink()
+        result = self.run_launcher('start')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('package.json fehlt', result.stderr)
+        self.assertFalse(self.state_path.exists())
+        self.assertFalse(self.module.listening(self.port))
+
     def test_foreign_listener_is_never_adopted_or_stopped(self):
         calls = []
+        version = self.module.VERSION
         class ForeignHandler(BaseHTTPRequestHandler):
             def do_GET(self):
                 calls.append('GET')
-                body = b'{"application":"allmiibo-dateimanager","version":"3.58.2","instance":"foreign"}'
+                body = json.dumps({'application': 'allmiibo-dateimanager', 'version': version,
+                                   'instance': 'foreign'}).encode('utf-8')
                 self.send_response(200)
                 self.send_header('Content-Length', str(len(body)))
                 self.end_headers()
@@ -360,7 +383,7 @@ class LauncherTests(unittest.TestCase):
                     break
                 time.sleep(0.05)
             self.assertIsNotNone(health, 'Direct server did not answer')
-            self.assertEqual(health['version'], '3.58.2')
+            self.assertEqual(health['version'], self.module.VERSION)
             self.assertEqual(self.state_path.read_bytes(), before)
             self.assertFalse((self.root / 'launcher-{}.lock'.format(self.port)).exists())
             self.assertFalse(self.module.error_log_path(self.port).exists())

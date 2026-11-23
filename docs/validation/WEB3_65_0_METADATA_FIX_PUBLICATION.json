@@ -1,0 +1,18 @@
+{
+  "repository": "bluecyber81/pixl.js",
+  "branch": "web-app675",
+  "commit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+  "tree": "c17ad0263285ee4e9304908c89bf551e121c2e62",
+  "parent": "d700e95a67dda2035a6189c16a7868d42a64a2c5",
+  "localCommit": "3546f33f54a06118caa61d3612eaf834aa9be7db",
+  "webProductTree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+  "metadataOnly": true,
+  "changedFiles": 5,
+  "targetedExistingTests": {
+    "pass": 9,
+    "fail": 0
+  },
+  "sourceQualificationCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "sourceQualificationRun": 45184306115,
+  "correctedMetadataFailureRun": 45192485217
+}

@@ -19,6 +19,7 @@ class SettingsLabelWidthTests(unittest.TestCase):
 #include "version.inc.h"
 extern const char *const lang_de_DE[], *const lang_en_US[];
 static const char *const *strings;
+#define FOCUS_TEST_LINKED_STRINGS 1
 #define _T(id) strings[_L_##id]
 #define main previous_focus_test
 '''

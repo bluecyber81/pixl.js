@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "passed": true,
+  "method": "Read-only strict verification of the actual completed first-pass records; no additional HTTP requests.",
+  "files": 323,
+  "verifiedBytes": 29576556,
+  "requests": 323,
+  "retries": 0,
+  "cacheBustingRequests": 0,
+  "failures": 0,
+  "repository": "bluecyber81/pixl.js",
+  "pagesCommit": "a70187159ec177c947c931d5dd7e3d1600841492",
+  "pagesTree": "e9b30b9199efa2278985aa15b39f3f448c3d0c17",
+  "deploymentRunId": 45189684248,
+  "manifestSha256": "fae4f758c857891d9053cad14f90048eca922ca74cad8f31a04a2f6007eb2821",
+  "deploymentEvidenceSha256": "c6c18e7c3ba574b3de2fb2d3c454082c0835ba3afcbf86e337094a1262a487ed",
+  "httpResultsSha256": "17f11b6491ba4d4a612e8a38ef7a5be96870c84c1dabeaadf98eb7438d2778cc",
+  "httpSummarySha256": "8a4c5f7714aca1f26538616dffb4b30adb08dea14035c9c8e9b8935d9c0c6021",
+  "checkerScriptSha256": "cc634cd63532267fb0bc4375570d6484030b4d0316982b617d3d29c513c6399f",
+  "checkerScriptSnapshot": "CHECKER_USED.py",
+  "deploymentRepository": "bluecyber81/pixl.js",
+  "allCanonicalExactUrls": true,
+  "allFirstAttempts": true,
+  "allResponsesHttp200": true,
+  "redirectsObserved": 0,
+  "portable": {
+    "bytes": 12444903,
+    "sha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd",
+    "contentType": "application/x-zip-compressed",
+    "status": 200
+  },
+  "firmware": {
+    "bytes": 362493,
+    "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
+    "contentType": "application/x-zip-compressed",
+    "status": 200
+  }
+}

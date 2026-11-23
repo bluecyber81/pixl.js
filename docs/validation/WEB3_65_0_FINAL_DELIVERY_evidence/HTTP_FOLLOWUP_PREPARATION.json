@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "status": "verified-local-source-archive-followup",
+  "pagesCheckout": "/workspace/scratch/d76247b6cf65/review_20261123/pages_source",
+  "basePagesCommit": "a70187159ec177c947c931d5dd7e3d1600841492",
+  "basePagesTree": "e9b30b9199efa2278985aa15b39f3f448c3d0c17",
+  "localCommit": "a6c886211d6a4d8cda3b88fb200368dc3c7d5e35",
+  "localTree": "bc1f5f7cc4cf6296a08efab2f16715c5f702e070",
+  "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+  "sourceTree": "c17ad0263285ee4e9304908c89bf551e121c2e62",
+  "qualifiedBuildCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "sourceWebSubtree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+  "publicPagesCommit": null,
+  "deliveryManifestSha256": "0a72b3f167a42de15377d10e28d90348a137419e73b0d86b7bfcf40f56c8b1fd",
+  "deliveryFiles": 3,
+  "deliveryBytes": 21254599,
+  "addedPaths": [
+    "downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip"
+  ],
+  "modifiedPaths": [
+    "downloads/web3.65.0/MANIFEST.json",
+    "downloads/web3.65.0/SHA256SUMS.txt"
+  ],
+  "deletedPaths": [],
+  "unchangedBaselineFiles": 1298,
+  "baselineFiles": 1300,
+  "totalPagesFiles": 1301,
+  "productDistributionFilesUnchanged": 320,
+  "portableBytesUnchanged": true,
+  "unchangedPriorHttpFiles": 321,
+  "firstHttpSummary": "build_20261123/pages_http/results/HTTP_SUMMARY.json",
+  "firstHttpSummarySha256": "8a4c5f7714aca1f26538616dffb4b30adb08dea14035c9c8e9b8935d9c0c6021",
+  "sourceArchive": {
+    "filename": "Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+    "bytes": 21249310,
+    "sha256": "de82839b8cdc90f7226b1229119ebbd60a1a5cd67deb4c80e0902a640d8c487c",
+    "gitBlob": "c504ca28f6c4ef2d8ecaae942887b64b275fbcd1",
+    "twoArchivesByteIdentical": true,
+    "sourceManifestSha256": "41b60637dcbaf626571d3eb8ad6c45fd6f41a08c45e23d4548990d0b3f258fd5",
+    "reproductionEvidence": "build_20261123/web_sources_public/REPRODUCIBILITY.json"
+  },
+  "qualifiedSourceCiRun": 45184306115,
+  "finalSourceHeadCiRun": 45193676314,
+  "finalSourceHeadCiStatus": "completed",
+  "finalSourceHeadCiConclusion": "success",
+  "finalSourceHeadCiEvidenceSha256": "cefe675df1a3c7d42d804fc77b7bcbcf03ac1d67d40e8fa23263e6ca34700053",
+  "fullTestsRerun": false,
+  "workingTreeClean": true,
+  "remoteMutation": false,
+  "followupDeploymentAndHttp": "pending-root-publication"
+}

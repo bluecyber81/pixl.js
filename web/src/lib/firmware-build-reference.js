@@ -1,4 +1,10 @@
+import { lcdRelease } from '../../public/dfu/lcd-release-reference.mjs';
+import { lcdRelease as app674 } from '../../public/dfu/lcd-app674-reference.mjs';
+import { lcdRelease as app673 } from '../../public/dfu/lcd-app673-reference.mjs';
+import { lcdRelease as app672 } from '../../public/dfu/lcd-app672-reference.mjs';
+import { lcdRelease as app671 } from '../../public/dfu/lcd-app671-reference.mjs';
 import { buildDiagnosticBoard, normalizeBuildDiagnostics } from './lcd-build-diagnostics.js';
+import { lcdPreviews } from '../../public/dfu/lcd-private-reference.mjs';
 import { firmwareBoard } from './hardware-profile.js';
 
 // Reference for the signed T1 application package. This is not a
@@ -205,7 +211,7 @@ const app662 = Object.freeze({
   "releaseTag": "de3.89"
 });
 
-const references = [app662, app661, app660, app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4, oledTest5, oledTest6];
+const references = [lcdRelease, app674, app673, app672, app671, ...lcdPreviews, app662, app661, app660, app659, app658, TEST_FIRMWARE_REFERENCE, app645, app646, app647, app648, app649, app650, app652, app653, app654, app655, app656, app657, oledTest1, oledTest2, oledTest3, oledTest4, oledTest5, oledTest6];
 const word = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const version = typeof firmwareVersion === 'string' && /^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]{1,48})?$/.test(firmwareVersion) ? firmwareVersion : null;
@@ -222,7 +228,7 @@ export function diagnosticBuildIdentity({ firmwareVersion, boot, build } = {}) {
   const reference = references.find(item => item.firmwareVersion === version) ?? (firmwareBoard(version) === 'OLED' ? null : app662);
   const relation = !reference ? 'no-package-reference' : version === null ? 'unknown' : version !== reference.firmwareVersion ? 'different-version'
     : observed.applicationCounter === null ? 'version-only' : observed.applicationCounter === reference.applicationCounter ? 'version-and-counter' : 'different-counter';
-  const sourceRelation = reported && reference?.firmwareVersion === version
+  const sourceRelation = reported && reference?.firmwareVersion === version && /^[a-f0-9]{64}$/.test(reference.sourceId || '')
     ? reported.sourceId === reference.sourceId && reported.board === reference.board ? 'matches-package' : 'differs-from-package'
     : null;
   return { schemaVersion: 1, ...(reported ? {firmwareReportedSourceRelation:sourceRelation} : {}), observed, packageReference: reference, referenceRelation: relation,

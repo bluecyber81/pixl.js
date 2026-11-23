@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "deviceAccess": false,
+  "arm32": false,
+  "sanitize": true,
+  "sourceHashes": {
+    "application/src/mod/vfs/packed_fs.c": "893edc1bf1a3858293b07cfef46f33505301f984a4c323535fefea349ad54bb6",
+    "application/src/mod/vfs/packed_fs.h": "5faf4a60c668e6188e23fe4a5b1b735e18c5dff8cfb8be32cd834248f38a82ef",
+    "application/src/mod/vfs/vfs_driver_packed.c": "d7825cc4280d583812e1fa16304ad5ba93ac979345460ccb47e2029bf2241131",
+    "application/src/mod/vfs/vfs_persist.c": "6253f86581611d95f9a087a76c749b38a97dd71b946013bbbd9df40a52ef3088",
+    "application/src/mod/vfs/vfs_persist.h": "3f0867ba098961569f5dda1f9d900958459293abc4f2ad52a73375f53802c609",
+    "application/src/mod/vfs/vfs.h": "5c0560c12b4db59c1150ba20cb41bad1209611fcb5bedacba52183882d265237",
+    "components/littlefs/lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+    "components/littlefs/lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+    "components/littlefs/lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+    "components/littlefs/lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3",
+    "tests/de3/packed_vfs_persistence_de344.c": "4480ae139668ab0458c11e45c294e634c4b7e3cc575b205af3e033339c3d0132",
+    "tests/de3/packed_vfs_nor_de344.c": "dad3e253c84006baf1d7dc8a5e75cc4ad92d6d4ded343859e5df4093b53668de",
+    "tests/de3/packed_vfs_nor_de344.h": "f0343a307c44ab005cb0f8cb0797c02f4bdbc760eef32645972ae3ac3e6887f7",
+    "tests/de3/packed_cleanup_de392.c": "870e4ef6904df0e1c01b4a223fb3164839d9549640c0a3653e9e2a298ca64ad4"
+  },
+  "sourcesUnchanged": true,
+  "observations": [
+    {
+      "passed": true,
+      "lifecycleCases": 36,
+      "readonlyCases": 4,
+      "maintenanceFailureCases": 2,
+      "norFaultCases": 243,
+      "postcommitNorFaultCases": 18,
+      "readFaultCases": 1306,
+      "pointerBytes": 8,
+      "pfsBytes": 3112,
+      "peakRequestedHeap": 9892,
+      "liveAtEnd": 0
+    }
+  ],
+  "limitations": [
+    "Synthetic NOR and malloc; no physical SPI, BLE/NFC or power test.",
+    "Requested allocations bounded to18KiB; not real TLSF overhead or a whole-firmware RAM watermark.",
+    "Postcommit NOSPC is injected at lfs_remove; NOR IO/cut/torn and read failures use actual storage callbacks.",
+    "ARM32 QEMU verifies32-bit ABI, not Cortex-M4 timing."
+  ]
+}

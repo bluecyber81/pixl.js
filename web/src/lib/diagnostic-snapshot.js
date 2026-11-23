@@ -5,7 +5,7 @@ import { normalizePowerDiagnostics } from './power-diagnostics.js';
 import { normalizeBuildDiagnostics } from './lcd-build-diagnostics.js';
 import { normalizeFlashDiagnostics } from './flash-diagnostics.js';
 import { normalizeStartupDiagnostics } from './startup-diagnostics.js';
-import { normalizeMenuDiagnostics, normalizeMtuDiagnostics, normalizeUiDiagnostics } from './device-extra-diagnostics.js';
+import { normalizeMenuDiagnostics, normalizeMtuDiagnostics, normalizeUiDiagnostics, normalizeStorageGcDiagnostics } from './device-extra-diagnostics.js';
 
 export const DIAGNOSTIC_SECTION_KEYS = Object.freeze(['runtime', 'boot', 'power', 'startup', 'drives', 'storage', 'mtu', 'ui']);
 const menuSectionKeys = Object.freeze([...DIAGNOSTIC_SECTION_KEYS, 'menu']);
@@ -31,7 +31,13 @@ export function normalizeStorageDiagnostics(value) {
       (layout !== null && (!layout || info.backend !== 3))) return null;
   const cleanInfo = { schema: 1, drive: 'E', backend: info.backend, mounted: info.mounted,
     flags: info.flags, metaLen: 128, pathMax: 64, nameMax: 48 };
-  if (layout === null) return { info: cleanInfo, layout: null };
+  const extra = {};
+  if (Object.hasOwn(value, 'cleanup')) {
+    const cleanup = value.cleanup === null ? null : normalizeStorageGcDiagnostics(value.cleanup);
+    if (info.backend !== 3 || value.cleanup !== null && !cleanup) return null;
+    extra.cleanup = cleanup;
+  }
+  if (layout === null) return { info: cleanInfo, layout: null, ...extra };
   const fields32 = ['flashBytes', 'blockSize', 'blockCount', 'shardTarget'];
   const fields16 = ['readSize', 'progSize', 'cacheSize', 'metadataBytes'];
   const fields8 = ['maxShards', 'pathCap', 'nameCap', 'maxHandles'];
@@ -46,7 +52,7 @@ export function normalizeStorageDiagnostics(value) {
       /^(?:0{64}|f{64})$/.test(layout.engineSha256)) return null;
   const cleanLayout = { schema: 1, drive: 'E', backend: 3, mounted: layout.mounted, magic: 0x31534650 };
   for (const key of [...fields32, ...fields16, ...fields8]) cleanLayout[key] = layout[key];
-  return { info: cleanInfo, layout: { ...cleanLayout, flags: 7, engineSha256: layout.engineSha256 } };
+  return { info: cleanInfo, layout: { ...cleanLayout, flags: 7, engineSha256: layout.engineSha256 }, ...extra };
 }
 
 export function normalizeDiagnosticSectionData(key, value) {
@@ -164,6 +170,10 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
       ...(sectionData('mtu')?.effectiveAttMtu != null
         ? ['The firmware reported the effective ATT MTU for its connection in diagnosticSnapshot.sections.mtu.']
         : ['This report contains no firmware reading of the effective ATT MTU.']),
+      ...(sectionData('mtu')?.schemaVersion >= 2 ? ['MTUD link values come from firmware GAP events. Connection interval units are 1.25 ms and supervision timeout units are 10 ms. PHY 1/2 means 1M/2M; it does not measure file throughput or establish DLE. A successful PHY request is not proof that 2M was negotiated.'] : []),
+      ...(sectionData('mtu')?.schemaVersion === 3 ? ['MTUD v3 experiment describes the configured global SoftDevice event-length-extension option, not negotiated or measured airtime. It persists across reconnection and resets OFF at stack initialization/device restart.'] : []),
+      ...(sectionData('storage')?.cleanup ? ['PXGC reads only cached PackedFS state. obsoletePinHandles counts handles retaining one or more obsolete groups; it does not measure unique groups or reclaimable bytes. The last completed collection result may predate this read.'] : []),
+      ...(sectionData('startup')?.schemaVersion === 5 ? ['Test mount profile ticks use ticksPerSecond. Flash transfer time excludes the preceding busy wait. The index pass includes nested flash/CRC work; timings must not be summed. Instrumentation adds overhead and these are not CPU times.'] : []),
       ...(sectionData('build') ? ['PXBI reports the current firmware’s compiled SourceID and board. A prior fault carries no build identity of its own. It can survive one application restart in retained RAM. Power loss can clear it.'] : []),
       'Sections were read sequentially; this is not an atomic device snapshot.',
       'Read timestamps describe browser receipt, not the age of cached firmware samples.',
@@ -174,7 +184,7 @@ export function createCombinedDiagnosticReport({ baseReport = {}, snapshot = nul
       ...(sectionData('menu') ? ['The menu trace covers the first main menu after application restart. Launch timing ends when the launcher returns and does not measure physical display latency.'] : []),
       ...(sectionData('menu')?.schemaVersion === 2 ? ['PXMI v2 separately records the latest completed app return and first/last drawing calls in its desktop input context. This is not a physical LCD pixel or latency measurement; a stale-event count of 65535 is a lower bound.'] : []),
       ...(sectionData('startup')?.schemaVersion >= 3 ? ['Mount profiling describes the last actual PackedFS mount, not the read timestamp; saturated counters are lower bounds.'] : []),
-      sectionData('startup')?.schemaVersion === 4 ?
+      sectionData('startup')?.schemaVersion >= 4 ?
         'storage.layout.cacheSize configures LittleFS. startup.mount records the separate temporary cache pages allocated and filled at the end of the last PackedFS mount.' :
         'Storage cache sizes are configuration values, not measured cache usage.',
       'SourceID and application BIN SHA-256 in buildIdentity.packageReference describe the referenced signed application package, not a hash measured on the device. Version/counter matches do not establish byte identity. No unique physical device ID is exported.'] };

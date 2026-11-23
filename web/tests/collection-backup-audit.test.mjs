@@ -75,7 +75,7 @@ test('offline panel works disconnected in both languages; cancelled or replaced 
   } } }
   const h = await mountSfc(new URL('../src/components/CollectionBackupAudit.vue',import.meta.url), {locale:'de_DE',catalogue}, deps)
   try {
-    assert.match(text(h.root), /Figuren in einer Sicherungs-ZIP prüfen/)
+    assert.match(text(h.root), /PC und Gerät vergleichen/)
     const input = nodes(h.root,'input')[0]
     input.props.onChange({target:{files:[blob]}}); await h.tick()
     nodes(h.root,'button').find(n => text(n) === 'Abbrechen').props.onClick()
@@ -87,7 +87,7 @@ test('offline panel works disconnected in both languages; cancelled or replaced 
     assert.match(text(h.root), /1 \/ 2 Katalog-IDs gefunden/)
     assert.match(text(h.root), /Abweichende Metadaten-IDs \(1\)/)
     h.state.locale = 'en_US'; await h.tick()
-    assert.match(text(h.root), /Check figures in a backup ZIP/)
+    assert.match(text(h.root), /Compare PC and device/)
     assert.match(text(h.root), /1 \/ 2 catalogue IDs found/)
     nodes(h.root,'details')[0].props.onToggle({currentTarget:{open:false}}); await h.tick()
     assert.doesNotMatch(text(h.root), /catalogue IDs found/)

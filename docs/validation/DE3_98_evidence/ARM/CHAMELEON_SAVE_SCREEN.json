@@ -1,0 +1,171 @@
+{
+  "passed": true,
+  "binarySha256": "b7d303ee4c4805482827fd79e58535a13210d37931b055d38cf63646a61cdde4",
+  "languages": {
+    "de": {
+      "errorStages": [
+        {
+          "labels": [
+            "Speichern fehlgeschl.",
+            "Karte/Slot prüfen",
+            "Mitte: neu speichern",
+            "Mitte halten: zurück",
+            "Rechts: verwerfen..."
+          ],
+          "frameSha256": "35ed3f740a33ff8412258f2036cebf4445e2734377d0843ca44959a39022c08a"
+        },
+        {
+          "labels": [
+            "Speichern fehlgeschl.",
+            "Karte lesen -1",
+            "Mitte: neu speichern",
+            "Mitte halten: zurück",
+            "Rechts: verwerfen..."
+          ],
+          "frameSha256": "e9000587fe70bc7a4b82a31d11ce7decb34ab0975e409c4753884d5b4a0a2a3a"
+        },
+        {
+          "labels": [
+            "Speichern fehlgeschl.",
+            "Karte schreiben -91",
+            "Mitte: neu speichern",
+            "Mitte halten: zurück",
+            "Rechts: verwerfen..."
+          ],
+          "frameSha256": "9cdd240eba709fdb5339b7f440d611733ec2d7e504b88d6e7a3aef211ea8f4f4"
+        },
+        {
+          "labels": [
+            "Speichern fehlgeschl.",
+            "Slotkonf. lesen -7",
+            "Mitte: neu speichern",
+            "Mitte halten: zurück",
+            "Rechts: verwerfen..."
+          ],
+          "frameSha256": "3dc4048885ee6b028779888f6ed5dcd15bbcf1f18c1a701b49b37895d964192f"
+        },
+        {
+          "labels": [
+            "Speichern fehlgeschl.",
+            "Slotkonf. schr. -91",
+            "Mitte: neu speichern",
+            "Mitte halten: zurück",
+            "Rechts: verwerfen..."
+          ],
+          "frameSha256": "bde60c5ed0e261a9767e04f447bc2cbc76e1e9dade3ce6f7e9efc10db5f41458"
+        },
+        {
+          "labels": [
+            "Speichern fehlgeschl.",
+            "Einstellungen 8",
+            "Mitte: neu speichern",
+            "Mitte halten: zurück",
+            "Rechts: verwerfen..."
+          ],
+          "frameSha256": "08e50c24164eeb5fe37a02c21fcffb057fc2c809dcfcdb4c698981b5a710d725"
+        }
+      ],
+      "default": {
+        "labels": [
+          "[Hauptmenü]",
+          "RAM-Daten verwerfen?",
+          "[Nein]       Ja",
+          "Mitte: bestätigen"
+        ],
+        "frameSha256": "fcb2d545bbdb560613f9de2503bc16f927876fecb36bbc243f1307450e42ad23"
+      },
+      "selected": {
+        "labels": [
+          "[Hauptmenü]",
+          "RAM-Daten verwerfen?",
+          " Nein       [Ja]",
+          "Mitte: bestätigen"
+        ],
+        "frameSha256": "aec1cb01db9813c82963fe63f71564406c9559789d4ad88d2e8b4bec0e2b0452"
+      }
+    },
+    "en": {
+      "errorStages": [
+        {
+          "labels": [
+            "Save failed",
+            "Check card/slot",
+            "Center: retry save",
+            "Hold center: back",
+            "Right: discard..."
+          ],
+          "frameSha256": "c92ed4447eefd9912bf36905d0acd926503ee8cb48a97e0e6339ff60ad9193ca"
+        },
+        {
+          "labels": [
+            "Save failed",
+            "Read card -1",
+            "Center: retry save",
+            "Hold center: back",
+            "Right: discard..."
+          ],
+          "frameSha256": "377bce7b56b972124f4b4b6a5b10f979fca1251f536902305b21ec34ec3f2aad"
+        },
+        {
+          "labels": [
+            "Save failed",
+            "Write card -91",
+            "Center: retry save",
+            "Hold center: back",
+            "Right: discard..."
+          ],
+          "frameSha256": "4f46500c2850139eacdde2336f85b7183129a96466426cea2c19f2e8653d2533"
+        },
+        {
+          "labels": [
+            "Save failed",
+            "Read slot config -7",
+            "Center: retry save",
+            "Hold center: back",
+            "Right: discard..."
+          ],
+          "frameSha256": "0341d4d5b337ab51385304bad05a4cf3404fade6012136e1e0b0cefb2b32cb30"
+        },
+        {
+          "labels": [
+            "Save failed",
+            "Write slot config -91",
+            "Center: retry save",
+            "Hold center: back",
+            "Right: discard..."
+          ],
+          "frameSha256": "165b3cbed89f966394f7a6075030a34ea4495dc9e1f5f39b30bb06ea0b3f3e91"
+        },
+        {
+          "labels": [
+            "Save failed",
+            "Settings 8",
+            "Center: retry save",
+            "Hold center: back",
+            "Right: discard..."
+          ],
+          "frameSha256": "2e09b8234fa2bc4d550d650bb7d86aa7f79e50468560f326e6d5165ee4aae8c8"
+        }
+      ],
+      "default": {
+        "labels": [
+          "[Main Menu]",
+          "Discard RAM changes?",
+          "[No]       Yes",
+          "Center: confirm"
+        ],
+        "frameSha256": "0832c9ae6d2ee7403c4b5f849611cba8902cd828dd9c8106de09ce5de0743e6b"
+      },
+      "selected": {
+        "labels": [
+          "[Main Menu]",
+          "Discard RAM changes?",
+          " No       [Yes]",
+          "Center: confirm"
+        ],
+        "frameSha256": "f7da645db3c86f04abcab47e1f26a61195aca5381b48f235cf15540414ac5ae9"
+      }
+    }
+  },
+  "scope": "Linked MUI button events, FIFO, modal choices, fonts and ST7567 frame data in emulation. Injected diagnostic records."
+}

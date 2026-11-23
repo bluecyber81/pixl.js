@@ -1,0 +1,115 @@
+=== WEB ===
+##[group]Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+##[group]Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+##[group]Run npm install --global npm@11.19.1
+##[group]Run npm ci
+##[group]Run python3 ../fw/scripts/amiibo_db_validate.py
+{"englishNoteLinks": 72, "figures": 956, "games": 83, "legacyEmptyLinkColumns": 3, "links": 1348, "uncategorizedFigures": 0, "uniqueEnglishNotes": 55, "valid": true}
+{"associations": 1414, "bytes": 270740, "englishNoteAssociations": 163, "figures": 956, "firmwareAssociations": 1348, "germanNoteAssociations": 163, "groups": 86, "legacyEmptyLinkColumns": 3, "nintendoWebAssociations": 66, "nintendoWebNoteAdditions": 91, "uniqueEnglishNotes": 64, "uniqueGermanTranslations": 64, "valid": true}
+Ran 13 tests in 1.032s
+OK
+##[group]Run python3 ../tools/check_readme_downloads.py
+##[group]Run gh api --method GET -H 'Accept: application/vnd.github.raw+json' \
+{"associations": 1414, "bytes": 270740, "englishNoteAssociations": 163, "figures": 956, "firmwareAssociations": 1348, "germanNoteAssociations": 163, "groups": 86, "legacyEmptyLinkColumns": 3, "nintendoWebAssociations": 66, "nintendoWebNoteAdditions": 91, "uniqueEnglishNotes": 64, "uniqueGermanTranslations": 64, "valid": true}
+##[group]Run npm test
+﹣ real immutable DE3.17 and recovery575 application archives pass without device access (0.243764ms) # Optional local OTA fixtures absent; set ALLMIIBO_DFU_FIXTURES to their folder
+﹣ Windows launchers keep two ports independent, reject altered tokens and preserve legacy state (0.448843ms) # SKIP
+﹣ Windows failed state persistence asks only the newly started server to stop itself (0.407215ms) # SKIP
+ℹ 3214 migration name normalizations for 804 entries
+ℹ Deterministic GATT247 mock, not measured phone speed: two 540-byte checks use 6 -> 2 data notifications, 1080 -> 64 content bytes, 1104 -> 72 NUS bytes. The previous fresh-session path additionally issued one 0x22 capability probe (20 response bytes).
+ℹ tests 2273
+ℹ suites 0
+ℹ pass 2270
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 3
+ℹ todo 0
+ℹ duration_ms 74865.863412
+##[group]Run npm run build
+{"mode":"root","version":"3.65.0","firmware":"de3.102-lcd-app","manifest":"release.json"}
+{"mode":"root","copiedNotices":115}
+ℹ tests 57
+ℹ suites 0
+ℹ pass 57
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2130.741328
+##[group]Run npm run build:pages
+{"mode":"pages","version":"3.65.0","firmware":"de3.102-lcd-app","manifest":"release.json"}
+{"mode":"pages","copiedNotices":115}
+ℹ tests 57
+ℹ suites 0
+ℹ pass 57
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2071.98412
+##[group]Run python3 -B tests/test_windows_launcher_r2.py
+Ran 26 tests in 5.419s
+OK
+##[group]Run python3 -B scripts/package-portable.py --output "$RUNNER_TEMP/dateimanager-portable" --verify
+{"passed": true, "version": "3.65.0", "verifiedFiles": 313}
+{"schema": 1, "version": "3.65.0", "archive": "Allmiibo_Dateimanager_3_65_0_Portable.zip", "bytes": 12444903, "sha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd", "files": 315, "portableManifestSha256": "e051fbc10f186f46cd0a4e9317b8dd39259d3e5f776f2c785858b79bc937773d", "nativeExecutable": false, "verification": {"path": "PORTABLE_VERIFICATION.json", "sha256": "f783623a9b3f7e35ac2cff191a775238ee3fea293a56dfa2052dc406e44bba45"}}
+=== WINDOWS ===
+##[group]Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+##[group]Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+##[group]Run python -B tests/test_windows_launcher_r2.py
+test_linux_bind_behavior_is_preserved (__main__.LauncherTests.test_linux_bind_behavior_is_preserved) ... skipped 'Linux/POSIX socket behavior check'
+test_real_direct_start_ctrl_c_and_unchanged_state (__main__.LauncherTests.test_real_direct_start_ctrl_c_and_unchanged_state) ... skipped 'POSIX signal integration; native Windows Ctrl+C is not tested here'
+Ran 26 tests in 14.754s
+OK (skipped=2)
+##[group]Run node --test tests/launcher.test.cjs
+✔ local server identity, routes and authenticated self-stop reject wrong token, Origin and Host (326.6088ms)
+✔ Windows launchers keep two ports independent, reject altered tokens and preserve legacy state (12038.7427ms)
+✔ Windows failed state persistence asks only the newly started server to stop itself (2070.8348ms)
+✔ launcher wrappers forward arguments and have no PID-based termination (1.0084ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14512.8923
+=== FIRMWARE SUBSET ===
+##[group]Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+##[group]Run python3 --version
+##[group]Run python3 fw/tests/de3/test_packed_crc_pair_de355.py
+Ran 2 tests in 4.226s
+OK
+{"passed":true,"cases":18575,"max_length":4097,"alignments":8,"streamed_records":384}
+##[group]Run python3 fw/tests/de3/test_lfs_wear_de355.py
+{"passed": true, "percent": 60, "blockCycles": 2, "transactions": 256, "initialBlocks": 310, "finalBlocks": 310, "rootMoves": 0, "eraseBlocks": 2, "maxErases": 8, "expansionEvents": 0, "faultCases": 0, "pointerBytes": 8, "variant": "old-threshold"}
+{"passed": true, "percent": 90, "blockCycles": 2, "transactions": 256, "initialBlocks": 464, "finalBlocks": 464, "rootMoves": 0, "eraseBlocks": 2, "maxErases": 8, "expansionEvents": 0, "faultCases": 0, "pointerBytes": 8, "variant": "old-threshold"}
+{"passed": true, "percent": 60, "blockCycles": 500, "transactions": 10000, "initialBlocks": 310, "finalBlocks": 310, "rootMoves": 0, "eraseBlocks": 2, "maxErases": 313, "expansionEvents": 0, "faultCases": 0, "pointerBytes": 8, "variant": "old-threshold"}
+{"passed": true, "percent": 60, "blockCycles": 2, "transactions": 256, "initialBlocks": 310, "finalBlocks": 312, "rootMoves": 6, "eraseBlocks": 8, "maxErases": 3, "expansionEvents": 6, "faultCases": 18, "pointerBytes": 8, "variant": "candidate"}
+{"passed": true, "percent": 90, "blockCycles": 2, "transactions": 256, "initialBlocks": 464, "finalBlocks": 464, "rootMoves": 0, "eraseBlocks": 2, "maxErases": 8, "expansionEvents": 0, "faultCases": 0, "pointerBytes": 8, "variant": "candidate"}
+{"passed": true, "percent": 60, "blockCycles": 500, "transactions": 10000, "initialBlocks": 310, "finalBlocks": 312, "rootMoves": 1, "eraseBlocks": 4, "maxErases": 250, "expansionEvents": 6, "faultCases": 18, "pointerBytes": 8, "variant": "candidate"}
+Ran 1 test in 4.266s
+OK
+##[group]Run python3 fw/tests/de3/test_ui_comfort_de356.py
+Ran 1 test in 1.311s
+OK
+##[group]Run python3 fw/tests/de3/test_progress_bar_bounds.py --sanitize
+Ran 1 test in 0.318s
+OK
+##[group]Run python3 fw/tests/de3/test_text_input_render_de344.py
+Ran 1 test in 0.930s
+OK
+##[group]Run python3 fw/tests/de3/test_display_photo.py
+##[group]Run python3 fw/tests/de3/test_ble_status_de357.py
+Ran 3 tests in 0.985s
+OK
+##[group]Run python3 fw/tests/de3/test_kirby_v3_machines.py
+##[group]Run python3 fw/tests/de3/test_chameleon_state_load.py
+Ran 10 tests in 0.338s
+OK
+Ran 1 test in 0.225s
+OK
+Ran 6 tests in 0.639s
+OK
+Ran 2 tests in 0.334s
+OK

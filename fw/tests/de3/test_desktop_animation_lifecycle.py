@@ -32,7 +32,10 @@ typedef struct { int id; } mui_anim_t;
 typedef struct { void *user_data; } mui_view_t;
 typedef struct { mui_anim_t icon_anim, name_anim; mui_view_t *p_view; } app_list_view_t;
 typedef struct {
-    bool exit_saved;
+    bool exit_saved, exit_discard;
+    uint32_t changed_fields;
+    uint16_t changed_apps;
+    int entry_settings;
     void *p_scene_dispatcher, *p_view_dispatcher, *p_view_dispatcher_toast;
     void *p_list_view, *p_progress_bar, *p_msg_box, *p_toast_view;
 } app_settings_t;
@@ -56,6 +59,7 @@ static void mui_mem_free(void *ptr) {
     CHECK(!active[0] && !active[1]); objects_freed++; free(ptr);
 }
 static void mui_nav_diag_end(void) {}
+static void settings_discard_fields(uint32_t fields,uint16_t apps,const int *cp) { (void)fields;(void)apps;(void)cp; }
 static int32_t settings_save(void) { saved++; return NRF_SUCCESS; }
 static void mui_scene_dispatcher_free(void *p) { (void)p; }
 static void mui_view_dispatcher_detach(void *p, int layer) {
@@ -66,6 +70,7 @@ static void mui_view_dispatcher_detach(void *p, int layer) {
 }
 static void mui_view_dispatcher_free(void *p) { (void)p; }
 static void mui_list_view_free(void *p) { (void)p; }
+#define mui_u8g2_settings_slider(active) ((void)(active))
 static void mui_progress_bar_free(void *p) { (void)p; }
 static void mui_msg_box_free(void *p) { (void)p; }
 static void mui_toast_view_free(void *p) { (void)p; }

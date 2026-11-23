@@ -1,0 +1,276 @@
+{
+  "schema": 1,
+  "passed": true,
+  "sourceId": "067c6740533ca3e390fa04ff0613d543573e4ad401adbb256a6ef17f89650f0a",
+  "sourceCommit": "7ab8d1343d609ecb5bec93863d60f038583f0ba0",
+  "sourceTree": "23ff354cd04e387a0af4e2b0b43823074515a0a9",
+  "physicalDeviceAccess": false,
+  "changes": [
+    {
+      "id": "import-return",
+      "baseline": "App670: Import liest vollständig in eine temporäre Kopie und schützt vorhandene Daten bei Vorfehlern; erfolgreicher Import springt mit back_scene(...,2) ins Menü. Save/Retry/Discard ist schon vorhanden.",
+      "implementation": "Nach akzeptiertem Import vorhandenes app_chameleon_save ausführen. Erst dessen Erfolg führt über CHAMELEON_SCENE_MAIN zur ausgewählten Karte; fehlgeschlagene Speicherung bleibt mit bestehendem Retry/Discard erreichbar. Keine neue Slotwahl.",
+      "sources": [
+        "fw/application/src/app/chameleon/scene/chameleon_scene_menu_card_data_file_load.c:chameleon_scene_menu_card_data_file_load_from_file"
+      ],
+      "tests": "test_import_return_de398.py:24 cases plus existing 31-case browser/TLSF fixture",
+      "deviceObserved": false,
+      "limits": "Eine spätere erfolgreiche manuelle Wiederholung nutzt die bestehende Overlay-Fortsetzung; kein separat gespeicherter automatischer Main-Handoff nach Retry behauptet."
+    },
+    {
+      "id": "settings-load-base",
+      "baseline": "App670 enthält bereits Save-Veto, ausdrückliche Nutzeränderungen, spätes Wiederlesen und Zusammenführen; ein eigener verständlicher Ladebasisstatus fehlt.",
+      "implementation": "settings_load_state() leitet nur aus bestehenden RAM-Flags pending/defaults/verified ab. Die nicht auswählbare Menüzeile Ladebasis/Load base zeigt Lesen offen/read pending, Standard/defaults oder gelesen/loaded. Keine zusätzliche Dateioperation; gelesen sagt nicht, dass jede laufende Änderung gespeichert ist.",
+      "sources": [
+        "fw/application/src/mod/settings.c:settings_load_state",
+        "fw/application/src/mod/settings.h",
+        "fw/application/src/app/settings/scene/settings_scene_main.c:settings_scene_main_reload"
+      ],
+      "tests": "Actual recovery tests; existing focus/no-stat tests;576 locale rows",
+      "deviceObserved": false
+    },
+    {
+      "id": "temporary-tag-retention",
+      "baseline": "App670 hält Navigation/Katalog-IDs vor; temporäre App3-Tags werden beim Wiedereinstieg neu erzeugt. Persistierte Slots werden wieder gelesen. Der vollständige CRC-geschützte Tagcache samt späterer main.c-Kopie beim Schlaf existiert bereits.",
+      "implementation": "Snapshot v3 bindet die vorhandene cache->ntag-Kopie durch Retainpointer, aktivierten App3-Owner, CRC, validierte Navigation/Katalogherkunft und NTAG215-Typ. Unmarkierte Tags müssen zusätzlich zur Nutzdaten-ID passen. Nach bestätigtem temporärem NFC-WRITE darf die Nutzdaten-ID geändert sein; die ausgewählte Katalogherkunft bleibt gebunden. Beide Markierungen passen in 300 von bereits reservierten 312 Byte. Geschützter Tag wird beim Wiedereintritt einmalig bytegleich statt durch Neugenerierung übernommen; persistierte Slots bleiben frisch geladen, Version1/2 behalten nur Navigation.",
+      "sources": [
+        "fw/application/src/app/amiidb/app_amiidb_resume.h:app_amiidb_save_cache/app_amiidb_restore_cache",
+        "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail.c:amiidb_scene_amiibo_game_list_generate"
+      ],
+      "tests": "258 tatsächliche C-Restore-/History-/Callbackfälle, einschließlich 103 Bytegleichheits-/WRITE-/ID-WRITE-/Folge-READ-/CRC-/Owner-/Identitäts-/Legacy-/Pointer-/Slotgrenzen; ASan/UBSan bestanden.",
+      "deviceObserved": false
+    },
+    {
+      "id": "nfc-field-end-return",
+      "baseline": "App670 liefert READ/WRITTEN auf Feldende aus; READ kann aber auch einen leeren Feldzyklus bezeichnen. Automatischer Rücksprung ist nicht implementiert. Manuelle Fokus-Rückkehr existiert bereits.",
+      "implementation": "Engine-Sitzungsgetter bestätigt abgeschlossenen Datenaustausch und Feldende, nicht nur READ-Callback. App2/App3 stellen einen an Owner und Generation gebundenen Rückweg ein; der Actioncallback prüft Sitzung, Auto-UID-Option und aktuelle Detailansicht erneut. Bestehender Fokus-Rückweg und Prepare/Save-Veto bleiben wirksam. App3 sperrt automatische Rückkehr dauerhaft bei noch ungespeichertem temporärem NFC-WRITE, einschließlich folgendem READ und Schlaf.",
+      "sources": [
+        "fw/application/src/app/amiibo/scene/amiibo_scene_amiibo_detail.c:amiibo_nfc_return_to_list/ntag_update_cb",
+        "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail.c:amiidb_nfc_return_to_list/ntag_update_cb",
+        "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail_menu.c:amiidb_scene_detail_back_to_list"
+      ],
+      "tests": "64 tatsächliche Engine/Appcallback/Scene-Fälle: App2 13, App3 51, nativ und ASan/UBSan. Einschließlich READ-only, temporärem WRITE→READ, SaveAs-Fehler/Erfolg, ID-WRITE, Action-Recheck und IRQ-WRITE direkt nach Sessionprüfung; Engine-Suite des anderen Agents separat.",
+      "deviceObserved": false,
+      "developmentFinding": {
+        "classification": "In der neuen Rückkehrimplementierung vor der Veröffentlichung gefundener Datenerhalt-Grenzfall; kein beobachteter App670-Gerätefehler.",
+        "state": "temporary_tag_changed in vorhandenem App-Padding und Snapshotpadding.",
+        "set": "Tatsächlich ausgelieferter WRITTEN-Callback auf einen temporären Tag.",
+        "clearedOnlyAt": [
+          "Erfolgreiche neue Taggenerierung/akzeptierter Tagwechsel",
+          "Erfolgreicher ausdrücklich gewählter UID-Wechsel",
+          "Erfolgreiches Save As oder erfolgreiche bestehende Slotpersistierung",
+          "Erfolgreich angenommener ausdrücklicher Rückweg zur Liste; vorhandenes manuelles Verlassen der temporären Kopie"
+        ],
+        "failureBehavior": "Fehlgeschlagene Speicherung und abgelehnter Wechsel erhalten den Schutz. Es wird keine zusätzliche Flashoperation für Schlaf oder Lesen eingeführt.",
+        "lateWriteGuard": "Automatischer App3-Actioncallback ruft nach erster Prüfung prepare_change auf. Dieser stoppt Empfang und liefert gegebenenfalls einen bereits eingetroffenen WRITE aus. Danach erneute Flagprüfung; bei Schutz cancel_change und Abbruch. Erst dann gemeinsamer Rückweg, abschließend cancel_change."
+      }
+    }
+  ],
+  "targetedVerification": {
+    "native": "passed",
+    "addressAndUndefinedSanitizers": "passed for new import, tag-retention and NFC-return suites",
+    "leakSanitizer": "Initial run blocked by ptrace runtime. Explicit ASAN_OPTIONS=detect_leaks=0 for successful ASan/UBSan reruns; no LeakSanitizer pass claimed. Import harness also explicitly checks allocation/free balance; existing browser fixture checks TLSF cleanup.",
+    "newPhysicalDeviceTests": false,
+    "allCasesCountsOverlap": true,
+    "productAndTestsFrozen": true,
+    "cases": [
+      {
+        "suite": "test_import_return_de398.py",
+        "cases": 24,
+        "status": "native+ASan/UBSan passed before final App3-only guard; unchanged import source"
+      },
+      {
+        "suite": "test_amiidb_resume.py",
+        "cases": 258,
+        "includedTagGuardCases": 103,
+        "status": "ASan/UBSan passed on final guard"
+      },
+      {
+        "suite": "test_nfc_return_de398.py",
+        "cases": 64,
+        "app2": 13,
+        "app3": 51,
+        "status": "native+ASan/UBSan passed on final guard"
+      },
+      {
+        "suite": "test_database_focus_veto_review2.py",
+        "cases": 156,
+        "includedNewMenuReentryCases": 16,
+        "status": "native+ASan/UBSan passed on final guard"
+      },
+      {
+        "suite": "test_amiibo_guard_and_uid_review2.py",
+        "cases": 36,
+        "status": "ASan/UBSan passed; explicit UID success clears protection, failures retain it"
+      },
+      {
+        "suite": "test_standard_tag_rng_review2.py",
+        "cases": 45,
+        "status": "ASan/UBSan passed; existing sibling tests retained"
+      },
+      {
+        "suite": "test_amiidb_slot_persistence_de348.py",
+        "cases": 29,
+        "status": "passed"
+      },
+      {
+        "suite": "test_player_v3.py",
+        "tests": 5,
+        "status": "passed"
+      },
+      {
+        "suite": "test_chameleon_files.py",
+        "groups": 8,
+        "status": "passed; existing short/error/format assertions retained"
+      },
+      {
+        "suite": "test_slot_save_guard.py",
+        "status": "passed; accepted SaveAs clears, cancel/badtarget retains protection"
+      },
+      {
+        "suite": "test_nfc_app_handoffs_de3_3.py + test_nfc_save_retry_de337.py + test_amiidb_back_to_list_focus.py",
+        "status": "passed; prior retry/metadata/focus assertions retained"
+      },
+      {
+        "suite": "Settings recovery/focus/storage snapshot/locale width",
+        "status": "passed on unchanged settings source; width576rows, both locales"
+      },
+      {
+        "suite": "test_app_settings_save_ui.py",
+        "tests": 4,
+        "status": "Gezielter Rerun auf finalem Produkt bestanden, nur alte Fixture um bool-Setter/Flag ergänzt; tatsächliche Testasserts unverändert. Voller erster Root-Lauf und anschließender Einzel-Rerun bleiben getrennt."
+      }
+    ],
+    "laterHarnessCorrection": "Im finalen Fullgate fiel noch app_settings_save_ui.c.in mit veraltetem void-Setter/fehlendem App-Feld auf. Ausschließlich diese Fixture wurde angepasst; vier ursprüngliche Tests anschließend bestanden, eigener gehashter Report/Log. Keine Produktänderung und kein behaupteter dritter Gesamtlauf."
+  },
+  "linkedArmMemory": {
+    "method": "Read-only GNU nm/objdump aus finalem Candidate; tatsächliche ARM-Allokations-/Kopierlängen und Symbolgrößen, kein neuer Build für diesen Abgleich.",
+    "oldElf": "builds/app670-reference/pixljs.out",
+    "newElf": "builds/app671-release1/pixljs.out",
+    "app_amiidb_heap_allocation_bytes": {
+      "before": 2568,
+      "after": 2568,
+      "proof": "app_amiidb_on_run movw r0,#2568 immediately before mui_mem_malloc in both ELFs"
+    },
+    "app_amiidb_snapshot_bytes": {
+      "before": 296,
+      "after": 300,
+      "retainBuffer": 312,
+      "proof": "Actual save_cache memset/memcpy and restore_cache memcpy lengths296 vs300; retain memset remains312"
+    },
+    "shared_cache_symbol_bytes": {
+      "before": 2500,
+      "after": 2500
+    },
+    "ntag_bytes": {
+      "before": 2178,
+      "after": 2178
+    },
+    "additionalSleepOrReadFlashWrites": 0,
+    "newElfSha256": "d08f4c054459447c460139e0708e9b9c7f5181044e665f48c6781f48bbeb4c94",
+    "temporaryProtectionFlagOffset": 2211,
+    "snapshotProtectionFlagOffset": 297,
+    "proofInstructions": {
+      "app_allocation": "app_amiidb_on_run @0x3956e movw r0,#2568; anschließend mui_mem_malloc",
+      "snapshot_save": "app_amiidb_save_cache @0x3977a/#300 memset; @0x39784/#312 Retainclear; @0x39958/#300 memcpy",
+      "snapshot_restore": "app_amiidb_restore_cache @0x3912c/#300 memcpy; legacy check296; v3 check300",
+      "protection_storage": "app_amiidb_restore_cache @0x3954c strb [r4,#2211]",
+      "tag_copy": "app_amiidb_restore_cache @0x39550/#2178",
+      "symbols": "m_cache_data size0x9c4=2500; m_snapshot size0x882=2178"
+    },
+    "additionalFullTagBufferAllocations": 0,
+    "additionalFullTagStorageBytes": 0
+  },
+  "sourceFiles": {
+    "fw/application/src/app/amiibo/scene/amiibo_scene_amiibo_detail.c": {
+      "bytes": 15157,
+      "sha256": "008ac26c1057f29e08266e4cca254baec1214a6866e68b2bc3f134acef5e848c",
+      "baseSha256": "7fa09a7a6d13b6fd40476062e9429bd172a80026260efe0637ae12692c04c4bb",
+      "basePinnedUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/898ba1bb46db2e67e3cc6a0216aefa3db4368f70/fw/application/src/app/amiibo/scene/amiibo_scene_amiibo_detail.c",
+      "matchesFinalCandidateInput": true
+    },
+    "fw/application/src/app/amiidb/app_amiidb.c": {
+      "bytes": 9345,
+      "sha256": "bbe553e256ba44c0303b766fd7a33139f9e9e0d189c06396fdaa3a590e4c66a6",
+      "baseSha256": "d8a7d81878308145888390edccce14ce9f36028b3e4928cf12d9156b9a301ad6",
+      "basePinnedUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/898ba1bb46db2e67e3cc6a0216aefa3db4368f70/fw/application/src/app/amiidb/app_amiidb.c",
+      "matchesFinalCandidateInput": true
+    },
+    "fw/application/src/app/amiidb/app_amiidb.h": {
+      "bytes": 4406,
+      "sha256": "15be28a88c5bb5e543d04a1aa03588a4d154baaf5ff63292b24e0dcc09852b59",
+      "baseSha256": "ecde138afae80f5ebe8e79ce12da492216b71a4d377fa67c9dc0ebe80273d731",
+      "basePinnedUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/898ba1bb46db2e67e3cc6a0216aefa3db4368f70/fw/application/src/app/amiidb/app_amiidb.h",
+      "matchesFinalCandidateInput": true
+    },
+    "fw/application/src/app/amiidb/app_amiidb_resume.h": {
+      "bytes": 12902,
+      "sha256": "9a92a889782cb6449009ee4e48b5fd5c47ff671c211dc2eca7998eb083fc358b",
+      "baseSha256": "43caf8a2cf079e825de432fbbcb722f425e1f5356422062203e76fda5fb0a48f",
+      "basePinnedUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/898ba1bb46db2e67e3cc6a0216aefa3db4368f70/fw/application/src/app/amiidb/app_amiidb_resume.h",
+      "matchesFinalCandidateInput": true
+    },
+    "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail.c": {
+      "bytes": 18342,
+      "sha256": "2b07c390a5f484641e686f9480c9f8867adc48cc6d33461e1c02796b887e5d24",
+      "baseSha256": "0440f9a7e5efc1ce52972b41a5b5d81a33b78895504838bc09b2183df95b89eb",
+      "basePinnedUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/898ba1bb46db2e67e3cc6a0216aefa3db4368f70/fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail.c",
+      "matchesFinalCandidateInput": true
+    },
+    "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail_menu.c": {
+      "bytes": 14455,
+      "sha256": "3596a9d3434345cab2a6c99de3299f7f8c0d0630cf9a9f51071307a1e681f605",
+      "baseSha256": "e586ef1cafbc0e42f8d24cba17131c8422bdeef0502a313184927aa949bdfbf8",
+      "basePinnedUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/898ba1bb46db2e67e3cc6a0216aefa3db4368f70/fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail_menu.c",
+      "matchesFinalCandidateInput": true
+    },
+    "fw/application/src/app/chameleon/scene/chameleon_scene_menu_card_data_file_load.c": {
+      "bytes": 20731,
+      "sha256": "5ee939041e9221c70cdfd5b7dd0bda614cba5fec0747436f33b3152b6f73e9b1",
+      "baseSha256": "a451c0bc2cfdada1a9541b39cce301037130db63b7d33988d8c7f6ed3df49342",
+      "basePinnedUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/898ba1bb46db2e67e3cc6a0216aefa3db4368f70/fw/application/src/app/chameleon/scene/chameleon_scene_menu_card_data_file_load.c",
+      "matchesFinalCandidateInput": true
+    },
+    "fw/application/src/app/settings/scene/settings_scene_main.c": {
+      "bytes": 20149,
+      "sha256": "75345656d2290019eeeda9191572624cd7d15e6bf51d6d46d9793419e3d07c8c",
+      "baseSha256": "6b3f4a82ee0f59e575a3f1955b0c777996d16082d52e60a5bff14c24afb3054f",
+      "basePinnedUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/898ba1bb46db2e67e3cc6a0216aefa3db4368f70/fw/application/src/app/settings/scene/settings_scene_main.c",
+      "matchesFinalCandidateInput": true
+    },
+    "fw/application/src/mod/settings.c": {
+      "bytes": 21349,
+      "sha256": "2fa74ea568e0f3bfecf2425495ef83e57537fc070d0a8aa87098bdb66c87aad4",
+      "baseSha256": "59cbe580c0113fa43fda5e0dd9adadc9e9af76b8e55c4f60fdb35d5da3740417",
+      "basePinnedUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/898ba1bb46db2e67e3cc6a0216aefa3db4368f70/fw/application/src/mod/settings.c",
+      "matchesFinalCandidateInput": true
+    },
+    "fw/application/src/mod/settings.h": {
+      "bytes": 4117,
+      "sha256": "dd12acd503d4b5db8b16370b35adac41706a3ad8175f47ea0f807e072badecb0",
+      "baseSha256": "72ee622eebe91dc8c155a7be2084d956c8c74b46df26f07cae8e566f95d41d4f",
+      "basePinnedUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/898ba1bb46db2e67e3cc6a0216aefa3db4368f70/fw/application/src/mod/settings.h",
+      "matchesFinalCandidateInput": true
+    },
+    "fw/application/src/app/amiidb/scene/amiidb_scene_data_select.c": {
+      "bytes": 4761,
+      "sha256": "99bff5018ee19e37435feb0efb805da526f8de2650e1839aa845bc1cfb1871ae",
+      "baseSha256": "09a1f7a478c683d90621458fabe4bfb6294b909872fb0a48010a7ee8a85016e1",
+      "basePinnedUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/898ba1bb46db2e67e3cc6a0216aefa3db4368f70/fw/application/src/app/amiidb/scene/amiidb_scene_data_select.c",
+      "matchesFinalCandidateInput": true
+    }
+  },
+  "limits": [
+    "No overall device acceptance or game/console completion is inferred from a valid RF response and field end.",
+    "Retained RAM reuse requires Resume/hibernate enabled; no claim across power loss or invalid cache.",
+    "Old instrumented profiles and device measurements are historical evidence, not direct causal timing proof for the new normal firmware.",
+    "This is a scoped implementation/targeted-test report; root owns the frozen full-suite/build/signature/release binding."
+  ],
+  "fullSuiteQualification": {
+    "path": "DE3_98_evidence/FULL_TESTS_QUALIFIED.json",
+    "sha256": "1cfdeb68c762291bbafb4b4d3a58be8d9000c5eb779bcc10eb823dc4d577281b",
+    "bytes": 185538
+  },
+  "caseCounting": "Named suites overlap. Their case counts are not added to a unique combined total.",
+  "historicalSeparation": "App669/App670 device observations remain historical; no App671 physical acceptance is inferred."
+}

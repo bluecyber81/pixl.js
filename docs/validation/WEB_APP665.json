@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "browserVersion": "3.58.2",
+  "privateTarget": "LCD DE3.92 / App665",
+  "publicBasisCommit": "b7e6964f5a198eba3f2a6427c0bfb2b54e1d43eb",
+  "reconstructedApp664Commit": "574994d50c86696b3429590dff04ae8cfa4a653e",
+  "reconstructedApp664Tree": "c750b905e2639fd96bca315a6ad56b2d7a9fb333",
+  "historicalApp664CommitUnavailable": "1cc7701484de6a32a247fa3958dc600632c20344",
+  "firmwareCommit": "05028b679591e3d228f2b43c6057e3905f5cca88",
+  "firmwareProductionCommit": "73df4e3d16f0e51b3bbd3e9bf10387010ed32934",
+  "sourceId": "49ed45a809f197c9d3b072bf1cb243fd8cf0b62fa55826d2cfeda841afe767b9",
+  "engineSha256": "605356ff74646392adcfb26adf5c7d39fe7138272e84b4e4a0f167b94e34c2c1",
+  "wasmSha256": "08428602391b6d9f8ee1bfb28abf683a5a774b97d75242da70d8d0f2f6314d16",
+  "wasmBytes": 64369,
+  "otaSha256": "65e9321309dc059b88adc490963c787fdbc01e35e201765b7cbb8d3ecd66e3a0",
+  "otaBytes": 365125,
+  "testGroups": {
+    "fullWebSuite": {
+      "command": "npm test",
+      "tests": 1850,
+      "passed": 1847,
+      "failed": 0,
+      "skipped": 3,
+      "skipReasons": [
+        "two existing Windows-only launcher tests",
+        "optional historical DE3.17/recovery575 fixtures absent"
+      ]
+    },
+    "rootProductionBuild": {
+      "command": "npm run build",
+      "exitCode": 0,
+      "distTests": 26,
+      "passed": 26,
+      "failed": 0
+    },
+    "targetedProfileAndTransport": {
+      "tests": 186,
+      "passed": 186,
+      "note": "subset of final full suite, not additional total"
+    },
+    "exactWasmRebuild": {
+      "reproduced": true,
+      "report": "REPRODUCIBLE_WASM.json"
+    },
+    "crossMount": {
+      "cases": 6,
+      "passed": 6,
+      "files": 1131,
+      "directories": 77,
+      "readOnlyPhasesWriteNor": false
+    },
+    "linkedArmLayout": {
+      "cases": 4,
+      "expectedResults": [
+        0,
+        0,
+        4294967290,
+        4294967290
+      ],
+      "passed": 4
+    },
+    "syntheticCollection": {
+      "entries": 1208,
+      "usedBlocks": 238,
+      "observedPeakUsedBlocks": 238,
+      "conservativePeakUsedBlocks": 279,
+      "coreHeapPeakBytes": 4264,
+      "scope": "synthetic; no physical free-space claim"
+    }
+  },
+  "visibleBrowserCheck": {
+    "status": "blocked-before-page",
+    "script": "web/scripts/verify-private-lcd-browser.mjs",
+    "headlessError": "Chromium ProcessSingleton: AF_UNIX socket() Operation not permitted",
+    "approval": "sandbox_approval=false; escalated execution rejected automatically",
+    "cloudDesktopFallback": "http://127.0.0.1:8766/ returned net::ERR_CONNECTION_REFUSED",
+    "screenshots": [],
+    "passed": false
+  },
+  "pagesBuild": "not run; private portable uses root deployment only",
+  "deviceAccess": false,
+  "published": false,
+  "windowsPhysicalTest": false,
+  "logsSha256": {
+    "web_de392_final_test.log": "7903a6a3a055204d054cdfa7fa92ca872f47b996336d43dc024431879eabe8c4",
+    "web_de392_final_build.log": "4487aec1a28c292c03dcf0f42dce6a4b379903437530ea895e27296ed383f23a",
+    "web_de392_added_tests.log": "63f7f52c0df6f3de29cd984b905f0a45014cdb8f891dfe816100d391b726d1da",
+    "web_de392_private_browser.log": "a34986488691a63f219d59b8b560f6cf996eae43e941b3b136c09a7ec76f197c"
+  },
+  "nextSteps": [
+    "Run the included visible browser check on a supported local Chromium environment",
+    "Install App665 on the intended LCD through the separately authorized normal update workflow",
+    "Read fresh diagnostics and verify storage reclaim/menu/BLE/NFC under normal use"
+  ]
+}

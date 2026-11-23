@@ -1,0 +1,443 @@
+@STORE@
+_Static_assert(sizeof(settings_checkpoint_t)==36, "scoped checkpoint RAM budget");
+_Static_assert(sizeof(settings_byte_checkpoint_t)==8, "field checkpoint RAM budget");
+#include "mui/mui_contrast.h"
+#define __STATIC_INLINE static inline
+#define NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF 1
+static volatile uint8_t m_input_idle_seconds;
+static volatile uint16_t m_standby_counter, m_timeout_counter;
+static bool m_shutdown_started;
+static unsigned shutdowns;
+static void nrf_pwr_mgmt_shutdown(unsigned kind) { assert(kind == NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF); shutdowns++; }
+@POWER@
+#define CRITICAL_REGION_ENTER() do {
+#define CRITICAL_REGION_EXIT() } while (0)
+#define BLE_CONNECT_SLEEP_TIMEOUT_SECONDS 180
+static bool m_timeout_overridden;
+static uint16_t m_previous_pwr_mgmt_sleep_timeout;
+@BLE@
+static void file_connected(void) { @CONNECT@ }
+static void file_disconnected(void) { @DISCONNECT@ }
+
+typedef struct { bool initialized; unsigned u8g2; } mui_t;
+static mui_t screen;
+static mui_t *mui(void) { return &screen; }
+static unsigned drawn, rotation, contrast, level, hardware_calls, ticks;
+static int pwm_error;
+static void mui_update(mui_t *m) { assert(m->initialized); drawn++; }
+#define U8G2_R2 2
+#define U8G2_R0 0
+static void u8g2_SetContrast(unsigned *d, unsigned v) { assert(screen.initialized); hardware_calls++; contrast = v; }
+static void u8g2_SetDisplayRotation(unsigned *d, unsigned v) { assert(screen.initialized); hardware_calls++; rotation = v; }
+typedef int ret_code_t;
+#define NRF_ERROR_BUSY 8
+#define APP_TIMER_TICKS(x) (x)
+static bool m_settings_slider, m_levels_deferred, m_backlight_preview_active, m_backlight_restore_pending;
+static bool m_dimmed, m_dim_retry_pending;
+static uint8_t m_backlight_saved;
+static uint32_t m_backlight_retry_tick;
+static uint32_t app_timer_cnt_get(void) { return ticks; }
+static uint32_t app_timer_cnt_diff_compute(unsigned now, unsigned then) { return now - then; }
+static int8_t mui_u8g2_get_backlight_level(void) { return level; }
+static ret_code_t backlight_level_apply(uint8_t v) {
+    assert(screen.initialized);
+    hardware_calls++;
+    if (pwm_error) return pwm_error;
+    level = v;
+    return NRF_SUCCESS;
+}
+@DISPLAY@
+@APPLICATION@
+@MENU_ENUM@
+typedef struct { char label[48], value[48]; } menu_row_t;
+typedef struct { uint16_t focus, scroll; menu_row_t rows[SETTINGS_MAIN_MENU_LOAD_STATE + 1]; } list_t;
+typedef int mui_msg_box_event_t;
+typedef struct mui_msg_box_s mui_msg_box_t;
+struct mui_msg_box_s { void *user_data; void (*event_cb)(mui_msg_box_event_t, mui_msg_box_t *); unsigned focus; };
+typedef struct { unsigned choice; } mui_input_event_t;
+typedef struct mui_view_s mui_view_t;
+struct mui_view_s { void *user_data; void (*input_cb)(mui_view_t *, mui_input_event_t *); };
+typedef struct { void *user_data; } mui_view_port_t;
+typedef struct { mui_view_t *p_active_view; } mui_view_dispatcher_t;
+static void mui_view_input(mui_view_t *view, mui_input_event_t *event) { view->input_cb(view, event); }
+@DISPATCH@
+typedef struct {
+    list_t *p_list_view;
+    mui_msg_box_t *p_msg_box;
+    mui_view_dispatcher_t *p_view_dispatcher;
+    void *p_scene_dispatcher, *p_view_dispatcher_toast, *p_toast_view, *p_progress_bar;
+    bool exit_saved, exit_discard, confirm_discard, storage_snapshot;
+    settings_checkpoint_t entry_settings;
+    uint32_t changed_fields;
+    uint16_t changed_apps;
+} app_settings_t;
+enum { SETTINGS_VIEW_ID_MAIN, SETTINGS_VIEW_ID_MSG_BOX };
+enum { MUI_MSG_BOX_EVENT_SELECT_LEFT, MUI_MSG_BOX_EVENT_SELECT_CENTER, MUI_MSG_BOX_EVENT_SELECT_RIGHT };
+enum { MINI_APP_ID_SETTINGS, MINI_APP_ID_DESKTOP, APP_STATE_RUNNING, APP_STATE_KILLED, MINI_APP_EXIT_SWITCH };
+enum { MUI_LAYER_FULLSCREEN, MUI_LAYER_TOAST, INPUT_TYPE_SHORT };
+typedef unsigned mini_app_exit_reason_t;
+typedef struct mini_app_inst_s mini_app_inst_t;
+typedef struct {
+    unsigned id; bool sys;
+    void (*kill_cb)(mini_app_inst_t *);
+    bool (*prepare_exit_cb)(mini_app_inst_t *, mini_app_exit_reason_t);
+    void (*cancel_exit_cb)(mini_app_inst_t *);
+} mini_app_t;
+struct mini_app_inst_s { mini_app_inst_t *next; const mini_app_t *p_app; void *p_handle; unsigned state; };
+typedef struct {
+    mini_app_inst_t *instances, *p_main_app_inst, *prepared_inst;
+    void *prepared_handle;
+    bool exit_busy, exit_prepared;
+    mini_app_exit_reason_t exit_reason;
+} mini_app_launcher_t;
+static list_t list;
+static mui_msg_box_t dialog;
+static mui_view_dispatcher_t views;
+static app_settings_t menu = {.p_list_view = &list, .p_msg_box = &dialog, .p_view_dispatcher = &views};
+static unsigned visible_view, kills, cleanup_calls, nfc_checks, nfc_cancels, runtime_restores;
+static bool nfc_veto, owner_veto;
+static const char *message;
+static void (*acknowledge)(mui_msg_box_event_t, mui_msg_box_t *);
+static bool ntag_emu_prepare_change(void) { nfc_checks++; return !nfc_veto; }
+static void ntag_emu_cancel_change(void) { nfc_cancels++; }
+static void mui_input_context_changed(void) {}
+static void mini_app_launcher_run(mini_app_launcher_t *launcher,unsigned id) { assert(id==MINI_APP_ID_DESKTOP); kills++; }
+static void cleanup(void *p) { (void)p; cleanup_calls++; }
+#define mui_scene_dispatcher_free cleanup
+#define mui_view_dispatcher_free cleanup
+#define mui_list_view_free cleanup
+#define mui_progress_bar_free cleanup
+#define mui_msg_box_free cleanup
+#define mui_toast_view_free cleanup
+#define mui_mem_free cleanup
+#define mui_view_dispatcher_detach(d,l) ((void)0)
+#define mui_nav_diag_end() ((void)0)
+@KILL@
+@LAUNCHER@
+static bool owner_guard(mini_app_inst_t *inst,mini_app_exit_reason_t reason) { return !owner_veto; }
+static mini_app_t fixture_app = {.id=MINI_APP_ID_SETTINGS,.kill_cb=app_settings_on_kill,.prepare_exit_cb=owner_guard};
+static mini_app_inst_t instance;
+/* The MsgBox component separately tests gesture/focus/frame fencing. Here an
+ * explicitly selected visible button enters the real view dispatcher and the
+ * unchanged Settings callback, launcher guards and accepted kill callback. */
+static void selected_button(mui_view_t *view,mui_input_event_t *event) {
+    mui_msg_box_t *box=view->user_data; assert(box->event_cb); box->event_cb(event->choice,box);
+}
+static mui_view_t box_view = {.user_data=&dialog,.input_cb=selected_button};
+static void press_button(unsigned choice) {
+    assert(views.p_active_view==&box_view);
+    mui_view_port_t port={.user_data=&views};mui_input_event_t event={.choice=choice};
+    mui_view_dispatcher_on_input(&port,&event);
+}
+static void start_menu(void) {
+    menu=(app_settings_t){.p_list_view=&list,.p_msg_box=&dialog,.p_view_dispatcher=&views};
+    dialog.user_data=&menu;
+    settings_checkpoint(&menu.entry_settings);
+    instance=(mini_app_inst_t){.p_app=&fixture_app,.p_handle=&menu,.state=APP_STATE_RUNNING};
+    *mini_app_launcher()=(mini_app_launcher_t){.instances=&instance,.p_main_app_inst=&instance};
+    nfc_veto=owner_veto=false;kills=cleanup_calls=nfc_checks=nfc_cancels=0;
+}
+#define mui_list_view_get_scroll_offset(v) ((v)->scroll)
+#define mui_list_view_get_focus(v) ((v)->focus)
+#define mui_list_view_set_scroll_offset(v,n) ((v)->scroll = (n))
+#define mui_list_view_set_focus(v,n) ((v)->focus = (n))
+#define mui_list_view_clear_items(v) memset((v),0,sizeof(*(v)))
+#define version_get_version(v) "test"
+#define settings_storage_snapshot_peek(snapshot,driver) ((const vfs_stat_t *)NULL)
+#define settings_storage_snapshot_invalidate(snapshot) ((void)0)
+#define ble_remote_enabled() false
+static void mui_list_view_add_item_ext(list_t *v,unsigned icon,const char *label,const char *value,void *id) {
+    assert((uintptr_t)id < sizeof(v->rows) / sizeof(v->rows[0]));
+    menu_row_t *row = &v->rows[(uintptr_t)id];
+    snprintf(row->label,sizeof(row->label),"%s",label);
+    snprintf(row->value,sizeof(row->value),"%s",value ? value : "");
+}
+#define mui_list_view_add_item(v,icon,label,id) mui_list_view_add_item_ext(v,icon,label,NULL,id)
+static void mui_view_dispatcher_switch_to_view(void *d,unsigned active) {visible_view=active; ((mui_view_dispatcher_t*)d)->p_active_view=active==SETTINGS_VIEW_ID_MSG_BOX?&box_view:NULL;}
+static void mui_msg_box_set_error(mui_msg_box_t *box,const char *text,void (*cb)(mui_msg_box_event_t,mui_msg_box_t *)) {
+    message = text; acknowledge = cb;
+}
+#define mui_update_now(ui) ((void)0)
+#define mui_msg_box_set_event_cb(box,cb) ((box)->event_cb=(cb),acknowledge=(cb))
+#define mui_msg_box_set_header(box,s) ((void)0)
+#define mui_msg_box_set_message(box,s) (message=(s))
+#define mui_msg_box_set_btn_focus(box,n) ((box)->focus=(n))
+#define mui_msg_box_set_btn_text(box,l,m,r) ((void)0)
+#define mui_nav_diag_save_begin(t) ((void)0)
+#define mui_nav_diag_save_result(t,r) ((void)0)
+#define mui_nav_diag_exit_returned(t) ((void)0)
+static void settings_scene_main_exit_choice(mui_msg_box_event_t event, mui_msg_box_t *box);
+@MENU@
+static void select_save_and_exit(app_settings_t *app) {
+    uint8_t diag_type=INPUT_TYPE_SHORT;
+    switch (SETTINGS_MAIN_MENU_EXIT) {
+        @SAVE_AND_EXIT@
+    }
+}
+static void start_runtime(void) {
+    settings_data_t *current = settings_get_data();
+    nrf_pwr_mgmt_set_timeout(current->sleep_timeout_sec);
+    setLanguage(current->language);
+    screen.initialized = true;
+    mui_u8g2_set_flip_display(current->flip_display);
+    mui_u8g2_set_contrast_level(current->oled_contrast);
+    level = current->lcd_backlight;
+    settings_on_recovered(mui_settings_recovered);
+}
+static void failed_start(unsigned timeout) {
+    reset();
+    settings_on_recovered(NULL);
+    settings_data_t saved = def_settings_data;
+    saved.sleep_timeout_sec = timeout; saved.language = LANGUAGE_EN_US; saved.flip_display = true;
+    saved.lcd_backlight = 75; saved.oled_contrast = 65;
+    memcpy(stored, &saved, sizeof(saved));
+    m_timeout_overridden = screen.initialized = m_settings_slider = m_levels_deferred = false;
+    m_backlight_preview_active = m_backlight_restore_pending = m_dimmed = m_dim_retry_pending = false;
+    drawn = hardware_calls = shutdowns = ticks = m_standby_counter = m_input_idle_seconds = 0;
+    pwm_error = 0;
+    read_error = VFS_ERR_FAIL;
+    assert(settings_init() != NRF_SUCCESS && hardware_calls == 0);
+    start_menu();
+}
+static void expect_recovered(void) {
+    settings_scene_main_reload(&menu);
+    menu_row_t language = list.rows[SETTINGS_MAIN_MENU_LANGUAGE];
+    assert(getLanguage() == LANGUAGE_EN_US && !strcmp(language.label, "Language") && !strcmp(language.value, "English"));
+    assert(!strcmp(_T(BACK), "Back") && nrf_pwr_mgmt_get_timeout() == 180);
+    assert(rotation == 2 && level == 75 && contrast == (65 - 1) * 255 / 99);
+    for (unsigned i = 0; i < 180; i++) pwr_mgmt_standby_timeout_check();
+    assert(!shutdowns);
+    pwr_mgmt_standby_timeout_check();
+    assert(shutdowns == 1);
+}
+int main(void) {
+    for (unsigned via_save = 0; via_save < 2; via_save++) {
+        failed_start(180); start_runtime();
+        unsigned status_reads=read_calls; assert(settings_load_state()==SETTINGS_LOAD_PENDING);
+        assert(read_calls==status_reads);
+        assert(getLanguage() == LANGUAGE_DE_DE && nrf_pwr_mgmt_get_timeout() == 30);
+        unsigned initial_calls = hardware_calls;
+        assert(settings_retry_load() != 0 && settings_save() != 0 && hardware_calls == initial_calls && drawn == 0);
+        read_error = 0;
+        assert((via_save ? settings_save() : settings_retry_load()) == 0 && drawn == 1);
+        expect_recovered();
+        assert(settings_load_state()==SETTINGS_LOAD_VERIFIED);
+        bool old_anim=settings_get_data()->anim_enabled;
+        settings_get_data()->anim_enabled=!old_anim;
+        assert(settings_load_state()==SETTINGS_LOAD_VERIFIED);
+        settings_get_data()->anim_enabled=old_anim;
+        assert(settings_retry_load() == 0 && settings_save() == 0 && drawn == 1 && writes == 0);
+    }
+    failed_start(180); read_error = 0;
+    assert(settings_retry_load() == 0 && !hardware_calls && !drawn);
+    start_runtime(); expect_recovered();
+
+    /* Simulate the already-filled Settings list: it owns copies of its text.
+     * Use the actual Home save action, failure callback and list renderer. */
+    failed_start(180); start_runtime(); dialog.user_data = &menu;
+    settings_scene_main_reload(&menu);
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_LANGUAGE].label, "Sprache"));
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_SLEEP_TIMEOUT].value, "30s"));
+    settings_get_data()->anim_enabled = true;
+    read_error = 0; write_result = VFS_ERR_NOSPC;
+    list.focus = 17; list.scroll = 156;
+    select_save_and_exit(&menu);
+    assert(visible_view == SETTINGS_VIEW_ID_MSG_BOX && acknowledge && !kills && !menu.exit_saved);
+    assert(!strcmp(message, "Storage operation failed") && getLanguage() == LANGUAGE_EN_US);
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_LANGUAGE].label, "Sprache"));
+    press_button(MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+    assert(visible_view == SETTINGS_VIEW_ID_MAIN && list.focus == 17 && list.scroll == 156);
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_LANGUAGE].label, "Language"));
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_LANGUAGE].value, "English"));
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_SLEEP_TIMEOUT].label, "Sleep Timeout"));
+    assert(!strcmp(list.rows[SETTINGS_MAIN_MENU_SLEEP_TIMEOUT].value, "3m"));
+    assert(writes == 1);
+    write_result = sizeof(settings_data_t);
+    select_save_and_exit(&menu);
+    assert(kills == 1 && menu.exit_saved && writes == 2);
+
+    /* Adoption and persistence are distinct. On a later failed write the
+     * validated record is live and the local edit is still available to retry. */
+    failed_start(180); start_runtime();
+    settings_get_data()->anim_enabled = true;
+    read_error = 0; write_result = VFS_ERR_NOSPC;
+    assert(settings_save() == VFS_ERR_NOSPC && drawn == 1 && writes == 1);
+    expect_recovered();
+    write_result = sizeof(settings_data_t);
+    assert(settings_save() == 0 && drawn == 1 && writes == 2 && settings_get_data()->anim_enabled);
+
+    failed_start(180); start_runtime();
+    unsigned calls_before_shutdown = hardware_calls;
+    screen.initialized = false;
+    read_error = 0; assert(settings_retry_load() == 0);
+    assert(hardware_calls == calls_before_shutdown && drawn == 0);
+
+    failed_start(60); start_runtime(); file_connected();
+    assert(nrf_pwr_mgmt_get_timeout() == 180 && m_previous_pwr_mgmt_sleep_timeout == 30);
+    assert(mui_u8g2_backlight_preview(5) == 0);
+    read_error = 0;
+    assert(settings_save() == 0 && nrf_pwr_mgmt_get_timeout() == 180 && m_previous_pwr_mgmt_sleep_timeout == 60);
+    assert(m_backlight_preview_active && level == 5);
+    file_disconnected(); assert(nrf_pwr_mgmt_get_timeout() == 60);
+    pwm_error = 8; assert(mui_u8g2_backlight_restore() == 8 && level == 5);
+    pwm_error = 0; ticks += 250; mui_u8g2_poll_dim(false); assert(level == 75);
+
+    failed_start(60); start_runtime();
+    stored[offsetof(settings_data_t, backlight)] = LCD_DIM_IDLE_5;
+    m_input_idle_seconds = 6;
+    assert(mui_u8g2_backlight_preview(100) == 0);
+    read_error = 0; assert(settings_retry_load() == 0 && level == 100);
+    assert(mui_u8g2_backlight_restore() == 0 && level == 19);
+    m_input_idle_seconds = 0;
+    mui_u8g2_poll_dim(nrf_pwr_mgmt_dim_window(settings_lcd_dim_idle_seconds()));
+    assert(level == 75);
+
+    failed_start(60); start_runtime(); mui_u8g2_settings_slider(true);
+    mui_u8g2_set_contrast_level(95); level = 42;
+    read_error = 0; assert(settings_retry_load() == 0);
+    assert(rotation == 2 && contrast == (95 - 1) * 255 / 99 && level == 42 && getLanguage() == LANGUAGE_EN_US);
+    mui_u8g2_settings_slider(false);
+    assert(contrast == (65 - 1) * 255 / 99 && level == 75);
+
+    /* A clean field checkpoint follows a subsequently verified 24/26-byte
+     * record, rather than replaying provisional boot defaults. */
+    const uint8_t offsets[] = {offsetof(settings_data_t, auto_gen_amiibo),
+        offsetof(settings_data_t, qrcode_enabled), offsetof(settings_data_t, amiibolink_mode),
+        offsetof(settings_data_t, amiidb_sort_column)};
+    const uint8_t accepted[] = {1, 0, 2, 1}, wanted[] = {0, 1, 3, 0};
+    for (unsigned length=24; length<=26; length+=2) for (unsigned field=0; field<4; field++) {
+        reset(); settings_on_recovered(NULL); stored_size=length; stored[offsets[field]]=accepted[field];
+        read_error=VFS_ERR_FAIL; assert(settings_init()!=0);
+        settings_byte_checkpoint_t cp; settings_checkpoint_byte(offsets[field],&cp);
+        settings_set_byte(offsets[field],wanted[field]); SETTINGS_SET(no_sleep_mode,true);
+        read_error=0; write_result=VFS_ERR_NOSPC; assert(settings_save()!=0);
+        unsigned before_reads=read_calls, before_writes=writes;
+        settings_discard_byte(offsets[field],&cp);
+        assert(((uint8_t*)settings_get_data())[offsets[field]]==accepted[field]);
+        assert(settings_get_data()->no_sleep_mode && read_calls==before_reads && writes==(int)before_writes);
+        assert(!(edited_fields & (UINT32_C(1)<<offsets[field])));
+        write_result=sizeof(settings_data_t); assert(settings_save()==0 && settings_init()==0);
+        assert(((uint8_t*)settings_get_data())[offsets[field]]==accepted[field] && settings_get_data()->no_sleep_mode);
+    }
+    puts("PASS 8 clean option checkpoints use verified late records; discard performs zero storage reads/writes and preserves unrelated choices");
+
+    /* An older pending explicit default belongs to the earlier owner, even
+     * when a recovered record has the opposite value. */
+    failed_start(180); stored[offsetof(settings_data_t,auto_gen_amiibo)]=1;
+    SETTINGS_SET(auto_gen_amiibo,false);
+    settings_byte_checkpoint_t prior; SETTINGS_CHECKPOINT(auto_gen_amiibo,&prior);
+    SETTINGS_SET(auto_gen_amiibo,true); SETTINGS_SET(anim_enabled,true);
+    read_error=0;write_result=VFS_ERR_NOSPC;assert(settings_save()!=0);
+    unsigned preserved_reads=read_calls,preserved_writes=writes;
+    SETTINGS_DISCARD(auto_gen_amiibo,&prior);
+    assert(!settings_get_data()->auto_gen_amiibo && settings_get_data()->anim_enabled);
+    assert((edited_fields&SETTINGS_FIELD_MASK(auto_gen_amiibo)) && read_calls==preserved_reads && writes==(int)preserved_writes);
+    write_result=sizeof(settings_data_t);assert(settings_save()==0 && settings_init()==0);
+    assert(!settings_get_data()->auto_gen_amiibo && settings_get_data()->anim_enabled);
+
+    /* A completed save is a new accepted base. An older entry checkpoint must
+     * not undo it after another attempted change fails. */
+    reset();settings_on_recovered(NULL);assert(settings_init()==0);
+    SETTINGS_CHECKPOINT(auto_gen_amiibo,&prior);
+    SETTINGS_SET(auto_gen_amiibo,true);assert(settings_save()==0);
+    SETTINGS_SET(auto_gen_amiibo,false);write_result=VFS_ERR_NOSPC;assert(settings_save()!=0);
+    SETTINGS_DISCARD(auto_gen_amiibo,&prior);assert(settings_get_data()->auto_gen_amiibo);
+    assert(!(edited_fields&SETTINGS_FIELD_MASK(auto_gen_amiibo)));
+    /* Legacy direct RAM callers are also protected at scene entry. */
+    settings_get_data()->qrcode_enabled=false;SETTINGS_CHECKPOINT(qrcode_enabled,&prior);
+    SETTINGS_SET(qrcode_enabled,true);SETTINGS_DISCARD(qrcode_enabled,&prior);
+    assert(!settings_get_data()->qrcode_enabled && (edited_fields&SETTINGS_FIELD_MASK(qrcode_enabled)));
+    puts("PASS prior pending defaults and legacy RAM edits survive scoped discard; successful saves invalidate old checkpoints");
+
+    /* Main-settings scope also preserves a prior pending value of the same
+     * field while clean fields use the late accepted record. */
+    failed_start(180);SETTINGS_SET(sleep_timeout_sec,60);
+    settings_checkpoint_t main_prior;settings_checkpoint(&main_prior);
+    SETTINGS_SET(sleep_timeout_sec,30);SETTINGS_SET(language,LANGUAGE_DE_DE);
+    read_error=0;write_result=VFS_ERR_NOSPC;assert(settings_save()!=0);
+    preserved_reads=read_calls;preserved_writes=writes;
+    settings_discard_fields(SETTINGS_FIELD_MASK(sleep_timeout_sec)|SETTINGS_FIELD_MASK(language),0,&main_prior);
+    assert(settings_get_data()->sleep_timeout_sec==60 && settings_get_data()->language==LANGUAGE_EN_US);
+    assert((edited_fields&SETTINGS_FIELD_MASK(sleep_timeout_sec)) && !(edited_fields&SETTINGS_FIELD_MASK(language)));
+    assert(read_calls==preserved_reads && writes==(int)preserved_writes);
+    write_result=sizeof(settings_data_t);SETTINGS_SET(sleep_timeout_sec,120);assert(settings_save()==0);
+    SETTINGS_SET(sleep_timeout_sec,15);settings_discard_fields(SETTINGS_FIELD_MASK(sleep_timeout_sec),0,&main_prior);
+    assert(settings_get_data()->sleep_timeout_sec==120 && !(edited_fields&SETTINGS_FIELD_MASK(sleep_timeout_sec)));
+    puts("PASS Main scope retains prior pending same-field choice, adopts clean late values, and honors newer successful save");
+
+    /* App-enable rollback is bit-scoped, including older pending app bits and
+     * independently recovered disabled bits in the same byte. */
+    failed_start(180);stored[offsetof(settings_data_t,app_enable_bits)]=0xfd;
+    settings_toggle_app(2);settings_checkpoint_t scope;settings_checkpoint(&scope);
+    settings_toggle_app(2);settings_toggle_app(3);settings_toggle_app(9);
+    read_error=0;write_result=VFS_ERR_NOSPC;assert(settings_save()!=0);
+    preserved_reads=read_calls;preserved_writes=writes;
+    settings_discard_fields(0,(1u<<2)|(1u<<3),&scope);
+    assert(!(settings_get_data()->app_enable_bits&(1u<<1)));
+    assert(!(settings_get_data()->app_enable_bits&(1u<<2)));
+    assert(settings_get_data()->app_enable_bits&(1u<<3));
+    assert(!(settings_get_data()->app_enable_bits&(1u<<9)));
+    assert((edited_apps&(1u<<2)) && !(edited_apps&(1u<<3)) && (edited_apps&(1u<<9)));
+    assert(read_calls==preserved_reads && writes==(int)preserved_writes);
+    puts("PASS scope preserves older and foreign app bits without restoring whole settings bytes");
+
+    /* Permanent save failure through the real Settings callbacks, dispatcher,
+     * launcher NFC/owner guards and accepted app kill. No mocks of settings.c. */
+    failed_start(180);start_runtime();
+    SETTINGS_SET(auto_gen_amiibo,true);SETTINGS_SET(chameleon_slot_num,20);start_menu();
+    SETTINGS_SET(language,LANGUAGE_DE_DE);SETTINGS_SET(sleep_timeout_sec,30);
+    SETTINGS_SET(flip_display,false);SETTINGS_SET(lcd_backlight,20);SETTINGS_SET(oled_contrast,40);
+    settings_toggle_app(3);
+    menu.changed_fields=SETTINGS_FIELD_MASK(language)|SETTINGS_FIELD_MASK(sleep_timeout_sec)|
+        SETTINGS_FIELD_MASK(flip_display)|SETTINGS_FIELD_MASK(lcd_backlight)|SETTINGS_FIELD_MASK(oled_contrast);
+    menu.changed_apps=1u<<3;
+    read_error=0;write_result=VFS_ERR_NOSPC;select_save_and_exit(&menu);
+    assert(instance.p_handle==&menu && !kills && writes==1 && dialog.focus==MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+    press_button(MUI_MSG_BOX_EVENT_SELECT_LEFT);press_button(MUI_MSG_BOX_EVENT_SELECT_LEFT);
+    assert(writes==3 && !kills && settings_get_data()->sleep_timeout_sec==30);
+    press_button(MUI_MSG_BOX_EVENT_SELECT_RIGHT);assert(visible_view==SETTINGS_VIEW_ID_MAIN);
+    select_save_and_exit(&menu);assert(writes==4);
+    press_button(MUI_MSG_BOX_EVENT_SELECT_CENTER);assert(menu.confirm_discard && dialog.focus==MUI_MSG_BOX_EVENT_SELECT_RIGHT);
+    press_button(MUI_MSG_BOX_EVENT_SELECT_RIGHT);assert(!menu.confirm_discard && !kills && writes==4);
+    assert(settings_get_data()->language==LANGUAGE_DE_DE);
+    nfc_veto=true;press_button(MUI_MSG_BOX_EVENT_SELECT_CENTER);press_button(MUI_MSG_BOX_EVENT_SELECT_LEFT);
+    assert(instance.p_handle==&menu && !kills && writes==4 && !menu.exit_discard && !menu.exit_saved);
+    assert(settings_get_data()->language==LANGUAGE_DE_DE && nfc_checks==1);
+    nfc_veto=false;owner_veto=true;
+    press_button(MUI_MSG_BOX_EVENT_SELECT_CENTER);press_button(MUI_MSG_BOX_EVENT_SELECT_LEFT);
+    assert(instance.p_handle==&menu && !kills && writes==4 && !menu.exit_discard && !menu.exit_saved && nfc_cancels==1);
+    assert(settings_get_data()->lcd_backlight==20 && !(settings_get_data()->app_enable_bits&(1u<<3)));
+    owner_veto=false;preserved_reads=read_calls;preserved_writes=writes;
+    press_button(MUI_MSG_BOX_EVENT_SELECT_CENTER);press_button(MUI_MSG_BOX_EVENT_SELECT_LEFT);
+    assert(!instance.p_handle && kills==1 && cleanup_calls>0);
+    assert(writes==(int)preserved_writes && read_calls==preserved_reads);
+    assert(settings_get_data()->language==LANGUAGE_EN_US && settings_get_data()->sleep_timeout_sec==180);
+    assert(settings_get_data()->flip_display && settings_get_data()->lcd_backlight==75 && settings_get_data()->oled_contrast==65);
+    assert(settings_get_data()->app_enable_bits&(1u<<3));
+    assert(settings_get_data()->auto_gen_amiibo && settings_get_data()->chameleon_slot_num==20);
+    assert(getLanguage()==LANGUAGE_EN_US && nrf_pwr_mgmt_get_timeout()==180 && rotation==2 && level==75);
+    assert(contrast==(65-1)*255/99);
+    /* A later deliberate save may persist unrelated choices, but cannot
+     * replay the discarded system choices from stale edit masks. */
+    write_result=sizeof(settings_data_t);assert(settings_save()==0 && settings_init()==0);
+    assert(settings_get_data()->language==LANGUAGE_EN_US && settings_get_data()->sleep_timeout_sec==180);
+    assert(settings_get_data()->auto_gen_amiibo && settings_get_data()->chameleon_slot_num==20);
+    puts("PASS permanent error: Retry/Back/No retain data; NFC/owner veto cancels intent; accepted Yes exits with zero I/O and reapplies runtime preferences");
+
+    /* A veto must not authorize a later unrelated forced exit to discard or
+     * skip its ordinary save. A successful retry must save only once. */
+    failed_start(180);start_runtime();SETTINGS_SET(anim_enabled,true);menu.changed_fields=SETTINGS_FIELD_MASK(anim_enabled);
+    read_error=0;write_result=VFS_ERR_NOSPC;select_save_and_exit(&menu);
+    nfc_veto=true;press_button(MUI_MSG_BOX_EVENT_SELECT_CENTER);press_button(MUI_MSG_BOX_EVENT_SELECT_LEFT);
+    assert(!menu.exit_discard && !menu.exit_saved && settings_get_data()->anim_enabled);
+    preserved_writes=writes;app_settings_on_kill(&instance);
+    assert(writes==(int)preserved_writes+1 && settings_get_data()->anim_enabled);
+    failed_start(180);start_runtime();SETTINGS_SET(anim_enabled,true);menu.changed_fields=SETTINGS_FIELD_MASK(anim_enabled);
+    read_error=0;write_result=VFS_ERR_NOSPC;select_save_and_exit(&menu);assert(writes==1);
+    write_result=sizeof(settings_data_t);press_button(MUI_MSG_BOX_EVENT_SELECT_LEFT);
+    assert(!instance.p_handle && kills==1 && writes==2 && settings_get_data()->anim_enabled);
+    puts("PASS veto cannot authorize a later forced exit; successful Retry exits after one save with no kill-time duplicate");
+
+    puts("PASS settings retry/save, early and failed reads, EN menu, 181st standby check, failed write/error dismissal refreshes cached Settings list, BLE override, LCD profile, slider, device preview and PWM retry");
+    return 0;
+}

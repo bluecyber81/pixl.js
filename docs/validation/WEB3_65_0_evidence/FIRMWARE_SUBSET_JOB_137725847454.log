@@ -1,0 +1,391 @@
+﻿2026-11-23T13:28:50.2304639Z Current runner version: '2.338.2'
+2026-11-23T13:28:50.2321640Z ##[group]Runner Image Provisioner
+2026-11-23T13:28:50.2322278Z Hosted Compute Agent
+2026-11-23T13:28:50.2322685Z Version: 20261111.635
+2026-11-23T13:28:50.2323147Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+2026-11-23T13:28:50.2323596Z Build Date: 2026-11-11T01:49:01Z
+2026-11-23T13:28:50.2324011Z Worker ID: {e4826f7b-4fa0-49b3-b2af-1ecf5f9b4405}
+2026-11-23T13:28:50.2324514Z Region: centralus
+2026-11-23T13:28:50.2324897Z Cloud: Azure
+2026-11-23T13:28:50.2325250Z ##[endgroup]
+2026-11-23T13:28:50.2326007Z ##[group]Operating System
+2026-11-23T13:28:50.2326519Z Ubuntu
+2026-11-23T13:28:50.2326895Z 24.04.5
+2026-11-23T13:28:50.2327252Z LTS
+2026-11-23T13:28:50.2327626Z ##[endgroup]
+2026-11-23T13:28:50.2327984Z ##[group]Runner Image
+2026-11-23T13:28:50.2328350Z Image: ubuntu-24.04
+2026-11-23T13:28:50.2329055Z Version: 20261116.376.1
+2026-11-23T13:28:50.2329866Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261116.376/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-23T13:28:50.2330787Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261116.376
+2026-11-23T13:28:50.2331368Z ##[endgroup]
+2026-11-23T13:28:50.2332091Z ##[group]GITHUB_TOKEN Permissions
+2026-11-23T13:28:50.2333300Z Contents: read
+2026-11-23T13:28:50.2333711Z Metadata: read
+2026-11-23T13:28:50.2334064Z ##[endgroup]
+2026-11-23T13:28:50.2335328Z Secret source: Actions
+2026-11-23T13:28:50.2336003Z Cache mode: write
+2026-11-23T13:28:50.2336538Z Prepare workflow directory
+2026-11-23T13:28:50.2605824Z Prepare all required actions
+2026-11-23T13:28:50.2637139Z Getting action download info
+2026-11-23T13:28:50.6985446Z Download action repository 'actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+2026-11-23T13:28:50.9109860Z Complete job name: Portable firmware regression subset
+2026-11-23T13:28:50.9682856Z ##[group]Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+2026-11-23T13:28:50.9683438Z with:
+2026-11-23T13:28:50.9683710Z   persist-credentials: false
+2026-11-23T13:28:50.9684029Z   repository: bluecyber81/pixl.js
+2026-11-23T13:28:50.9686670Z   token: ***
+2026-11-23T13:28:50.9686926Z   ssh-strict: true
+2026-11-23T13:28:50.9687190Z   ssh-user: git
+2026-11-23T13:28:50.9687444Z   clean: true
+2026-11-23T13:28:50.9687713Z   sparse-checkout-cone-mode: true
+2026-11-23T13:28:50.9688029Z   fetch-depth: 1
+2026-11-23T13:28:50.9688291Z   fetch-tags: false
+2026-11-23T13:28:50.9688568Z   show-progress: true
+2026-11-23T13:28:50.9688847Z   lfs: false
+2026-11-23T13:28:50.9689104Z   submodules: false
+2026-11-23T13:28:50.9689380Z   set-safe-directory: true
+2026-11-23T13:28:50.9689686Z   allow-unsafe-pr-checkout: false
+2026-11-23T13:28:50.9690075Z env:
+2026-11-23T13:28:50.9690321Z   PYTHONUTF8: 1
+2026-11-23T13:28:50.9690593Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-23T13:28:50.9690920Z   PYTHONOPTIMIZE: 0
+2026-11-23T13:28:50.9691186Z ##[endgroup]
+2026-11-23T13:28:51.2146734Z Syncing repository: bluecyber81/pixl.js
+2026-11-23T13:28:51.2148164Z ##[group]Getting Git version info
+2026-11-23T13:28:51.2148745Z Working directory is '/home/runner/work/pixl.js/pixl.js'
+2026-11-23T13:28:51.2149580Z [command]/usr/bin/git version
+2026-11-23T13:28:51.2241044Z git version 2.56.1
+2026-11-23T13:28:51.2256599Z ##[endgroup]
+2026-11-23T13:28:51.2268296Z Temporarily overriding HOME='/home/runner/work/_temp/4d2d2376-da4b-45c7-bb29-51bd2372047b' before making global git config changes
+2026-11-23T13:28:51.2270074Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-23T13:28:51.2272755Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pixl.js/pixl.js
+2026-11-23T13:28:51.2322971Z Deleting the contents of '/home/runner/work/pixl.js/pixl.js'
+2026-11-23T13:28:51.2334086Z ##[group]Determining repository object format
+2026-11-23T13:28:51.2335472Z ##[endgroup]
+2026-11-23T13:28:51.2336109Z ##[group]Initializing the repository
+2026-11-23T13:28:51.2339434Z [command]/usr/bin/git init /home/runner/work/pixl.js/pixl.js
+2026-11-23T13:28:51.2595297Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-23T13:28:51.2597582Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-23T13:28:51.2599207Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-23T13:28:51.2600579Z hint: call:
+2026-11-23T13:28:51.2601171Z hint:
+2026-11-23T13:28:51.2602109Z hint: 	git config --global init.defaultBranch <name>
+2026-11-23T13:28:51.2603158Z hint:
+2026-11-23T13:28:51.2604105Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-23T13:28:51.2605820Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-23T13:28:51.2607360Z hint:
+2026-11-23T13:28:51.2609917Z hint: 	git branch -m <name>
+2026-11-23T13:28:51.2610749Z hint:
+2026-11-23T13:28:51.2611878Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-23T13:28:51.2624702Z Initialized empty Git repository in /home/runner/work/pixl.js/pixl.js/.git/
+2026-11-23T13:28:51.2627981Z [command]/usr/bin/git remote add origin https://github.com/bluecyber81/pixl.js
+2026-11-23T13:28:51.2692423Z ##[endgroup]
+2026-11-23T13:28:51.2693526Z ##[group]Disabling automatic garbage collection
+2026-11-23T13:28:51.2697469Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-23T13:28:51.2739501Z ##[endgroup]
+2026-11-23T13:28:51.2740710Z ##[group]Setting up auth
+2026-11-23T13:28:51.2741563Z Removing SSH command configuration
+2026-11-23T13:28:51.2746177Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T13:28:51.2798455Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-23T13:28:51.3148017Z Removing HTTP extra header
+2026-11-23T13:28:51.3153008Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T13:28:51.3191683Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-23T13:28:51.3378294Z Removing includeIf entries pointing to credentials config files
+2026-11-23T13:28:51.3382702Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T13:28:51.3420789Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-23T13:28:51.3617808Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-23T13:28:51.3659037Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/pixl.js/pixl.js/.git.path /home/runner/work/_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:51.3695062Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/pixl.js/pixl.js/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:51.3731844Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:51.3817093Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:51.3928276Z ##[endgroup]
+2026-11-23T13:28:51.3928880Z ##[group]Fetching the repository
+2026-11-23T13:28:51.3934398Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4:refs/remotes/origin/web-app675
+2026-11-23T13:28:54.0423902Z From https://github.com/bluecyber81/pixl.js
+2026-11-23T13:28:54.0426491Z  * [new ref]         a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4 -> origin/web-app675
+2026-11-23T13:28:54.0432587Z [command]/usr/bin/git branch --list --remote origin/web-app675
+2026-11-23T13:28:54.0472508Z   origin/web-app675
+2026-11-23T13:28:54.0478709Z [command]/usr/bin/git rev-parse refs/remotes/origin/web-app675
+2026-11-23T13:28:54.0506236Z a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4
+2026-11-23T13:28:54.0510598Z ##[endgroup]
+2026-11-23T13:28:54.0511679Z ##[group]Determining the checkout info
+2026-11-23T13:28:54.0512592Z ##[endgroup]
+2026-11-23T13:28:54.0513384Z [command]/usr/bin/git sparse-checkout disable
+2026-11-23T13:28:54.0564725Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-23T13:28:54.0598186Z ##[group]Checking out the ref
+2026-11-23T13:28:54.0599907Z [command]/usr/bin/git checkout --progress --force -B web-app675 refs/remotes/origin/web-app675
+2026-11-23T13:28:54.4703605Z Switched to a new branch 'web-app675'
+2026-11-23T13:28:54.4707136Z branch 'web-app675' set up to track 'origin/web-app675'.
+2026-11-23T13:28:54.4750316Z ##[endgroup]
+2026-11-23T13:28:54.4817236Z [command]/usr/bin/git log -1 --format=%H
+2026-11-23T13:28:54.4836162Z a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4
+2026-11-23T13:28:54.4847046Z ##[group]Removing auth
+2026-11-23T13:28:54.4847345Z Removing SSH command configuration
+2026-11-23T13:28:54.4849879Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T13:28:54.4890143Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-23T13:28:54.5109887Z Removing HTTP extra header
+2026-11-23T13:28:54.5113095Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T13:28:54.5149590Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-23T13:28:54.5339892Z Removing includeIf entries pointing to credentials config files
+2026-11-23T13:28:54.5342195Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T13:28:54.5376975Z includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git.path
+2026-11-23T13:28:54.5377536Z includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git/worktrees/*.path
+2026-11-23T13:28:54.5377996Z includeif.gitdir:/github/workspace/.git.path
+2026-11-23T13:28:54.5378347Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-23T13:28:54.5384892Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git.path
+2026-11-23T13:28:54.5413828Z /home/runner/work/_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:54.5421791Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git.path /home/runner/work/_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:54.5460284Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git/worktrees/*.path
+2026-11-23T13:28:54.5490572Z /home/runner/work/_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:54.5496812Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/pixl.js/pixl.js/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:54.5534498Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-11-23T13:28:54.5569356Z /github/runner_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:54.5575149Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:54.5611337Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-23T13:28:54.5638737Z /github/runner_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:54.5644526Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config
+2026-11-23T13:28:54.5681301Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-23T13:28:54.5869000Z Removing credentials config '/home/runner/work/_temp/git-credentials-d333f739-a092-42b7-8679-479f5075ac24.config'
+2026-11-23T13:28:54.5898297Z ##[endgroup]
+2026-11-23T13:28:54.6067388Z ##[group]Run python3 --version
+2026-11-23T13:28:54.6067628Z [36;1mpython3 --version[0m
+2026-11-23T13:28:54.6067785Z [36;1mgcc --version[0m
+2026-11-23T13:28:54.6087265Z shell: /usr/bin/bash -e {0}
+2026-11-23T13:28:54.6087448Z env:
+2026-11-23T13:28:54.6087569Z   PYTHONUTF8: 1
+2026-11-23T13:28:54.6087706Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-23T13:28:54.6087854Z   PYTHONOPTIMIZE: 0
+2026-11-23T13:28:54.6087981Z ##[endgroup]
+2026-11-23T13:28:54.6143137Z Python 3.12.3
+2026-11-23T13:28:54.6199146Z gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+2026-11-23T13:28:54.6199444Z Copyright (C) 2023 Free Software Foundation, Inc.
+2026-11-23T13:28:54.6199802Z This is free software; see the source for copying conditions.  There is NO
+2026-11-23T13:28:54.6200195Z warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+2026-11-23T13:28:54.6200458Z 
+2026-11-23T13:28:54.6226808Z ##[group]Run python3 fw/tests/de3/test_packed_crc_pair_de355.py
+2026-11-23T13:28:54.6227091Z [36;1mpython3 fw/tests/de3/test_packed_crc_pair_de355.py[0m
+2026-11-23T13:28:54.6241980Z shell: /usr/bin/bash -e {0}
+2026-11-23T13:28:54.6242123Z env:
+2026-11-23T13:28:54.6242241Z   PYTHONUTF8: 1
+2026-11-23T13:28:54.6242388Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-23T13:28:54.6242531Z   PYTHONOPTIMIZE: 0
+2026-11-23T13:28:54.6242654Z ##[endgroup]
+2026-11-23T13:28:56.5275304Z ..
+2026-11-23T13:28:56.5275568Z ----------------------------------------------------------------------
+2026-11-23T13:28:56.5275808Z Ran 2 tests in 1.858s
+2026-11-23T13:28:56.5275978Z 
+2026-11-23T13:28:56.5276048Z OK
+2026-11-23T13:28:56.5276266Z negative_control=record expected_exit=77 actual_exit=77
+2026-11-23T13:28:56.5276695Z negative_control=shard expected_exit=77 actual_exit=77
+2026-11-23T13:28:56.5277056Z {"passed":true,"cases":18575,"max_length":4097,"alignments":8,"streamed_records":384}
+2026-11-23T13:28:56.5277452Z PASS
+2026-11-23T13:28:56.5371355Z ##[group]Run python3 fw/tests/de3/test_lfs_wear_de355.py
+2026-11-23T13:28:56.5371612Z [36;1mpython3 fw/tests/de3/test_lfs_wear_de355.py[0m
+2026-11-23T13:28:56.5387490Z shell: /usr/bin/bash -e {0}
+2026-11-23T13:28:56.5387633Z env:
+2026-11-23T13:28:56.5387748Z   PYTHONUTF8: 1
+2026-11-23T13:28:56.5387899Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-23T13:28:56.5388044Z   PYTHONOPTIMIZE: 0
+2026-11-23T13:28:56.5388173Z ##[endgroup]
+2026-11-23T13:28:57.4719830Z {"passed": true, "percent": 60, "blockCycles": 2, "transactions": 256, "initialBlocks": 310, "finalBlocks": 310, "rootMoves": 0, "eraseBlocks": 2, "maxErases": 8, "expansionEvents": 0, "faultCases": 0, "pointerBytes": 8, "variant": "old-threshold"}
+2026-11-23T13:28:57.4957276Z {"passed": true, "percent": 90, "blockCycles": 2, "transactions": 256, "initialBlocks": 464, "finalBlocks": 464, "rootMoves": 0, "eraseBlocks": 2, "maxErases": 8, "expansionEvents": 0, "faultCases": 0, "pointerBytes": 8, "variant": "old-threshold"}
+2026-11-23T13:28:57.9925914Z {"passed": true, "percent": 60, "blockCycles": 500, "transactions": 10000, "initialBlocks": 310, "finalBlocks": 310, "rootMoves": 0, "eraseBlocks": 2, "maxErases": 313, "expansionEvents": 0, "faultCases": 0, "pointerBytes": 8, "variant": "old-threshold"}
+2026-11-23T13:28:58.6470943Z {"passed": true, "percent": 60, "blockCycles": 2, "transactions": 256, "initialBlocks": 310, "finalBlocks": 312, "rootMoves": 6, "eraseBlocks": 8, "maxErases": 3, "expansionEvents": 6, "faultCases": 18, "pointerBytes": 8, "variant": "candidate"}
+2026-11-23T13:28:58.6718819Z {"passed": true, "percent": 90, "blockCycles": 2, "transactions": 256, "initialBlocks": 464, "finalBlocks": 464, "rootMoves": 0, "eraseBlocks": 2, "maxErases": 8, "expansionEvents": 0, "faultCases": 0, "pointerBytes": 8, "variant": "candidate"}
+2026-11-23T13:28:59.1255981Z {"passed": true, "percent": 60, "blockCycles": 500, "transactions": 10000, "initialBlocks": 310, "finalBlocks": 312, "rootMoves": 1, "eraseBlocks": 4, "maxErases": 250, "expansionEvents": 6, "faultCases": 18, "pointerBytes": 8, "variant": "candidate"}
+2026-11-23T13:28:59.1264979Z .
+2026-11-23T13:28:59.1265259Z ----------------------------------------------------------------------
+2026-11-23T13:28:59.1265601Z Ran 1 test in 2.552s
+2026-11-23T13:28:59.1265737Z 
+2026-11-23T13:28:59.1265812Z OK
+2026-11-23T13:28:59.1373802Z ##[group]Run python3 fw/tests/de3/test_ui_comfort_de356.py
+2026-11-23T13:28:59.1374061Z [36;1mpython3 fw/tests/de3/test_ui_comfort_de356.py[0m
+2026-11-23T13:28:59.1390398Z shell: /usr/bin/bash -e {0}
+2026-11-23T13:28:59.1390554Z env:
+2026-11-23T13:28:59.1390672Z   PYTHONUTF8: 1
+2026-11-23T13:28:59.1390814Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-23T13:28:59.1390960Z   PYTHONOPTIMIZE: 0
+2026-11-23T13:28:59.1391094Z ##[endgroup]
+2026-11-23T13:29:00.5259199Z .
+2026-11-23T13:29:00.5259575Z ----------------------------------------------------------------------
+2026-11-23T13:29:00.5259914Z Ran 1 test in 1.351s
+2026-11-23T13:29:00.5260044Z 
+2026-11-23T13:29:00.5260110Z OK
+2026-11-23T13:29:00.5260469Z PASS RAM overlay: right-aligned in all 9 font/sample combinations and disabled state
+2026-11-23T13:29:00.5260971Z PASS 4536 pixel-identical list frames; 6 instead of 1081 row visits at most for the long list
+2026-11-23T13:29:00.5261625Z PASS: 60 fixed-value pixel comparisons, clipped column, held keys, cancellation and callback disposal
+2026-11-23T13:29:00.5262147Z PASS: 480 actual UTF-8 title/hint pixel comparisons and clip restoration cases
+2026-11-23T13:29:00.5262638Z PASS: 52 real keyboard case/hold scenarios plus editor bounds and 30720 scrollbar boundary scenarios
+2026-11-23T13:29:00.5262952Z 
+2026-11-23T13:29:00.5387842Z ##[group]Run python3 fw/tests/de3/test_progress_bar_bounds.py --sanitize
+2026-11-23T13:29:00.5388153Z [36;1mpython3 fw/tests/de3/test_progress_bar_bounds.py --sanitize[0m
+2026-11-23T13:29:00.5388401Z [36;1mpython3 fw/tests/de3/test_settings_label_width_de361.py[0m
+2026-11-23T13:29:00.5404399Z shell: /usr/bin/bash -e {0}
+2026-11-23T13:29:00.5404542Z env:
+2026-11-23T13:29:00.5404661Z   PYTHONUTF8: 1
+2026-11-23T13:29:00.5404795Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-23T13:29:00.5404936Z   PYTHONOPTIMIZE: 0
+2026-11-23T13:29:00.5405061Z ##[endgroup]
+2026-11-23T13:29:01.3363956Z PASS all101 values x SHORT/REPEAT x LEFT/RIGHT/CENTER: clamp before callback; endpoint wrap; generic ranges and int32 boundaries
+2026-11-23T13:29:01.3364777Z PASS actual brightness/contrast callbacks: signed clamp before uint8 conversion, preview without saving, confirmation persists bounded value
+2026-11-23T13:29:01.3365483Z PASS LCD setters: all256 uint8 inputs, PWM0..100, contrast low-visibility guard and0..255 output
+2026-11-23T13:29:01.3366004Z PASS actual constructor fail-at1/fail-at2, reverse cleanup, valid retry and NULL-safe destructor
+2026-11-23T13:29:01.3366711Z PASS actual renderer: bounded bar/text, nonzero minimum, zero/reversed range and int32 span
+2026-11-23T13:29:01.3367195Z PASS actual contrast dialog 60..100 step 2, 256 legacy values, end stops and explicit save
+2026-11-23T13:29:01.3367693Z PASS OLED setter: all256 uint8 inputs including zero, no negative float-to-byte conversion
+2026-11-23T13:29:01.3368164Z PASS actual contrast dialog 0..100 step 5, 256 legacy values, end stops and explicit save
+2026-11-23T13:29:01.3368597Z PASS production slider, settings/display bounds and allocation cleanup
+2026-11-23T13:29:01.6994455Z PASS 552 settings rows, both locales, full labels and values at rest
+2026-11-23T13:29:01.7002413Z .
+2026-11-23T13:29:01.7002655Z ----------------------------------------------------------------------
+2026-11-23T13:29:01.7002961Z Ran 1 test in 0.318s
+2026-11-23T13:29:01.7003123Z 
+2026-11-23T13:29:01.7003191Z OK
+2026-11-23T13:29:01.7112637Z ##[group]Run python3 fw/tests/de3/test_text_input_render_de344.py
+2026-11-23T13:29:01.7112906Z [36;1mpython3 fw/tests/de3/test_text_input_render_de344.py[0m
+2026-11-23T13:29:01.7127993Z shell: /usr/bin/bash -e {0}
+2026-11-23T13:29:01.7128131Z env:
+2026-11-23T13:29:01.7128242Z   PYTHONUTF8: 1
+2026-11-23T13:29:01.7128372Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-23T13:29:01.7128510Z   PYTHONOPTIMIZE: 0
+2026-11-23T13:29:01.7128628Z ##[endgroup]
+2026-11-23T13:29:02.6823646Z .
+2026-11-23T13:29:02.6823994Z ----------------------------------------------------------------------
+2026-11-23T13:29:02.6824328Z Ran 1 test in 0.937s
+2026-11-23T13:29:02.6824450Z 
+2026-11-23T13:29:02.6824557Z OK
+2026-11-23T13:29:02.6824749Z case0 marked0 offset0 text_end4 cursor_end10
+2026-11-23T13:29:02.6826992Z case0 marked1 offset0 text_end4 cursor_end0
+2026-11-23T13:29:02.6827274Z case1 marked0 offset0 text_end29 cursor_end35
+2026-11-23T13:29:02.6827528Z case1 marked1 offset0 text_end29 cursor_end0
+2026-11-23T13:29:02.6827880Z case2 marked0 offset22 text_end113 cursor_end119
+2026-11-23T13:29:02.6828133Z case2 marked1 offset21 text_end121 cursor_end0
+2026-11-23T13:29:02.6828373Z case3 marked0 offset12 text_end118 cursor_end124
+2026-11-23T13:29:02.6828612Z case3 marked1 offset12 text_end118 cursor_end0
+2026-11-23T13:29:02.6828854Z case4 marked0 offset11 text_end113 cursor_end119
+2026-11-23T13:29:02.6829094Z case4 marked1 offset9 text_end121 cursor_end0
+2026-11-23T13:29:02.6829333Z case5 marked0 offset12 text_end116 cursor_end122
+2026-11-23T13:29:02.6829572Z case5 marked1 offset12 text_end116 cursor_end0
+2026-11-23T13:29:02.6829910Z PASS 12 actual font editor frames: UTF8 boundaries, text/cursor fit and unchanged input
+2026-11-23T13:29:02.6830170Z 
+2026-11-23T13:29:02.6931054Z ##[group]Run python3 fw/tests/de3/test_display_photo.py
+2026-11-23T13:29:02.6931437Z [36;1mpython3 fw/tests/de3/test_display_photo.py[0m
+2026-11-23T13:29:02.6931731Z [36;1mpython3 fw/tests/de3/test_hal_reliability.py[0m
+2026-11-23T13:29:02.6932057Z [36;1mpython3 fw/tests/de3/test_packed_recovery_protocol.py[0m
+2026-11-23T13:29:02.6953107Z shell: /usr/bin/bash -e {0}
+2026-11-23T13:29:02.6953330Z env:
+2026-11-23T13:29:02.6953505Z   PYTHONUTF8: 1
+2026-11-23T13:29:02.6953702Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-23T13:29:02.6953915Z   PYTHONOPTIMIZE: 0
+2026-11-23T13:29:02.6954095Z ##[endgroup]
+2026-11-23T13:29:02.8379131Z PASS all eight LCD pages, full SHA-256, repaint, busy, geometry, malformed requests and event isolation
+2026-11-23T13:29:03.0579141Z PASS cached PXJF from actual RDID, all driver geometries, unknown/empty IDs, both I/O failures, sleep, reset, malformed requests and zero additional SPI transfers
+2026-11-23T13:29:03.0579721Z PASS all 54 command/data/status-transfer error points return unchanged error and release CS
+2026-11-23T13:29:03.0580003Z PASS ready timeout and 24-bit RTC wrap for read/program/erase
+2026-11-23T13:29:03.0580224Z PASS program/erase completion timeout never reports success
+2026-11-23T13:29:03.0580415Z PASS stopped-clock fallback remains finite
+2026-11-23T13:29:03.0580579Z PASS refused WEL prevents program and erase
+2026-11-23T13:29:03.0580806Z PASS interleaved read no longer clears WEL; all individual transactions remain exclusive
+2026-11-23T13:29:03.0581107Z PASS invalid input, zero-length no-op and failed ID never expose uninitialized geometry
+2026-11-23T13:29:03.0581471Z PASS 24-bit address/range and page-crossing guards before every SPI command; last byte/page/sector and zero-length controls
+2026-11-23T13:29:03.1372875Z PASS 8192 exhaustive byte/bit/error combinations and valid SLP_REQ control
+2026-11-23T13:29:03.2026528Z PASS 256 HAL status values map to zero success or negative SPIFFS/LFS failure
+2026-11-23T13:29:03.2027156Z PASS 16 LFS geometry/range/null/alignment guards reject before HAL; final physical page succeeds
+2026-11-23T13:29:03.2042083Z PASS actual-source Flash/NFC/adapter reliability suites
+2026-11-23T13:29:03.5481636Z PASS 25 actual C recovery and read-only backup digest scenarios
+2026-11-23T13:29:03.5561585Z ##[group]Run python3 fw/tests/de3/test_ble_status_de357.py
+2026-11-23T13:29:03.5561837Z [36;1mpython3 fw/tests/de3/test_ble_status_de357.py[0m
+2026-11-23T13:29:03.5577763Z shell: /usr/bin/bash -e {0}
+2026-11-23T13:29:03.5577906Z env:
+2026-11-23T13:29:03.5578019Z   PYTHONUTF8: 1
+2026-11-23T13:29:03.5578146Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-23T13:29:03.5578282Z   PYTHONOPTIMIZE: 0
+2026-11-23T13:29:03.5578403Z ##[endgroup]
+2026-11-23T13:29:04.6210610Z ...
+2026-11-23T13:29:04.6211118Z PASS: 5 distinct actual BT icons, 720 status/battery/voltage pixel scenarios, bounds and change-only redraw
+2026-11-23T13:29:04.6211479Z 
+2026-11-23T13:29:04.6211614Z ----------------------------------------------------------------------
+2026-11-23T13:29:04.6211932Z Ran 3 tests in 1.024s
+2026-11-23T13:29:04.6212041Z 
+2026-11-23T13:29:04.6212117Z OK
+2026-11-23T13:29:04.6332937Z ##[group]Run python3 fw/tests/de3/test_kirby_v3_machines.py
+2026-11-23T13:29:04.6333197Z [36;1mpython3 fw/tests/de3/test_kirby_v3_machines.py[0m
+2026-11-23T13:29:04.6348672Z shell: /usr/bin/bash -e {0}
+2026-11-23T13:29:04.6348810Z env:
+2026-11-23T13:29:04.6348922Z   PYTHONUTF8: 1
+2026-11-23T13:29:04.6349046Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-23T13:29:04.6349183Z   PYTHONOPTIMIZE: 0
+2026-11-23T13:29:04.6349302Z ##[endgroup]
+2026-11-23T13:29:04.7555115Z Dragoon PASS: standalone rejected; full loader, tag selection, rider ID, both ready checks, matching machine FAST_READ and four READs; opposite machine differs.
+2026-11-23T13:29:04.7555994Z Hydra PASS: standalone rejected; full loader, tag selection, rider ID, both ready checks, matching machine FAST_READ and four READs; opposite machine differs.
+2026-11-23T13:29:04.7642653Z ##[group]Run python3 fw/tests/de3/test_chameleon_state_load.py
+2026-11-23T13:29:04.7642924Z [36;1mpython3 fw/tests/de3/test_chameleon_state_load.py[0m
+2026-11-23T13:29:04.7643129Z [36;1mpython3 fw/tests/de3/test_chameleon_exit_guard.py[0m
+2026-11-23T13:29:04.7643330Z [36;1mpython3 fw/tests/de3/test_exit_contract_de358.py[0m
+2026-11-23T13:29:04.7643540Z [36;1mpython3 fw/tests/de3/test_reset_exit_contract_de358.py[0m
+2026-11-23T13:29:04.7658559Z shell: /usr/bin/bash -e {0}
+2026-11-23T13:29:04.7658694Z env:
+2026-11-23T13:29:04.7658804Z   PYTHONUTF8: 1
+2026-11-23T13:29:04.7658934Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-23T13:29:04.7659070Z   PYTHONOPTIMIZE: 0
+2026-11-23T13:29:04.7659186Z ##[endgroup]
+2026-11-23T13:29:05.1843576Z ..........
+2026-11-23T13:29:05.1843865Z ----------------------------------------------------------------------
+2026-11-23T13:29:05.1844087Z Ran 10 tests in 0.385s
+2026-11-23T13:29:05.1844176Z 
+2026-11-23T13:29:05.1844225Z OK
+2026-11-23T13:29:05.1847123Z PASS 8 actual failed-init app cases: dialog exits without scenes, saves, default changes or NFC activation
+2026-11-23T13:29:05.1847744Z PASS 461 config cases: real 404B/short-enum ABI, v8 8/20/50, legacy0-7, length/type/index errors, file/RAM preservation
+2026-11-23T13:29:05.1848285Z PASS empty type selection exits to Home; configured type retains previous-scene navigation
+2026-11-23T13:29:05.1848897Z PASS 14 actual checked-save slot cases: failure preserves slot/RAM/dirty CRC/RF, retry commits once; undefined/shadow/unchanged paths retained
+2026-11-23T13:29:05.1849503Z PASS failed writes remain dirty, successful retry commits CRC, unchanged data skips write
+2026-11-23T13:29:05.1849875Z PASS 12 actual main entry/slot-change cases: empty type routes to selection, invalid data never renders
+2026-11-23T13:29:05.1850239Z PASS 64 actual wakeup cases: failed/empty Chameleon init never enables its IRQ/sense; NTAG cache fallback preserved
+2026-11-23T13:29:05.1850643Z PASS 523 actual HF-loader/init/readiness cases: short/missing data registers no handler, preserves capacity, starts no RF
+2026-11-23T13:29:05.1851253Z PASS 523 actual HF-loader/init/readiness cases: short/missing data registers no handler, preserves capacity, starts no RF
+2026-11-23T13:29:05.1851588Z PASS 2500 HF-only navigation cases and 6 slot-shrink/save-failure bounds cases
+2026-11-23T13:29:05.1851822Z PASS display-only UID and save-guarded real navigation
+2026-11-23T13:29:05.4351346Z .
+2026-11-23T13:29:05.4351666Z ----------------------------------------------------------------------
+2026-11-23T13:29:05.4351918Z Ran 1 test in 0.211s
+2026-11-23T13:29:05.4352005Z 
+2026-11-23T13:29:05.4352050Z OK
+2026-11-23T13:29:05.4357299Z native PASS 47 real Chameleon exit cases: NOSPC/IO/config/compare/settings failures retain owner and RAM; retry then exit/reload; defaults without preload, Shadow/REQ, cancel and write-free cleanup
+2026-11-23T13:29:05.4357963Z STACK_USAGE /tmp/chameleon-factory-result-ly0cr52q/factory.c:670:9:fds_compare_sync	496	static
+2026-11-23T13:29:05.4358355Z STACK_USAGE /tmp/chameleon-factory-result-ly0cr52q/factory.c:837:13:save_data_by_tag_type	64	static
+2026-11-23T13:29:05.4358729Z STACK_USAGE /tmp/chameleon-factory-result-ly0cr52q/factory.c:914:6:tag_emulation_save_config	32	static
+2026-11-23T13:29:06.0710705Z ......
+2026-11-23T13:29:06.0711007Z ----------------------------------------------------------------------
+2026-11-23T13:29:06.0711230Z Ran 6 tests in 0.597s
+2026-11-23T13:29:06.0711314Z 
+2026-11-23T13:29:06.0711370Z OK
+2026-11-23T13:29:06.0717186Z PASS desktop-menu-focus 5 actual-C behavior cases
+2026-11-23T13:29:06.0717434Z PASS first-menu-selection 4 actual-C behavior cases
+2026-11-23T13:29:06.0717692Z PASS input-exit 6 actual-C behavior cases
+2026-11-23T13:29:06.0717864Z PASS launcher-exit 26 actual-C behavior cases
+2026-11-23T13:29:06.0718034Z PASS ntag-cancel 2 actual-C behavior cases
+2026-11-23T13:29:06.0718200Z PASS shutdown-exit 8 actual-C behavior cases
+2026-11-23T13:29:06.4329558Z ..
+2026-11-23T13:29:06.4330094Z ----------------------------------------------------------------------
+2026-11-23T13:29:06.4330368Z PASS async-reset-exit 27 actual-C behavior cases
+2026-11-23T13:29:06.4330562Z PASS reset-exit 11 actual-C behavior cases
+2026-11-23T13:29:06.4330814Z Ran 2 tests in 0.323s
+2026-11-23T13:29:06.4330909Z 
+2026-11-23T13:29:06.4331097Z OK
+2026-11-23T13:29:06.4483472Z Post job cleanup.
+2026-11-23T13:29:06.5042434Z [command]/usr/bin/git version
+2026-11-23T13:29:06.5108029Z git version 2.56.1
+2026-11-23T13:29:06.5137145Z Temporarily overriding HOME='/home/runner/work/_temp/46a856b1-a5de-4ea0-b387-1660d728413f' before making global git config changes
+2026-11-23T13:29:06.5137848Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-23T13:29:06.5140932Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pixl.js/pixl.js
+2026-11-23T13:29:06.5175830Z Removing SSH command configuration
+2026-11-23T13:29:06.5181621Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T13:29:06.5221945Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-23T13:29:06.5436218Z Removing HTTP extra header
+2026-11-23T13:29:06.5441101Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T13:29:06.5499739Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-23T13:29:06.5701412Z Removing includeIf entries pointing to credentials config files
+2026-11-23T13:29:06.5708410Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T13:29:06.5750207Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-23T13:29:06.6077215Z Cleaning up orphan processes

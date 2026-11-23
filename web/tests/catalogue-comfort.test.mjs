@@ -182,6 +182,48 @@ test('all documented game IDs resolve uniquely in the baseline', () => {
   }
 });
 
+test('game search, filter, card and exact figure notes agree in DE and EN after a metadata refresh', async () => {
+  const realCatalogue = JSON.parse(fs.readFileSync(new URL('../src/data/catalogue.json', import.meta.url), 'utf8'));
+  const cases = [
+    ['fatal-fury-cotw', '34c1000003890002', /Avatare.*Titel.*Erfahrung/, /avatars.*titles.*experience/],
+    ['ocarina-of-time', '0100000000040002', /Gegenstände.*Hylianischen Steppe/, /items.*Hyrule Field/],
+    ['kirby-forgotten-land-switch2', '1f00010004c51e03', /mehr hilfreiche Gegenstände/, /more helpful items/],
+    ['miitopia', '1f00010004c51e03', /Nintendo 3DS nicht/, /not on Nintendo 3DS/],
+  ];
+  for (const locale of ['de_DE', 'en_US']) {
+    const de = locale === 'de_DE';
+    const { root, state, app } = await mount({ catalogue: realCatalogue }, locale);
+    try {
+      const search = nodes(root, 'input').find(node => node.props.type === 'search');
+      const select = nodes(classNode(root, 'game-filter'), 'select')[0];
+      for (const [gameId, id, deText, enText] of cases) {
+        const game = gameGuides.find(game => game.id === gameId);
+        select.props['onUpdate:modelValue']('');
+        search.props['onUpdate:modelValue'](game.title); await Vue.nextTick();
+        assert.deepEqual(new Set(cards(root).map(card => nodes(card, 'code')[0].text)), new Set(game.ids));
+        select.props['onUpdate:modelValue'](gameId); await Vue.nextTick();
+        state.catalogue = { ...realCatalogue, commit: 'b'.repeat(40), entries: [...realCatalogue.entries].reverse() };
+        await Vue.nextTick();
+        assert.deepEqual(new Set(cards(root).map(card => nodes(card, 'code')[0].text)), new Set(game.ids));
+        const card = cards(root).find(card => nodes(card, 'code')[0].text === id);
+        const button = nodes(card, 'button').find(button => String(button.props['aria-label']).startsWith(de ? 'Details zu ' : 'Details for '));
+        await button.props.onClick({ currentTarget: button }); await Vue.nextTick();
+        const details = classNode(root, 'figure-details');
+        assert.ok(details);
+        const usage = classNode(details, 'figure-usage');
+        const row = nodes(usage, 'li').find(row => nodes(row, 'a').some(link => link.props.href === game.source));
+        assert.ok(row, gameId);
+        assert.match(text(row), de ? deText : enText);
+        assert.match(text(row), new RegExp('Nintendo ' + game.platform));
+        const duplicateGuides = nodes(details, 'section').filter(section =>
+          String(section.props.class || '').split(' ').includes('game-guide') && text(section).includes(game.title));
+        assert.equal(duplicateGuides.length, 0, 'The same per-figure game note is not repeated as a second guide');
+        assert.equal(nodes(details, 'img').length, 0, 'Bundled notes need no external image request');
+      }
+    } finally { app.unmount(); }
+  }
+});
+
 test('the nine regional releases and announcements have official links and stay outside inventory counts', async () => {
   const { root, app } = await mount({ collectionReport: report() });
   try {

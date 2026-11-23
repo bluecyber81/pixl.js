@@ -1,0 +1,18 @@
+✔ explicit test writes, reads twice, verifies SHA and removes only its own file and empty folder (11.092694ms)
+✔ preexisting exact and case-alias names cause no mutation (2.005446ms)
+✔ unfamiliar data in a just-created folder is never overwritten or removed (1.321243ms)
+✔ partial writes and corrupted readback remain in the unique test folder for review (3.293398ms)
+✔ a new foreign entry before cleanup prevents every removal (1.826686ms)
+✔ a new foreign entry after file removal prevents recursive directory removal (2.920255ms)
+✔ session loss at every I/O acknowledgement stops before any subsequent I/O (4.89207ms)
+✔ functional success reports unrecovered free space honestly (0.660717ms)
+✔ invalid fresh free space and unavailable crypto stop before mutation (2.245097ms)
+✔ remove failure retains cleanup hint, while a final free-space failure does not invent a leftover folder (2.152326ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 167.397962

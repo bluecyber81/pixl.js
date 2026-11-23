@@ -1,0 +1,82 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include "switch2_protocol.h"
+#define _T(x) #x
+#define NRF_POWER_RESETREAS_OFF_MASK 1
+#define NRF_POWER_RESETREAS_NFC_MASK 2
+#define NRF_POWER_RESETREAS_LPCOMP_MASK 4
+#define SWITCH2_WAKE_CFG_PATH "/switch2_wake.txt"
+#define SWITCH2_WAKE_ADV_DURATION_10MS 300
+#define MINI_APP_ID_DESKTOP 1
+#define MINI_APP_ID_SWITCH2_WAKE 10
+#define NRF_SUCCESS 0
+#define NRF_ERROR_BUSY 1
+#define NRF_ERROR_INTERNAL 2
+typedef struct{void*user_data;}mui_list_view_t;
+typedef struct{void*user_data;}mui_list_item_t;
+typedef void mui_view_dispatcher_t;
+typedef void mui_text_input_t;
+typedef void mui_toast_view_t;
+typedef unsigned mui_list_view_event_t;
+typedef unsigned mini_app_exit_reason_t;
+typedef struct{unsigned id;}mini_app_t;
+typedef struct{void*p_handle;mini_app_t*p_app;}mini_app_inst_t;
+typedef struct{mini_app_inst_t*p_main_app_inst;}mini_app_launcher_t;
+/* ACTUAL_SWITCH_TYPES */
+static unsigned checks;
+#define CHECK(x) do{assert(x);checks++;}while(0)
+static unsigned writes,reads,menus,toasts,scans,advs,scan_stops,adv_stops,kills;
+static bool mounted,has_driver,scan_owner,adv_owner;
+static int write_result,read_result;
+static uint32_t radio_result;
+static unsigned sent_duration;
+static char stored[600],toast[64];
+static const char* s2_tr(const char*a,const char*b){(void)b;return a;}
+static void*mui(void){return NULL;}
+static void mui_update(void*p){(void)p;}
+static void mui_toast_view_show(void*p,const char*s){(void)p;toasts++;snprintf(toast,sizeof toast,"%s",s);}
+static void switch2_wake_reload_menu(app_switch2_wake_t*p){(void)p;menus++;}
+static void switch2_wake_open_mac_editor(app_switch2_wake_t*p,switch2_edit_target_t t){(void)p;(void)t;}
+static void ble_switch2_scan_stop(void){scan_stops++;}
+static void ble_raw_adv_stop(void){adv_stops++;}
+static bool ble_miniapp_radio_busy(void){return scan_owner||adv_owner;}
+static uint32_t ble_switch2_scan_start(uint16_t seconds,void(*cb)(bool,const ble_switch2_scan_result_t*)){assert(seconds==15&&cb);scans++;if(!radio_result)scan_owner=true;return radio_result;}
+static uint32_t ble_raw_adv_start(const uint8_t*m,const uint8_t*p,uint8_t n,bool c,uint16_t d,void(*cb)(uint32_t)){(void)m;(void)p;(void)c;(void)cb;assert(n==31);advs++;sent_duration=d;if(!radio_result)adv_owner=true;return radio_result;}
+static bool mount(void){return mounted;}
+static int32_t read_cfg(const char*path,char*p,size_t n){assert(!strcmp(path,SWITCH2_WAKE_CFG_PATH)&&n==512);reads++;if(read_result>=0){size_t take=(size_t)read_result<n?(size_t)read_result:n;memcpy(p,stored,take);}return read_result;}
+typedef struct{bool(*mounted)(void);int32_t(*read_file_data)(const char*,char*,size_t);}vfs_driver_t;
+static vfs_driver_t driver={mount,read_cfg};
+static vfs_driver_t*vfs_get_default_driver(void){return has_driver?&driver:NULL;}
+static int32_t vfs_persist_write(vfs_driver_t*d,const char*path,const void*p,size_t n){assert(d==&driver&&!strcmp(path,SWITCH2_WAKE_CFG_PATH)&&n<256);writes++;if(write_result<0)return write_result;if(write_result==1)return (int)n-1;memcpy(stored,p,n);stored[n]=0;read_result=(int)n;return (int)n;}
+static mini_app_inst_t inst;
+static mini_app_t main_app={1};
+static mini_app_launcher_t launcher={&inst};
+static mini_app_launcher_t*mini_app_launcher(void){return &launcher;}
+static bool app_switch2_wake_prepare_exit(mini_app_inst_t*,mini_app_exit_reason_t);
+static void mini_app_launcher_kill(mini_app_launcher_t*l,unsigned id){assert(l==&launcher&&id==10);if(app_switch2_wake_prepare_exit(&inst,0))kills++;}
+/* ACTUAL_SWITCH_FUNCTIONS */
+static app_switch2_wake_t app;
+static mui_list_view_t list;
+static void select_item(unsigned n){mui_list_item_t item={.user_data=(void*)(uintptr_t)n};switch2_wake_list_selected_cb(0,&list,&item);}
+static void reset(void){memset(&app,0,sizeof app);s_active_app=&app;switch2_wake_cfg_set_default(&app.cfg);inst.p_handle=&app;inst.p_app=&main_app;main_app.id=1;launcher.p_main_app_inst=&inst;list.user_data=&app;app.p_list_view=&list;writes=reads=menus=toasts=scans=advs=scan_stops=adv_stops=kills=0;mounted=has_driver=true;scan_owner=adv_owner=false;write_result=radio_result=0;read_result=-1;stored[0]=toast[0]=0;}
+static void configured(void){CHECK(parse_mac_str("11:22:33:44:55:66",app.cfg.controller_mac));CHECK(parse_mac_str("A1:B2:C3:D4:E5:F6",app.cfg.host_mac));app.cfg.has_mac=app.cfg.has_host=true;}
+int main(void){
+ reset();has_driver=false;CHECK(!switch2_wake_save_cfg(&app.cfg)&&!writes);CHECK(!switch2_wake_load_cfg(&app.cfg)&&!reads);has_driver=true;mounted=false;CHECK(!switch2_wake_save_cfg(&app.cfg)&&!writes);CHECK(!switch2_wake_load_cfg(&app.cfg)&&!reads);
+ reset();configured();write_result=1;CHECK(!switch2_save_current(&app)&&app.dirty);write_result=-1;for(unsigned why=0;why<3;why++)CHECK(!app_switch2_wake_prepare_exit(&inst,why)&&app.dirty);write_result=0;CHECK(app_switch2_wake_prepare_exit(&inst,0)&&!app.dirty);CHECK(switch2_wake_load_cfg(&app.cfg)&&app.cfg.has_mac&&app.cfg.has_host);
+ reset();configured();write_result=-1;select_item(SWITCH2_MENU_AUTO_WAKE);CHECK(app.cfg.auto_wake&&app.dirty&&!strcmp(toast,"FAILED"));select_item(SWITCH2_MENU_MODE);CHECK(app.cfg.connectable&&app.dirty);app.cfg.has_raw_data=true;app.cfg.raw_data_len=31;select_item(SWITCH2_MENU_PID);CHECK(app.cfg.pid==SWITCH2_PID_JC2_R&&!app.cfg.has_raw_data&&!app.cfg.raw_data_len&&app.dirty);
+ app.scanning=scan_owner=true;select_item(SWITCH2_MENU_EXIT);CHECK(!kills&&!scan_stops&&!adv_stops&&app.scanning&&scan_owner);write_result=0;select_item(SWITCH2_MENU_EXIT);CHECK(kills==1&&!app.dirty&&!scan_stops&&!adv_stops); /* Stop belongs to successful kill_cb. */
+ reset();configured();CHECK(switch2_save_current(&app));app.cfg.auto_wake=true;app.dirty=true;select_item(SWITCH2_MENU_DISCARD);CHECK(!app.cfg.auto_wake&&!app.dirty&&app.cfg.has_mac);
+ reset();read_result=512;memset(stored,'a',512);CHECK(!switch2_wake_load_cfg(&app.cfg));read_result=10;memcpy(stored,"mac=12\0xx",10);CHECK(!switch2_wake_load_cfg(&app.cfg));
+ reset();configured();app.scanning=scan_owner=true;switch2_wake_trigger(&app);CHECK(scan_stops==1&&!app.scanning&&!advs&&menus==1);CHECK(strstr(toast,"erneut"));switch2_wake_trigger(&app);CHECK(!advs&&strstr(toast,"beendet"));scan_owner=false;switch2_wake_trigger(&app);CHECK(advs==1&&app.waking&&sent_duration==300);
+ switch2_wake_toggle_scan(&app);CHECK(adv_stops==1&&!app.waking&&!scans);CHECK(strstr(toast,"erneut"));switch2_wake_toggle_scan(&app);CHECK(!scans&&strstr(toast,"beendet"));adv_owner=false;switch2_wake_toggle_scan(&app);CHECK(scans==1&&app.scanning);switch2_wake_toggle_scan(&app);CHECK(!app.scanning&&scan_stops==2);
+ reset();configured();app.cfg.auto_wake=true;CHECK(switch2_save_current(&app));writes=0;
+ app_switch2_wake_on_boot(0);app_switch2_wake_on_boot(8);app_switch2_wake_on_boot(1|2);app_switch2_wake_on_boot(1|4);CHECK(!advs&&!writes);
+ main_app.id=4;app_switch2_wake_on_boot(1);CHECK(!advs);main_app.id=1;app_switch2_wake_on_boot(1);CHECK(advs==1&&sent_duration==200&&!writes);adv_owner=false;mounted=false;app_switch2_wake_on_boot(1);CHECK(advs==1);
+ s_active_app=NULL;switch2_wake_on_ble_done(0);switch2_wake_on_scan_done(false,NULL); /* Late callback guard. */
+ printf("PASS %u Switch UI/VFS/boot assertions; actual callbacks, mocked storage/radio\n",checks);
+ return 0;
+}

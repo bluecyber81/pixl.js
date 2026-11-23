@@ -109,7 +109,8 @@ static void df_proto_handler_info_ui_diagnostic(df_event_t *evt) {
     df_core_send_frame(&out);
 }
 
-/* Empty query, or exactly "MTU!" + uint16 LE (23 or 250). The ACK uses the
+/* Empty query, selector 1 for a read-only MTUDv2 link report, or exactly
+ * "MTU!" + uint16 LE (23 or 250). The ACK uses the
  * current link; the test client must disconnect/reconnect to apply the value.
  * This is volatile diagnostics, not a persisted setting or a DFU request. */
 static void df_proto_handler_info_mtu_diagnostic(df_event_t *evt) {
@@ -120,14 +121,31 @@ static void df_proto_handler_info_mtu_diagnostic(df_event_t *evt) {
         bool idle = df_proto_vfs_is_idle();
         uint16_t requested = 0;
         bool valid = evt->df->length == 0;
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+        if (evt->df->length == 1 && evt->df->data[0] == 1 &&
+            ble_link_diagnostic(out.data, sizeof(out.data)))
+            out.length = BLE_LINK_DIAGNOSTIC_SIZE;
+#if defined(PIXL_TEST_DIAGNOSTICS)
+        /* A read never sets the global option. Only the exact test request is
+         * allowed to change it, after the existing complete VFS-idle check. */
+        if (evt->df->length == 1 && evt->df->data[0] == 2 &&
+            ble_test_diagnostic(-1, out.data, sizeof(out.data)))
+            out.length = BLE_TEST_DIAGNOSTIC_SIZE;
+        if (evt->df->length == 5 && memcmp(evt->df->data, "EVT!", 4) == 0 &&
+            evt->df->data[4] <= 1 && idle &&
+            ble_test_diagnostic((int8_t)evt->df->data[4], out.data, sizeof(out.data)))
+            out.length = BLE_TEST_DIAGNOSTIC_SIZE;
+#endif
+#endif
         if (evt->df->length == 6 && memcmp(evt->df->data, "MTU!", 4) == 0) {
             requested = (uint16_t)evt->df->data[4] | ((uint16_t)evt->df->data[5] << 8);
             valid = idle && (requested == 23 || requested == 250);
         }
-        if (valid && ble_mtu_diagnostic(requested, out.data, sizeof(out.data))) {
+        if (valid && ble_mtu_diagnostic(requested, out.data, sizeof(out.data)))
+            out.length = BLE_MTU_DIAGNOSTIC_SIZE;
+        if (out.length) {
             if (idle) out.data[5] |= 4; /* no open/abandoned file or directory transfer */
             out.status = DF_STATUS_OK;
-            out.length = BLE_MTU_DIAGNOSTIC_SIZE;
         }
     }
     df_core_send_frame(&out);
@@ -186,6 +204,9 @@ static void df_proto_handler_info_startup_diagnostic(df_event_t *evt) {
                 case 1: ready = runtime_diag_startup_snapshot(out.data, sizeof(out.data), true); break;
                 case 2: ready = runtime_diag_startup_mount_snapshot(out.data, sizeof(out.data)); break;
                 case 3: ready = runtime_diag_startup_cache_snapshot(out.data, sizeof(out.data)); break;
+#if defined(PIXL_TEST_DIAGNOSTICS)
+                case 4: ready = runtime_diag_startup_profile_snapshot(out.data, sizeof(out.data)); break;
+#endif
             }
         }
         if (ready) {

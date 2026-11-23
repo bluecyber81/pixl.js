@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "device_access": false,
+  "sanitizers": false,
+  "pinned_s112_headers": {
+    "ble.h": "9b8131fffee18f0548c30990e501e7337b36e27f82d59ee61c3a8df5678e5d23",
+    "ble_gap.h": "0ec9439c9e87a917cfbc65817bd8fb696060b4154919fee0f08ebbfefa84067c"
+  },
+  "source_sha256": {
+    "mod/ble/ble_main.c": "0854f595b3a0a9bcd5d59fda038061e363f68f523c98c51b5d598eb52c992bb5",
+    "mod/ble/ble_main.h": "aefffd6fae1250443c27224cbbcad207a65a1b31a334be3007e3bcd0c1f58572",
+    "mod/df/df_proto_info.c": "78b3c2c212a1d60cb612536d840fda91bb4106cf6644f175d8f59177c84db3db"
+  },
+  "limits": [
+    "Actual application functions and S112 option ABI; mocked SoftDevice, timer and GATT boundary.",
+    "Configured extension is global until changed or stack restart; no negotiated airtime measurement.",
+    "No physical phone, radio, throughput, battery or installation test."
+  ],
+  "passed": true,
+  "output": "{\"case\":\"bounds_invalid_requests_and_uninitialized_are_nonmutating\",\"passed\":true}\n{\"case\":\"fresh_stack_baseline_off_and_guarded_v3_snapshot\",\"passed\":true}\n{\"case\":\"read_only_query_allowed_while_vfs_busy_without_radio_option_call\",\"passed\":true}\n{\"case\":\"v3_preserves_legacy_prefix_and_confirmed_link_values\",\"passed\":true}\n{\"case\":\"explicit_enable_success_only_and_no_retry_on_read\",\"passed\":true}\n{\"case\":\"explicit_disable_success\",\"passed\":true}\n{\"case\":\"api_rejection_reports_error_preserves_previous_setting_without_reset_or_retry\",\"passed\":true}\n{\"case\":\"vfs_and_exact_active_file_session_ownership_gate_every_setting\",\"passed\":true}\n{\"case\":\"malformed_setting_length_value_status_chunk_and_selector_rejected\",\"passed\":true}\n{\"case\":\"nonrequest_events_never_change_global_policy\",\"passed\":true}\n{\"case\":\"v1_v2_and_next_mtu_setting_stay_byte_compatible\",\"passed\":true}\n{\"case\":\"global_success_survives_real_reconnect_and_stale_handle_events\",\"passed\":true}\n{\"case\":\"option_and_snapshot_are_atomic_to_application_gap_events\",\"passed\":true}\n{\"case\":\"fresh_stack_restores_off_baseline_and_no_prior_request_claim\",\"passed\":true}\nWIRE 4d5455440307fa00fa00fa00f700070018000000f401020201000000000000000300060000000000\nPASS 14 event-extension/legacy/ownership cases; actual S112 option ABI; no radio\n",
+  "cases": [
+    {
+      "case": "bounds_invalid_requests_and_uninitialized_are_nonmutating",
+      "passed": true
+    },
+    {
+      "case": "fresh_stack_baseline_off_and_guarded_v3_snapshot",
+      "passed": true
+    },
+    {
+      "case": "read_only_query_allowed_while_vfs_busy_without_radio_option_call",
+      "passed": true
+    },
+    {
+      "case": "v3_preserves_legacy_prefix_and_confirmed_link_values",
+      "passed": true
+    },
+    {
+      "case": "explicit_enable_success_only_and_no_retry_on_read",
+      "passed": true
+    },
+    {
+      "case": "explicit_disable_success",
+      "passed": true
+    },
+    {
+      "case": "api_rejection_reports_error_preserves_previous_setting_without_reset_or_retry",
+      "passed": true
+    },
+    {
+      "case": "vfs_and_exact_active_file_session_ownership_gate_every_setting",
+      "passed": true
+    },
+    {
+      "case": "malformed_setting_length_value_status_chunk_and_selector_rejected",
+      "passed": true
+    },
+    {
+      "case": "nonrequest_events_never_change_global_policy",
+      "passed": true
+    },
+    {
+      "case": "v1_v2_and_next_mtu_setting_stay_byte_compatible",
+      "passed": true
+    },
+    {
+      "case": "global_success_survives_real_reconnect_and_stale_handle_events",
+      "passed": true
+    },
+    {
+      "case": "option_and_snapshot_are_atomic_to_application_gap_events",
+      "passed": true
+    },
+    {
+      "case": "fresh_stack_restores_off_baseline_and_no_prior_request_claim",
+      "passed": true
+    }
+  ],
+  "negative_controls": {
+    "trust_rejected_setting": {
+      "detected": true,
+      "assertion": "CHECK 561: response.data[32] == (1u | (sdk_extension ? 2u : 0u))"
+    },
+    "omit_vfs_idle_gate": {
+      "detected": true,
+      "assertion": "CHECK 570: response.status == DF_STATUS_ERR && !response.length && option_calls == calls"
+    },
+    "mutate_on_read": {
+      "detected": true,
+      "assertion": "CHECK 488: m_conn_handle != BLE_CONN_HANDLE_INVALID && m_nus_session_handle == m_conn_handle"
+    },
+    "forget_global_state_on_disconnect": {
+      "detected": true,
+      "assertion": "CHECK 561: response.data[32] == (1u | (sdk_extension ? 2u : 0u))"
+    },
+    "omit_stack_default_reset": {
+      "detected": true,
+      "assertion": "CHECK 560: response.data[32] == (1u | (sdk_extension ? 2u : 0u))"
+    }
+  }
+}

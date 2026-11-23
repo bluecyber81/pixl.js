@@ -469,3 +469,200 @@ test('actual App658 ARM PXBI replies survive queued file traffic and MTU23/185/2
         const following=next(f);f.rx(20,[8]);await following;
     }
 });
+
+const mtuLinkPacket = require('./mtu-link-fixture.cjs');
+
+test('App668 link snapshot selects MTUD v2 once, queues normally and reassembles all MTU sizes', async () => {
+    for (const mtu of [23,185,250]) {
+        const f=fixture(), prior=next(f), pending=f.api.get_mtu_diagnostics('2.22.0-DE3.95');
+        assert.deepEqual(f.writes,[[0x14,0,0,0]]);
+        f.rx(0x14,[3]);await prior;await flush();
+        assert.deepEqual(f.writes.at(-1),[5,0,0,0,1]);
+        const bytes=mtuLinkPacket(), capacity=mtu-7;
+        for(let offset=0;offset<bytes.length;offset+=capacity)
+            f.rx(5,bytes.subarray(offset,offset+capacity),(offset/capacity)|(offset+capacity<bytes.length?0x8000:0));
+        const data=await pending;
+        assert.equal(data.schemaVersion,2);assert.equal(data.link.connectionIntervalUnits,6);
+        assert.equal(data.link.rxPhy,2);assert.equal(data.link.txPhy,2);
+        assert.equal(f.disconnects,0);assert.equal(f.timers.size,0);
+        const following=next(f);f.rx(0x14,[7]);await following;
+    }
+    for(const version of [undefined,'2.22.0-DE3.94','2.22.0-DE3.103','2.22.0-DE3.97-OLEDt1','2.22.0-DE3.95-OLEDt7']) {
+        const f=fixture(), pending=f.api.get_mtu_diagnostics(version);
+        assert.deepEqual(f.writes,[[5,0,0,0]]);f.rx(5,mtuPacket());
+        assert.equal((await pending).schemaVersion,1);
+    }
+});
+
+test('App668 MTUD selector falls back only on explicit unsupported status and retains real faults', async () => {
+    for(const status of [1,255]) {
+        const f=fixture(), pending=f.api.get_mtu_diagnostics('2.22.0-DE3.95');
+        f.rx(5,[],0,status);await flush();
+        assert.deepEqual(f.writes,[[5,0,0,0,1],[5,0,0,0]]);
+        f.rx(5,mtuPacket());assert.equal((await pending).schemaVersion,1);
+        assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
+        const bad=f.api.get_mtu_diagnostics(), failed=assert.rejects(bad);
+        f.rx(5,[],0,1);await failed;
+        const absent=f.api.get_mtu_diagnostics('2.22.0-DE3.95');
+        f.rx(5,[],0,status);await flush();f.rx(5,[],0,255);
+        assert.equal(await absent,null);
+        assert.equal(f.api.get_transport_diagnostics().lastErrorCode,'DEVICE_STATUS');
+    }
+});
+
+test('App668 malformed MTUD success and timeouts never downgrade or change the MTU preference', async () => {
+    const corrupt=mtuLinkPacket();corrupt[25]=1;
+    for(const payload of [mtuPacket(),corrupt,new Uint8Array(33)]) {
+        const f=fixture(), pending=f.api.get_mtu_diagnostics('2.22.0-DE3.95'), rejected=assert.rejects(pending);
+        f.rx(5,payload);await rejected;
+        assert.deepEqual(f.writes,[[5,0,0,0,1]]);
+        assert.equal(f.api.get_transport_diagnostics().lastErrorCode,payload.length>32?'RX_INVALID':'RESPONSE_INVALID');
+    }
+    const f=fixture(), pending=f.api.get_mtu_diagnostics('2.22.0-DE3.95'), rejected=assert.rejects(pending);
+    for(const timeout of [...f.timers.values()]) timeout();await rejected;
+    assert.deepEqual(f.writes,[[5,0,0,0,1]]);assert.equal(f.disconnects,1);
+});
+
+test('App668 MTUD fallback cannot cross a replacement Bluetooth session', async () => {
+    const f=fixture(), pending=f.api.get_mtu_diagnostics('2.22.0-DE3.95'), rejected=assert.rejects(pending);
+    f.rx(5,[],0,255);f.bus.emit('ble_disconnected');f.bus.emit('ble_connected');
+    await rejected;await flush();
+    assert.deepEqual(f.writes,[[5,0,0,0,1]]);assert.equal(f.timers.size,0);
+});
+
+const testLinkPacket = () => Uint8Array.from(Buffer.from(JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/ble-link-diagnostic-v3.json'),'utf8')).responsePayloadHex,'hex'));
+const testGcPacket = () => Uint8Array.from(Buffer.from(JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/packed-gc-diagnostic-v1.json'),'utf8')).cases.find(f=>f.name==='pinned').hex,'hex'));
+const testStartupPacket = () => Uint8Array.from(Buffer.from(JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/startup-profile-v5.json'),'utf8')).hex,'hex'));
+
+const testFirmwareVersions=['2.22.0-DE3.96','2.22.0-DE3.97'];
+for(const version of testFirmwareVersions)
+for(const [method,cmd,request,makePacket,schema] of [
+ ['get_mtu_diagnostics',5,[2],testLinkPacket,3],
+ ['get_storage_gc_diagnostics',0x1c,[69,2],testGcPacket,1],
+ ['get_startup_diagnostics',9,[4],testStartupPacket,5]])
+test(`APP670_STATUS_REGRESSION ${version} ${method} selects the actual production test response without mutation`,async()=>{
+ const startup=await import('../src/lib/startup-diagnostics.js'),f=fixture(startup),packet=makePacket();
+ const pending=f.api[method](version);pending.catch(()=>{});
+ assert.deepEqual(f.writes,[[cmd,0,0,0,...request]]);
+ const capacity=16;
+ for(let start=0;start<packet.length;start+=capacity)
+  f.rx(cmd,packet.subarray(start,start+capacity),(start/capacity)|(start+capacity<packet.length?0x8000:0));
+ const data=await pending;assert.equal(data.schemaVersion,schema);
+ if(method==='get_mtu_diagnostics'){
+  const normalized=load('device-extra-diagnostics.js').normalizeMtuDiagnostics(data);
+  assert.equal(normalized.schemaVersion,3);assert.equal(normalized.experiment.testBuild,true);
+  assert.equal(normalized.sessionReady,true);assert.equal(normalized.fileMode,true);assert.equal(normalized.transferIdle,true);
+ }else if(method==='get_startup_diagnostics'){
+  assert.equal(data.mountProfile.testBuild,true);assert.equal(data.mountProfile.available,true);
+  assert.equal(data.mountProfile.flashWaitTicks,32);assert.equal(data.mountProfile.ticksPerSecond,16384);
+ }else{
+  assert.equal(data.scope,'packedfs-memory-status');assert.equal(data.drive,'E');
+  for(const unsupported of ['2.22.0-DE3.95','2.22.0-DE3.103','2.22.0-DE3.98-OLEDt1'])
+   assert.equal(await f.api.get_storage_gc_diagnostics(unsupported),null);
+ }
+ assert.deepEqual(f.writes,[[cmd,0,0,0,...request]]);assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
+});
+
+for(const testVersion of testFirmwareVersions){
+test(testVersion+' '+'Test 1 link explicitly falls back v3 to v2 to v1, but malformed and failed reads never retry',async()=>{
+ for(const status of [1,255]){
+  const f=fixture(),p=f.api.get_mtu_diagnostics(testVersion);f.rx(5,[],0,status);await flush();
+  assert.deepEqual(f.writes.at(-1),[5,0,0,0,1]);f.rx(5,[],0,status);await flush();
+  assert.deepEqual(f.writes.at(-1),[5,0,0,0]);f.rx(5,mtuPacket());assert.equal((await p).schemaVersion,1);
+  assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
+ }
+ const badFlag=testLinkPacket();badFlag[33]=1;
+ for(const payload of [testLinkPacket().slice(0,39),badFlag,mtuLinkPacket()]){
+  const f=fixture(),p=f.api.get_mtu_diagnostics(testVersion),failed=assert.rejects(p);f.rx(5,payload);await failed;assert.equal(f.writes.length,1);
+ }
+ const f=fixture(),p=f.api.get_mtu_diagnostics(testVersion),failed=assert.rejects(p);f.rx(5,[],0,9);await failed;assert.equal(f.writes.length,1);
+});
+
+test(testVersion+' '+'Test 1 optional GC rejection does not run a fallback cleanup or modify stored capability state',async()=>{
+ for(const status of [1,255]){
+  const f=fixture(),p=f.api.get_storage_gc_diagnostics(testVersion);f.rx(0x1c,[],0,status);assert.equal(await p,null);
+  assert.deepEqual(f.writes,[[0x1c,0,0,0,69,2]]);assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
+ }
+ const f=fixture(),p=f.api.get_storage_gc_diagnostics(testVersion),failed=assert.rejects(p);f.rx(0x1c,testGcPacket().slice(0,23));await failed;
+ assert.equal(f.writes.length,1);
+});
+
+test(testVersion+' '+'experimental option requires an exact test identity and idle local queues before the fresh capability read',async()=>{
+ const f=fixture();
+ for(const version of [undefined,'2.22.0-DE3.95','2.22.0-DE3.98','2.22.0-DE3.97-OLEDt1'])await assert.rejects(f.api.set_ble_test_extension(version,true),{code:'BLE_TEST_UNSUPPORTED'});
+ await assert.rejects(f.api.set_ble_test_extension(testVersion,1),{code:'BLE_TEST_UNSUPPORTED'});assert.equal(f.writes.length,0);
+ const transfer=next(f);await assert.rejects(f.api.set_ble_test_extension(testVersion,true),{code:'BLE_TEST_BUSY'});
+ assert.deepEqual(f.writes,[[0x14,0,0,0]]);f.rx(0x14,[7]);await transfer;
+});
+
+test(testVersion+' '+'experimental option checks idle again after a fresh read and refuses unsupported or busy firmware',async()=>{
+ const f=fixture(),change=f.api.set_ble_test_extension(testVersion,true),failed=assert.rejects(change,{code:'BLE_TEST_BUSY'});
+ const queued=next(f);f.rx(5,testLinkPacket());await failed;assert.deepEqual(f.writes,[[5,0,0,0,2],[0x14,0,0,0]]);f.rx(0x14,[9]);await queued;
+ const g=fixture(),unsupported=g.api.set_ble_test_extension(testVersion,true),missing=assert.rejects(unsupported,{code:'BLE_TEST_UNSUPPORTED'});
+ g.rx(5,[],0,255);await flush();g.rx(5,mtuLinkPacket());await missing;assert.equal(g.writes.length,2);
+ const h=fixture(),busy=h.api.set_ble_test_extension(testVersion,true),reject=assert.rejects(busy,{code:'BLE_TEST_BUSY'});
+ const packet=testLinkPacket();packet[5]&=~4;h.rx(5,packet);await reject;assert.equal(h.writes.length,1);
+});
+
+test(testVersion+' '+'APP670_STATUS_REGRESSION explicit EVT! request is bounded and SDK rejection retains previous configuration without success inference',async()=>{
+ for(const enabled of [false,true]){
+  const f=fixture(),change=f.api.set_ble_test_extension(testVersion,enabled);change.catch(()=>{});
+  assert.deepEqual(f.writes,[[5,0,0,0,2]]);f.rx(5,testLinkPacket());await flush();
+  assert.deepEqual(f.writes,[[5,0,0,0,2],[5,0,0,0,69,86,84,33,Number(enabled)]]);
+  const result=testLinkPacket();result[32]=enabled?3:1;f.rx(5,result);const data=await change;
+  assert.equal(data.experiment.eventLengthExtensionEnabled,enabled);assert.equal(data.experiment.lastOptionResult,0);assert.equal(f.writes.length,2);
+ }
+ const f=fixture(),change=f.api.set_ble_test_extension(testVersion,false);f.rx(5,testLinkPacket());await flush();
+ const result=testLinkPacket();new DataView(result.buffer).setUint32(36,7,true);f.rx(5,result);
+ const data=await change;assert.equal(data.experiment.eventLengthExtensionEnabled,true);assert.equal(data.experiment.lastOptionResult,7);
+ assert.equal(f.api.get_transport_diagnostics().lastErrorCode,null);
+});
+
+test(testVersion+' '+'session changes suppress late experimental replies and prevent writes after a stale capability check',async()=>{
+ for(const stage of ['read','write']){
+  const f=fixture(),change=f.api.set_ble_test_extension(testVersion,true),failed=assert.rejects(change);
+  if(stage==='write'){f.rx(5,testLinkPacket());await flush();}
+  await flush();f.rx(5,testLinkPacket());f.bus.emit('ble_disconnected');await failed;await flush();
+  assert.equal(f.writes.length,stage==='read'?1:2);f.rx(5,testLinkPacket());await flush();assert.equal(f.writes.length,stage==='read'?1:2);
+ }
+ for(const [method,cmd,payload] of [['get_mtu_diagnostics',5,testLinkPacket()],['get_storage_gc_diagnostics',0x1c,testGcPacket()]]){
+  const f=fixture(),p=f.api[method](testVersion),failed=assert.rejects(p);await flush();f.rx(cmd,payload);f.bus.emit('ble_disconnected');await failed;assert.equal(f.writes.length,1);
+ }
+});
+
+
+test(testVersion+' '+'Test 1 startup v5 falls back only on explicit unsupported selector and rejects a wrong successful version',async()=>{
+ const startup=await import('../src/lib/startup-diagnostics.js');
+ const old=testStartupPacket().slice(0,84);old[4]=4;old[5]=84;
+ for(const status of [1,255]){
+  const f=fixture(startup),p=f.api.get_startup_diagnostics(testVersion);f.rx(9,[],0,status);await flush();
+  assert.deepEqual(f.writes,[[9,0,0,0,4],[9,0,0,0,3]]);f.rx(9,old);assert.equal((await p).schemaVersion,4);
+ }
+ for(const packet of [old,testStartupPacket().slice(0,111)]){
+  const f=fixture(startup),p=f.api.get_startup_diagnostics(testVersion),failed=assert.rejects(p);f.rx(9,packet);await failed;assert.equal(f.writes.length,1);
+ }
+ const f=fixture(startup),p=f.api.get_startup_diagnostics(testVersion),failed=assert.rejects(p);await flush();f.rx(9,[],0,255);f.bus.emit('ble_disconnected');await failed;assert.equal(f.writes.length,1);
+});
+
+}
+
+for(const [normalCounter, normalVersion] of [[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100'],[674,'2.22.0-DE3.101'],[675,'2.22.0-DE3.102']]) {
+// App671 through App675 have normal observations, while App669/670 retain their experimental selectors.
+for(const [method,cmd,request,makePacket,schema] of [
+ ['get_mtu_diagnostics',5,[1],mtuLinkPacket,2],
+ ['get_storage_gc_diagnostics',0x1c,[69,2],testGcPacket,1],
+ ['get_startup_diagnostics',9,[3],()=>{const bytes=testStartupPacket().slice(0,84);bytes[4]=4;bytes[5]=84;return bytes;},4]])
+test(`App${normalCounter} normal ${method} uses its exact wire selector without a test profile`,async()=>{
+ const startup=await import('../src/lib/startup-diagnostics.js'),f=fixture(startup),packet=makePacket();
+ const pending=f.api[method](normalVersion);pending.catch(()=>{});
+ assert.deepEqual(f.writes,[[cmd,0,0,0,...request]]);
+ for(let start=0;start<packet.length;start+=16)
+  f.rx(cmd,packet.subarray(start,start+16),(start/16)|(start+16<packet.length?0x8000:0));
+ const data=await pending;assert.equal(data.schemaVersion,schema);
+ assert.equal(data.experiment,undefined);assert.equal(data.mountProfile,undefined);
+ assert.equal(f.writes.length,1);assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
+ await assert.rejects(f.api.set_ble_test_extension(normalVersion,true),{code:'BLE_TEST_UNSUPPORTED'});
+ assert.equal(f.writes.length,1,'normal diagnostic support must never permit an EVT! request');
+});
+
+}

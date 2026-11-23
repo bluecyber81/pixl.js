@@ -30,7 +30,15 @@ mui_t *mui(void){return &fake_mui;}
 void mui_show_memory_error(mui_t*m){m->memory_error=true;oom++;}
 const char*getLangString(L_StringID id){return english ? lang_en_US[id] : lang_de_DE[id];}
 bool isChineseLanguage(void){return chinese;}
-const char*get_amiibo_display_name(const db_amiibo_t*a){return chinese?a->name_cn:a->name_en;}
+#if TEST_NAME_POOL
+const char db_amiibo_name_pool[]="\0Slot";
+#define TEST_FIGURE_EN(a) db_amiibo_name_en(a)
+#define TEST_FIGURE_CN(a) db_amiibo_name_cn(a)
+#else
+#define TEST_FIGURE_EN(a) ((a)->name_en)
+#define TEST_FIGURE_CN(a) ((a)->name_cn)
+#endif
+const char*get_amiibo_display_name(const db_amiibo_t*a){return chinese?TEST_FIGURE_CN(a):TEST_FIGURE_EN(a);}
 bool is_valid_amiibo_v3(uint32_t a,uint32_t b){(void)a;(void)b;return false;}
 void mui_toast_view_show(mui_toast_view_t *view,const char *text) {
     if(strstr(text," · ") || !strcmp(text,"Zelda")){
@@ -50,7 +58,11 @@ void mui_text_input_set_event_cb(mui_text_input_t*v,mui_text_input_event_cb_t cb
 void mui_scene_dispatcher_previous_scene(mui_scene_dispatcher_t*d){(void)d;scene_changes++;}
 void mui_text_input_clear_input_text(mui_text_input_t*v){(void)v;}
 @READ_ID@
+#if TEST_NAME_POOL
+static const db_amiibo_t slot_figure={.head=0x11223344,.tail=0x55667788,.name_en_offset=1};
+#else
 static const db_amiibo_t slot_figure={.head=0x11223344,.tail=0x55667788,.name_en="Slot"};
+#endif
 const db_amiibo_t *get_amiibo_by_id(uint32_t head,uint32_t tail){
  return head==slot_figure.head && tail==slot_figure.tail ? &slot_figure : NULL;
 }

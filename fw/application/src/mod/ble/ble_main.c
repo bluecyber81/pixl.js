@@ -83,6 +83,10 @@
 #include "ble_amiibolink.h"
 #include "ble_df_driver.h"
 #include "ble_main.h"
+#ifdef BOARD_LCD
+#include "mui_mem.h"
+static void ble_raw_adv_process(void);
+#endif
 #include "ble_work.h"
 #include "ble_remote.h"
 #include "../runtime_diag.h"
@@ -203,7 +207,94 @@ static uint8_t m_reported_status_state;
 static ble_link_state_handler_t m_status_state_handler;
 
 #define BLE_CONNECT_SLEEP_TIMEOUT_SECONDS 180 /**< Sleep timeout when ble connection established. */
-uint16_t m_previous_pwr_mgmt_sleep_timeout = BLE_CONNECT_SLEEP_TIMEOUT_SECONDS;
+static volatile uint16_t m_previous_pwr_mgmt_sleep_timeout = BLE_CONNECT_SLEEP_TIMEOUT_SECONDS;
+
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+/* Current GAP link only. NUS unsubscribe does not fabricate a disconnect.
+ * No heap or additional timer: the existing foreground poll owns retries. */
+typedef struct {
+    uint32_t request_result, retry_tick;
+    uint16_t interval, latency, timeout;
+    uint8_t rx_phy, tx_phy, attempts, phy_status;
+    bool params_valid, phy_valid, pending, retry;
+} ble_link_profile_t;
+static volatile ble_link_profile_t m_link_profile;
+
+#if defined(PIXL_TEST_DIAGNOSTICS)
+/* This option belongs to the SoftDevice, not a GAP handle. It deliberately
+ * survives reconnects, just as the successful API setting does. A fresh BLE
+ * stack starts at the SDK default (disabled). No read changes the option. */
+static bool m_event_extension_enabled;
+static uint32_t m_event_extension_result = UINT32_MAX;
+#endif
+
+static void ble_link_parameters_update(const ble_gap_conn_params_t *params) {
+    /* CONNECT/UPDATE contain the selected interval, not the PPCP preference. */
+    bool valid = params && params->min_conn_interval == params->max_conn_interval &&
+                 params->min_conn_interval >= 6 && params->max_conn_interval <= 3200 &&
+                 params->slave_latency <= 499 && params->conn_sup_timeout >= 10 &&
+                 params->conn_sup_timeout <= 3200;
+    m_link_profile.params_valid = valid;
+    m_link_profile.interval = valid ? params->min_conn_interval : 0;
+    m_link_profile.latency = valid ? params->slave_latency : 0;
+    m_link_profile.timeout = valid ? params->conn_sup_timeout : 0;
+}
+
+static void ble_link_profile_reset(const ble_gap_conn_params_t *params) {
+    m_link_profile = (ble_link_profile_t){.request_result = UINT32_MAX, .phy_status = UINT8_MAX,
+                                        .retry = params != NULL};
+    ble_link_parameters_update(params);
+}
+
+static void ble_link_phy_observe(const ble_gap_evt_phy_update_t *update) {
+    m_link_profile.phy_status = update->status;
+    m_link_profile.pending = false;
+    /* Failed updates do not make their unspecified PHY fields authoritative. */
+    if (update->status == BLE_HCI_STATUS_CODE_SUCCESS &&
+        (update->rx_phy == BLE_GAP_PHY_1MBPS || update->rx_phy == BLE_GAP_PHY_2MBPS) &&
+        (update->tx_phy == BLE_GAP_PHY_1MBPS || update->tx_phy == BLE_GAP_PHY_2MBPS)) {
+        m_link_profile.rx_phy = update->rx_phy;
+        m_link_profile.tx_phy = update->tx_phy;
+        m_link_profile.phy_valid = true;
+    }
+}
+
+static void ble_phy_tuning_poll(void) {
+#if (BLE_GAP_PHYS_SUPPORTED & BLE_GAP_PHY_2MBPS)
+    CRITICAL_REGION_ENTER();
+    if (m_link_profile.retry && !m_link_profile.pending && m_sessions_enabled && m_file_mode &&
+        !m_mode_pending && m_conn_handle != BLE_CONN_HANDLE_INVALID &&
+        m_nus_session_handle == m_conn_handle && m_release_handle == BLE_CONN_HANDLE_INVALID &&
+        ble_work_can_send()) {
+        if (m_link_profile.phy_valid && m_link_profile.rx_phy == BLE_GAP_PHY_2MBPS &&
+            m_link_profile.tx_phy == BLE_GAP_PHY_2MBPS) {
+            m_link_profile.retry = false;
+        } else if (m_link_profile.attempts == 0 ||
+                   app_timer_cnt_diff_compute(app_timer_cnt_get(), m_link_profile.retry_tick) >= APP_TIMER_TICKS(250)) {
+            const ble_gap_phys_t phys = {.rx_phys = BLE_GAP_PHY_2MBPS, .tx_phys = BLE_GAP_PHY_2MBPS};
+            uint32_t result = sd_ble_gap_phy_update(m_conn_handle, &phys);
+            m_link_profile.request_result = result;
+            m_link_profile.attempts++;
+            m_link_profile.retry_tick = app_timer_cnt_get();
+            m_link_profile.pending = result == NRF_SUCCESS;
+            /* S112 supports 2M. A busy procedure gets two bounded retries;
+             * unsupported peers and every other rejection retain the link.
+             * SUCCESS requests a procedure; only PHY_UPDATE proves its PHY. */
+            m_link_profile.retry = result == NRF_ERROR_BUSY && m_link_profile.attempts < 3;
+        }
+    }
+    CRITICAL_REGION_EXIT();
+#endif
+}
+#endif
+
+/* A connected file session owns the active timer until its disconnect IRQ. */
+void ble_set_standby_timeout(uint16_t seconds) {
+    CRITICAL_REGION_ENTER();
+    if (m_timeout_overridden) m_previous_pwr_mgmt_sleep_timeout = seconds;
+    else nrf_pwr_mgmt_set_timeout(seconds);
+    CRITICAL_REGION_EXIT();
+}
 
 /**@brief Function for assert macro callback.
  *
@@ -353,7 +444,14 @@ void ble_process_pending(void) {
     ble_work_process(ble_on_disconnected);
     ble_release_stopped_session();
     ble_file_link_poll();
+#ifdef BOARD_LCD
+    ble_switch2_scan_process();
+    ble_raw_adv_process();
+#endif
     ble_pending_mode_poll();
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    ble_phy_tuning_poll();
+#endif
     ble_df_driver_poll();
     if (m_link_state_handler) {
         ble_link_state_t state = ble_link_state_get();
@@ -395,26 +493,6 @@ static void services_init(void) {
     APP_ERROR_CHECK(err_code);
 }
 
-/**@brief Function for handling an event from the Connection Parameters Module.
- *
- * @details This function will be called for all events in the Connection Parameters Module
- *          which are passed to the application.
- *
- * @note All this function does is to disconnect. This could have been done by simply setting
- *       the disconnect_on_fail config parameter, but instead we use the event handler
- *       mechanism to demonstrate its use.
- *
- * @param[in] p_evt  Event received from the Connection Parameters Module.
- */
-static void on_conn_params_evt(ble_conn_params_evt_t *p_evt) {
-    uint32_t err_code;
-
-    if (p_evt->evt_type == BLE_CONN_PARAMS_EVT_FAILED) {
-        err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
-        APP_ERROR_CHECK(err_code);
-    }
-}
-
 /**@brief Function for handling errors from the Connection Parameters module.
  *
  * @param[in] nrf_error  Error code containing information about what went wrong.
@@ -434,8 +512,9 @@ static void conn_params_init(void) {
     cp_init.next_conn_params_update_delay = NEXT_CONN_PARAMS_UPDATE_DELAY;
     cp_init.max_conn_params_update_count = MAX_CONN_PARAMS_UPDATE_COUNT;
     cp_init.start_on_notify_cccd_handle = BLE_GATT_HANDLE_INVALID;
+    /* These are preferred parameters. Keep a valid link if the central
+     * retains different parameters, including a faster connection interval. */
     cp_init.disconnect_on_fail = false;
-    cp_init.evt_handler = on_conn_params_evt;
     cp_init.error_handler = conn_params_error_handler;
 
     err_code = ble_conn_params_init(&cp_init);
@@ -493,6 +572,9 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
         m_link_generation++;
         m_session_generation++;
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+        ble_link_profile_reset(&p_ble_evt->evt.gap_evt.params.connected.conn_params);
+#endif
         m_timeout_overridden = false;
         m_release_handle = BLE_CONN_HANDLE_INVALID;
         m_release_attempted = m_release_requested = false;
@@ -549,17 +631,35 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
         if (m_timeout_overridden) nrf_pwr_mgmt_set_timeout(m_previous_pwr_mgmt_sleep_timeout);
         m_timeout_overridden = false;
 
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+        ble_link_profile_reset(NULL);
+#endif
         break;
 
     case BLE_GAP_EVT_PHY_UPDATE_REQUEST: {
+        if (p_ble_evt->evt.gap_evt.conn_handle != m_conn_handle || m_conn_handle == BLE_CONN_HANDLE_INVALID) break;
         NRF_LOG_DEBUG("PHY update request.");
         ble_gap_phys_t const phys = {
             .rx_phys = BLE_GAP_PHY_AUTO,
             .tx_phys = BLE_GAP_PHY_AUTO,
         };
         err_code = sd_ble_gap_phy_update(p_ble_evt->evt.gap_evt.conn_handle, &phys);
-        APP_ERROR_CHECK(err_code);
+        /* A concurrent local/peer procedure or already closed controller link
+         * is not a reason to reset the application and lose an active edit. */
+        if (err_code != NRF_SUCCESS) NRF_LOG_INFO("BLE PHY reply deferred/rejected: %lu", (unsigned long)err_code);
     } break;
+
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+    case BLE_GAP_EVT_CONN_PARAM_UPDATE:
+        if (p_ble_evt->evt.gap_evt.conn_handle == m_conn_handle && m_conn_handle != BLE_CONN_HANDLE_INVALID)
+            ble_link_parameters_update(&p_ble_evt->evt.gap_evt.params.conn_param_update.conn_params);
+        break;
+
+    case BLE_GAP_EVT_PHY_UPDATE:
+        if (p_ble_evt->evt.gap_evt.conn_handle == m_conn_handle && m_conn_handle != BLE_CONN_HANDLE_INVALID)
+            ble_link_phy_observe(&p_ble_evt->evt.gap_evt.params.phy_update);
+        break;
+#endif
 
     case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
         // Pairing not supported
@@ -616,6 +716,11 @@ static void ble_stack_init(void) {
     // Enable BLE stack.
     err_code = nrf_sdh_ble_enable(&ram_start);
     APP_ERROR_CHECK(err_code);
+
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS) && defined(PIXL_TEST_DIAGNOSTICS)
+    m_event_extension_enabled = false;
+    m_event_extension_result = UINT32_MAX;
+#endif
 
     // Register a handler for BLE events.
     NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
@@ -784,6 +889,9 @@ static ret_code_t ble_apply_device_mode(ble_device_mode_t mode) {
 
 void ble_adv_start(void) {
     if (m_mode_pending) { m_mode_adv_requested = true; return; }
+#ifdef BOARD_LCD
+    if (ble_miniapp_radio_busy()) return;
+#endif
     if (m_ble_initialized && m_advertising.adv_mode_current == BLE_ADV_MODE_IDLE) {
         advertising_start();
     }
@@ -839,6 +947,9 @@ void ble_link_state_observe(ble_link_state_handler_t handler) {
 }
 
 bool ble_restart_advertising(void) {
+#ifdef BOARD_LCD
+    if (ble_miniapp_radio_busy()) return false;
+#endif
     ret_code_t result = NRF_ERROR_INVALID_STATE;
     CRITICAL_REGION_ENTER();
     if (m_ble_initialized && m_conn_handle == BLE_CONN_HANDLE_INVALID && !m_advertising_active) {
@@ -879,11 +990,19 @@ static void ble_stop_transport(void) {
 }
 
 void ble_disable(void) {
+#ifdef BOARD_LCD
+    ble_raw_adv_stop();
+    ble_switch2_scan_stop();
+#endif
     m_mode_pending = m_mode_adv_requested = m_mode_handlers_ready = m_mode_wait_reply = false;
     remote_init_step(BLE_REMOTE_INIT_IDLE, NRF_SUCCESS);
     ble_stop_transport();
 }
 void ble_device_mode_prepare(ble_device_mode_t mode) {
+#ifdef BOARD_LCD
+    ble_raw_adv_stop();
+    ble_switch2_scan_stop();
+#endif
     /* New owners register their handlers before the next foreground poll.
      * Never reconfigure the GAP address beneath an existing connection. */
     m_pending_mode = mode;
@@ -897,6 +1016,9 @@ void ble_device_mode_prepare(ble_device_mode_t mode) {
 }
 static void ble_pending_mode_poll(void) {
     if (!m_mode_pending) return;
+#ifdef BOARD_LCD
+    if (ble_miniapp_radio_busy()) return;
+#endif
     if (!m_mode_stop_requested) {
         if (m_mode_wait_reply && ble_is_connected() && ble_remote_response_pending() &&
             app_timer_cnt_diff_compute(app_timer_cnt_get(), m_mode_wait_tick) < APP_TIMER_TICKS(2000)) return;
@@ -1033,6 +1155,77 @@ bool ble_mtu_diagnostic(uint16_t requested_mtu, uint8_t *snapshot, size_t capaci
     return success;
 }
 
+#if defined(BOARD_LCD) && defined(PIXL_RUNTIME_DIAGNOSTICS)
+bool ble_link_diagnostic(uint8_t *snapshot, size_t capacity) {
+    if (!snapshot || capacity < BLE_LINK_DIAGNOSTIC_SIZE) return false;
+    bool success;
+    CRITICAL_REGION_ENTER();
+    /* Keep both halves on the same GAP generation. Nested critical regions
+     * preserve the outer mask; no link event can split the MTU/link snapshot. */
+    success = ble_mtu_diagnostic(0, snapshot, capacity);
+    if (success) {
+        memset(snapshot + BLE_MTU_DIAGNOSTIC_SIZE, 0, BLE_LINK_DIAGNOSTIC_SIZE - BLE_MTU_DIAGNOSTIC_SIZE);
+        bool connected = m_conn_handle != BLE_CONN_HANDLE_INVALID;
+        snapshot[4] = 2;
+        snapshot[14] = (connected ? 1u : 0u) | (connected && m_link_profile.params_valid ? 2u : 0u) |
+                       (connected && m_link_profile.phy_valid ? 4u : 0u) |
+                       (connected && m_link_profile.pending ? 8u : 0u);
+        snapshot[15] = connected ? m_link_profile.phy_status : UINT8_MAX;
+        const uint16_t values[] = {connected ? m_link_profile.interval : 0,
+                                  connected ? m_link_profile.latency : 0,
+                                  connected ? m_link_profile.timeout : 0};
+        for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); ++i) {
+            snapshot[16 + i * 2] = (uint8_t)values[i];
+            snapshot[17 + i * 2] = (uint8_t)(values[i] >> 8);
+        }
+        snapshot[22] = connected ? m_link_profile.rx_phy : 0;
+        snapshot[23] = connected ? m_link_profile.tx_phy : 0;
+        snapshot[24] = connected ? m_link_profile.attempts : 0;
+        uint32_t result = connected ? m_link_profile.request_result : UINT32_MAX;
+        for (unsigned i = 0; i < 4; ++i) snapshot[28 + i] = (uint8_t)(result >> (8 * i));
+    }
+    CRITICAL_REGION_EXIT();
+    return success;
+}
+
+#if defined(PIXL_TEST_DIAGNOSTICS)
+bool ble_test_diagnostic(int8_t requested_extension, uint8_t *snapshot, size_t capacity) {
+    if (!snapshot || capacity < BLE_TEST_DIAGNOSTIC_SIZE ||
+        requested_extension < -1 || requested_extension > 1) return false;
+    bool success = false;
+    CRITICAL_REGION_ENTER();
+    /* The caller additionally requires the foreground VFS to be idle before
+     * a setting request. Recheck NUS ownership atomically with the option call;
+     * a disconnected/closing/remote session cannot change global radio policy. */
+    bool allowed = m_ble_initialized && m_sessions_enabled && m_file_mode && !m_remote_mode &&
+                   !m_mode_pending && m_conn_handle != BLE_CONN_HANDLE_INVALID &&
+                   m_nus_session_handle == m_conn_handle && m_release_handle == BLE_CONN_HANDLE_INVALID &&
+                   ble_work_can_send();
+    if (requested_extension < 0 || allowed) {
+        if (requested_extension >= 0) {
+            ble_opt_t option = {0};
+            option.common_opt.conn_evt_ext.enable = requested_extension != 0;
+            uint32_t result = sd_ble_opt_set(BLE_COMMON_OPT_CONN_EVT_EXT, &option);
+            m_event_extension_result = result;
+            if (result == NRF_SUCCESS) m_event_extension_enabled = requested_extension != 0;
+        }
+        success = ble_link_diagnostic(snapshot, capacity);
+        if (success) {
+            snapshot[4] = 3;
+            snapshot[32] = 1u | (m_event_extension_enabled ? 2u : 0u);
+            snapshot[33] = 0;
+            snapshot[34] = (uint8_t)NRF_SDH_BLE_GAP_EVENT_LENGTH;
+            snapshot[35] = (uint8_t)(NRF_SDH_BLE_GAP_EVENT_LENGTH >> 8);
+            for (unsigned i = 0; i < 4; ++i)
+                snapshot[36 + i] = (uint8_t)(m_event_extension_result >> (8 * i));
+        }
+    }
+    CRITICAL_REGION_EXIT();
+    return success;
+}
+#endif
+#endif
+
 void ble_nus_abort_transfer(void) {
     /* Discard queued work now; file-close/flush remains deferred to main after
      * the current handler returns, as with a radio disconnect. */
@@ -1069,3 +1262,128 @@ void ble_get_addr_str(char addr_fmt[]) {
     sprintf(addr_fmt, "%02X:%02X:%02X:%02X:%02X:%02X", addr.addr[5], addr.addr[4], addr.addr[3], addr.addr[2],
             addr.addr[1], addr.addr[0]);
 }
+
+
+#ifdef BOARD_LCD
+/* A short Switch-2 advertisement temporarily borrows the existing S112
+ * advertising set. No second radio stack, connection or persistent buffer. */
+typedef struct {
+    ble_gap_addr_t saved_address;
+    ble_gap_adv_data_t data;
+    uint8_t bytes[SWITCH2_WAKE_ADV_LEN];
+    ble_raw_adv_done_cb_t callback;
+    uint32_t result;
+    volatile bool active, finished;
+    bool address_dirty, configured, power_dirty;
+} ble_raw_adv_state_t;
+static ble_raw_adv_state_t *m_raw_adv;
+
+static void ble_raw_adv_observer(const ble_evt_t *event, void *context) {
+    (void)context;
+    if (!m_raw_adv || !m_raw_adv->active) return;
+    if (event->header.evt_id == BLE_GAP_EVT_CONNECTED ||
+        (event->header.evt_id == BLE_GAP_EVT_ADV_SET_TERMINATED &&
+         event->evt.gap_evt.params.adv_set_terminated.adv_handle == m_advertising.adv_handle)) {
+        m_raw_adv->active = false;
+        m_raw_adv->finished = true;
+        /* The normal observer records/rejects a raw-mode connection because
+         * m_sessions_enabled is false. Its timeout was never overridden. */
+    }
+}
+NRF_SDH_BLE_OBSERVER(m_switch2_adv_observer, APP_BLE_OBSERVER_PRIO, ble_raw_adv_observer, NULL);
+
+bool ble_raw_adv_is_active(void) { return m_raw_adv != NULL; }
+bool ble_miniapp_radio_busy(void) { return m_raw_adv != NULL || ble_switch2_scan_is_active(); }
+static void ble_raw_adv_process(void) {
+    ble_raw_adv_state_t *state = m_raw_adv;
+    if (!state || !state->finished || !ble_transport_idle()) return;
+    /* Rebind the set away from the temporary bytes BEFORE freeing them. A
+     * rejected stop/restore keeps ownership and retries after pending events. */
+    if (state->configured) {
+        uint32_t stopped = sd_ble_gap_adv_stop(m_advertising.adv_handle);
+        if (stopped != NRF_SUCCESS && stopped != NRF_ERROR_INVALID_STATE) return;
+        if (advertising_init(m_remote_mode) != NRF_SUCCESS) return;
+        state->configured = false;
+    }
+    if (state->power_dirty) {
+        if (sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_advertising.adv_handle, 0) != NRF_SUCCESS) return;
+        state->power_dirty = false;
+    }
+    if (state->address_dirty) {
+        if (sd_ble_gap_addr_set(&state->saved_address) != NRF_SUCCESS) return;
+        state->address_dirty = false;
+    }
+    ble_raw_adv_done_cb_t callback = state->callback;
+    uint32_t result = state->result;
+    m_raw_adv = NULL;
+    mui_mem_free(state);
+    if (callback) callback(result); /* foreground, after complete restoration */
+}
+void ble_raw_adv_stop(void) {
+    if (!m_raw_adv) return;
+    m_raw_adv->callback = NULL;
+    if (m_raw_adv->active) (void)sd_ble_gap_adv_stop(m_advertising.adv_handle);
+    m_raw_adv->active = false;
+    m_raw_adv->finished = true;
+}
+uint32_t ble_raw_adv_start(const uint8_t mac[6], const uint8_t *data, uint8_t length,
+                          bool connectable, uint16_t duration, ble_raw_adv_done_cb_t callback) {
+    if (!mac || !data || length != SWITCH2_WAKE_ADV_LEN || !duration || duration > 300)
+        return NRF_ERROR_INVALID_PARAM;
+    if (ble_miniapp_radio_busy() || ble_mode_transition_pending() || !ble_transport_idle())
+        return NRF_ERROR_BUSY;
+    ble_raw_adv_state_t *state = mui_mem_malloc(sizeof(*state));
+    if (!state) return NRF_ERROR_NO_MEM;
+    memset(state, 0, sizeof(*state));
+    ble_init();
+    ble_disable();
+    m_raw_adv = state;
+    uint32_t result = sd_ble_gap_addr_get(&state->saved_address);
+    if (result != NRF_SUCCESS) goto failed;
+    if (!m_advertising.initialized) {
+        result = advertising_init(false);
+        if (result != NRF_SUCCESS) goto failed;
+    }
+    ble_gap_addr_t address = {.addr_type = BLE_GAP_ADDR_TYPE_PUBLIC};
+    for (unsigned i = 0; i < 6; ++i) address.addr[i] = mac[5-i];
+    result = sd_ble_gap_addr_set(&address);
+    if (result != NRF_SUCCESS) goto failed;
+    state->address_dirty = true;
+    memcpy(state->bytes, data, length);
+    state->data.adv_data.p_data = state->bytes;
+    state->data.adv_data.len = length;
+    ble_gap_adv_params_t params = {0};
+    params.properties.type = connectable ? BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED :
+                                          BLE_GAP_ADV_TYPE_NONCONNECTABLE_NONSCANNABLE_UNDIRECTED;
+    params.filter_policy = BLE_GAP_ADV_FP_ANY;
+    params.interval = BLE_GAP_ADV_INTERVAL_MIN;
+    params.duration = duration;
+    params.primary_phy = BLE_GAP_PHY_1MBPS;
+    result = sd_ble_gap_adv_set_configure(&m_advertising.adv_handle, &state->data, &params);
+    if (result != NRF_SUCCESS) goto failed;
+    state->configured = true;
+    result = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, m_advertising.adv_handle, 4);
+    if (result != NRF_SUCCESS) goto failed;
+    state->power_dirty = true;
+    state->active = true;
+    state->callback = callback;
+    result = sd_ble_gap_adv_start(m_advertising.adv_handle, APP_BLE_CONN_CFG_TAG);
+    if (result != NRF_SUCCESS) goto failed;
+    nrf_pwr_mgmt_feed();
+    return NRF_SUCCESS;
+failed:
+    state->result = result;
+    state->callback = NULL; /* synchronous rejection is returned to its caller */
+    state->active = false;
+    state->finished = true;
+    ble_raw_adv_process();
+    return result;
+}
+bool ble_stream_rssi(int8_t *rssi) {
+    if (!rssi || m_conn_handle == BLE_CONN_HANDLE_INVALID || !m_sessions_enabled) return false;
+    uint8_t channel;
+    uint32_t result = sd_ble_gap_rssi_get(m_conn_handle, rssi, &channel);
+    if (result == NRF_ERROR_INVALID_STATE) (void)sd_ble_gap_rssi_start(m_conn_handle, 2, 3);
+    return result == NRF_SUCCESS;
+}
+#endif

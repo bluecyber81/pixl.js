@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "qualifiedAtUtc": "2026-11-23T12:07:22.577212+00:00",
+  "version": "2.22.0-DE3.102",
+  "counter": 675,
+  "board": "LCD",
+  "status": "software-qualified-current-ci-passed-device-acceptance-pending",
+  "productionSourceCommit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+  "productionSourceTree": "b5476cc3ee8c1b297f3648fe63b02aae8772e22b",
+  "productionSourceId": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+  "productionInputCount": 720,
+  "versionHeaderSha256": "debbcb9e35ef035c9d4f9cb82be8a911dccf68c48851d893dabdb07499f98185",
+  "applicationSha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+  "applicationBytes": 361892,
+  "applicationHexSha256": "adc87454dd86241ebf7e208220e40d725daf6d4f470abdd347a3375a04271fdd",
+  "otaSha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
+  "otaBytes": 362493,
+  "otaFile": "Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+  "applicationOnly": true,
+  "hardwareVersion": 52,
+  "softDeviceFwids": [
+    "0x0126"
+  ],
+  "pfsEngineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
+  "pfsEngineUnchangedFromApp674": true,
+  "bootloaderChanged": false,
+  "softDeviceChanged": false,
+  "oledChanged": false,
+  "signatureVerified": true,
+  "signatureNegativeControls": 3,
+  "builds": {
+    "isolatedNativeBuilds": 2,
+    "binAndHexByteIdentical": true,
+    "releaseBuildMatchesSignedPayload": true,
+    "report": "docs/validation/DE3_102_evidence/REPRODUCIBILITY.json"
+  },
+  "linkerBudget": {
+    "binary_bytes": 361892,
+    "linker_flash_used_bytes": 361904,
+    "observed": {
+      "flash_reserve_bytes": 10832,
+      "heap_stack_gap_bytes": 1672,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "resourceComparison": {
+    "previousApp674BinBytes": 361352,
+    "newApp675BinBytes": 361892,
+    "flashBytesAdded": 540,
+    "playerStructureBytesBefore": 52,
+    "playerStructureBytesAfter": 120,
+    "oneFilePlayerMenuExtraHeapBytes": 104,
+    "limits": "The 104-byte comparison is one modeled menu scenario with one clip; list capacity growth varies. No physical free-heap or timing measurement."
+  },
+  "host": {
+    "executed": 198,
+    "passed": 198,
+    "omitted": 0,
+    "sourcesUnchangedDuringRun": true,
+    "report": "docs/validation/DE3_102_evidence/HOST_SUMMARY.json"
+  },
+  "linkedArm": {
+    "groupsExecuted": 13,
+    "groupsPassed": 13,
+    "report": "docs/validation/DE3_102_evidence/ARM_RESULTS.json",
+    "additionalPlayerAllocationAndFreeCheck": "docs/validation/DE3_102_evidence/PLAYER_MEMORY_ARM.json"
+  },
+  "targetedBehavior": {
+    "streamAssertions": 146,
+    "switchUiAssertions": 43,
+    "stream20ByteRawFrameChunks": 52,
+    "streamChunkAcks": 52,
+    "dispatchedRedraws": 1,
+    "actualMuiQueueCoalescing": true,
+    "actualStreamCodec": true,
+    "playerPathAndListMemoryCases": 160,
+    "playerLoopCounterAndRestartCases": 21,
+    "playerInputSequenceGroups": 3,
+    "sdkTimerAndPlayerSanitizerGroups": 12,
+    "localSanitizers": [
+      "ASan",
+      "UBSan"
+    ],
+    "localLsan": false,
+    "scope": "Actual functions/codecs/SDK timer bodies with declared VFS, display and radio edges modeled; 52-to-1 is a controlled redraw case, not measured hardware throughput."
+  },
+  "z21": {
+    "reproducedUnchanged": true,
+    "paddedRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+    "actualLinkedArmCryptoCases": 7,
+    "actualLinkedInitAcceptanceCases": 2,
+    "previousAppCounter": 674,
+    "currentAppCounter": 675,
+    "payloadBytes": 361892,
+    "resumeOffsets": [
+      0,
+      131072,
+      327680
+    ],
+    "modeledCheckpointPowerCuts": 455,
+    "modeledLinkCutsDuringCheckpoint": 5,
+    "modeledAdmissionOrCompletionFailures": 8,
+    "localDataPathSanitizers": [
+      "ASan",
+      "UBSan"
+    ],
+    "localLsanPositiveControl": false,
+    "localResumeReport": "docs/validation/DE3_102_evidence/Z21_RESUME_LOCAL.json",
+    "localLsanLimit": "docs/validation/DE3_102_evidence/LSAN_LOCAL_LIMIT.json",
+    "ciCurrentApp675ResumePassed": true,
+    "ciLsanPositiveControlPassed": true,
+    "ciResumeReport": "docs/validation/DE3_102_evidence/CI_Z21_PREVIEW_RESUME.json"
+  },
+  "publicRebuild": {
+    "status": "passed",
+    "sourceCommit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+    "sourceTree": "b5476cc3ee8c1b297f3648fe63b02aae8772e22b",
+    "currentRun": 45169716170,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45169716170",
+    "lcdJobId": 137675750476,
+    "artifactId": 14816023938,
+    "lsanPositiveControlPassed": true,
+    "binHexAndProductionInputsMatchLocalBuilds": true,
+    "signedPayloadMatchesPublicBuild": true,
+    "hostGroupsPassed": 198,
+    "hostGroupsOmitted": 0,
+    "linkedArmGroupsPassed": 8,
+    "report": "docs/validation/DE3_102_evidence/CI_SUMMARY.json"
+  },
+  "physicalDeviceAccess": false,
+  "deviceTestsPending": [
+    "Real LCD stream and video, HUD/inversion, disconnect/reconnect and exit",
+    "Player single playback, session options, loop and clean full-frame display",
+    "Switch2 scan/wake and miniapp transitions",
+    "Runtime heap/largest-block/stack diagnostics before and after ordinary use"
+  ],
+  "nextStep": "Finish the Web3.65 publication, then perform the short actual LCD acceptance for stream/reconnect, Player loop/counter, exits and Switch2, with runtime diagnostics before and after ordinary use.",
+  "privacy": {
+    "privateKeysIncluded": false,
+    "personalBackupsIncluded": false,
+    "userDumpsIncluded": false
+  }
+}

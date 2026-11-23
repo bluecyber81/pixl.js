@@ -89,9 +89,11 @@ COMMON = r'''
 static int errors, current_view, current_scene;
 static int read_result=NTAG_DATA_SIZE,stat_result=VFS_ERR_NOOBJ,write_result=NTAG_DATA_SIZE;
 static unsigned file_reads,file_writes;
+static bool require_saved_before_read;
 static bool copied_partial;
 static int32_t fake_read(const char*path,void*out,size_t n){
  (void)path;++file_reads;
+ if(require_saved_before_read)assert(file_writes==1 && !ntag_emu_save_pending());
  if(copied_partial && n >= 16)memset(out,0x71,16);
  if(read_result>0){size_t copied=(size_t)read_result<n?(size_t)read_result:n;memset(out,0x66,copied);return (int32_t)copied;}
  return read_result;
@@ -120,7 +122,7 @@ def nfc_code(src):
 SLOT = r'''
 #define MAX_SLOT_COUNT 100
 typedef struct {uint8_t focus,max_ntags;int game;} amiibo_view_t;
-typedef struct {ntag_t ntag;uint8_t cur_slot_index;amiibo_view_t*p_amiibo_view;} app_amiidb_t;
+typedef struct {ntag_t ntag;bool temporary_tag_changed;uint8_t cur_slot_index;amiibo_view_t*p_amiibo_view;} app_amiidb_t;
 typedef struct {uint8_t amiidb_data_slot_num;} settings_data_t;
 static settings_data_t settings={20};
 static settings_data_t *settings_get_data(void){return &settings;}
@@ -236,6 +238,36 @@ int main(int argc,char**argv){
  CHECK(ntag_emu_set_tag(&old)&&ntag_emu_set_update_cb(ntag_update_cb,&app));
  uint32_t generation=ntag_emu.generation;current_view=1;
 #ifdef SLOT_RESULT_CHECKS
+ /* Direct reload entry: failed pending save cannot touch the next slot;
+  * success/retry must save the old owner's tag before reading the new one. */
+ if(scenario >= 21 && scenario <= 23){
+  ntag_emu.dirty=true;ntag_emu.pending=true;view.index=6;
+  write_result=scenario==21?NTAG_DATA_SIZE:VFS_ERR_FAIL;
+  if(scenario==21){
+   require_saved_before_read=true;
+   CHECK(ntag_reload(&app,6));
+   CHECK(file_writes==1 && file_reads==1 && !ntag_emu_save_pending());
+  }else{
+   CHECK(!ntag_reload(&app,6));
+   CHECK(file_writes==1 && !file_reads && !rng_calls && ntag_emu_save_pending());
+   CHECK(!memcmp(&ntag_emu.ntag,&old,sizeof(old)) && m_active_index==4 && view.index==4);
+   CHECK(ntag_emu.cb_context==&app && ntag_emu.generation==generation);
+   if(scenario==22){
+    write_result=NTAG_DATA_SIZE;
+    CHECK(ntag_reload(&app,6));
+    CHECK(file_writes==2 && file_reads==1 && !ntag_emu_save_pending());
+   }else{
+    /* Only this explicit discard authorizes dropping the failed pending RAM. */
+    CHECK(ntag_emu_discard_changes());
+    CHECK(ntag_reload(&app,6));
+    CHECK(file_writes==1 && file_reads==1 && !ntag_emu_save_pending());
+   }
+  }
+  CHECK(m_active_index==6 && m_active_mode==BLE_AMIIBOLINK_MODE_CYCLE);
+  CHECK(ntag_emu.ntag.data[16]==0x66 && !ntag_emu.paused && ntag_emu.cb_context==&app);
+  printf("PASS direct reload pending-save/owner case %d\n",scenario);
+  return 0;
+ }
  if(scenario >= 11){
   const int file_results[]={0,1,NTAG_DATA_SIZE-1,NTAG_DATA_SIZE+1,572,2048,VFS_ERR_FAIL,VFS_ERR_CRPT,VFS_ERR_NODEV,VFS_ERR_NOMEM};
   CHECK((unsigned)(scenario-11)<sizeof(file_results)/sizeof(file_results[0]));
@@ -292,7 +324,13 @@ def link_code(src, internal=False):
     branch = source.split('#ifdef INTERNAL_ENABLE', 1)[1].split('#endif', 1)[0].split('#else', 1)[0 if internal else 1]
     names = ['ntag_reload_error_back', 'ntag_reload_error'] if 'static void ntag_reload_error(' in source else []
     pieces = [actual(source, name) for name in names]
-    pieces += [actual(branch, name) for name in ['ntag_update', 'ntag_reload', 'ntag_init']]
+    pieces.append(actual(branch, 'ntag_update'))
+    # LCD separates pending-save delivery from the large next-tag frame.
+    # Compile the actual helper as well; all existing RNG/error/owner cases
+    # still pass through the production ntag_reload entry point.
+    if 'static bool ntag_reload_prepared(' in branch:
+        pieces.append(actual(branch, 'ntag_reload_prepared'))
+    pieces += [actual(branch, name) for name in ['ntag_reload', 'ntag_init']]
     pieces += [actual(source, name) for name in ['ntag_save_error', 'ntag_update_cb', 'amiibolink_scene_main_event_cb',
                'amiibolink_scene_switch_mode', 'amiibolink_scene_ble_event_handler', 'amiibolink_scene_main_on_enter']]
     tag_result_checks = '#define SLOT_RESULT_CHECKS 1\n' if not internal and 'static bool ntag_reload(' in branch else ''
@@ -315,7 +353,7 @@ def main():
     for name, code, scenarios, negatives in [
         ('file', file_code(src), range(5), {0,2,3}),
         ('slot', slot_code(src), range(6), {0,1}),
-        ('link_external', link_code(src), range(11 if args.expect_original_failures else 21), {0,1,2,3,8,9}),
+        ('link_external', link_code(src), range(11 if args.expect_original_failures else 24), {0,1,2,3,8,9}),
         ('link_internal', link_code(src, True), [0,1,2,3,4,6,7,8,9,10], {0,1,2,3,8,9}),
     ]:
         cfile=args.out/(name+'.c');cfile.write_text(code)

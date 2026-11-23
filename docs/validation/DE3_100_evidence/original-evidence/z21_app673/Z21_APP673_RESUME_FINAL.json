@@ -1,0 +1,37 @@
+{
+  "payloadBytes": 361080,
+  "cutOffsets": [
+    40,
+    180264,
+    360488
+  ],
+  "resumeOffsets": [
+    0,
+    131072,
+    327680
+  ],
+  "checkpointCount": 5,
+  "additionalPageErases": 10,
+  "finalCrc32": 301201889,
+  "passed": true,
+  "sha256": "ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e",
+  "cutKinds": [
+    "link",
+    "link",
+    "cold-restart"
+  ],
+  "duplicateExecuteExtraErases": 0,
+  "modeledLinkCutsDuringCheckpoint": 5,
+  "modeledCheckpointPowerCuts": 455,
+  "modeledAdmissionOrCompletionFailures": 8,
+  "sanitizers": [
+    "ASan",
+    "UBSan"
+  ],
+  "leakCheckEnabled": false,
+  "leakCheckLimitation": "LSan is unavailable under the execution host ptrace boundary",
+  "sourceBindingSha256": "8b2665ba9051eed507827a4bf845b57ed824449b060608fa2796acc62ba6188c",
+  "testBindingSha256": "aa7c81f5949cf9f7cc72fa62e66f32a27bba12c96756d5873174813cfbf04d81",
+  "checkerSha256": "64c83bb86ae49f08a82d56f7b6d7503be7de3f80e7cf3a159b0dcd73eaf305a6",
+  "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access."
+}

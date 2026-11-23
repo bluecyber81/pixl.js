@@ -1,0 +1,1 @@
+PASS Cortex-M4 release ELF: 8192 reserved, initial test watermark 7664, then 1416/256/256/0. Caller and guards intact; unavailable sentinel verified.

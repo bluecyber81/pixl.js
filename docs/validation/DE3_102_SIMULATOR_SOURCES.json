@@ -1,0 +1,12 @@
+{
+  "path": "web/public/sources/LCD_DE3_102_App675_Simulatorquellen.zip",
+  "bytes": 162752,
+  "sha256": "877a352b067e6580c6fc7b126d3a49e19b18f6f19f13e6320f320261b403982e",
+  "files": 28,
+  "productionCommit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+  "productionTree": "b5476cc3ee8c1b297f3648fe63b02aae8772e22b",
+  "sourceId": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+  "capacityProfile": "de3102",
+  "simulatorProfile": "de399",
+  "wasmRebuilt": false
+}

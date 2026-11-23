@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "status": "passed",
+  "repository": "bluecyber81/pixl.js",
+  "pagesCommit": "f1d69f020097f21487eef99314fe7da5257b41d7",
+  "pagesTree": "bc1f5f7cc4cf6296a08efab2f16715c5f702e070",
+  "deploymentRun": 45198958839,
+  "deploymentAttempt": 1,
+  "deploymentConclusion": "success",
+  "deploymentJobs": [
+    {
+      "id": 137776942150,
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 137777237283,
+      "name": "report-build-status",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 137777237425,
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "finalManifestFiles": 324,
+  "verifiedBytes": 50829377,
+  "freshCanonicalFiles": 3,
+  "freshCanonicalBytes": 21254599,
+  "freshHttpRequests": 3,
+  "inheritedCanonicalFiles": 321,
+  "inheritedCanonicalBytes": 29574778,
+  "previousPagesCommit": "a70187159ec177c947c931d5dd7e3d1600841492",
+  "priorCanonicalReportFiles": 323,
+  "supersededPriorManifestRecords": 2,
+  "failures": 0,
+  "redirects": 0,
+  "retries": 0,
+  "cacheBustingRequests": 0,
+  "allFinalUrlsExact": true,
+  "fullyFreshInventory": false,
+  "scope": "321 previous canonical HTTP successes are retained only for exactly unchanged Git blobs; the three added/modified files were fetched canonically from the final deployed Pages tree. This is not a claim of 324 fresh HTTP requests. No product build, browser or Bluetooth test was repeated.",
+  "sourceArchive": {
+    "path": "downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+    "url": "https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+    "httpStatus": 200,
+    "contentType": "application/x-zip-compressed",
+    "bytes": 21249310,
+    "sha256": "de82839b8cdc90f7226b1229119ebbd60a1a5cd67deb4c80e0902a640d8c487c",
+    "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+    "qualifiedBuildCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4"
+  },
+  "firstReportSha256": "17f11b6491ba4d4a612e8a38ef7a5be96870c84c1dabeaadf98eb7438d2778cc",
+  "freshReportSha256": "4953fb37750b3e457b2b65175a0f567d1dbcc534049a5ff1cabdbff0c2c423c8",
+  "finalManifestSha256": "9b1b8c41265057e2922ca807314770a969e6fd12c13e9507c25f4e17874444af",
+  "coverageSha256": "bedb8244d722c3938e7e06de2d593e2346ee25795ce113e1c375a86d7887890f",
+  "checkerSnapshotSha256": "a12b7f5076d4173b607e59e5ccfc43088c6ed44136c09fe829ffd7666cdb3862",
+  "evidence": {
+    "priorHttp": "build_20261123/pages_http/results/HTTP_RESULTS.json",
+    "freshHttp": "build_20261123/pages_http_source/results/HTTP_RESULTS.json",
+    "deployment": "GITHUB_RUN.json",
+    "jobs": "GITHUB_JOBS.json",
+    "deployLog": "DEPLOY_JOB_137777237425.log",
+    "publicationBinding": "PUBLICATION_BINDING.json",
+    "coverage": "FINAL_COVERAGE.json"
+  }
+}

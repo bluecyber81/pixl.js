@@ -1,0 +1,89 @@
+/* Actual S112 scanner state machine; radio/register/SoftDevice boundary mocked.
+ * These are ownership and parser tests, not a test of RF reception. */
+#include <assert.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "switch2_protocol.h"
+typedef void (*ble_switch2_scan_cb_t)(bool,const ble_switch2_scan_result_t*);
+typedef struct {unsigned request_type;struct {struct {unsigned hfclk,priority,length_us,timeout_us;} earliest;} params;} nrf_radio_request_t;
+typedef struct {unsigned callback_action;struct {struct {void*p_next;}request;}params;} nrf_radio_signal_callback_return_param_t;
+enum {NRF_SUCCESS,NRF_ERROR_BUSY,NRF_ERROR_INVALID_PARAM,NRF_ERROR_NO_MEM,NRF_ERROR_INTERNAL};
+enum {NRF_RADIO_CALLBACK_SIGNAL_TYPE_START=1,NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO,NRF_RADIO_CALLBACK_SIGNAL_TYPE_TIMER0,NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_FAILED,NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED};
+enum {NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE,NRF_RADIO_SIGNAL_CALLBACK_ACTION_END};
+enum {NRF_EVT_RADIO_SESSION_IDLE=20,NRF_EVT_RADIO_BLOCKED,NRF_EVT_RADIO_CANCELED,NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN,NRF_EVT_RADIO_SESSION_CLOSED};
+enum {NRF_RADIO_REQ_TYPE_EARLIEST=1,NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED=1,NRF_RADIO_PRIORITY_NORMAL=1};
+enum {RADIO_STATE_STATE_Disabled=0,RADIO_MODE_MODE_Ble_1Mbit=3,RADIO_MODE_MODE_Pos=0,RADIO_PCNF0_LFLEN_Pos=0,RADIO_PCNF0_S0LEN_Pos=8,RADIO_PCNF0_S1LEN_Pos=16,RADIO_PCNF0_PLEN_8bit=0,RADIO_PCNF0_PLEN_Pos=24,RADIO_PCNF1_MAXLEN_Pos=0,RADIO_PCNF1_STATLEN_Pos=8,RADIO_PCNF1_BALEN_Pos=16,RADIO_PCNF1_ENDIAN_Little=0,RADIO_PCNF1_ENDIAN_Pos=24,RADIO_PCNF1_WHITEEN_Enabled=1,RADIO_PCNF1_WHITEEN_Pos=25,RADIO_CRCCNF_LEN_Three=3,RADIO_CRCCNF_LEN_Pos=0,RADIO_CRCCNF_SKIPADDR_Skip=1,RADIO_CRCCNF_SKIPADDR_Pos=8,RADIO_SHORTS_READY_START_Msk=1,RADIO_SHORTS_END_DISABLE_Msk=2,RADIO_INTENSET_DISABLED_Msk=4,RADIO_CRCSTATUS_CRCSTATUS_CRCOk=1,TIMER_MODE_MODE_Timer=0,TIMER_BITMODE_BITMODE_32Bit=3,TIMER_INTENSET_COMPARE0_Msk=1,RADIO_IRQn,TIMER0_IRQn};
+static volatile struct {uint32_t SHORTS,INTENCLR,STATE,EVENTS_DISABLED,TASKS_DISABLE,EVENTS_END,EVENTS_READY,POWER,MODE,FREQUENCY,DATAWHITEIV,BASE0,PREFIX0,RXADDRESSES,PCNF0,PCNF1,CRCCNF,CRCPOLY,CRCINIT,PACKETPTR,EVENTS_ADDRESS,EVENTS_PAYLOAD,INTENSET,TASKS_RXEN,CRCSTATUS;} radio;
+static volatile struct {uint32_t TASKS_STOP,INTENCLR,EVENTS_COMPARE[4],TASKS_CLEAR,MODE,BITMODE,PRESCALER,CC[4],INTENSET,TASKS_START;} timer;
+#define NRF_RADIO (&radio)
+#define NRF_TIMER0 (&timer)
+#define NRF_SDH_SOC_OBSERVER(...)
+#define APP_TIMER_TICKS(x) (x)
+static unsigned irq,open_result,request_result,close_result,opens,requests,closes,allocations,frees,feeds,calls;
+static bool no_memory,raw_busy,mode_pending,transport_idle=true;
+static uint32_t tick;
+static nrf_radio_signal_callback_return_param_t*(*signal_callback)(uint8_t);
+static uint32_t app_timer_cnt_get(void){assert(!irq);return tick;}
+static uint32_t app_timer_cnt_diff_compute(uint32_t a,uint32_t b){assert(!irq);return (a-b)&0xffffff;}
+static void nrf_pwr_mgmt_feed(void){assert(!irq);feeds++;}
+static void NVIC_DisableIRQ(unsigned n){(void)n;assert(irq);}
+static void NVIC_EnableIRQ(unsigned n){(void)n;assert(irq);}
+static void NVIC_ClearPendingIRQ(unsigned n){(void)n;assert(irq);}
+static void*mui_mem_malloc(size_t n){assert(!irq);if(no_memory)return NULL;void*p=malloc(n);assert(p);allocations++;return p;}
+static void mui_mem_free(void*p){assert(!irq&&p);frees++;free(p);}
+static bool ble_raw_adv_is_active(void){return raw_busy;}
+static bool ble_mode_transition_pending(void){return mode_pending;}
+static bool ble_transport_idle(void){return transport_idle;}
+static void ble_init(void){assert(!irq);}
+static void ble_disable(void){assert(!irq);}
+static uint32_t sd_radio_session_open(nrf_radio_signal_callback_return_param_t*(*cb)(uint8_t)){assert(!irq);opens++;signal_callback=cb;return open_result;}
+static uint32_t sd_radio_request(nrf_radio_request_t*r){assert(!irq);assert(r->request_type==NRF_RADIO_REQ_TYPE_EARLIEST&&r->params.earliest.length_us==50000&&r->params.earliest.timeout_us==100000);requests++;return request_result;}
+static uint32_t sd_radio_session_close(void){assert(!irq);closes++;return close_result;}
+/* ACTUAL_SCANNER */
+static unsigned checks;
+#define CHECK(x) do{assert(x);checks++;}while(0)
+static bool found_value,restart_in_callback;
+static ble_switch2_scan_result_t captured;
+static void completion(bool found,const ble_switch2_scan_result_t*r){
+ assert(!irq);CHECK(!ble_switch2_scan_is_active());calls++;found_value=found;
+ CHECK((r!=NULL)==found);if(r)captured=*r;
+ if(restart_in_callback){restart_in_callback=false;CHECK(ble_switch2_scan_start(1,NULL)==NRF_SUCCESS);}
+}
+static void closed(void){scan_soc_evt_handler(NRF_EVT_RADIO_SESSION_CLOSED,NULL);CHECK(ble_switch2_scan_is_active());ble_switch2_scan_process();}
+static unsigned signal(unsigned n){irq++;unsigned ret=signal_callback(n)->callback_action;irq--;return ret;}
+static void clean(void){if(m_scan){ble_switch2_scan_stop();closed();}CHECK(allocations==frees);open_result=request_result=close_result=0;raw_busy=mode_pending=no_memory=false;transport_idle=true;tick=0;calls=0;found_value=false;memset(&captured,0,sizeof captured);}
+int main(void){
+ clean();
+ for(unsigned n=0;n<3;n++){raw_busy=n==0;mode_pending=n==1;transport_idle=n!=2;CHECK(ble_switch2_scan_start(1,completion)==NRF_ERROR_BUSY);CHECK(!m_scan&&!opens);}clean();
+ CHECK(ble_switch2_scan_start(61,completion)==NRF_ERROR_INVALID_PARAM&&!m_scan);
+ no_memory=true;CHECK(ble_switch2_scan_start(1,completion)==NRF_ERROR_NO_MEM);CHECK(!m_scan&&!opens);clean();
+ open_result=NRF_ERROR_INTERNAL;CHECK(ble_switch2_scan_start(1,completion)==NRF_ERROR_INTERNAL);CHECK(!m_scan&&allocations==frees);clean();
+ request_result=NRF_ERROR_INTERNAL;CHECK(ble_switch2_scan_start(1,completion)==NRF_ERROR_INTERNAL);CHECK(m_scan&&m_scan->stop&&allocations==frees+1);CHECK(ble_switch2_scan_start(1,completion)==NRF_ERROR_BUSY);closed();CHECK(!calls);clean();
+ CHECK(ble_switch2_scan_start(1,completion)==NRF_SUCCESS);ble_switch2_scan_stop();CHECK(m_scan&&m_scan->stop);CHECK(signal(NRF_RADIO_CALLBACK_SIGNAL_TYPE_START)==NRF_RADIO_SIGNAL_CALLBACK_ACTION_END);ble_switch2_scan_process();CHECK(m_scan&&!calls);closed();CHECK(!calls);clean();
+ CHECK(ble_switch2_scan_start(0,completion)==NRF_SUCCESS);CHECK(m_scan->duration==15000);tick=14999;ble_switch2_scan_process();CHECK(!m_scan->stop);tick=15000;ble_switch2_scan_process();CHECK(m_scan->stop&&!calls);closed();CHECK(calls==1&&!found_value);clean();
+ tick=0xffff00;CHECK(ble_switch2_scan_start(1,completion)==NRF_SUCCESS);tick=(tick+999)&0xffffff;ble_switch2_scan_process();CHECK(!m_scan->stop);tick=(tick+1)&0xffffff;ble_switch2_scan_process();CHECK(m_scan->stop);closed();CHECK(calls==1&&!found_value);clean();
+ for(unsigned event=NRF_EVT_RADIO_SESSION_IDLE;event<=NRF_EVT_RADIO_CANCELED;event++){
+  CHECK(ble_switch2_scan_start(1,completion)==0);unsigned before=requests;scan_soc_evt_handler(event,NULL);CHECK(requests==before+1&&!m_scan->stop);
+  request_result=NRF_ERROR_INTERNAL;scan_soc_evt_handler(event,NULL);CHECK(m_scan->stop);closed();CHECK(calls==1&&!found_value);clean();
+ }
+ CHECK(ble_switch2_scan_start(1,completion)==0);scan_soc_evt_handler(NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN,NULL);CHECK(m_scan->stop);closed();clean();
+ /* A valid CRC alone is insufficient. Actual Nintendo packet validation runs
+  * inside the production priority-0 callback before accepting any result. */
+ CHECK(ble_switch2_scan_start(1,completion)==0);CHECK(signal(NRF_RADIO_CALLBACK_SIGNAL_TYPE_START)==0);CHECK(timer.CC[0]==47000&&radio.FREQUENCY==2&&radio.DATAWHITEIV==37);
+ memset(m_rx_buf,0,68);radio.CRCSTATUS=1;radio.EVENTS_DISABLED=1;CHECK(signal(NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO)==0&&!m_scan->captured);
+ CHECK(signal(NRF_RADIO_CALLBACK_SIGNAL_TYPE_TIMER0)==NRF_RADIO_SIGNAL_CALLBACK_ACTION_END);CHECK(m_scan->channel==1);
+ CHECK(signal(NRF_RADIO_CALLBACK_SIGNAL_TYPE_START)==0);CHECK(radio.FREQUENCY==26&&radio.DATAWHITEIV==38);
+ switch2_wake_cfg_t cfg;switch2_wake_cfg_set_default(&cfg);CHECK(parse_mac_str("11:22:33:44:55:66",cfg.controller_mac));cfg.has_mac=true;CHECK(parse_mac_str("A1:B2:C3:D4:E5:F6",cfg.host_mac));cfg.has_host=true;
+ memset(m_rx_buf,0,68);m_rx_buf[0]=2;m_rx_buf[1]=37;for(unsigned i=0;i<6;i++)m_rx_buf[2+i]=cfg.controller_mac[5-i];CHECK(switch2_wake_build_adv(&cfg,m_rx_buf+8)==31);
+ radio.EVENTS_DISABLED=1;radio.CRCSTATUS=0;CHECK(signal(NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO)==0&&!m_scan->captured);
+ radio.EVENTS_DISABLED=1;radio.CRCSTATUS=1;CHECK(signal(NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO)==NRF_RADIO_SIGNAL_CALLBACK_ACTION_END);CHECK(m_scan->captured&&!calls);
+ scan_soc_evt_handler(NRF_EVT_RADIO_SESSION_IDLE,NULL);CHECK(m_scan->stop&&!calls);restart_in_callback=true;closed();CHECK(calls==1&&found_value&&m_scan);CHECK(!memcmp(captured.controller_mac,cfg.controller_mac,6)&&!memcmp(captured.host_mac,cfg.host_mac,6));CHECK(allocations==frees+1);clean();
+ /* Stop during a live slot: retain memory and tolerate a pending close. */
+ CHECK(ble_switch2_scan_start(1,completion)==0);CHECK(signal(NRF_RADIO_CALLBACK_SIGNAL_TYPE_START)==0);close_result=NRF_ERROR_BUSY;ble_switch2_scan_stop();CHECK(m_scan&&m_scan->stop);CHECK(signal(NRF_RADIO_CALLBACK_SIGNAL_TYPE_TIMER0)==NRF_RADIO_SIGNAL_CALLBACK_ACTION_END);closed();CHECK(!calls);clean();
+ printf("PASS %u scanner lifecycle assertions; actual source, mocked S112/RADIO; no hardware claim\n",checks);
+ return 0;
+}

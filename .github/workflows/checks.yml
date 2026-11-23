@@ -3,7 +3,7 @@ name: Source checks
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, 'web-app*']
   workflow_dispatch:
 
 permissions:
@@ -54,6 +54,8 @@ jobs:
       - run: npm run build:pages
       - name: Exercise portable launcher including POSIX shutdown
         run: python3 -B tests/test_windows_launcher_r2.py
+      - name: Package and start the actual normal portable ZIP
+        run: python3 -B scripts/package-portable.py --output "$RUNNER_TEMP/dateimanager-portable" --verify
 
   windows-launcher:
     name: Windows portable launcher

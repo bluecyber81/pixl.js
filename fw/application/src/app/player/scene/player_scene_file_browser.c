@@ -18,14 +18,27 @@
 #define ICON_BACK 0xe069
 #define ICON_ERROR 0xe1bb
 #define ICON_HOME 0xe1f0
+#define ICON_OPTION 0xe1dc
+#define PLAYER_OPTION_LOOP 1
+#define PLAYER_OPTION_COUNTER 2
 
 static void player_scene_file_browser_on_selected(mui_list_view_event_t event, mui_list_view_t *p_list_view,
                                                   mui_list_item_t *p_item) {
     app_player_t *app = p_list_view->user_data;
-    uint32_t idx = (uint32_t)p_item->user_data;
+    uintptr_t idx = (uintptr_t)p_item->user_data;
 
     if (event == MUI_LIST_VIEW_EVENT_SELECTED) {
-        if (p_item->icon == ICON_FILE) {
+        if (p_item->icon == ICON_OPTION) {
+            bool *option = idx == PLAYER_OPTION_LOOP ? &app->p_player_view->loop :
+                           idx == PLAYER_OPTION_COUNTER ? &app->p_player_view->show_counter : NULL;
+            if (!option) return;
+            if (!mui_string_try_set_str(p_item->sub_text, *option ? _T(OFF) : _T(ON))) {
+                mui_show_memory_error(mui());
+                return;
+            }
+            *option = !*option;
+            mui_update(mui());
+        } else if (p_item->icon == ICON_FILE) {
             char path[VFS_MAX_PATH_LEN];
             int length = snprintf(path, sizeof(path), "/player/%s", string_get_cstr(p_item->text));
             if (length < 0 || (size_t)length >= sizeof(path) ||
@@ -61,6 +74,11 @@ static void player_scene_file_browser_reload_folders(app_player_t *app) {
     p_vfs_driver = vfs_get_driver(VFS_DRIVE_EXT);
 
     bool complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_HOME, _T(MAIN_MENU), NULL, (void *)-1);
+    if (!complete) goto memory_error;
+    complete = mui_list_view_try_add_item_ext(app->p_list_view, ICON_OPTION, _T(PLAYER_LOOP),
+                                              app->p_player_view->loop ? _T(ON) : _T(OFF), (void *)PLAYER_OPTION_LOOP) &&
+               mui_list_view_try_add_item_ext(app->p_list_view, ICON_OPTION, _T(PLAYER_COUNTER),
+                                              app->p_player_view->show_counter ? _T(ON) : _T(OFF), (void *)PLAYER_OPTION_COUNTER);
     if (!complete) goto memory_error;
 
     int32_t res = p_vfs_driver->open_dir("/player", &dir);

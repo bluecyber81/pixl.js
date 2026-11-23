@@ -1,0 +1,2 @@
+PASS Cortex-M4 first-menu wire, local counts, app 2, RTC rollover 125 ms, frozen across re-entry
+PASS Cortex-M4 PXMI v2: short buffer, empty return, context matching, first and last frame, stale input

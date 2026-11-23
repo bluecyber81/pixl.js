@@ -1,0 +1,52 @@
+{
+  "root": {
+    "tests": 57,
+    "pass": 57,
+    "fail": 0,
+    "skipped": 0,
+    "log": "web_dist_root_final.log",
+    "logSha256": "2a44d05d2d49be26100e1b7088e2cc0ffd869c38d8b7027c0c2fc7d6b4f2b88d",
+    "releaseManifest": {
+      "schema": 1,
+      "application": "allmiibo-dateimanager",
+      "version": "3.65.0",
+      "base": "/",
+      "channel": "normal",
+      "packageManifestSha256": "3d64af5e5ad1e6c17b665c4d860c8ea4cd84c963523bad45a0ea597c4d304175",
+      "firmware": {
+        "id": "de3.102-lcd-app",
+        "version": "2.22.0-DE3.102",
+        "counter": 675,
+        "path": "firmware/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+        "bytes": 362493,
+        "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746"
+      }
+    },
+    "releaseManifestSha256": "93949dace6d6be3a6ee36ee412b7233c1794524f9e626032d035073a7e1c8515"
+  },
+  "pages": {
+    "tests": 57,
+    "pass": 57,
+    "fail": 0,
+    "skipped": 0,
+    "log": "web_build_pages.log",
+    "logSha256": "6ad5c32ee56989fadf8072fe4cb9f192cdde8001a05770846a5e32bd5505332e",
+    "releaseManifest": {
+      "schema": 1,
+      "application": "allmiibo-dateimanager",
+      "version": "3.65.0",
+      "base": "/pixl.js/",
+      "channel": "normal",
+      "packageManifestSha256": "3d64af5e5ad1e6c17b665c4d860c8ea4cd84c963523bad45a0ea597c4d304175",
+      "firmware": {
+        "id": "de3.102-lcd-app",
+        "version": "2.22.0-DE3.102",
+        "counter": 675,
+        "path": "firmware/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+        "bytes": 362493,
+        "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746"
+      }
+    },
+    "releaseManifestSha256": "f7f4fed0d12fd80dd3574b8b18dd7e8a20e4dbf7ac35a013ca83e604cb31441b"
+  }
+}

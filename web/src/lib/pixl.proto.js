@@ -9,7 +9,7 @@ import { parsePowerDiagnostics } from "./power-diagnostics.js"
 import { buildDiagnosticBoard, parseBuildDiagnostics } from "./lcd-build-diagnostics.js"
 import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, LCD_Z21_COUNTERS } from "./hardware-profile.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
-import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, supportsMenuDiagnostics } from "./device-extra-diagnostics.js"
+import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, parseStorageGcDiagnostics, supportsMenuDiagnostics, supportsBleTestDiagnostics, supportsLinkDiagnostics, supportsStorageGcDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
 
 import i18n from '../i18n'
@@ -35,6 +35,8 @@ var file_digest_unsupported = false
 var small_create_generation = -1
 var small_read_supported = false
 var small_read_probe = null
+var small_batch_capability = null
+var small_batch_probe = null
 var small_create_tx = 0
 var storage_info_cache = new Map()
 var storage_info_queries = new Map()
@@ -261,16 +263,60 @@ export function enter_dfu() {
 
 // Optional application diagnostics. Older firmware's UNKNOWN_COMMAND reply is
 // expected; a malformed successful reply must still be reported as an error.
-// Both requests are empty reads. In particular, never send the MTU! command
-// which changes the firmware's preference for its next Bluetooth connection.
-export function get_mtu_diagnostics() {
+// The new link selector is read-only, as is the legacy empty request. Never send
+// MTU!, which changes the preference for the next Bluetooth connection.
+export function get_mtu_diagnostics(firmwareVersion) {
     const generation = transport_generation;
-    return op_queue_push(0x05, () => {}, b =>
-        parseMtuDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: 16 })
-        .then(response => {
-            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+    const detail = supportsBleTestDiagnostics(firmwareVersion) ? 2 : supportsLinkDiagnostics(firmwareVersion) ? 1 : 0;
+    const check = () => { if (generation !== transport_generation) throw new Error('Bluetooth session changed'); };
+    function read(selector) {
+        return op_queue_push(0x05, b => { if (selector) b.writeUint8(selector); }, b => {
+            const data = parseMtuDiagnostics(b.readBytes(b.remaining()).toArrayBuffer());
+            if (data.schemaVersion !== selector + 1) throw new Error('Invalid MTU diagnostic version');
+            return data;
+        }, {max_bytes: [16, 32, 40][selector], optional_probe: selector > 0}).then(response => {
+            check();
+            // Only an explicit unsupported selector permits a legacy fallback.
+            // Invalid data, timeout and session replacement never start another read.
+            if (selector && (response.status === 1 || response.status === 255)) return read(selector - 1);
             return response.status === 255 ? null : checked_response(response);
         });
+    }
+    return read(detail);
+}
+
+// Explicit App669/670 test action. A fresh capability/readiness check is bracketed
+// by local queue checks; this option is never set by ordinary diagnostic reads.
+export async function set_ble_test_extension(firmwareVersion, enabled) {
+    if (!supportsBleTestDiagnostics(firmwareVersion) || typeof enabled !== 'boolean')
+        throw Object.assign(new Error('This firmware does not support the LCD Test 1 radio comparison.'), {code:'BLE_TEST_UNSUPPORTED'});
+    const generation = transport_generation;
+    const check = () => {
+        if (generation !== transport_generation) throw Object.assign(new Error('Bluetooth session changed'), {code:'DISCONNECTED'});
+        const state = get_transport_diagnostics();
+        if (state.connectionState !== 'connected' || state.activeCommand !== null || state.queuedCommands ||
+            state.fileTransferActive || state.queuedFileTransfers)
+            throw Object.assign(new Error('Wait until all Bluetooth commands and file transfers have finished.'), {code:'BLE_TEST_BUSY'});
+    };
+    check();
+    const before = await get_mtu_diagnostics(firmwareVersion);
+    check();
+    if (before?.schemaVersion !== 3 || before.experiment?.testBuild !== true)
+        throw Object.assign(new Error('The device did not confirm the LCD Test 1 radio capability.'), {code:'BLE_TEST_UNSUPPORTED'});
+    if (!before.sessionReady || !before.fileMode || !before.transferIdle)
+        throw Object.assign(new Error('The device file session is not idle and ready.'), {code:'BLE_TEST_BUSY'});
+    const response = await op_queue_push(0x05, b => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        for (const byte of [69,86,84,33,Number(enabled)]) b.writeUint8(byte);
+    }, b => {
+        const data = parseMtuDiagnostics(b.readBytes(b.remaining()).toArrayBuffer());
+        if (data.schemaVersion !== 3) throw new Error('Invalid BLE test reply');
+        return data;
+    }, {max_bytes:40, optional_probe:true});
+    if (generation !== transport_generation) throw Object.assign(new Error('Bluetooth session changed'), {code:'DISCONNECTED'});
+    // SDK rejection is a valid bounded status response. The caller must inspect
+    // lastOptionResult before showing success; the previous enabled state remains.
+    return checked_response(response);
 }
 
 export function get_ui_diagnostics() {
@@ -387,8 +433,11 @@ export function get_startup_diagnostics(firmwareVersion) {
     const known = firmwareVersion === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : firmwareVersion;
     const series = /^2\.22\.0-DE3\.(\d+)$/.exec(known || '');
     function read(detail) {
-        return op_queue_push(0x09, b => { if (detail) b.writeUint8(detail); }, b =>
-            parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), { max_bytes: [32,40,80,84][detail], optional_probe: detail > 0 })
+        return op_queue_push(0x09, b => { if (detail) b.writeUint8(detail); }, b => {
+            const data=parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer());
+            if (detail === 4 && data.schemaVersion !== 5) throw new Error('Invalid startup test diagnostic version');
+            return data;
+        }, { max_bytes: [32,40,80,84,112][detail], optional_probe: detail > 0 })
             .then(response => {
                 if (generation !== transport_generation) throw new Error('Bluetooth session changed');
                 if (detail && (response.status === 1 || response.status === 255)) return read(detail - 1);
@@ -397,6 +446,7 @@ export function get_startup_diagnostics(firmwareVersion) {
     }
     // Supported OLED trials record native VFS startup phases without a PackedFS mount profile.
     if (hasOledSystemDiagnostics(known)) return read(1);
+    if (supportsBleTestDiagnostics(known)) return read(4);
     if (Object.hasOwn(LCD_Z21_COUNTERS, known)) return read(3);
     const revision = series === null ? 0 : Number(series[1]);
     return read(revision >= 62 ? 2 : revision >= 61 ? 1 : 0);
@@ -462,6 +512,18 @@ export function vfs_drive_format(path) {
     return op_queue_push(0x11,
         b => { b.writeByte(path.charCodeAt(0)) },
         b => { });
+}
+
+// A cached PackedFS RAM snapshot: no filesystem scan or collection is run.
+export function get_storage_gc_diagnostics(firmwareVersion) {
+    if (!supportsStorageGcDiagnostics(firmwareVersion)) return Promise.resolve(null);
+    const generation = transport_generation;
+    return op_queue_push(0x1c, b => { b.writeUint8(69); b.writeUint8(2); }, b =>
+        parseStorageGcDiagnostics(b.readBytes(b.remaining()).toArrayBuffer()), {max_bytes:24, optional_probe:true})
+        .then(response => {
+            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+            return response.status === 1 || response.status === 255 ? null : checked_response(response);
+        });
 }
 
 export function vfs_storage_info(drive) {
@@ -605,6 +667,109 @@ export function vfs_probe_small_read(firmwareVersion) {
         });
     }
     return small_read_probe.promise;
+}
+
+// App670 and later known LCD builds advertise the bounded READ/DIGEST contract separately. Keep PXSC
+// unchanged so older file managers retain their strict existing parser.
+export function vfs_probe_small_batch(firmwareVersion) {
+    const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(firmwareVersion);
+    if (!version || Number(version[1]) < 97 || !Object.hasOwn(LCD_Z21_COUNTERS, firmwareVersion)) return Promise.resolve(null);
+    if (small_batch_capability?.generation === transport_generation && small_batch_capability.version === firmwareVersion)
+        return Promise.resolve(small_batch_capability.value);
+    if (small_batch_probe?.generation === transport_generation && small_batch_probe.version === firmwareVersion)
+        return small_batch_probe.promise;
+    const generation = transport_generation;
+    const promise = op_queue_push(0x25, () => {}, b => {
+        if (b.remaining() !== 16 || b.readUint32() !== 0x52425850 || b.readUint8() !== 1 ||
+            b.readUint8() !== 4 || b.readUint16() !== 572) throw new Error('Invalid small-file batch capability.');
+        // This revision describes the probe only. Every actual batch receives
+        // the backup's freshly observed revision, never this cached value.
+        return Object.freeze({maxCount:4, maxFileBytes:572, maxRequestBytes:243, observedRevision:read_revision(b)});
+    }, {max_bytes:16}).then(response => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        const value = response.status === 255 ? null : checked_response(response);
+        small_batch_capability = {generation, version:firmwareVersion, value};
+        return value;
+    });
+    small_batch_probe = {generation, version:firmwareVersion, promise};
+    promise.then(() => {
+        if (small_batch_probe?.promise === promise) small_batch_probe = null;
+    }, () => {
+        if (small_batch_probe?.promise === promise) small_batch_probe = null;
+    });
+    return promise;
+}
+
+function checked_small_batch(files, revision) {
+    if (!Array.isArray(files) || files.length < 1 || files.length > 4 ||
+        typeof revision !== 'string' || !/^[0-9a-f]{16}$/u.test(revision) || /^0{16}$/u.test(revision))
+        throw new Error('Invalid small-file batch request.');
+    let requestBytes = 10;
+    const seen = new Set();
+    const owned = files.map(file => {
+        const path = file?.path, size = file?.size;
+        path_validation(path);
+        if (!path.startsWith('E:/') || path.length <= 3 || !Number.isInteger(size) || size < 0 || size > 572 ||
+            seen.has(path) || new TextDecoder('utf-8', {fatal:true, ignoreBOM:true}).decode(new TextEncoder().encode(path)) !== path)
+            throw new Error('Invalid small-file batch entry.');
+        seen.add(path);
+        requestBytes += 4 + get_utf8_byte_size(path);
+        return Object.freeze({path, size});
+    });
+    if (requestBytes > 243) throw new Error('Small-file batch request is too large.');
+    return Object.freeze(owned);
+}
+
+function small_batch_fits(files) {
+    const maximum = Math.min(243, transport_capabilities?.maxRequestPayload ?? DF_MAX_DATA_SIZE);
+    return 10 + files.reduce((sum, file) => sum + 4 + get_utf8_byte_size(file.path), 0) <= maximum;
+}
+
+function queue_small_batch(files, revision, firmwareVersion, mode) {
+    let owned;
+    try { owned = checked_small_batch(files, revision); }
+    catch (error) { return Promise.reject(error); }
+    if (!small_batch_fits(owned)) return Promise.resolve(null);
+    return new Promise((resolve, reject) => {
+        file_write_queue.push({type:'batch', files:owned, revision, firmwareVersion, mode,
+            success_cb:resolve, error_cb:reject});
+        vfs_process_file_write_queue();
+    });
+}
+
+export function vfs_read_small_batch(files, revision, firmwareVersion) {
+    return queue_small_batch(files, revision, firmwareVersion, 0);
+}
+export function vfs_digest_small_batch(files, revision, firmwareVersion) {
+    return queue_small_batch(files, revision, firmwareVersion, 1);
+}
+
+function vfs_process_small_batch(entry) {
+    const generation = file_write_generation;
+    const current = () => {
+        if (entry.finished || generation !== file_write_generation) throw new Error('File transfer cancelled');
+    };
+    return vfs_probe_small_batch(entry.firmwareVersion).then(capability => {
+        current();
+        if (!capability || !small_batch_fits(entry.files)) return null;
+        const maximum = entry.mode === 1 ? entry.files.length * 32 : entry.files.reduce((sum, file) => sum + file.size, 0);
+        return op_queue_push(0x26, b => {
+            current();
+            b.writeUint8(entry.mode); b.writeUint8(entry.files.length);
+            b.writeUint32(parseInt(entry.revision.slice(8), 16)); b.writeUint32(parseInt(entry.revision.slice(0, 8), 16));
+            for (const file of entry.files) { write_string(b, file.path); b.writeUint16(file.size); }
+        }, b => {
+            if (b.remaining() !== maximum) throw new Error('Invalid small-file batch response length.');
+            // No element escapes until the final status and total size passed.
+            // The firmware prepares every member before sending the first byte.
+            return entry.files.map(file => {
+                const bytes = new Uint8Array(b.readBytes(entry.mode === 1 ? 32 : file.size).toArrayBuffer());
+                return entry.mode === 1 ? {path:file.path, size:file.size,
+                    sha256:Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('')}
+                    : {path:file.path, size:file.size, bytes};
+            });
+        }, {max_bytes:maximum}).then(response => { current(); return checked_response(response); });
+    }).then(value => { current(); return value; }).then(value => entry.finish(null, value), error => entry.finish(error));
 }
 
 // Each fragment waits for the application acknowledgement, including when a
@@ -874,6 +1039,10 @@ function vfs_process_file_read(entry) {
         entry.finish(new Error('Invalid download options'));
         return;
     }
+    // Validate before inspecting the path or probing/opening a device handle.
+    // Synchronous caller errors must still release the shared file queue.
+    try { path_validation(entry.path); }
+    catch (error) { entry.finish(error); return; }
     function checkCurrent() {
         if (entry.finished || generation !== file_write_generation) throw new Error('File transfer cancelled');
     }
@@ -916,7 +1085,7 @@ function file_callback(callback, ...args) {
 
 function complete_file_entry(entry, error, data) {
     if (error) file_callback(entry.error_cb, error, entry.file);
-    else file_callback(entry.success_cb, entry.type === 'read' ? data : entry.file);
+    else file_callback(entry.success_cb, entry.type === 'read' || entry.type === 'batch' ? data : entry.file);
     file_callback(entry.done_cb);
     if (entry.completion) entry.completion();
 }
@@ -954,12 +1123,14 @@ function vfs_process_file_write_queue() {
         e.finish = (error, data) => {
             if (e.finished) return;
             e.finished = true;
+            e.cancelFileRead?.();
             file_write_current = null;
             file_write_ongoing = false;
             complete_file_entry(e, error, data);
             vfs_process_file_write_queue();
         };
         if (e.type === 'read') vfs_process_file_read(e);
+        else if (e.type === 'batch') vfs_process_small_batch(e);
         else vfs_process_file_write(e);
     }
 }
@@ -970,7 +1141,7 @@ function vfs_process_file_write(entry) {
     function checkCurrent() {
         if (entry.finished || generation !== file_write_generation) throw new Error('File transfer cancelled');
     }
-    read_file_as_bytebuffer(entry.file, checkCurrent).then(buffer => {
+    read_file_as_bytebuffer(entry.file, checkCurrent, entry).then(buffer => {
         checkCurrent();
         return vfs_open_file(entry.path, "w", entry.rawMeta128).then(checked_response).then(opened => {
             checkCurrent();
@@ -1030,21 +1201,39 @@ function path_validation(path) {
 }
 
 
-function read_file_as_bytebuffer(file, checkCurrent) {
+function read_file_as_bytebuffer(file, checkCurrent, entry) {
     if (!ByteBuffer) return loadFileCodec().then(() => {
         checkCurrent();
-        return read_file_as_bytebuffer(file, checkCurrent);
+        return read_file_as_bytebuffer(file, checkCurrent, entry);
     });
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
+        let finished = false;
+        const cancelled = () => Object.assign(new Error('Local file read cancelled'), {name: 'AbortError'});
+        const finish = (error, value) => {
+            if (finished) return;
+            finished = true;
+            if (entry.cancelFileRead === cancel) entry.cancelFileRead = null;
+            reader.onload = reader.onerror = reader.onabort = null;
+            if (error) reject(error); else resolve(value);
+        };
+        const cancel = entry.cancelFileRead = () => {
+            finish(cancelled());
+            // Logical BLE cancellation must also release a pending local file
+            // read; its late completion cannot allocate or enter the new link.
+            try { reader.abort(); } catch (_) { /* Already stopped/unavailable. */ }
+        };
         reader.onload = function () {
-            resolve(ByteBuffer.wrap(reader.result));
+            if (finished) return;
+            try { checkCurrent(); finish(null, ByteBuffer.wrap(reader.result)); }
+            catch (error) { finish(error); }
         }
         reader.onerror = function () {
-            reject(reader.error);
+            finish(reader.error || new Error('Local file read failed'));
         }
-
-        reader.readAsArrayBuffer(file);
+        reader.onabort = () => finish(cancelled());
+        try { checkCurrent(); reader.readAsArrayBuffer(file); }
+        catch (error) { finish(error); }
     });
 }
 
@@ -1215,9 +1404,11 @@ async function tx_data_frame(cmd, status, chunk, data) {
         // Await every GATT write; no concurrent writes and no fragments from
         // an earlier connection can leak into a replacement session.
         const wire = frame.toArrayBuffer();
-        // A single negotiated WRITE frame already receives a file-protocol reply.
+        // A single negotiated read/write frame already receives a file-protocol reply.
         // Wait for both that reply and the browser send before advancing the offset.
-        const acknowledgedWrite = cmd === 0x15 || cmd === 0x23 && payload[0] <= 1;
+        const acknowledgedWrite = cmd === 0x15 || cmd === 0x23 && payload[0] <= 1 ||
+            cmd === 0x24 && vfs_small_read_capable() ||
+            cmd === 0x26 && small_batch_capability?.generation === generation && !!small_batch_capability.value;
         await pixl.tx_data(wire, acknowledgedWrite && chunked && payload.length <= capacity);
         offset += length; ++sequence;
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
@@ -1289,8 +1480,8 @@ function on_rx_data(data) {
         }
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
-        const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04 || h.cmd===0x0a || h.cmd===0x0b || h.cmd===0x0c) && op.optional_probe && (h.status===1 || h.status===255);
-        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21 || h.cmd === 0x22) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
+        const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04 || h.cmd===0x05 || h.cmd===0x0a || h.cmd===0x0b || h.cmd===0x0c) && op.optional_probe && (h.status===1 || h.status===255);
+        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21 || h.cmd === 0x22 || h.cmd === 0x25) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';
         op.rx_error = error;
@@ -1306,6 +1497,8 @@ function on_ble_disconnected(reason) {
     ++transport_generation;
     transport_capabilities = null;
     file_digest_unsupported = false;
+    small_batch_capability = null;
+    small_batch_probe = null;
     transport_probe = null;
     storage_info_cache.clear();
     storage_info_queries.clear();

@@ -14,7 +14,7 @@ PREFIX = r'''
 #include <string.h>
 #include "ntag_def.h"
 typedef enum {NTAG_EVENT_TYPE_WRITTEN,NTAG_EVENT_TYPE_READ} ntag_event_type_t;
-typedef struct {ntag_t ntag;void *p_amiibo_view,*p_toast_view;} app_amiidb_t;
+typedef struct {ntag_t ntag;bool temporary_tag_changed;void *p_amiibo_view,*p_toast_view;} app_amiidb_t;
 typedef app_amiidb_t app_amiibolink_t;
 typedef struct {bool auto_gen_amiibo;} settings_data_t;
 static settings_data_t settings;
@@ -25,6 +25,11 @@ static uint8_t saved_value;
 static int m_amiibo_gen_delay_timer=1;
 static uint32_t m_generate_generation;
 static uint32_t ntag_emu_get_generation(void){return 37;}
+static bool ntag_emu_session_used(void){return false;}
+static bool ntag_emu_save_pending(void){return false;}
+static void ntag_emu_request_action(void(*fn)(void*),void*context,uint32_t generation){(void)fn;(void)context;(void)generation;assert(false);}
+static void amiidb_nfc_return_to_list(void*context){(void)context;assert(false);}
+
 static void app_timer_stop(int timer){assert(timer==1);stopped++;}
 static void app_timer_start(int timer,int ticks,void*ctx){assert(timer==1&&ticks==1000&&ctx);started++;}
 #define APP_TIMER_TICKS(n) (n)

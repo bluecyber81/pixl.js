@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "kind": "live-public-web-ui-verification",
+  "passed": true,
+  "webVersion": "3.61.0",
+  "firmwareVersion": "2.22.0-DE3.98",
+  "applicationCounter": 671,
+  "pagesCommit": "f83275eb5568ca777a750f70e0b9bb504e5e7c62",
+  "browser": "Dedicated cloud Chrome",
+  "surface": "desktop browser",
+  "rootUrl": "https://bluecyber81.github.io/pixl.js/",
+  "updaterUrl": "https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.98-lcd-app",
+  "otaUrl": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_98_671_NUR_APP.zip",
+  "observations": [
+    {
+      "id": "normal-root",
+      "passed": true,
+      "evidence": "Page title and header show Allmiibo Dateimanager 3.61.0 and LCD DE3.98 / App671."
+    },
+    {
+      "id": "normal-lcd-download",
+      "passed": true,
+      "evidence": "The current LCD card links to Allmiibo_LCD_DE3_98_671_NUR_APP.zip and states PFS1, Z21 and S112 7.3.0."
+    },
+    {
+      "id": "update-target",
+      "passed": true,
+      "evidence": "Start-page firmware action and LCD selection show Aktuelle LCD-Ausgabe DE3.98 / App671 and application counter 671."
+    },
+    {
+      "id": "historical-system-package",
+      "passed": true,
+      "evidence": "The App662 combined system package remains explicitly older, requires bootloader counter below 21 and points to separate subsequent App671 installation."
+    },
+    {
+      "id": "updater-preselection",
+      "passed": true,
+      "evidence": "The actual App671 card URL opens Allmiibo DFU 3.61.0 with LCD and DE3.98 selected; package load remains an explicit action."
+    },
+    {
+      "id": "published-package-loader",
+      "passed": true,
+      "evidence": "After Paket laden und prüfen, the live page reports Paketidentität per SHA-256 bestätigt and selected counter 671, hardware field 52, allowed SoftDevice FWID 0x0126."
+    },
+    {
+      "id": "device-boundary",
+      "passed": true,
+      "evidence": "No Bluetooth device was connected or selected. The cloud browser displayed the expected unavailable-Bluetooth transfer state."
+    }
+  ],
+  "visualObservation": "A desktop screenshot after package verification shows the normal title, App671 selected, current download and the explicit package-check controls. The verified updater tab was retained for review.",
+  "localBrowserAttempt": {
+    "passed": false,
+    "reason": "Local headless Chromium failed before page navigation: ProcessSingleton socket() failed: Operation not permitted. The local extension lacked its originating browser context. The permitted cloud browser supplied the separate live UI observations above."
+  },
+  "physicalDeviceAccess": false,
+  "physicalFirmwareTransfer": false,
+  "mobileBrowserRun": false,
+  "limitations": [
+    "This is a desktop cloud-browser UI and public package-loading check, not a physical Android or BLE firmware transfer.",
+    "No firmware installation, device readback, console/game NFC session or hardware acceptance is claimed."
+  ]
+}

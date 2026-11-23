@@ -73,7 +73,7 @@ async function run(context, locale, width) {
   await offline.locator(':scope > summary').click();
   const picker=offline.locator('input[type=file]');
   await picker.setInputFiles(inputZip);
-  const area = offline.locator('section[aria-label]');
+  const area = offline.locator('section[aria-label="' + label('Ergebnis der lokalen Inhaltsprüfung','Local content check results') + '"]');
   await area.getByRole('status').getByText(label('Prüfung abgeschlossen','Check complete')).waitFor();
   assert.match(await area.textContent(), /1 \/ 956/);
   assert.match(await area.textContent(), de ? /3 Figurendateien gelesen/ : /3 figure files read/);

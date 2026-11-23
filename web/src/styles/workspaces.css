@@ -66,6 +66,7 @@
 .filemanager :is(#backup-workspace,[aria-controls="backup-workspace"]) { --zone:#336573; --wash:#e0eef1; }
 .filemanager :is(#update-workspace,[aria-controls="update-workspace"]) { --zone:#514f83; --wash:#ebeaf7; }
 .filemanager :is(#remote-workspace,[aria-controls="remote-workspace"]) { --zone:#70516f; --wash:#f1e8ef; }
+.filemanager :is(#stream-workspace,[aria-controls="stream-workspace"]) { --zone:#576735; --wash:#edf2df; }
 .filemanager :is(#device-overview,[aria-controls="device-overview"]) { --zone:#345a80; --wash:#e5edf6; }
 .filemanager :is(#catalogue-workspace,[aria-controls="catalogue-workspace"]) { --zone:#695886; --wash:#eee9f4; }
 .filemanager .workspace-nav { padding-top:18px; background:#f5f7f2; border-color:var(--rule); }

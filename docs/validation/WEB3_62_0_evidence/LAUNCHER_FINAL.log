@@ -1,0 +1,39 @@
+test_ambiguous_port_timeout_preserves_state (__main__.LauncherTests.test_ambiguous_port_timeout_preserves_state) ... ok
+test_bind_failure_keeps_old_state_and_reports_own_error (__main__.LauncherTests.test_bind_failure_keeps_old_state_and_reports_own_error) ... ok
+test_bom_state_from_previous_powershell_launcher (__main__.LauncherTests.test_bom_state_from_previous_powershell_launcher) ... ok
+test_browser_failure_keeps_started_server (__main__.LauncherTests.test_browser_failure_keeps_started_server) ... ok
+test_cli_invalid_port_and_argument (__main__.LauncherTests.test_cli_invalid_port_and_argument) ... ok
+test_cold_start_ignores_simulated_failed_legacy_probe (__main__.LauncherTests.test_cold_start_ignores_simulated_failed_legacy_probe) ... ok
+test_direct_propagates_server_exit_code (__main__.LauncherTests.test_direct_propagates_server_exit_code) ... ok
+test_existing_health_match_reuses_without_probe_or_spawn (__main__.LauncherTests.test_existing_health_match_reuses_without_probe_or_spawn) ... ok
+test_folder_lock_rejects_second_operation (__main__.LauncherTests.test_folder_lock_rejects_second_operation) ... ok
+test_foreign_listener_is_never_adopted_or_stopped (__main__.LauncherTests.test_foreign_listener_is_never_adopted_or_stopped) ... ok
+test_health_errors_expose_exception_details_without_token (__main__.LauncherTests.test_health_errors_expose_exception_details_without_token) ... ok
+test_linux_bind_behavior_is_preserved (__main__.LauncherTests.test_linux_bind_behavior_is_preserved) ... ok
+test_malformed_state_kept_without_server_start (__main__.LauncherTests.test_malformed_state_kept_without_server_start) ... ok
+test_manifest_version_drives_real_controller_and_health_outside_working_directory (__main__.LauncherTests.test_manifest_version_drives_real_controller_and_health_outside_working_directory) ... ok
+test_missing_dist_fails_before_spawn (__main__.LauncherTests.test_missing_dist_fails_before_spawn) ... ok
+test_missing_version_manifest_fails_before_starting_a_server (__main__.LauncherTests.test_missing_version_manifest_fails_before_starting_a_server) ... ok
+test_real_direct_bind_error_has_no_probe_or_state_change (__main__.LauncherTests.test_real_direct_bind_error_has_no_probe_or_state_change) ... ok
+test_real_direct_start_ctrl_c_and_unchanged_state (__main__.LauncherTests.test_real_direct_start_ctrl_c_and_unchanged_state) ... ok
+test_real_start_repeat_health_and_stop_in_nontrivial_path (__main__.LauncherTests.test_real_start_repeat_health_and_stop_in_nontrivial_path) ... ok
+test_spawn_failure_reports_errno_winerror_without_token (__main__.LauncherTests.test_spawn_failure_reports_errno_winerror_without_token) ... ok
+test_stale_valid_state_can_restart (__main__.LauncherTests.test_stale_valid_state_can_restart) ... ok
+test_state_token_mismatch_rejected (__main__.LauncherTests.test_state_token_mismatch_rejected) ... ok
+test_state_write_failure_cleans_owned_child (__main__.LauncherTests.test_state_write_failure_cleans_owned_child) ... ok
+test_stop_explicit_refusal_removes_stale_state (__main__.LauncherTests.test_stop_explicit_refusal_removes_stale_state) ... ok
+test_stop_timeout_and_simulated_winerror_keep_state_with_details (__main__.LauncherTests.test_stop_timeout_and_simulated_winerror_keep_state_with_details) ... ok
+test_windows_exclusive_bind_options_simulated_before_bind (__main__.LauncherTests.test_windows_exclusive_bind_options_simulated_before_bind) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 4.281s
+
+OK
+Der lokale Dateimanager auf Port 50889 ist beendet.
+Dateimanager 3.62.0: http://127.0.0.1:59827/ (nur auf diesem PC erreichbar)
+Beenden: Stop-Dateimanager.cmd -Port 59827
+Der lokale Dateimanager auf Port 59827 ist beendet.
+Der Dateimanager dieser Kopie laeuft bereits.
+Dateimanager 3.62.0: http://127.0.0.1:46003/ (nur auf diesem PC erreichbar)
+Beenden: Stop-Dateimanager.cmd -Port 46003
+Kein Server auf Port 56399 aktiv; veralteter Status entfernt.

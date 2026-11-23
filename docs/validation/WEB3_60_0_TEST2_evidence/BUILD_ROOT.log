@@ -1,0 +1,156 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> allmiibo-web@3.60.0-test.2 build
+> vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 1843 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                        0.77 kB │ gzip:   0.39 kB
+dist/assets/migration-capacity-worker-Br41Qnp6.js     16.19 kB
+dist/assets/HardwareProfile-BuUO4l_T.css               0.44 kB │ gzip:   0.26 kB
+dist/assets/IdentifierCopy-Bs2_bB0i.css                0.54 kB │ gzip:   0.30 kB
+dist/assets/BackupExportOptions-C2_-YBd4.css           0.62 kB │ gzip:   0.28 kB
+dist/assets/CardSlotInspection-DJE_jGiF.css            0.69 kB │ gzip:   0.36 kB
+dist/assets/CurrentLcdDownloads-CiB7QhbW.css           0.70 kB │ gzip:   0.36 kB
+dist/assets/ScreenAwake-ypRNPhvM.css                   0.72 kB │ gzip:   0.36 kB
+dist/assets/CollectionBackupAudit-C7wMT7_g.css         0.81 kB │ gzip:   0.38 kB
+dist/assets/GameFolder-qSwXhVzu.css                    0.87 kB │ gzip:   0.35 kB
+dist/assets/MenuRunComparison-BiwC6dtn.css             0.96 kB │ gzip:   0.42 kB
+dist/assets/TransferStatus-nWAZERUQ.css                1.08 kB │ gzip:   0.51 kB
+dist/assets/FirmwareBoardChoice-BuGEXwMN.css           1.09 kB │ gzip:   0.44 kB
+dist/assets/UploadNameReview-dImUFujJ.css              1.16 kB │ gzip:   0.49 kB
+dist/assets/LcdTestPanel-QdggYZjo.css                  1.30 kB │ gzip:   0.53 kB
+dist/assets/BackupComparison-_WGSlmtw.css              1.39 kB │ gzip:   0.53 kB
+dist/assets/GuidedReportComparison-BhhMld0u.css        1.41 kB │ gzip:   0.53 kB
+dist/assets/SelectionPreview-DOUTkQrT.css              1.67 kB │ gzip:   0.58 kB
+dist/assets/FigureUsage-DOIGiNS_.css                   1.69 kB │ gzip:   0.59 kB
+dist/assets/DisplayPhoto-BaS8wQqT.css                  1.75 kB │ gzip:   0.59 kB
+dist/assets/DeviceSearch-aJlougZ8.css                  2.19 kB │ gzip:   0.72 kB
+dist/assets/UpdateCheck-DE52_EFW.css                   3.55 kB │ gzip:   1.07 kB
+dist/assets/StartupDiagnostics-CEsNsfTH.css            3.81 kB │ gzip:   1.09 kB
+dist/assets/FigureDetails-BseEjObO.css                 4.27 kB │ gzip:   1.34 kB
+dist/assets/DiagnosticOverview-C7-dlKZB.css            4.39 kB │ gzip:   1.30 kB
+dist/assets/MigrationAssistant-DpZJogHD.css            4.51 kB │ gzip:   1.16 kB
+dist/assets/BatteryVoltageHistory-Bvc7Ufeq.css         4.75 kB │ gzip:   1.34 kB
+dist/assets/RemoteControl-oYzZ6rVx.css                 4.89 kB │ gzip:   1.29 kB
+dist/assets/GuidedDeviceCheck-BNexpmac.css             6.34 kB │ gzip:   1.73 kB
+dist/assets/CollectionAssistant-q6hXVjx8.css           6.61 kB │ gzip:   1.59 kB
+dist/assets/CataloguePanel-CD8Fd96n.css               12.63 kB │ gzip:   3.00 kB
+dist/assets/index-B_hilqNQ.css                       183.84 kB │ gzip:  28.74 kB
+dist/assets/csv-export-i82OsDJ4.js                     0.16 kB │ gzip:   0.16 kB
+dist/assets/zip-crc32-DjkMFiVs.js                      0.20 kB │ gzip:   0.17 kB
+dist/assets/IdentifierCopy-DqwtPrMQ.js                 1.08 kB │ gzip:   0.66 kB
+dist/assets/TransferStatus-D_VavVpr.js                 1.90 kB │ gzip:   0.90 kB
+dist/assets/CurrentLcdDownloads-BCsEmnkg.js            2.03 kB │ gzip:   1.07 kB
+dist/assets/hardware-profile-BULRUnvv.js               3.71 kB │ gzip:   1.63 kB
+dist/assets/lcd-storage-self-test-BkIqy2O2.js          3.87 kB │ gzip:   1.84 kB
+dist/assets/ScreenAwake-DrM-g5gp.js                    3.87 kB │ gzip:   1.83 kB
+dist/assets/HardwareProfile-Cf9a4cPX.js                4.04 kB │ gzip:   1.88 kB
+dist/assets/BackupExportOptions-DanbuscA.js            4.46 kB │ gzip:   2.21 kB
+dist/assets/UploadNameReview-MbQV-cBp.js               4.61 kB │ gzip:   2.20 kB
+dist/assets/stored-backup-BGMoLWDA.js                  4.65 kB │ gzip:   2.06 kB
+dist/assets/FirmwareBoardChoice-DxpYlLhE.js            4.71 kB │ gzip:   2.19 kB
+dist/assets/SelectionPreview-wwHFVHVc.js               5.18 kB │ gzip:   2.29 kB
+dist/assets/GuidedReportComparison-DnXpyTMr.js         5.52 kB │ gzip:   2.58 kB
+dist/assets/lcd-read-comparison-DEvZevVF.js            5.56 kB │ gzip:   2.40 kB
+dist/assets/firmware-releases-FFwuTmQ6.js              6.12 kB │ gzip:   1.50 kB
+dist/assets/DisplayPhoto-oR7sWefb.js                   7.49 kB │ gzip:   3.20 kB
+dist/assets/collection-audit-DPWF2bNn.js               7.83 kB │ gzip:   3.39 kB
+dist/assets/migration-capacity-xUoVFYyE.js             9.37 kB │ gzip:   2.67 kB
+dist/assets/FigureUsage-BzjJmzO8.js                    9.67 kB │ gzip:   4.11 kB
+dist/assets/BackupComparison-Dbol0JHt.js              10.11 kB │ gzip:   4.19 kB
+dist/assets/CollectionBackupAudit-CX3O_pAj.js         10.12 kB │ gzip:   4.26 kB
+dist/assets/MenuRunComparison-DtklIR1M.js             10.41 kB │ gzip:   4.34 kB
+dist/assets/GameFolder-BMSnA-1m.js                    10.55 kB │ gzip:   4.56 kB
+dist/assets/BatteryVoltageHistory-CE7tzGUb.js         10.85 kB │ gzip:   4.63 kB
+dist/assets/StartupDiagnostics-CPjKwfco.js            11.73 kB │ gzip:   4.45 kB
+dist/assets/CardSlotInspection-C4YONzNE.js            13.39 kB │ gzip:   5.53 kB
+dist/assets/guided-device-check-CaRzOY4S.js           13.45 kB │ gzip:   4.81 kB
+dist/assets/figure-download-links-DyQmPQfr.js         13.59 kB │ gzip:   5.73 kB
+dist/assets/LcdTestPanel-C2Zv79vg.js                  15.47 kB │ gzip:   5.97 kB
+dist/assets/DeviceSearch-Be-k6qrd.js                  15.78 kB │ gzip:   6.01 kB
+dist/assets/zip-import-BvOubjW2.js                    17.43 kB │ gzip:   6.93 kB
+dist/assets/UpdateCheck-DpoX9y5w.js                   19.59 kB │ gzip:   7.06 kB
+dist/assets/backup-BKb7gRax.js                        20.58 kB │ gzip:   7.77 kB
+dist/assets/GuidedDeviceCheck-CTe3r8xB.js             29.17 kB │ gzip:  11.07 kB
+dist/assets/DiagnosticOverview-BhnVENon.js            32.81 kB │ gzip:  12.65 kB
+dist/assets/FigureDetails-hpBGtmqG.js                 33.58 kB │ gzip:  12.51 kB
+dist/assets/RemoteControl-BFrIGyqs.js                 39.04 kB │ gzip:  13.32 kB
+dist/assets/bytebuffer-CTNvBmjw.js                    50.85 kB │ gzip:  11.04 kB
+dist/assets/CataloguePanel-BogNBQIb.js                53.92 kB │ gzip:  18.59 kB
+dist/assets/MigrationAssistant-B8xaR_FR.js            70.92 kB │ gzip:  22.30 kB
+dist/assets/figure-usage-nWE3zv6y.js                 113.84 kB │ gzip:  17.29 kB
+dist/assets/CollectionAssistant-HYSrO3dn.js          114.82 kB │ gzip:  31.73 kB
+dist/assets/index-DbFmIYCS.js                      1,040.37 kB │ gzip: 294.84 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.80s
+
+> allmiibo-web@3.60.0-test.2 postbuild
+> node scripts/copy-license-notices.mjs root && npm run test:dist
+
+{"mode":"root","copiedNotices":109}
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> allmiibo-web@3.60.0-test.2 test:dist
+> node scripts/test-production-build.mjs root
+
+✔ production worker is one self-contained referenced artifact with the tested pinned WASM assets (6.147572ms)
+✔ de397: built worker runs its real WASM and returns the matching engine/application through messages (99.285885ms)
+✔ de397: built worker rejects a server that supplies the other profile's WASM (74.35145ms)
+✔ de396: built worker runs its real WASM and returns the matching engine/application through messages (63.190367ms)
+✔ de396: built worker rejects a server that supplies the other profile's WASM (60.300574ms)
+✔ de395: built worker runs its real WASM and returns the matching engine/application through messages (60.558993ms)
+✔ de395: built worker rejects a server that supplies the other profile's WASM (52.589941ms)
+✔ de394: built worker runs its real WASM and returns the matching engine/application through messages (65.482651ms)
+✔ de394: built worker rejects a server that supplies the other profile's WASM (56.853694ms)
+✔ de393: built worker runs its real WASM and returns the matching engine/application through messages (62.93785ms)
+✔ de393: built worker rejects a server that supplies the other profile's WASM (54.900669ms)
+✔ de392: built worker runs its real WASM and returns the matching engine/application through messages (65.49739ms)
+✔ de392: built worker rejects a server that supplies the other profile's WASM (66.55936ms)
+✔ de391: built worker runs its real WASM and returns the matching engine/application through messages (62.56556ms)
+✔ de391: built worker rejects a server that supplies the other profile's WASM (54.709235ms)
+✔ current: built worker runs its real WASM and returns the matching engine/application through messages (62.002641ms)
+✔ current: built worker rejects a server that supplies the other profile's WASM (57.871458ms)
+✔ de354: built worker runs its real WASM and returns the matching engine/application through messages (74.800088ms)
+✔ de354: built worker rejects a server that supplies the other profile's WASM (54.993845ms)
+✔ de350: built worker runs its real WASM and returns the matching engine/application through messages (75.910907ms)
+✔ de350: built worker rejects a server that supplies the other profile's WASM (68.446135ms)
+✔ de345: built worker runs its real WASM and returns the matching engine/application through messages (84.654179ms)
+✔ de345: built worker rejects a server that supplies the other profile's WASM (62.9838ms)
+✔ de344: built worker runs its real WASM and returns the matching engine/application through messages (72.766984ms)
+✔ de344: built worker rejects a server that supplies the other profile's WASM (116.948364ms)
+✔ previous: built worker runs its real WASM and returns the matching engine/application through messages (78.872206ms)
+✔ previous: built worker rejects a server that supplies the other profile's WASM (62.307711ms)
+✔ legacy: built worker runs its real WASM and returns the matching engine/application through messages (61.776279ms)
+✔ legacy: built worker rejects a server that supplies the other profile's WASM (62.259758ms)
+✔ built worker defaults an omitted profile to current, without selecting legacy implicitly (54.342769ms)
+✔ built worker rejects unknown profiles and raw target injection before any fetch or progress (310.085518ms)
+✔ /: both setup guides have working anchors and bundled destinations (8.033826ms)
+✔ /: production index, lazy chunks and DFU assets resolve to real files inside this deployment (12.348744ms)
+✔ /: real stable firmware loader hashes and parses deployed ZIP without starting Bluetooth (50.896111ms)
+✔ /: real de3.97-lcd-app-test1 firmware loader hashes and parses deployed ZIP without starting Bluetooth (7.931041ms)
+✔ /: real de3.96-lcd-app-test1 firmware loader hashes and parses deployed ZIP without starting Bluetooth (5.171945ms)
+✔ /: real de3.95-lcd-app firmware loader hashes and parses deployed ZIP without starting Bluetooth (4.562ms)
+✔ /: real de3.94-lcd-app firmware loader hashes and parses deployed ZIP without starting Bluetooth (4.374127ms)
+✔ /: public notices preserve all selected license bytes and explicit matching source downloads (6.07391ms)
+✔ /: the App670 source download resolves to its complete archive and exact firmware binding (13.694643ms)
+✔ /: the App669 source download resolves to its complete archive and exact firmware binding (14.946723ms)
+✔ /: the App668 source download resolves to its complete archive and exact firmware binding (8.415101ms)
+✔ /: the App667 source download resolves to its complete archive and exact firmware binding (6.69058ms)
+✔ /: static build contains no local server, state, test, dependency tree or collection backup (2.457096ms)
+ℹ tests 44
+ℹ suites 0
+ℹ pass 44
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2365.30241

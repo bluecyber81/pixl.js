@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "reviewedAt": "2026-11-21T18:39:58.440346+00:00",
+  "reviewAccepted": true,
+  "reviewKind": "Enges unabhängiges Quellreview; keine neue Testausführung durch den Reviewer.",
+  "repository": ".",
+  "branch": "work/lcd-de398-app671",
+  "headAtReview": "fe15340ae744aa083eff1407ff7dea9cbded8cbf",
+  "sourceSha256": {
+    "fw/application/src/app/amiidb/app_amiidb.h": {
+      "bytes": 4406,
+      "sha256": "15be28a88c5bb5e543d04a1aa03588a4d154baaf5ff63292b24e0dcc09852b59"
+    },
+    "fw/application/src/app/amiidb/app_amiidb_resume.h": {
+      "bytes": 12902,
+      "sha256": "9a92a889782cb6449009ee4e48b5fd5c47ff671c211dc2eca7998eb083fc358b"
+    },
+    "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail.c": {
+      "bytes": 18342,
+      "sha256": "2b07c390a5f484641e686f9480c9f8867adc48cc6d33461e1c02796b887e5d24"
+    },
+    "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail_menu.c": {
+      "bytes": 14455,
+      "sha256": "3596a9d3434345cab2a6c99de3299f7f8c0d0630cf9a9f51071307a1e681f605"
+    },
+    "fw/application/src/app/amiidb/scene/amiidb_scene_data_select.c": {
+      "bytes": 4761,
+      "sha256": "99bff5018ee19e37435feb0efb805da526f8de2650e1839aa845bc1cfb1871ae"
+    },
+    "fw/application/src/ntag/ntag_emu_v2.c": {
+      "bytes": 23869,
+      "sha256": "7859ea77b9dd97c2cf42364d262f85f06833f05626e29de71c462ba000c71ce1"
+    },
+    "fw/application/src/mui/mui_scene_dispatcher.c": {
+      "bytes": 3127,
+      "sha256": "236be2b7fc8c97dbe1334278647826f3ca16168fa71c7a78858540313abdfb53"
+    },
+    "fw/application/src/main.c": {
+      "bytes": 15719,
+      "sha256": "a79cffdc1ab24c9261b59d580383b5244f91a9eb926c4c711b6a193669740a14"
+    },
+    "fw/application/src/mod/cache.c": {
+      "bytes": 3453,
+      "sha256": "f6baf3f1a2ca2b5e0f9baccb001c9f18b01945c5bc1c2492fd354f680ef71a24"
+    }
+  },
+  "scope": "Temporäre App3-NFC-Schreibänderungen behalten den Zugang zum Speichern unter nach folgendem READ, Menü-Wiedereintritt und SleepResume. Automatischer Listenrückweg darf solche Daten nicht verlieren.",
+  "observations": [
+    {
+      "path": "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail.c",
+      "functions": [
+        "ntag_update_cb",
+        "amiidb_nfc_return_to_list"
+      ],
+      "finding": "WRITTEN für eine temporäre Quelle setzt temporary_tag_changed. Ein folgender READ setzt es nicht zurück. Sowohl das Einreihen als auch das Ausführen des automatischen Rückwegs prüfen diese Marke."
+    },
+    {
+      "path": "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail.c",
+      "functions": [
+        "amiidb_nfc_return_to_list"
+      ],
+      "finding": "Der automatische Actionpfad ruft vor der endgültigen Entscheidung ntag_emu_prepare_change auf. Erst danach prüft er die Marke erneut. Ein zwischen früherer Prüfung und Prepare angenommener WRITE wird dabei ausgeliefert; bei gesetzter Marke bleiben die Detailansicht und die Kopie erhalten, anschließend hebt cancel_change die Pause kontrolliert auf."
+    },
+    {
+      "path": "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail.c",
+      "functions": [
+        "amiidb_scene_amiibo_detail_on_enter",
+        "amiidb_scene_amiibo_game_list_generate"
+      ],
+      "finding": "Beim Menü-Wiedereintritt wird eine markierte temporäre NTAG215-Kopie nur bei vollständiger Gleichheit mit dem aktiven Emulator übernommen. Der Generator bewahrt die Marke bei dieser Wiederverwendung; eine ausdrücklich neu erzeugte Figur hebt sie nach erfolgreicher Installation auf."
+    },
+    {
+      "path": "fw/application/src/app/amiidb/app_amiidb_resume.h",
+      "functions": [
+        "app_amiidb_save_cache",
+        "app_amiidb_restore_cache"
+      ],
+      "finding": "Retained-Tag und Änderungsmarke werden gemeinsam gespeichert. Wiederverwendung verlangt weiterhin passenden Retainpointer, CRC, aktivierten App3-Owner, aufgelöstes Katalogziel und NTAG215-Typ. Die Änderungsmarke darf nicht größer als retained_tag sein. Ein markierter akzeptierter NFC-WRITE darf die Nutzdaten-ID geändert haben; die Herkunft bleibt durch selected_head/tail und den validierten Katalogeintrag gebunden. Unmarkierte Kopien müssen auch die Nutzdaten-ID erfüllen."
+    },
+    {
+      "path": "fw/application/src/app/amiidb/scene/amiidb_scene_data_select.c",
+      "functions": [
+        "save_to_slot"
+      ],
+      "finding": "Fehlgeschlagenes Speichern unter kehrt vor dem Löschen der Marke zurück. Erst erfolgreiche Speicherung hebt den Schutz auf."
+    },
+    {
+      "path": "fw/application/src/app/amiidb/scene/amiidb_scene_amiibo_detail_menu.c",
+      "functions": [
+        "amiidb_scene_detail_back_to_list",
+        "amiidb_scene_amiibo_detail_menu_on_selected"
+      ],
+      "finding": "Ein ausdrücklicher Listenrückweg löscht die Marke erst nach akzeptiertem Szenenwechsel. Ein erfolgreicher ausdrücklicher UID-Wechsel hebt sie auf. Menüeinstieg und fehlgeschlagenes Speichern sind kein stillschweigendes Verwerfen."
+    },
+    {
+      "path": "fw/application/src/main.c",
+      "functions": [
+        "shutdown_handler"
+      ],
+      "finding": "Schlafvorbereitung liefert akzeptierte NFC-Schreibdaten vor App-Retention aus; die aktive vollständige Tagkopie wird anschließend in den vorhandenen gemeinsamen Cache kopiert und über cache_save CRC-gebunden."
+    }
+  ],
+  "reviewFindingsResolved": [
+    {
+      "id": "app3-payload-id-retention",
+      "counterexample": "Die echte Engine akzeptiert einen WRITE auf Seite 21/22 und damit Nutzdatenbytes 84..91. Ein unverändert strikter Nutzdaten-ID-Vergleich würde diese akzeptierte temporäre Kopie beim Menü-/Schlaf-Wiedereintritt verwerfen.",
+      "resolution": "Nur für die explizite Änderungsmarke wird die Nutzdaten-ID-Abweichung zugelassen; äußere CRC-/Owner-/Retainpointer-/Katalogziel- und Tagtypbindung bleiben bestehen."
+    },
+    {
+      "id": "app3-write-between-action-and-transition",
+      "counterexample": "Ein nach der Actionprüfung, aber vor dem Szenen-Guard angenommener WRITE kann erst durch prepare_change ausgeliefert werden. Ohne erneute Flagprüfung würde der gemeinsame Listenrückweg die gerade gesetzte Marke löschen.",
+      "resolution": "Prepare/Pause vor die abschließende Flagprüfung des automatischen Actions gezogen; bei neuer Schreibmarke abbrechen und cancel_change."
+    }
+  ],
+  "testsPerformedByReviewer": [],
+  "testFollowup": "Der implementierende Historie-Agent prüft die konkreten ID-WRITE-, Retentions- und Interleaving-Fälle mit tatsächlichen C-Funktionen. Diese Quellreview-Datei behauptet deren Ausführung oder Ausgang nicht.",
+  "limits": [
+    "Kein physischer NFC-/Konsolen-/Sleep-Gerätetest und keine behauptete Konsolenbestätigung.",
+    "Kein breiter neuer Funktions- oder Sicherheitsreview außerhalb der fünf geänderten App3-Dateien und ihrer unmittelbar benötigten Aufrufgrenzen.",
+    "Expliziter Figuren-/UID-Wechsel oder ausdrückliches Verlassen der temporären Auswahl ist von der verhinderten automatischen Rückkehr zu unterscheiden.",
+    "Endgültige ARM-/Ressourcenqualifikation bindet Root nach dem Produktnachtrag; dieser Bericht ist ein Quellreview."
+  ],
+  "nextStep": "Endgültigen normalen ARM-Build erzeugen; die bereits gemessenen Stackteilketten und Quellbindungen gegen dessen ELF/.su abgleichen."
+}

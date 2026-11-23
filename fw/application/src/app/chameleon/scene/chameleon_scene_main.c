@@ -1,5 +1,6 @@
 #include "app_chameleon.h"
 #include "chameleon_scene.h"
+#include "fds_utils.h"
 #include "chameleon_view.h"
 #include "amiibo_helper.h"
 
@@ -19,6 +20,7 @@ static void chameleon_scene_main_event_cb(chameleon_view_event_t event, chameleo
         uint8_t current = tag_emulation_get_slot();
         uint8_t next = event == CHAMELEON_VIEW_EVENT_PREV ? tag_emulation_slot_find_prev(current)
                                                          : tag_emulation_slot_find_next(current);
+        chameleon_save_begin();
         if (!tag_emulation_change_slot(next, true)) app_chameleon_show_save_error(app);
         else if (!tag_emulation_active_data_ready()) app_chameleon_show_load_error(app);
     }

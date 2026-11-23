@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "status": "passed",
+  "startedAt": "2026-11-23T14:54:38.729296+00:00",
+  "completedAt": "2026-11-23T14:54:45.023107+00:00",
+  "baseUrl": "https://bluecyber81.github.io/pixl.js/",
+  "expectedFiles": 3,
+  "expectedBytes": 21254599,
+  "manifestSha256": "0a72b3f167a42de15377d10e28d90348a137419e73b0d86b7bfcf40f56c8b1fd",
+  "expectedPagesTree": "bc1f5f7cc4cf6296a08efab2f16715c5f702e070",
+  "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+  "workers": 8,
+  "maxAttemptsPerPath": 3,
+  "deployment": {
+    "runId": 45198958839,
+    "headCommit": "f1d69f020097f21487eef99314fe7da5257b41d7",
+    "headBranch": "gh-pages",
+    "tree": "bc1f5f7cc4cf6296a08efab2f16715c5f702e070",
+    "repository": "bluecyber81/pixl.js",
+    "workflowName": "pages build and deployment",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45198958839",
+    "evidence": "build_20261123/pages_http_source/GITHUB_RUN.json",
+    "evidenceSha256": "f45bbc9a0969b98508256186a9c908c68891989bbbfaa340dbd1d7c17bf0bfcb",
+    "publicationEvidence": {
+      "path": "build_20261123/pages_http_source/PUBLICATION_BINDING.json",
+      "sha256": "9ec7ec7bdebf8396f3f68c2754986956c662f12256ff00ce4e9c6758f20194e5"
+    }
+  },
+  "requestsThisRun": 3,
+  "verifiedFiles": 3,
+  "verifiedBytes": 21254599,
+  "failed": 0,
+  "canonicalUrlSuccessRequired": true,
+  "cacheBustedOnlyFiles": 0,
+  "previousPublicBytesObservedFiles": 0,
+  "inheritedResults": null,
+  "scope": "Ordinary HTTP GET byte/size/path verification; no browser, Bluetooth or device test.",
+  "retryPolicy": "Canonical GET; only observed failures retried with a cache-busting query; final canonical recheck. Unresolved canonical failures remain failures.",
+  "failures": []
+}
