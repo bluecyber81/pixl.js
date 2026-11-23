@@ -1,0 +1,233 @@
+{
+  "schema": 1,
+  "date": "2026-11-23",
+  "recordedAtUtc": "2026-11-23T12:11:04.794703+00:00",
+  "version": "3.65.0",
+  "channel": "normal",
+  "branch": "web-app675",
+  "status": "local-qualified-publication-pending",
+  "baselineCommit": "b364222005f493a7d898560592fe1bd1423fa510",
+  "qualificationCommit": null,
+  "firmware": {
+    "board": "LCD/ST7567",
+    "version": "2.22.0-DE3.102",
+    "counter": 675,
+    "productionCommit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+    "releaseHead": "ad4a328551e9c138de2e75be6d7ab8ef06c74b7b",
+    "sourceId": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+    "softwareCiRun": 45169716170,
+    "hardwareAcceptance": "pending"
+  },
+  "node": {
+    "tests": 2273,
+    "pass": 2270,
+    "fail": 0,
+    "skipped": 3,
+    "log": "web_full_node_release.log",
+    "logSha256": "1def6512aca6ba02010c32c169a980bbdda50e53e752205d024544ef328cdb61",
+    "node": "24.22.3",
+    "npm": "11.19.1",
+    "platform": "linux",
+    "skipReasons": [
+      "Two native Windows launcher cases are covered separately by Windows CI.",
+      "One optional historical Nordic DFU ZIP fixture is absent."
+    ],
+    "counting": "Targeted subsets are included where applicable; they are not added to this total."
+  },
+  "distributions": {
+    "root": {
+      "tests": 57,
+      "pass": 57,
+      "fail": 0,
+      "skipped": 0,
+      "log": "web_dist_root_final.log",
+      "logSha256": "2a44d05d2d49be26100e1b7088e2cc0ffd869c38d8b7027c0c2fc7d6b4f2b88d",
+      "releaseManifest": {
+        "schema": 1,
+        "application": "allmiibo-dateimanager",
+        "version": "3.65.0",
+        "base": "/",
+        "channel": "normal",
+        "packageManifestSha256": "3d64af5e5ad1e6c17b665c4d860c8ea4cd84c963523bad45a0ea597c4d304175",
+        "firmware": {
+          "id": "de3.102-lcd-app",
+          "version": "2.22.0-DE3.102",
+          "counter": 675,
+          "path": "firmware/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+          "bytes": 362493,
+          "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746"
+        }
+      },
+      "releaseManifestSha256": "93949dace6d6be3a6ee36ee412b7233c1794524f9e626032d035073a7e1c8515"
+    },
+    "pages": {
+      "tests": 57,
+      "pass": 57,
+      "fail": 0,
+      "skipped": 0,
+      "log": "web_build_pages.log",
+      "logSha256": "6ad5c32ee56989fadf8072fe4cb9f192cdde8001a05770846a5e32bd5505332e",
+      "releaseManifest": {
+        "schema": 1,
+        "application": "allmiibo-dateimanager",
+        "version": "3.65.0",
+        "base": "/pixl.js/",
+        "channel": "normal",
+        "packageManifestSha256": "3d64af5e5ad1e6c17b665c4d860c8ea4cd84c963523bad45a0ea597c4d304175",
+        "firmware": {
+          "id": "de3.102-lcd-app",
+          "version": "2.22.0-DE3.102",
+          "counter": 675,
+          "path": "firmware/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+          "bytes": 362493,
+          "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746"
+        }
+      },
+      "releaseManifestSha256": "f7f4fed0d12fd80dd3574b8b18dd7e8a20e4dbf7ac35a013ca83e604cb31441b"
+    }
+  },
+  "linuxLauncher": {
+    "passed": true,
+    "tests": 26,
+    "platform": "linux",
+    "nativeWindowsExecuted": false,
+    "logSha256": "81148dd6087c01dfbcb7b89e2f17defdb08f900406ab5718a80fbdee0a423ad7"
+  },
+  "portable": {
+    "schema": 1,
+    "version": "3.65.0",
+    "archive": "Allmiibo_Dateimanager_3_65_0_Portable.zip",
+    "bytes": 12444903,
+    "sha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd",
+    "files": 315,
+    "portableManifestSha256": "e051fbc10f186f46cd0a4e9317b8dd39259d3e5f776f2c785858b79bc937773d",
+    "nativeExecutable": false,
+    "verification": {
+      "path": "PORTABLE_VERIFICATION.json",
+      "sha256": "f783623a9b3f7e35ac2cff191a775238ee3fea293a56dfa2052dc406e44bba45"
+    }
+  },
+  "portableVerification": {
+    "schema": 1,
+    "passed": true,
+    "version": "3.65.0",
+    "archiveSha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd",
+    "verifiedFiles": 313,
+    "normalControllerStartReuseStop": true,
+    "downloads": [
+      {
+        "path": "index.html",
+        "bytes": 767,
+        "sha256": "02dd39b11d5cbb281ca6383859356d4d971105b722a8d64bb3a8386f2999155d"
+      },
+      {
+        "path": "release.json",
+        "bytes": 482,
+        "sha256": "93949dace6d6be3a6ee36ee412b7233c1794524f9e626032d035073a7e1c8515"
+      },
+      {
+        "path": "firmware/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+        "bytes": 362493,
+        "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746"
+      }
+    ],
+    "platform": "linux",
+    "nativeWindowsExecuted": false,
+    "limits": [
+      "Loopback HTTP and the real Python controller only; no device or Bluetooth transfer.",
+      "CMD/PowerShell native execution is covered separately by the Windows CI job."
+    ]
+  },
+  "sender": {
+    "targetedTests": 74,
+    "failed": 0,
+    "actualCHeaderParser": true,
+    "actualCPlayerDrawing": true,
+    "pixelCases": 144,
+    "pixelComparisons": 1179648,
+    "physicalDeviceAccess": false,
+    "proof": "WEB3_65_0_evidence/SENDER_PIXELS.json"
+  },
+  "catalogue": {
+    "proof": "WEB_CATALOGUE_20261123.json",
+    "figures": 956,
+    "associations": 1414,
+    "groups": 86,
+    "ordinaryOcarinaDetailNotesAligned": 33,
+    "fatalFuryDetailNotesAligned": 10,
+    "additionalKirbyAssociations": 15,
+    "correction": "Ocarina and Fatal Fury already existed in filters and guides; this release aligns figure details and avoids duplicate guide text."
+  },
+  "firmwareIntegration": {
+    "targetedTests": 452,
+    "failed": 0,
+    "proof": "APP675_WEB365_BINDING.json",
+    "armLayoutsFresh": 4,
+    "crossMountCases": 6,
+    "crossMountScope": "Historical App672 results reused only for the byte-identical engine; not rerun."
+  },
+  "ci": {
+    "web": null,
+    "nativeWindows": null,
+    "pages": null,
+    "combinedMain": null
+  },
+  "live": {
+    "http": null,
+    "browser": null,
+    "localBrowserPreview": "Unavailable in the cloud browser; public-site UI verification is pending."
+  },
+  "openDeviceTests": [
+    "Real supported video codecs on the user device",
+    "LCD image/video transmission, inversion and reconnection",
+    "App675 player single run, loop, frame counter and exit",
+    "Switch 2 wake and normal miniapp transitions"
+  ],
+  "limits": [
+    "No physical LCD, OLED, NFC, Bluetooth or power measurement.",
+    "The portable package needs an existing Python 3.8+ runtime; it contains no native EXE.",
+    "Software and model coverage does not constitute hardware acceptance."
+  ],
+  "evidence": [
+    {
+      "path": "DISTRIBUTIONS.json",
+      "bytes": 1744,
+      "sha256": "74cbcc1da4e06ff596457cf62b05358abe408082ad1a3f9ab1e92531e8bbd004"
+    },
+    {
+      "path": "LINUX_LAUNCHER.json",
+      "bytes": 176,
+      "sha256": "c3ff85f9d567e92465919f93f34229959ea67237df2b761f2751b244c2fbc535"
+    },
+    {
+      "path": "NODE_SUITE.json",
+      "bytes": 516,
+      "sha256": "7242f7389bdfae123dad5f4f4dbe19759f2432e3e409db035391f015b0dcd3a2"
+    },
+    {
+      "path": "PHONE_DOWNLOAD.json",
+      "bytes": 539,
+      "sha256": "e7c8fab378032ce1c936f9c2de3b6cbee2e60eceddc1cfc2150129aec6122c3c"
+    },
+    {
+      "path": "PORTABLE_PACKAGE.json",
+      "bytes": 489,
+      "sha256": "4ffaf6f20da0e9e46656897dba1bf3c2e0f9223951218c5214ab42250c79b6ef"
+    },
+    {
+      "path": "PORTABLE_VERIFICATION.json",
+      "bytes": 955,
+      "sha256": "f783623a9b3f7e35ac2cff191a775238ee3fea293a56dfa2052dc406e44bba45"
+    },
+    {
+      "path": "SENDER_IMPLEMENTATION.json",
+      "bytes": 9391,
+      "sha256": "9e443a09c2aa185d190d1d65d4ee1d247ece8b32c0a846f558d9bd88baa26ce0"
+    },
+    {
+      "path": "SENDER_PIXELS.json",
+      "bytes": 25946,
+      "sha256": "a7c24023af84a920d4780ff9b81bb451109dd943b2442c32490560cbc3f43f65"
+    }
+  ]
+}

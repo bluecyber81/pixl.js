@@ -1,5 +1,15 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.65.0 · Bildoptionen und lokaler Playerexport
+
+**Bild & Video** merkt die Einstellungen und behält eine ausgewählte Datei bis 128 MiB höchstens 30 Minuten in der geöffneten Seite. Rotation um 90°, 180° oder 270°, ein optionales Punktraster für Fotos und Drag & Drop ergänzen die 128 × 64-Vorschau. Zurücksetzen lädt die Ausgangswerte und die Demo. Auswahl und Senden bleiben getrennt; Bereichwechsel oder Ausblenden starten keine Übertragung neu.
+
+Der neue lokale Export erzeugt eine Player-BIN aus Bild, Demo oder Videoausschnitt. Anfang/Ende, Bildrate und Dateigröße sind vor dem Start sichtbar; Fortschritt und Abbruch sind vorhanden. Die fertige Datei bis 1 MiB wird heruntergeladen und anschließend ausdrücklich nach E:/player/ übertragen. App675 ergänzt die Player-Optionen Endlosschleife und Bildzähler sowie sparsamere Neuzeichnungen im Empfänger; der Bildsender funktioniert weiterhin mit App673+.
+
+Erneute Auswahl nach Ladefehler, Dateierkennung bei generischem Binärtyp und Wiederherstellung bei schnellen Bereichwechseln sind korrigiert. Ocarina-/Fatal-Fury-Hinweise werden zwischen Spielfilter, Spielübersicht und Figurendetails vereinheitlicht; 15 weitere Nintendo-belegte Kirby-Spielzuordnungen kommen hinzu. Die Katalogergänzungen sind Webdaten. App675 hat eigene Paket-, Diagnose- und Kapazitätsbindungen; frühere LCD- und OLED-Pakete bleiben erhalten.
+
+[Bild & Video öffnen](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip) · [Softwarequalifikation](validation/WEB3_65_0.json) · [Bedienung](../web/LIESMICH_3_65_0.txt). Reale Video-Codecs, Bildwirkung, Bluetooth und der LCD-Player werden am Gerät gesondert abgenommen.
+
 ## Dateimanager 3.64.0 · Bild & Video auf dem LCD
 
 Der neue Bereich **Bild & Video** rechnet lokale Bilder und Videos in eine 128×64-Schwarz-Weiß-Vorschau um. Einpassen, Ausschnitt, Strecken, Hell-Dunkel-Grenze und Invertierung sind einstellbar; eine bewegte Demo ist enthalten. Verbinden und Senden sind getrennte Aktionen. Die Datei wird lokal verarbeitet. Der Sender benötigt den BLE-Bildempfang der LCD-Firmware ab DE3.100/App673; App674 ergänzt passende 32×32-Menüsymbole für Bildempfang und Switch-2-Wecken.

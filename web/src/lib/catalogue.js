@@ -1,4 +1,15 @@
 import { catalogueAliases, ocarinaFigureById, ocarinaYear } from '../data/announced-figures.js';
+import { gameGuides } from '../data/game-guides.js';
+
+// Reuse the reviewed exact-ID mappings shown by the game filter and details.
+// A shared character or series name alone never expands compatibility.
+const reviewedGameTitles = new Map();
+for (const game of gameGuides) {
+  for (const id of game.ids) {
+    if (!reviewedGameTitles.has(id)) reviewedGameTitles.set(id, []);
+    reviewedGameTitles.get(id).push(game.title);
+  }
+}
 
 // Metadata only. A catalogue entry does not establish file ownership, file
 // presence on a device, a release date in every region, or emulation support.
@@ -26,7 +37,8 @@ export function compareFigureNames(a, b) {
 export function filterCatalogue(entries, { query = '', series = '', kind = '', knownOnly = false } = {}) {
   const matches = catalogueMatcher(query);
   const filtered = entries.filter(entry => (!series || entry.series === series) && (!kind || entry.type === kind) &&
-    (!knownOnly || entry.firmwareIdKnown === true) && matches(entry.id, entry.name, entry.series, entry.game, entry.type, ...(catalogueAliases.get(entry.id) || [])))
+    (!knownOnly || entry.firmwareIdKnown === true) && matches(entry.id, entry.name, entry.series, entry.game, entry.type,
+      ...(catalogueAliases.get(entry.id) || []), ...(reviewedGameTitles.get(entry.id) || [])))
     .sort(compareFigureNames);
   const term = normalize(query).trim();
   if (!term) return filtered;

@@ -1,7 +1,7 @@
 {
   "name": "allmiibo-web",
-  "version": "3.64.0",
-  "description": "Allmiibo Bluetooth-Dateimanager mit ZIP-Sicherung und \u00dcbertragungspr\u00fcfung",
+  "version": "3.65.0",
+  "description": "Allmiibo Bluetooth-Dateimanager mit ZIP-Sicherung und Übertragungsprüfung",
   "private": true,
   "type": "module",
   "scripts": {

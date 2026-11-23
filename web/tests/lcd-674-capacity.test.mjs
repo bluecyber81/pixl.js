@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import JSZip from '../public/dfu/vendor/jszip-3.10.2.min.js';
-import {lcdRelease} from '../public/dfu/lcd-release-reference.mjs';
+import {lcdRelease} from '../public/dfu/lcd-app674-reference.mjs';
 import {lcdRelease as app672} from '../public/dfu/lcd-app672-reference.mjs';
 import {getMigrationCapacityTarget} from '../src/lib/migration-capacity.js';
 import {supportsFolderPublication} from '../src/lib/hardware-profile.js';
@@ -30,7 +30,7 @@ test('App674 is an exact new application profile using the unchanged App672 engi
   assert.equal(normal.layout.engineSha256, '3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f');
   assert.equal(supportsFolderPublication(normal.firmwareVersion, normal.layout.engineSha256), true);
   assert.equal(supportsFolderPublication(app672.firmwareVersion, normal.layout.engineSha256), true);
-  for (const version of ['2.22.0-DE3.102','2.22.0-DE3.101-OLEDt7'])
+  for (const version of ['2.22.0-DE3.103','2.22.0-DE3.101-OLEDt7'])
     assert.equal(supportsFolderPublication(version, normal.layout.engineSha256), false, version);
   assert.equal(supportsFolderPublication(normal.firmwareVersion, getMigrationCapacityTarget('de398').layout.engineSha256), false);
 });

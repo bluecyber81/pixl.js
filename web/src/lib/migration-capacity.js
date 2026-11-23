@@ -246,6 +246,17 @@ const de3101 = {
   geometry: {...de3100.geometry},
   layout: {...de3100.layout},
 }
+// App675 keeps the App672 engine. Its own SourceID, ELF/BIN/HEX and ARM layout
+// are independently bound in docs/validation/DE3_102_PFS.json.
+const de3102 = {
+  ...de3101,
+  approved: true,
+  firmwareVersion: '2.22.0-DE3.102',
+  applicationCounter: 675,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE3.102', applicationCounter: 675}],
+  geometry: {...de3101.geometry},
+  layout: {...de3101.layout},
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -270,7 +281,9 @@ export const DE398_MIGRATION_CAPACITY_TARGET=freezeTarget(de398)
 export const DE399_MIGRATION_CAPACITY_TARGET=freezeTarget(de399)
 export const DE3100_MIGRATION_CAPACITY_TARGET=freezeTarget(de3100)
 export const DE3101_MIGRATION_CAPACITY_TARGET=freezeTarget(de3101)
+export const DE3102_MIGRATION_CAPACITY_TARGET=freezeTarget(de3102)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de3102')return DE3102_MIGRATION_CAPACITY_TARGET
   if(profile==='de3101')return DE3101_MIGRATION_CAPACITY_TARGET
   if(profile==='de3100')return DE3100_MIGRATION_CAPACITY_TARGET
   if(profile==='de399')return DE399_MIGRATION_CAPACITY_TARGET

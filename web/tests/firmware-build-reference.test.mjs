@@ -9,6 +9,9 @@ const releases = [
   {version:'2.22.0-DE3.101', counter:674,
     sourceId:'894ab79ff45ee5c342d4fed11b6970fa0a60f21697216d4e876f488b4ba320f6',
     binSha256:'95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052'},
+  {version:'2.22.0-DE3.102', counter:675,
+    sourceId:'9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46',
+    binSha256:'28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06'},
 ];
 
 for (const reference of releases) test(`App${reference.counter} diagnostics keep the correct package reference without claiming a measured device BIN`, () => {
@@ -30,11 +33,11 @@ for (const reference of releases) test(`App${reference.counter} diagnostics keep
   assert.equal(diagnosticBuildIdentity({...request, build:{...request.build, board:'OLED'}}).observed.sourceId, null);
 });
 
-test('future and OLED versions never inherit the App674 package or its declared source match', () => {
-  for (const version of ['2.22.0-DE3.102', '2.22.0-DE3.101-OLEDt7']) {
-    const identity = diagnosticBuildIdentity({firmwareVersion:version, boot:{settingsCrcValid:true, applicationCounter:674},
-      build:{schemaVersion:1, board:'LCD', sourceId:releases[1].sourceId, previousFault:null}});
-    assert.notEqual(identity.packageReference?.applicationCounter, 674);
+test('future and OLED versions never inherit the App675 package or its declared source match', () => {
+  for (const version of ['2.22.0-DE3.103', '2.22.0-DE3.101-OLEDt7']) {
+    const identity = diagnosticBuildIdentity({firmwareVersion:version, boot:{settingsCrcValid:true, applicationCounter:675},
+      build:{schemaVersion:1, board:'LCD', sourceId:releases[2].sourceId, previousFault:null}});
+    assert.notEqual(identity.packageReference?.applicationCounter, 675);
     assert.equal(identity.observed.sourceId, null);
     assert.notEqual(identity.firmwareReportedSourceRelation, 'matches-package');
   }

@@ -93,7 +93,10 @@ const props = defineProps({ id: { type: String, default: null }, metadata: { typ
 const { locale } = useI18n();
 const de = computed(() => locale.value.startsWith('de'));
 const resolvedId = computed(() => figureId(props.id) || metadataFigureId(props.metadata));
-const matchingGames = computed(() => gameGuides.filter(game => game.ids.includes(resolvedId.value)));
+// Shared supplements are already rendered once as the exact figure's usage
+// note. Keep separate guides only where they add information not exported there.
+const matchingGames = computed(() => gameGuides.filter(game => game.ids.includes(resolvedId.value) &&
+  !game.usageIds?.includes(resolvedId.value)));
 const vehicles = computed(() => props.inspection?.id === resolvedId.value ? props.inspection?.vehicleCandidates : undefined);
 const catalogueData = computed(() => Array.isArray(props.catalogue?.entries) ? props.catalogue : data);
 const entry = computed(() => resolvedId.value ? (props.catalogueEntry?.id === resolvedId.value ? props.catalogueEntry : catalogueData.value.entries.find(item => item?.id === resolvedId.value)) : null);

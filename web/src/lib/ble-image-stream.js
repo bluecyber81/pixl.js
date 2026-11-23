@@ -28,16 +28,21 @@ function validateFrame(frame) {
 /** Convert an already scaled 128 x 64 RGBA image to row-major, LSB-first XBM.
  * A set XBM bit is a dark pixel on the LCD's normal ST7567 display, matching
  * the device-photo renderer. Transparency is composited onto the black canvas. */
-export function rgbaToFrame(rgba, { threshold = 128, invert = false } = {}) {
+const bayer4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+export function rgbaToFrame(rgba, { threshold = 128, invert = false, dither = 'threshold' } = {}) {
   if (!(rgba instanceof Uint8Array || rgba instanceof Uint8ClampedArray) || rgba.length !== 128 * 64 * 4 ||
-      !Number.isInteger(threshold) || threshold < 0 || threshold > 255 || typeof invert !== 'boolean') {
+      !Number.isInteger(threshold) || threshold < 0 || threshold > 255 || typeof invert !== 'boolean' ||
+      !['threshold', 'bayer'].includes(dither)) {
     throw failure('STREAM_FRAME_INVALID');
   }
   const frame = new Uint8Array(STREAM_FRAME_BYTES);
   for (let pixel = 0; pixel < 128 * 64; ++pixel) {
     const offset = pixel * 4;
     const luminance = (299 * rgba[offset] + 587 * rgba[offset + 1] + 114 * rgba[offset + 2]) * rgba[offset + 3] / 255000;
-    if ((luminance < threshold) !== invert) frame[pixel >> 3] |= 1 << (pixel & 7);
+    // Screen-anchored 4×4 Bayer cells are deterministic across frames. The
+    // existing threshold mode remains byte-for-byte unchanged by default.
+    const level = dither === 'bayer' ? threshold + (bayer4[((pixel >> 7) & 3) * 4 + (pixel & 3)] - 7.5) * 16 : threshold;
+    if ((luminance < level) !== invert) frame[pixel >> 3] |= 1 << (pixel & 7);
   }
   return frame;
 }

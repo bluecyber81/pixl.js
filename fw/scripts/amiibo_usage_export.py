@@ -76,9 +76,20 @@ def apply_web_supplement(data, supplement_path):
     date.fromisoformat(supplement['checkedDate'])
     figures = {figure['id']: figure for figure in data['figures']}
     groups = {group['id']: group for group in data['groups']}
+    original_targets = {(figure['id'], row['groupId'])
+                        for figure in data['figures'] for row in figure['associations']}
+    note_ids = {(note['en'], note['de'], note['translation']): note['id'] for note in data['notes']}
+    game_ids = set()
     targets = set()
     new_associations = new_notes = supplemented_notes = 0
     for game in supplement['games']:
+        if not isinstance(game.get('id'), str) or not re.fullmatch(r'[a-z0-9-]+', game['id']) or game['id'] in game_ids:
+            raise ValueError('Invalid or duplicate Nintendo game-guide ID')
+        game_ids.add(game['id'])
+        for field in ('title', 'de', 'en'):
+            text_field(game[field], 'Nintendo game guide ' + field, required=True)
+        if game.get('checkedDate'):
+            date.fromisoformat(game['checkedDate'])
         source = urlsplit(game['source'])
         if source.scheme != 'https' or not source.hostname or not source.hostname.endswith('.nintendo.com') or source.username or source.password:
             raise ValueError('Nintendo supplement must link to an official HTTPS source')
@@ -94,10 +105,21 @@ def apply_web_supplement(data, supplement_path):
             groups[group_id] = group
         elif groups[group_id]['labelPath'][-1] != game['groupLabel']:
             raise ValueError('Nintendo supplement game label does not match its group')
+        # A shared guide may also name a figure whose original, more specific
+        # note must be preserved (for example the two Ocarina mask figures).
+        for identifier in game.get('includeExistingIds', []):
+            target = (identifier, group_id)
+            if target not in original_targets or target in targets:
+                raise ValueError('Guide-only figure ID must have a unique existing game association')
+            targets.add(target)
+        translation = game.get('translation', 'editorial-from-english')
+        if translation not in ('editorial-from-english', 'editorial-from-primary-source'):
+            raise ValueError('Unsupported Nintendo note translation provenance')
         for note in game['rows']:
             for language in ('en', 'de'):
                 text_field(note[language], 'Nintendo note ' + language, required=True)
-            note_id = len(data['notes']) + 1
+            identity = (note['en'], note['de'], translation)
+            note_id = note_ids.get(identity, len(data['notes']) + 1)
             if not note['ids']:
                 raise ValueError('Nintendo note has no reviewed figure IDs')
             for identifier in note['ids']:
@@ -120,9 +142,11 @@ def apply_web_supplement(data, supplement_path):
                 existing.update(noteId=note_id, sourceUrl=game['source'],
                                 webSupplement=True, platform=game['platform'])
                 supplemented_notes += 1
-            data['notes'].append({'id': note_id, 'en': note['en'], 'de': note['de'],
-                                  'translation': 'editorial-from-english'})
-            new_notes += 1
+            if identity not in note_ids:
+                data['notes'].append({'id': note_id, 'en': note['en'], 'de': note['de'],
+                                      'translation': translation})
+                note_ids[identity] = note_id
+                new_notes += 1
     data['source']['webSupplement'] = {
         'path': 'web/src/data/usage-nintendo-supplement.json',
         'sha256': hashlib.sha256(supplement_path.read_bytes()).hexdigest(),

@@ -88,7 +88,7 @@
     <p v-if="collectionBusy" class="background-work" role="status">{{ language === 'de_DE' ? 'Sammlungsprüfung oder Figurenübertragung läuft …' : 'Collection check or figure transfer running …' }} <button type="button" @click="show_workspace('catalogue')">{{ language === 'de_DE' ? 'Vorgang anzeigen' : 'Show operation' }}</button></p>
     <p v-if="searchBusy" class="background-work" role="status">{{ language === 'de_DE' ? 'Gerätesuche läuft…' : 'Device search running…' }} <button type="button" @click="show_workspace('files')">{{ language === 'de_DE' ? 'Suche anzeigen' : 'Show search' }}</button></p>
     <details v-show="activeWorkspace === 'remote'" id="remote-workspace" ref="remoteWorkspace" class="remote-workspace"><summary>{{ language === 'de_DE' ? 'Fernbedienung · Menü und Dateien' : 'Remote control · menu and files' }}</summary><RemoteControl v-if="visitedWorkspaces.has('remote')" :locale="language" :blocked="connected || connecting || disconnecting || busy || streamActive" :handoff-file-connection="on_remote_file_handoff" @active="remoteActive = $event" /></details>
-    <details v-show="activeWorkspace === 'stream'" id="stream-workspace" ref="streamWorkspace" class="workspace-panel"><summary>{{ language === 'de_DE' ? 'Bild & Video · BLE-Bildempfang' : 'Image & video · BLE image receiver' }}</summary><BleImageSender v-if="activeWorkspace === 'stream'" :locale="language" :blocked="connected || connecting || disconnecting || busy || remoteActive" @active="streamActive = $event" @sending="streamSending = $event" /></details>
+    <details v-show="activeWorkspace === 'stream'" id="stream-workspace" ref="streamWorkspace" class="workspace-panel"><summary>{{ language === 'de_DE' ? 'Bild & Video · BLE-Bildempfang' : 'Image & video · BLE image receiver' }}</summary><BleImageSender v-if="activeWorkspace === 'stream'" :locale="language" :blocked="connected || connecting || disconnecting || busy || remoteActive" @active="streamActive = $event" @sending="streamSending = $event" @exporting="streamExporting = $event" /></details>
     <section v-if="transfer && !upload_diag_visible && !zipDialog && !syncDialog" class="transfer-panel">
       <span class="visually-hidden" role="status" aria-live="polite">{{ $t('tools.' + transfer.phase) }}</span>
       <strong>{{ $t('tools.' + transfer.phase) }}</strong>
@@ -599,9 +599,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a href="https://github.com/bluecyber81/pixl.js/tree/web-app674" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.64.0' : '3.64.0 source code' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.64.0 (ZIP)' : 'Windows 3.64.0 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.64.0 (ZIP)' : '3.64.0 source code (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web-app675" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.65.0' : '3.65.0 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.65.0 (ZIP)' : 'Windows 3.65.0 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.65.0 (ZIP)' : '3.65.0 source code (ZIP)' }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
@@ -671,7 +671,7 @@ export default {
       diagnosticsDialog: false, diagnosticsJson: '', diagnosticsFilename: '', diagnosticsStatus: 'info.diagnosticReady', diagnosticsSaving: false, diagnosticsCopying: false,
       zipPathAdvice: null, renameDraft: '', backupReferenceLoading: false, backupResumeInfo: null, storeBackup:false, storedBusy:false, storedHead:null, storedError:'', persistStatus:'',
       zipDialog: false, zipBusy: false, zipRoot: '', zipFilename: '', zipPlan: null, zipSelected: [], zipStatus: '', zipPage: 1,
-      activeWorkspace: 'files', visitedWorkspaces: new Set(['files']), figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false, streamActive: false, streamSending: false,
+      activeWorkspace: 'files', visitedWorkspaces: new Set(['files']), figureImportFocusPending: false, previewSelection: null, previewBusy: false, previewSerial: 0, remoteActive: false, streamActive: false, streamSending: false, streamExporting: false,
       renameNotice: null,
       powerInfo: null, powerState: 'unknown', devicePanelOpen: false, startupBusy: false, displayPhotoBusy: false, bleTestBusy: false, guidedCheckOpened: false, guidedComparisonOpened: false,
       flashInfo:null, flashState:'unknown', storageLayoutBytes:null, batteryLabelConfirmed:false, hardwareProfileError:false,
@@ -729,7 +729,7 @@ export default {
   },
   computed: {
     lcdGameFolderSupported() { return buildDiagnosticBoard(this.firmwareVersion) === 'LCD'; },
-    screenAwakeActive() { return this.streamSending || this.connected && (this.backingUp || this.fullDiagnosticBusy || this.startupBusy || this.collectionBusy || this.searchBusy || this.migrationBusy || this.syncing || this.zipBusy || this.pendingUploads > 0 || this.pendingDownloads > 0); },
+    screenAwakeActive() { return this.streamSending || this.streamExporting || this.connected && (this.backingUp || this.fullDiagnosticBusy || this.startupBusy || this.collectionBusy || this.searchBusy || this.migrationBusy || this.syncing || this.zipBusy || this.pendingUploads > 0 || this.pendingDownloads > 0); },
     catalogueObservationHistorical() { return !this.connected && !this.connecting && !this.collectionStale && !!this.collectionObservation; },
     cataloguePresenceReport() { return this.catalogueObservationHistorical ? this.collectionObservation.report : this.collectionReport; },
     catalogueObservationAt() { return this.catalogueObservationHistorical ? this.collectionObservation.checkedAt : ''; },

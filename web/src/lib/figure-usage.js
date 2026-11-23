@@ -62,6 +62,7 @@ export function figureUsage(id, data, locale = 'de_DE') {
       original: translated ? note.en : null,
       language: translated ? 'de' : note?.en ? 'en' : null,
       translated,
+      editorialNote: note?.translation === 'editorial-from-primary-source',
     };
   });
 }

@@ -42,7 +42,9 @@ class UsageExportTests(unittest.TestCase):
             for association in figure['associations']:
                 note = notes.get(association['noteId'])
                 if association.get('webSupplement'):
-                    self.assertIn(association['groupId'], [5, 'web-yoshi-mysterious-book'])
+                    self.assertIn(association['groupId'], [5, 82, 22, 23, 24, 26, 33, 44, 47,
+                                                          'web-yoshi-mysterious-book', 'web-fatal-fury-cotw',
+                                                          'web-kirby-forgotten-land-switch2'])
                     self.assertTrue(note['de'] and note['en'])
                     if association.get('webOnly'):
                         self.assertNotIn('sourceLine', association)
@@ -71,12 +73,12 @@ class UsageExportTests(unittest.TestCase):
         self.assertEqual(len(actual), 1348)
         self.assertEqual(nintendo_web_rows, sorted([*exporter.OCARINA_PRODUCTS, *exporter.TRAINING_IDS]))
         self.assertEqual(data['coverage']['firmwareAssociations'], len(actual))
-        self.assertEqual(data['coverage']['associations'], len(actual) + 8)
-        self.assertEqual(data['coverage']['nintendoWebAssociations'], 8)
+        self.assertEqual(data['coverage']['associations'], len(actual) + 66)
+        self.assertEqual(data['coverage']['nintendoWebAssociations'], 66)
         self.assertEqual(data['coverage']['figures'], 956)
-        self.assertEqual(data['coverage']['englishNoteAssociations'], 105)
-        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 58)
-        self.assertEqual(data['coverage']['germanNoteAssociations'], 105)
+        self.assertEqual(data['coverage']['englishNoteAssociations'], 163)
+        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 64)
+        self.assertEqual(data['coverage']['germanNoteAssociations'], 163)
         self.assertTrue(data['policy']['germanTranslationsAreComplete'])
         self.assertEqual({row['en'] for row in data['notes'][:55] if row['de']}, {row[2] for row in rows if row[2]})
         self.assertFalse(data['policy']['verifiedInGame'])
@@ -103,6 +105,9 @@ class UsageExportTests(unittest.TestCase):
             ('fake group', lambda d: d['games'][1].update(groupId=83), 'numeric firmware'),
             ('external URL', lambda d: d['games'][0].update(source='https://example.com/guide'), 'official HTTPS'),
             ('empty note', lambda d: d['games'][0]['rows'][0].update(de=''), 'non-empty'),
+            ('duplicate guide', lambda d: d['games'][1].update(id=d['games'][0]['id']), 'duplicate Nintendo game-guide'),
+            ('invented guide-only match', lambda d: d['games'][3].update(includeExistingIds=['0000000000000002']), 'unique existing'),
+            ('duplicate guide-only match', lambda d: d['games'][3]['includeExistingIds'].append('0100000004fd0902'), 'unique existing'),
         ]
         for name, change, error in cases:
             with self.subTest(name=name):
@@ -117,6 +122,25 @@ class UsageExportTests(unittest.TestCase):
         path.write_text(json.dumps(candidate))
         with self.assertRaisesRegex(ValueError, 'must not replace'):
             exporter.export_usage(self.data, self.translations, path)
+
+    def test_new_game_notes_preserve_masks_and_share_identical_bilingual_wording(self):
+        data = exporter.export_usage(self.data, self.translations)
+        by_figure = {figure['id']: {row['groupId']: row for row in figure['associations']}
+                     for figure in data['figures']}
+        notes = {note['id']: note for note in data['notes']}
+        for aid in exporter.OCARINA_PRODUCTS:
+            row = by_figure[aid][82]
+            self.assertNotIn('webSupplement', row)
+            self.assertEqual(notes[row['noteId']]['en'], 'Unlocks a special mask that Link can wear.')
+        for aid in exporter.RIDER_IDS:
+            same_note_ids = {by_figure[aid][game]['noteId'] for game in
+                             (22, 23, 24, 44, 'web-kirby-forgotten-land-switch2')}
+            self.assertEqual(len(same_note_ids), 1)
+            self.assertEqual(notes[same_note_ids.pop()]['translation'], 'editorial-from-primary-source')
+            self.assertEqual(by_figure[aid][75]['sinceGameVersion'], '1.3.3')
+        self.assertIn(33, by_figure['1f00010004c51e03'])
+        self.assertNotIn(33, by_figure['1f02010004c81e03'])
+        self.assertEqual(len(data['notes']), len({(n['en'], n['de']) for n in data['notes']}))
 
     def test_export_is_reproducible_and_check_detects_stale_json_without_rewriting(self):
         rendered = exporter.render_usage(exporter.export_usage(self.data, self.translations)).encode('utf8')

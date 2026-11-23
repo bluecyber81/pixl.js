@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "checkedDate": "2026-11-22",
+  "checkedDate": "2026-11-23",
   "policy": "Reviewed exact catalogue IDs only. Web notes supplement the unchanged firmware CSV export. No new firmware group, downloaded figure file or in-game device test is implied.",
   "games": [
     {
@@ -53,7 +53,8 @@
           "en": "Unlock Shadow Link for Chamber Dungeons, plus an extra chamber. Save a Chamber Dungeon to this amiibo to share it.",
           "de": "Schatten-Link für Kammerlabyrinthe und eine zusätzliche Kammer freischalten. Ein Kammerlabyrinth auf diesem amiibo speichern und weitergeben."
         }
-      ]
+      ],
+      "checkedDate": "2026-11-22"
     },
     {
       "id": "yoshi-mysterious-book",
@@ -83,6 +84,322 @@
           ],
           "en": "Read your fortune once per day and receive tokens that unlock discovery hints.",
           "de": "Einmal täglich wahrsagen lassen und Glyphen erhalten, mit denen du Hinweise zu Entdeckungen freischaltest."
+        }
+      ],
+      "checkedDate": "2026-11-22"
+    },
+    {
+      "id": "fatal-fury-cotw",
+      "title": "Fatal Fury: City of the Wolves",
+      "platform": "Switch 2",
+      "groupId": "web-fatal-fury-cotw",
+      "groupLabel": "Fatal Fury: City of the Wolves",
+      "checkedDate": "2026-11-23",
+      "source": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+      "additionalSources": [
+        "https://www.nintendo.com/jp/hardware/amiibo/data/amiiboID_list.csv",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/aadg/index.html",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/aadq/index.html"
+      ],
+      "de": "Mit Ken, Chun-Li, Terry und Mai aus den Street-Fighter-6-Startersets und Boosterpacks sowie den Smash-Figuren von Ken und Terry erhältst du Avatare, Titel und Erfahrung für Episodes of South Town.",
+      "en": "Use the Ken, Chun-Li, Terry and Mai cards from the Street Fighter 6 starter sets and booster packs, or the Smash figures of Ken and Terry, to receive avatars, titles and experience for Episodes of South Town.",
+      "mappingScope": "The previously reviewed ten guide IDs are shared with the per-figure notes. Nintendo lists figures aadg/aadq and card packs mjza/mj3a; its game page limits cards to Ken, Chun-Li, Terry and Mai. Other Street Fighter cards and figures are not inferred.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "34c1000104a91d02",
+            "34c1000104cc1d02",
+            "34c5000104b01d02",
+            "34c5000104d01d02",
+            "3c80000104e81d02",
+            "3c80000104f11d02",
+            "3c81000104f21d02",
+            "3c81000104f31d02",
+            "34c1000003890002",
+            "3c80000003a40002"
+          ],
+          "en": "Receive amiibo-exclusive avatars and titles, and experience for Episodes of South Town (EOST).",
+          "de": "Erhalte amiibo-exklusive Avatare und Titel sowie Erfahrung für Episodes of South Town (EOST)."
+        }
+      ]
+    },
+    {
+      "id": "ocarina-of-time",
+      "title": "The Legend of Zelda: Ocarina of Time",
+      "platform": "Switch 2",
+      "groupId": 82,
+      "groupLabel": "The Legend of Zelda: Ocarina of Time",
+      "checkedDate": "2026-11-23",
+      "source": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+      "de": "Scannen kannst du nach dem ersten Besuch der Hylianischen Steppe. Junger Link und Junge Zelda aus der Ocarina-of-Time-Reihe schalten besondere Masken im Grafikstil des Originals frei. Die übrigen hier gelisteten Figuren geben Gegenstände.",
+      "en": "Scan after you first reach Hyrule Field. Young Link and Young Zelda from the Ocarina of Time series unlock special masks in the original game’s visual style. The other figures listed here summon items.",
+      "mappingScope": "The 33 exact Zelda figure IDs already reviewed in the game guide receive per-figure notes. Young Link and Young Zelda retain their existing special-mask notes and are included in the same guide without replacing those notes.",
+      "includeExistingIds": [
+        "0100000004fd0902",
+        "0101000004ff0902"
+      ],
+      "rows": [
+        {
+          "ids": [
+            "01000000034f0902",
+            "01410000035c0902",
+            "0105000003580902",
+            "01020100001b0002",
+            "01020100041a0902",
+            "0140000003550902",
+            "0100000000040002",
+            "0100000003530902",
+            "0100000003990902",
+            "01000000034c0902",
+            "01000000034b0902",
+            "0100000003540902",
+            "01000000034e0902",
+            "0100000004180902",
+            "01000000034d0902",
+            "01030000024f0902",
+            "010d000004a70902",
+            "01070000035a0902",
+            "01080000035b0902",
+            "0109000004a30902",
+            "0101010000170002",
+            "010a000004a40902",
+            "0100010000160002",
+            "0100010003500902",
+            "0101000003520902",
+            "010b000004a50902",
+            "0106000003590902",
+            "01000000037c0002",
+            "010c000004a60902",
+            "01010000000e0002",
+            "0101000003560902",
+            "0101000004190902",
+            "0101030004140902"
+          ],
+          "en": "Summon useful items for your adventure. Scanning becomes available after you first reach Hyrule Field.",
+          "de": "Rufe nützliche Gegenstände für dein Abenteuer herbei. Scannen ist nach dem ersten Besuch der Hylianischen Steppe möglich."
+        }
+      ]
+    },
+    {
+      "id": "mario-kart-8-deluxe",
+      "title": "Mario Kart 8 Deluxe",
+      "platform": "Switch",
+      "groupId": 26,
+      "groupLabel": "Mario Kart 8 Deluxe",
+      "checkedDate": "2026-11-23",
+      "source": "https://www.nintendo.com/jp/hardware/amiibo/game/aabpa/index.html",
+      "additionalSources": [
+        "https://www.nintendo.com/jp/hardware/amiibo/data/amiiboID_list.csv",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caaf/index.html",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caag/index.html"
+      ],
+      "de": "Nintendo führt die hier gelisteten Air-Riders-Figuren für dieses Spiel auf. Schalte einen Mii-Rennanzug frei, der zum amiibo-Charakter passt.",
+      "en": "Nintendo lists the Air Riders figures shown here for this game. Unlock a Mii racing suit based on the amiibo character.",
+      "mappingScope": "Exact reviewed rider IDs only. Nintendo matrix cells caaf/aabpa=1, caag/aabpa=1. Other riders, machines, editions and platforms are not inferred. Detailed reward counts from the community source are not carried over.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "1f00010004c51e03",
+            "1f02010004c81e03"
+          ],
+          "en": "Unlock a Mii racing suit based on the amiibo character.",
+          "de": "Schalte einen Mii-Rennanzug frei, der zum amiibo-Charakter passt."
+        }
+      ]
+    },
+    {
+      "id": "kirby-star-allies",
+      "title": "Kirby Star Allies",
+      "platform": "Switch",
+      "groupId": 24,
+      "groupLabel": "Kirby: Star Allies",
+      "checkedDate": "2026-11-23",
+      "source": "https://www.nintendo.com/jp/hardware/amiibo/game/ah26a/index.html",
+      "additionalSources": [
+        "https://www.nintendo.com/jp/hardware/amiibo/data/amiiboID_list.csv",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caaf/index.html",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caag/index.html"
+      ],
+      "de": "Nintendo führt die hier gelisteten Air-Riders-Figuren für dieses Spiel auf. Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo.",
+      "en": "Nintendo lists the Air Riders figures shown here for this game. Receive more helpful items than with other amiibo.",
+      "mappingScope": "Exact reviewed rider IDs only. Nintendo matrix cells caaf/ah26a=1, caag/ah26a=1. Other riders, machines, editions and platforms are not inferred. Detailed reward counts from the community source are not carried over.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "1f00010004c51e03",
+            "1f02010004c81e03"
+          ],
+          "en": "Receive more helpful items than with other amiibo.",
+          "de": "Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo."
+        }
+      ]
+    },
+    {
+      "id": "smash-bros-ultimate",
+      "title": "Super Smash Bros. Ultimate",
+      "platform": "Switch",
+      "groupId": 47,
+      "groupLabel": "Super Smash Bros Ultimate",
+      "checkedDate": "2026-11-23",
+      "source": "https://www.nintendo.com/jp/hardware/amiibo/game/aaaba/index.html",
+      "additionalSources": [
+        "https://www.nintendo.com/jp/hardware/amiibo/data/amiiboID_list.csv",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caaf/index.html",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caag/index.html"
+      ],
+      "de": "Nintendo führt die hier gelisteten Air-Riders-Figuren für dieses Spiel auf. Trainiere einen computergesteuerten Figurenspieler, der sich durch Kämpfe weiterentwickelt.",
+      "en": "Nintendo lists the Air Riders figures shown here for this game. Train a computer-controlled Figure Player that develops through battles.",
+      "mappingScope": "Exact reviewed rider IDs only. Nintendo matrix cells caaf/aaaba=1, caag/aaaba=1. Other riders, machines, editions and platforms are not inferred. Detailed reward counts from the community source are not carried over.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "1f00010004c51e03",
+            "1f02010004c81e03"
+          ],
+          "en": "Train a computer-controlled Figure Player that develops through battles.",
+          "de": "Trainiere einen computergesteuerten Figurenspieler, der sich durch Kämpfe weiterentwickelt."
+        }
+      ]
+    },
+    {
+      "id": "super-kirby-clash",
+      "title": "Super Kirby Clash",
+      "platform": "Switch",
+      "groupId": 44,
+      "groupLabel": "Super Kirby Clash",
+      "checkedDate": "2026-11-23",
+      "source": "https://www.nintendo.com/jp/hardware/amiibo/game/apy8a/index.html",
+      "additionalSources": [
+        "https://www.nintendo.com/jp/hardware/amiibo/data/amiiboID_list.csv",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caaf/index.html",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caag/index.html"
+      ],
+      "de": "Nintendo führt die hier gelisteten Air-Riders-Figuren für dieses Spiel auf. Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo.",
+      "en": "Nintendo lists the Air Riders figures shown here for this game. Receive more helpful items than with other amiibo.",
+      "mappingScope": "Exact reviewed rider IDs only. Nintendo matrix cells caaf/apy8a=1, caag/apy8a=1. Other riders, machines, editions and platforms are not inferred. Detailed reward counts from the community source are not carried over.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "1f00010004c51e03",
+            "1f02010004c81e03"
+          ],
+          "en": "Receive more helpful items than with other amiibo.",
+          "de": "Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo."
+        }
+      ]
+    },
+    {
+      "id": "miitopia",
+      "title": "Miitopia",
+      "platform": "Switch",
+      "groupId": 33,
+      "groupLabel": "Miitopia",
+      "checkedDate": "2026-11-23",
+      "source": "https://www.nintendo.com/jp/hardware/amiibo/game/aw8sa/index.html",
+      "additionalSources": [
+        "https://www.nintendo.com/jp/hardware/amiibo/data/amiiboID_list.csv",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caaf/index.html"
+      ],
+      "de": "Nintendo führt die hier gelisteten Air-Riders-Figuren für dieses Spiel auf. Erhalte ein Charakterkostüm; weitere amiibo desselben Charakters geben Spieltickets. Diese Air-Riders-Figur wird auf Switch unterstützt, auf Nintendo 3DS nicht.",
+      "en": "Nintendo lists the Air Riders figures shown here for this game. Receive a character costume; further amiibo of the same character give game tickets. This Air Riders figure is supported on Switch, not on Nintendo 3DS.",
+      "mappingScope": "Exact reviewed rider IDs only. Nintendo matrix cells caaf/aw8sa=1. Other riders, machines, editions and platforms are not inferred. Detailed reward counts from the community source are not carried over.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "1f00010004c51e03"
+          ],
+          "en": "Receive a character costume; further amiibo of the same character give game tickets. This Air Riders figure is supported on Switch, not on Nintendo 3DS.",
+          "de": "Erhalte ein Charakterkostüm; weitere amiibo desselben Charakters geben Spieltickets. Diese Air-Riders-Figur wird auf Switch unterstützt, auf Nintendo 3DS nicht."
+        }
+      ]
+    },
+    {
+      "id": "kirby-forgotten-land",
+      "title": "Kirby and the Forgotten Land",
+      "platform": "Switch",
+      "groupId": 22,
+      "groupLabel": "Kirby and the Forgotten Land",
+      "checkedDate": "2026-11-23",
+      "source": "https://www.nintendo.com/jp/hardware/amiibo/game/arzga/index.html",
+      "additionalSources": [
+        "https://www.nintendo.com/jp/hardware/amiibo/data/amiiboID_list.csv",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caaf/index.html",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caag/index.html"
+      ],
+      "de": "Nintendo führt die hier gelisteten Air-Riders-Figuren für dieses Spiel auf. Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo.",
+      "en": "Nintendo lists the Air Riders figures shown here for this game. Receive more helpful items than with other amiibo.",
+      "mappingScope": "Exact reviewed rider IDs only. Nintendo matrix cells caaf/arzga=1, caag/arzga=1. Other riders, machines, editions and platforms are not inferred. Detailed reward counts from the community source are not carried over.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "1f00010004c51e03",
+            "1f02010004c81e03"
+          ],
+          "en": "Receive more helpful items than with other amiibo.",
+          "de": "Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo."
+        }
+      ]
+    },
+    {
+      "id": "kirby-return-dream-land-deluxe",
+      "title": "Kirby's Return to Dream Land Deluxe",
+      "platform": "Switch",
+      "groupId": 23,
+      "groupLabel": "Kirby's Return to Dream Land DELUXE",
+      "checkedDate": "2026-11-23",
+      "source": "https://www.nintendo.com/jp/hardware/amiibo/game/a2jya/index.html",
+      "additionalSources": [
+        "https://www.nintendo.com/jp/hardware/amiibo/data/amiiboID_list.csv",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caaf/index.html",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caag/index.html"
+      ],
+      "de": "Nintendo führt die hier gelisteten Air-Riders-Figuren für dieses Spiel auf. Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo.",
+      "en": "Nintendo lists the Air Riders figures shown here for this game. Receive more helpful items than with other amiibo.",
+      "mappingScope": "Exact reviewed rider IDs only. Nintendo matrix cells caaf/a2jya=1, caag/a2jya=1. Other riders, machines, editions and platforms are not inferred. Detailed reward counts from the community source are not carried over.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "1f00010004c51e03",
+            "1f02010004c81e03"
+          ],
+          "en": "Receive more helpful items than with other amiibo.",
+          "de": "Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo."
+        }
+      ]
+    },
+    {
+      "id": "kirby-forgotten-land-switch2",
+      "title": "Kirby and the Forgotten Land – Nintendo Switch 2 Edition + Star-Crossed World",
+      "platform": "Switch 2",
+      "groupId": "web-kirby-forgotten-land-switch2",
+      "groupLabel": "Kirby and the Forgotten Land – Nintendo Switch 2 Edition + Star-Crossed World",
+      "checkedDate": "2026-11-23",
+      "source": "https://www.nintendo.com/jp/hardware/amiibo/game/arzga_2/index.html",
+      "additionalSources": [
+        "https://www.nintendo.com/jp/hardware/amiibo/data/amiiboID_list.csv",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caaf/index.html",
+        "https://www.nintendo.com/jp/hardware/amiibo/lineup/caag/index.html"
+      ],
+      "de": "Nintendo führt die hier gelisteten Air-Riders-Figuren für dieses Spiel auf. Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo.",
+      "en": "Nintendo lists the Air Riders figures shown here for this game. Receive more helpful items than with other amiibo.",
+      "mappingScope": "Exact reviewed rider IDs only. Nintendo matrix cells caaf/arzga_2=1, caag/arzga_2=1. Other riders, machines, editions and platforms are not inferred. Detailed reward counts from the community source are not carried over.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "1f00010004c51e03",
+            "1f02010004c81e03"
+          ],
+          "en": "Receive more helpful items than with other amiibo.",
+          "de": "Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo."
         }
       ]
     }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {sourceKind, sourceRectangle, demoRgba, drawMediaFrame, loadLocalMedia, createFramePump} from '../src/lib/stream-media.js';
+import {sourceKind, sourceRectangle, rotatedSourceRectangle, demoRgba, drawMediaFrame, loadLocalMedia, createFramePump} from '../src/lib/stream-media.js';
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
 const flush=async()=>{await Promise.resolve();await Promise.resolve();};
 function clock(){let time=0,id=0;const pending=new Map();return{now:()=>time,schedule(fn,ms){const key=++id;pending.set(key,{fn,at:time+ms});return key;},cancel:key=>pending.delete(key),async advance(ms){time+=ms;for(const [key,value]of [...pending])if(value.at<=time){pending.delete(key);value.fn();}await flush();},pending};}
@@ -10,6 +10,11 @@ function mediaFixture(video=false){const item=source(video),urls=[],revoked=[],t
 test('media classification supports local browser types and filename fallback, rejects active SVG and non-media',()=>{
  assert.equal(sourceKind({type:'image/png'}),'image');assert.equal(sourceKind({name:'CLIP.MP4',type:''}),'video');assert.equal(sourceKind({name:'test.GIF'}),'image');assert.equal(sourceKind({type:'video/webm'}),'video');
  for(const file of [{type:'image/svg+xml'},{name:'hidden.svg',type:'image/png'},{name:'archive.zip'},{type:'text/html',name:'clip.mp4'},{}])assert.throws(()=>sourceKind(file),{code:'MEDIA_TYPE'});
+});
+test('generic binary MIME types use a media extension, while explicit non-media and SVG remain rejected',()=>{
+ assert.equal(sourceKind({name:'photo.PNG',type:'application/octet-stream'}),'image');
+ assert.equal(sourceKind({name:'movie.mp4',type:'binary/octet-stream'}),'video');
+ for(const file of [{name:'photo.png',type:'text/html'},{name:'photo.png',type:'image/svg+xml;charset=utf-8'},{name:'archive.zip',type:'application/octet-stream'}])assert.throws(()=>sourceKind(file),{code:'MEDIA_TYPE'});
 });
 test('fitting preserves a square image with equal side bars, cropping keeps its centered middle, stretching fills',()=>{
  assert.deepEqual(sourceRectangle(100,100,'fit'),{sx:0,sy:0,sw:100,sh:100,dx:32,dy:0,dw:64,dh:64});
@@ -21,6 +26,18 @@ test('fitting preserves a square image with equal side bars, cropping keeps its 
 test('canvas capture clears letterbox pixels and draws the centered source rectangle into exactly 128x64',()=>{
  const calls=[],rgba=new Uint8ClampedArray(32768);const context={fillRect:(...args)=>calls.push(['fill',...args]),drawImage:(...args)=>calls.push(['draw',...args]),getImageData:(...args)=>{calls.push(['read',...args]);return{data:rgba};}};
  const src={videoWidth:1920,videoHeight:1080};assert.equal(drawMediaFrame(context,src,'fit'),rgba);assert.equal(context.fillStyle,'#000');assert.deepEqual(calls[0],['fill',0,0,128,64]);assert.deepEqual(calls[1].slice(0,6),['draw',src,0,0,1920,1080]);assert(Math.abs(calls[1][6]-(64-512/9))<1e-10);assert.equal(calls[1][7],0);assert(Math.abs(calls[1][8]-1024/9)<1e-10);assert.equal(calls[1][9],64);assert.deepEqual(calls[2],['read',0,0,128,64]);
+});
+test('rotation is applied before fit/crop without a source-sized intermediate canvas',()=>{
+ const fit=rotatedSourceRectangle(200,100,'fit',90);
+ assert.deepEqual(fit.rectangle,{sx:0,sy:0,sw:100,sh:200,dx:48,dy:0,dw:32,dh:64});
+ assert.deepEqual(fit.original,{sx:0,sy:0,sw:200,sh:100});
+ for(const rotation of [90,270])assert.deepEqual(rotatedSourceRectangle(200,100,'crop',rotation).original,{sx:75,sy:0,sw:50,sh:100});
+ assert.deepEqual(rotatedSourceRectangle(200,100,'crop',180).original,{sx:0,sy:0,sw:200,sh:100});
+ assert.throws(()=>rotatedSourceRectangle(100,100,'fit',45),{code:'MEDIA_ROTATION'});
+ const calls=[],source={naturalWidth:200,naturalHeight:100},context={fillRect(){},save(){calls.push(['save']);},restore(){calls.push(['restore']);},translate:(...v)=>calls.push(['translate',...v]),rotate:v=>calls.push(['rotate',v]),drawImage:(...v)=>calls.push(['draw',...v]),getImageData:()=>({data:new Uint8ClampedArray(32768)})};
+ drawMediaFrame(context,source,'fit',90);
+ assert.deepEqual(calls,[['save'],['translate',64,32],['rotate',Math.PI/2],['draw',source,0,0,200,100,-32,-16,64,32],['restore']]);
+ context.drawImage=()=>{throw Error('decode');};assert.throws(()=>drawMediaFrame(context,source,'fit',180),/decode/);assert.deepEqual(calls.at(-1),['restore']);
 });
 test('demo is bounded opaque monochrome and changes between frames',()=>{
  const first=demoRgba(0),next=demoRgba(1);assert.equal(first.length,32768);assert.notDeepEqual(first,next);

@@ -63,7 +63,7 @@ test('both guide languages link to a dedicated OLED chapter with the published p
 
 test('both guides offer the current LCD app, full package and aligned storage target', () => {
     const release = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/';
-    const app = 'https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip';
+    const app = 'https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip';
     const combo = release + 'Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip';
     for (const file of ['index.html', 'en.html']) {
         const html = fs.readFileSync(path.join(__dirname, '../public/guide', file), 'utf8');
@@ -72,7 +72,7 @@ test('both guides offer the current LCD app, full package and aligned storage ta
         assert.match(section('flash'), /Z21/);
         assert.ok(section('bootloader').includes(combo));
         assert.match(section('bootloader'), /(?:unter|below) 21/);
-        assert.match(section('littlefs'), /DE3\.101 \/ 674/);
+        assert.match(section('littlefs'), /DE3\.102 \/ 675/);
         const lcdDownloads = [...section('programme').matchAll(/href="([^"]*Allmiibo_LCD_[^"]*\.zip)"/g)].map(match => match[1]);
         assert.deepEqual(lcdDownloads, [app, combo]);
     }
@@ -114,14 +114,18 @@ test('the App660 device guide links the signed LCD application and its published
 });
 
 
-test('current App674 guide keeps the App673 chapter and package addressable as history', () => {
+test('current App675 guide keeps App674 and App673 packages addressable as history', () => {
     for (const file of ['index.html', 'en.html']) {
         const html = fs.readFileSync(path.join(__dirname, '../public/guide', file), 'utf8');
-        const current = html.split('<h3 id="lcd-de3101">')[1].split('<h3 id="lcd-de3100">')[0];
+        const current = html.split('<h3 id="lcd-de3102">')[1].split('<h3 id="lcd-de3101">')[0];
+        const previous = html.split('<h3 id="lcd-de3101">')[1].split('<h3 id="lcd-de3100">')[0];
         const history = html.split('<h3 id="lcd-de3100">')[1].split('<h3 id="lcd-de399">')[0];
-        assert.match(current, /DE3\.101 \/ App674/);
-        assert.match(current, /Allmiibo_LCD_DE3_101_674_NUR_APP\.zip/);
-        assert.match(current, /package=de3\.101-lcd-app#board=LCD/);
+        assert.match(current, /DE3\.102 \/ App675/);
+        assert.match(current, /Allmiibo_LCD_DE3_102_675_NUR_APP\.zip/);
+        assert.match(current, /package=de3\.102-lcd-app#board=LCD/);
+        assert.match(previous, /DE3\.101 \/ App674/);
+        assert.match(previous, /Allmiibo_LCD_DE3_101_674_NUR_APP\.zip/);
+        assert.match(previous, /package=de3\.101-lcd-app#board=LCD/);
         assert.doesNotMatch(current, /Allmiibo_LCD_DE3_100_673_NUR_APP\.zip/);
         assert.match(history, /Archi(?:v|ve): LCD DE3\.100 \/ App673/);
         assert.match(history, /Allmiibo_LCD_DE3_100_673_NUR_APP\.zip/);
@@ -140,7 +144,7 @@ test('both guides open the browser sender without connecting and explain its App
         assert.deepEqual([...target.searchParams], [['workspace', 'stream']]);
         assert.match(chapter, /DE3\.100\/App673/);
         assert.match(chapter, /128 × 64/);
-        assert.match(chapter, file === 'en.html' ? /Selecting a file and connecting alone do not send images/ : /Auswahl und das Verbinden allein senden keine Bilder/);
+        assert.match(chapter, file === 'en.html' ? /Selecting a file and connecting alone do not send images/ : /Auswahl und Verbinden allein senden keine Bilder/);
         assert.match(chapter, file === 'en.html' ? /Center exits the receiver/ : /Mitte beendet den Bildempfang/);
         assert.match(chapter, file === 'en.html' ? /file stays.*not uploaded/ : /Datei bleibt.*nicht hochgeladen/);
         assert.match(chapter, file === 'en.html' ? /Actual rate depends/ : /tatsächliche Rate hängt/);

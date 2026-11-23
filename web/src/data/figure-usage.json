@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026-11-22.nintendo-web",
+  "dataVersion": "2026-11-23.nintendo-web",
   "source": {
     "label": "Bundled firmware catalogue",
     "referenceCommit": "6e0004969cd1481a027c2eaa86838a4c3fa1553d",
@@ -206,8 +206,8 @@
     "hashPolicy": "sha256 identifies the local export input; referenceSha256 identifies the exact bytes at referenceUrl. Per-file transformations explain any difference.",
     "webSupplement": {
       "path": "web/src/data/usage-nintendo-supplement.json",
-      "sha256": "f3738b3a39250f5ce2f08e89aa28ea49a9cdb8935c33d5ff429ab265a2ccbd96",
-      "checkedDate": "2026-11-22",
+      "sha256": "f0f9466d43a1e338276a8d6a08d0b7c489776480de8b9c5218c7ae74a045c5ac",
+      "checkedDate": "2026-11-23",
       "policy": "Reviewed exact catalogue IDs only. Web notes supplement the unchanged firmware CSV export. No new firmware group, downloaded figure file or in-game device test is implied."
     },
     "firmwareDataVersion": "2026-11-16.de376"
@@ -222,16 +222,16 @@
   },
   "coverage": {
     "figures": 956,
-    "groups": 84,
-    "associations": 1356,
+    "groups": 86,
+    "associations": 1414,
     "firmwareAssociations": 1348,
-    "nintendoWebAssociations": 8,
+    "nintendoWebAssociations": 66,
     "legacyEmptyLinkColumns": 3,
-    "englishNoteAssociations": 105,
-    "uniqueEnglishNotes": 58,
-    "uniqueGermanTranslations": 58,
-    "germanNoteAssociations": 105,
-    "nintendoWebNoteAdditions": 33
+    "englishNoteAssociations": 163,
+    "uniqueEnglishNotes": 64,
+    "uniqueGermanTranslations": 64,
+    "germanNoteAssociations": 163,
+    "nintendoWebNoteAdditions": 91
   },
   "groups": [
     {
@@ -927,6 +927,26 @@
       "platform": "Switch 2",
       "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71615/~/how-to-use-amiibo-figures-(yoshi-and-the-mysterious-book)",
       "webOnly": true
+    },
+    {
+      "id": "web-fatal-fury-cotw",
+      "parentId": null,
+      "labelPath": [
+        "Fatal Fury: City of the Wolves"
+      ],
+      "platform": "Switch 2",
+      "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+      "webOnly": true
+    },
+    {
+      "id": "web-kirby-forgotten-land-switch2",
+      "parentId": null,
+      "labelPath": [
+        "Kirby and the Forgotten Land – Nintendo Switch 2 Edition + Star-Crossed World"
+      ],
+      "platform": "Switch 2",
+      "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/arzga_2/index.html",
+      "webOnly": true
     }
   ],
   "notes": [
@@ -1277,6 +1297,42 @@
       "en": "Read your fortune once per day and receive tokens that unlock discovery hints.",
       "de": "Einmal täglich wahrsagen lassen und Glyphen erhalten, mit denen du Hinweise zu Entdeckungen freischaltest.",
       "translation": "editorial-from-english"
+    },
+    {
+      "id": 59,
+      "en": "Receive amiibo-exclusive avatars and titles, and experience for Episodes of South Town (EOST).",
+      "de": "Erhalte amiibo-exklusive Avatare und Titel sowie Erfahrung für Episodes of South Town (EOST).",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 60,
+      "en": "Summon useful items for your adventure. Scanning becomes available after you first reach Hyrule Field.",
+      "de": "Rufe nützliche Gegenstände für dein Abenteuer herbei. Scannen ist nach dem ersten Besuch der Hylianischen Steppe möglich.",
+      "translation": "editorial-from-english"
+    },
+    {
+      "id": 61,
+      "en": "Unlock a Mii racing suit based on the amiibo character.",
+      "de": "Schalte einen Mii-Rennanzug frei, der zum amiibo-Charakter passt.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 62,
+      "en": "Receive more helpful items than with other amiibo.",
+      "de": "Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 63,
+      "en": "Train a computer-controlled Figure Player that develops through battles.",
+      "de": "Trainiere einen computergesteuerten Figurenspieler, der sich durch Kämpfe weiterentwickelt.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 64,
+      "en": "Receive a character costume; further amiibo of the same character give game tickets. This Air Riders figure is supported on Switch, not on Nintendo 3DS.",
+      "de": "Erhalte ein Charakterkostüm; weitere amiibo desselben Charakters geben Spieltickets. Diese Air-Riders-Figur wird auf Switch unterstützt, auf Nintendo 3DS nicht.",
+      "translation": "editorial-from-primary-source"
     }
   ],
   "figures": [
@@ -2425,6 +2481,14 @@
           "groupId": 68,
           "noteId": null,
           "sourceLine": 1138
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2459,6 +2523,14 @@
           "groupId": 68,
           "noteId": null,
           "sourceLine": 1139
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2483,6 +2555,14 @@
           "sourceUrl": "https://zelda.nintendo.com/links-awakening/gameplay/",
           "webSupplement": true,
           "platform": "Switch"
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2507,6 +2587,14 @@
           "sourceUrl": "https://zelda.nintendo.com/links-awakening/gameplay/",
           "webSupplement": true,
           "platform": "Switch"
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2536,6 +2624,14 @@
           "groupId": 33,
           "noteId": null,
           "sourceLine": 312
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2565,6 +2661,14 @@
           "groupId": 68,
           "noteId": null,
           "sourceLine": 1136
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2594,6 +2698,14 @@
           "groupId": 6,
           "noteId": null,
           "sourceLine": 94
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2618,6 +2730,14 @@
           "sourceUrl": "https://zelda.nintendo.com/links-awakening/gameplay/",
           "webSupplement": true,
           "platform": "Switch"
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2652,6 +2772,14 @@
           "groupId": 47,
           "noteId": null,
           "sourceLine": 553
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2676,6 +2804,14 @@
           "sourceUrl": "https://zelda.nintendo.com/links-awakening/gameplay/",
           "webSupplement": true,
           "platform": "Switch"
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2686,6 +2822,14 @@
           "groupId": 1,
           "noteId": 14,
           "sourceLine": 14
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2741,6 +2885,14 @@
           "groupId": 68,
           "noteId": null,
           "sourceLine": 1142
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2775,6 +2927,14 @@
           "groupId": 68,
           "noteId": null,
           "sourceLine": 1143
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2824,6 +2984,14 @@
           "groupId": 68,
           "noteId": null,
           "sourceLine": 1145
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2858,6 +3026,14 @@
           "groupId": 68,
           "noteId": null,
           "sourceLine": 1144
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2882,6 +3058,14 @@
           "sourceUrl": "https://zelda.nintendo.com/links-awakening/gameplay/",
           "webSupplement": true,
           "platform": "Switch"
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2892,6 +3076,14 @@
           "groupId": 1,
           "noteId": 25,
           "sourceLine": 28
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2952,6 +3144,14 @@
           "groupId": 68,
           "noteId": null,
           "sourceLine": 1141
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -2981,6 +3181,14 @@
           "sourceUrl": "https://zelda.nintendo.com/links-awakening/gameplay/",
           "webSupplement": true,
           "platform": "Switch"
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3035,6 +3243,14 @@
           "groupId": 68,
           "noteId": null,
           "sourceLine": 1137
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3045,6 +3261,14 @@
           "groupId": 1,
           "noteId": 5,
           "sourceLine": 5
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3094,6 +3318,14 @@
           "groupId": 68,
           "noteId": null,
           "sourceLine": 1140
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3128,6 +3360,14 @@
           "groupId": 7,
           "noteId": null,
           "sourceLine": 101
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3162,6 +3402,14 @@
           "groupId": 7,
           "noteId": null,
           "sourceLine": 109
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3196,6 +3444,14 @@
           "groupId": 7,
           "noteId": null,
           "sourceLine": 105
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3230,6 +3486,14 @@
           "groupId": 7,
           "noteId": null,
           "sourceLine": 106
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3240,6 +3504,14 @@
           "groupId": 1,
           "noteId": 26,
           "sourceLine": 29
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3250,6 +3522,14 @@
           "groupId": 1,
           "noteId": 26,
           "sourceLine": 30
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3260,6 +3540,14 @@
           "groupId": 1,
           "noteId": 26,
           "sourceLine": 31
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3270,6 +3558,14 @@
           "groupId": 1,
           "noteId": 26,
           "sourceLine": 32
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3280,6 +3576,14 @@
           "groupId": 1,
           "noteId": null,
           "sourceLine": 1325
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3314,6 +3618,14 @@
           "groupId": 7,
           "noteId": null,
           "sourceLine": 103
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -3348,6 +3660,14 @@
           "groupId": 7,
           "noteId": null,
           "sourceLine": 100
+        },
+        {
+          "groupId": 82,
+          "webOnly": true,
+          "noteId": 60,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -10736,6 +11056,70 @@
           "sourceLine": 1345,
           "sourceUrl": "https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html",
           "sinceGameVersion": "1.3.3"
+        },
+        {
+          "groupId": 26,
+          "webOnly": true,
+          "noteId": 61,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/aabpa/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": 24,
+          "webOnly": true,
+          "noteId": 62,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/ah26a/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": 47,
+          "webOnly": true,
+          "noteId": 63,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/aaaba/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": 44,
+          "webOnly": true,
+          "noteId": 62,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/apy8a/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": 33,
+          "webOnly": true,
+          "noteId": 64,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/aw8sa/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": 22,
+          "webOnly": true,
+          "noteId": 62,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/arzga/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": 23,
+          "webOnly": true,
+          "noteId": 62,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/a2jya/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": "web-kirby-forgotten-land-switch2",
+          "webOnly": true,
+          "noteId": 62,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/arzga_2/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -10850,6 +11234,62 @@
           "sourceLine": 1346,
           "sourceUrl": "https://www.nintendo.com/de-de/Support/Kaufe-und-Mitgliedschaften/Spiele/Das-Aktualisieren-von-Kirby-Air-Riders--2967700.html",
           "sinceGameVersion": "1.3.3"
+        },
+        {
+          "groupId": 26,
+          "webOnly": true,
+          "noteId": 61,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/aabpa/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": 24,
+          "webOnly": true,
+          "noteId": 62,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/ah26a/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": 47,
+          "webOnly": true,
+          "noteId": 63,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/aaaba/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": 44,
+          "webOnly": true,
+          "noteId": 62,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/apy8a/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": 22,
+          "webOnly": true,
+          "noteId": 62,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/arzga/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": 23,
+          "webOnly": true,
+          "noteId": 62,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/a2jya/index.html",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": "web-kirby-forgotten-land-switch2",
+          "webOnly": true,
+          "noteId": 62,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/arzga_2/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -11647,6 +12087,14 @@
           "groupId": 47,
           "noteId": null,
           "sourceLine": 495
+        },
+        {
+          "groupId": "web-fatal-fury-cotw",
+          "webOnly": true,
+          "noteId": 59,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -11657,6 +12105,14 @@
           "groupId": 72,
           "noteId": null,
           "sourceLine": 1263
+        },
+        {
+          "groupId": "web-fatal-fury-cotw",
+          "webOnly": true,
+          "noteId": 59,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -11667,6 +12123,14 @@
           "groupId": 72,
           "noteId": null,
           "sourceLine": 1304
+        },
+        {
+          "groupId": "web-fatal-fury-cotw",
+          "webOnly": true,
+          "noteId": 59,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -11767,6 +12231,14 @@
           "groupId": 72,
           "noteId": null,
           "sourceLine": 1264
+        },
+        {
+          "groupId": "web-fatal-fury-cotw",
+          "webOnly": true,
+          "noteId": 59,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -11777,6 +12249,14 @@
           "groupId": 72,
           "noteId": null,
           "sourceLine": 1305
+        },
+        {
+          "groupId": "web-fatal-fury-cotw",
+          "webOnly": true,
+          "noteId": 59,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -12902,6 +13382,14 @@
           "groupId": 47,
           "noteId": null,
           "sourceLine": 546
+        },
+        {
+          "groupId": "web-fatal-fury-cotw",
+          "webOnly": true,
+          "noteId": 59,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -12912,6 +13400,14 @@
           "groupId": 72,
           "noteId": null,
           "sourceLine": 1283
+        },
+        {
+          "groupId": "web-fatal-fury-cotw",
+          "webOnly": true,
+          "noteId": 59,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -12922,6 +13418,14 @@
           "groupId": 72,
           "noteId": null,
           "sourceLine": 1313
+        },
+        {
+          "groupId": "web-fatal-fury-cotw",
+          "webOnly": true,
+          "noteId": 59,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -12932,6 +13436,14 @@
           "groupId": 72,
           "noteId": null,
           "sourceLine": 1284
+        },
+        {
+          "groupId": "web-fatal-fury-cotw",
+          "webOnly": true,
+          "noteId": 59,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -12942,6 +13454,14 @@
           "groupId": 72,
           "noteId": null,
           "sourceLine": 1314
+        },
+        {
+          "groupId": "web-fatal-fury-cotw",
+          "webOnly": true,
+          "noteId": 59,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/abfua/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },

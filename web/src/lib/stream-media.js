@@ -6,9 +6,10 @@ function mediaError(code) { return Object.assign(new Error(code), {code}); }
 export function sourceKind(file) {
   const type = String(file?.type || '').toLowerCase();
   const name = String(file?.name || '').toLowerCase();
-  if (type === 'image/svg+xml' || /\.svgz?$/.test(name)) throw mediaError('MEDIA_TYPE');
-  if (type.startsWith('image/') || (!type && /\.(png|jpe?g|webp|bmp|gif|avif)$/.test(name))) return 'image';
-  if (type.startsWith('video/') || (!type && /\.(mp4|webm|mov|m4v|ogv|ogg)$/.test(name))) return 'video';
+  const generic = !type || type === 'application/octet-stream' || type === 'binary/octet-stream';
+  if (type.startsWith('image/svg+xml') || /\.svgz?$/.test(name)) throw mediaError('MEDIA_TYPE');
+  if (type.startsWith('image/') || (generic && /\.(png|jpe?g|webp|bmp|gif|avif)$/.test(name))) return 'image';
+  if (type.startsWith('video/') || (generic && /\.(mp4|webm|mov|m4v|ogv|ogg)$/.test(name))) return 'video';
   throw mediaError('MEDIA_TYPE');
 }
 
@@ -26,15 +27,37 @@ export function sourceRectangle(width, height, mode = 'fit') {
   return {sx, sy, sw, sh, dx, dy, dw, dh};
 }
 
-export function drawMediaFrame(context, source, mode = 'fit') {
+export function rotatedSourceRectangle(width, height, mode = 'fit', rotation = 0) {
+  if (![0, 90, 180, 270].includes(rotation)) throw mediaError('MEDIA_ROTATION');
+  const sideways = rotation === 90 || rotation === 270;
+  const rectangle = sourceRectangle(sideways ? height : width, sideways ? width : height, mode);
+  const {sx, sy, sw, sh} = rectangle;
+  let original;
+  if (rotation === 90) original = {sx: sy, sy: height - sx - sw, sw: sh, sh: sw};
+  else if (rotation === 180) original = {sx: width - sx - sw, sy: height - sy - sh, sw, sh};
+  else if (rotation === 270) original = {sx: width - sy - sh, sy: sx, sw: sh, sh: sw};
+  else original = {sx, sy, sw, sh};
+  return {rectangle, original, sideways};
+}
+
+export function drawMediaFrame(context, source, mode = 'fit', rotation = 0) {
   const width = source.videoWidth || source.naturalWidth || source.width;
   const height = source.videoHeight || source.naturalHeight || source.height;
-  const r = sourceRectangle(width, height, mode);
+  const {rectangle: r, original: o, sideways} = rotatedSourceRectangle(width, height, mode, rotation);
   context.fillStyle = '#000';
   context.fillRect(0, 0, 128, 64);
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = 'high';
-  context.drawImage(source, r.sx, r.sy, r.sw, r.sh, r.dx, r.dy, r.dw, r.dh);
+  if (rotation === 0) context.drawImage(source, r.sx, r.sy, r.sw, r.sh, r.dx, r.dy, r.dw, r.dh);
+  else {
+    context.save();
+    try {
+      context.translate(r.dx + r.dw / 2, r.dy + r.dh / 2);
+      context.rotate(rotation * Math.PI / 180);
+      const dw = sideways ? r.dh : r.dw, dh = sideways ? r.dw : r.dh;
+      context.drawImage(source, o.sx, o.sy, o.sw, o.sh, -dw / 2, -dh / 2, dw, dh);
+    } finally { context.restore(); }
+  }
   return context.getImageData(0, 0, 128, 64).data;
 }
 

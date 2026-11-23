@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "date": "2026-11-23",
+  "scope": "Normaler Web-Dateimanager, Bild-/Videosender und lokaler PIXV-Export für LCD/ST7567; kein OLED- oder privater Webstand.",
+  "repository": "bluecyber81/pixl.js",
+  "branch": "web-app675",
+  "baselineCommit": "b364222005f493a7d898560592fe1bd1423fa510",
+  "baselineSourceUrl": "https://github.com/bluecyber81/pixl.js/tree/b364222005f493a7d898560592fe1bd1423fa510",
+  "targetVersion": "Web 3.65.0",
+  "status": "Lokale Implementierung fertig, nicht durch diesen Agenten committed oder publiziert.",
+  "features": [
+    "Eine lokale Datei bis 128 MiB bleibt höchstens 30 Minuten ab Auswahl in dieser offenen Seite verfügbar; Wechsel verwirft Decoder/ObjectURL, hält nur die File-Referenz. Rückkehr verlängert die Frist nicht und startet keine Übertragung.",
+    "Bildformat, Rotation, Schwellenwert/Rasterung, Invertieren, FPS und Videowiederholung werden in einem versionierten localStorage-Eintrag gespeichert; fehlende/gesperrte Speicherung fällt auf Sitzungsspeicher zurück. Zurücksetzen stellt die Vorgaben und Demo wieder her.",
+    "Feste Bayer-4×4-Rasterung optional; Standard bleibt bisheriger Schwellwertmodus. Rotation 0/90/180/270 Grad vor Einpassen/Ausschnitt/Dehnen ohne großflächige Zwischenleinwand.",
+    "Einzeldatei per Drag-and-drop oder unverändertem Datei-/Tastaturpicker; nach Fehler kann dieselbe Datei erneut ausgewählt werden.",
+    "Demo, Bild und gewählter Videoausschnitt können lokal als bestehendes PIXV/BIN-Format mit Vorschauoptionen exportiert werden. Größe, Bildzahl, Bildrate, Fortschritt und Abbruch sichtbar; nur fertige Datei als expliziter Download.",
+    "Export maximal 1 MiB, ein Ausgabepuffer und je ein Frame; normale Quellen weiterhin höchstens 40 Millionen Pixel pro Frame. Kein unbegrenztes Frame-Array.",
+    "Seite ausblenden, Bereichwechsel/unmount oder Abbruch beendet Export und unterdrückt späte Ergebnisse; kein Neustart. BLE-Transport und Stop/Disconnect-Verhalten bleiben erhalten. App-Wachhaltemechanismus berücksichtigt Export."
+  ],
+  "fixedConcreteIssues": [
+    {
+      "issue": "Dateipicker behielt nach fehlgeschlagenem Laden seinen Wert; dieselbe Datei löste keinen erneuten change aus.",
+      "fix": "Pickerwert wird vor neuem Laden geleert.",
+      "test": "failed selection clears the picker so the same file can be retried, and a drop never sends"
+    },
+    {
+      "issue": "Gültige lokale PNG/Video-Dateien mit generischem application/octet-stream konnten trotz passender Endung abgewiesen werden.",
+      "fix": "Bekannte Erweiterungen bei leerem/generischem Binärtyp akzeptiert; SVG und explizit andere MIME-Typen bleiben ausgeschlossen.",
+      "test": "stream-media.test.mjs generic MIME regression"
+    },
+    {
+      "issue": "Im neuen Sitzungspfad konnte sehr rascher Bereichwechsel während des Wiederladens die gemerkte Auswahl löschen oder Wiederkehr die Frist verlängern.",
+      "fix": "Wiederladen hält bestehende File-Referenz und ursprüngliche Frist; Regressionstest mit erneutem unmount während Laden.",
+      "test": "a rapid workspace change during restoration keeps the File without extending its lifetime"
+    }
+  ],
+  "validation": {
+    "command": "node --test tests/stream-media.test.mjs tests/stream-options.test.mjs tests/stream-player-export.test.mjs tests/ble-image-stream.test.mjs tests/ble-image-sender-ui.test.mjs",
+    "exitCode": 0,
+    "counts": {
+      "tests": 74,
+      "pass": 74,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "log": "/workspace/scratch/d76247b6cf65/review_20261123/notes/web_sender_targeted_final.log",
+    "logSha256": "13f2a7e9625117476bbd7d3eedc3b2f32a6f18f70c5cb605516cfe8986b64016",
+    "actualCParser": {
+      "executed": true,
+      "header": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/fw/application/src/app/player/view/player_format.h",
+      "currentFirmwareHeader": "/workspace/scratch/d76247b6cf65/review_20261123/firmware_source/fw/application/src/app/player/view/player_format.h",
+      "headerSha256": "f84c66342ec0281ec634783c0976209d4e27c0df7b853a2b503885efc674b1a3",
+      "currentHeaderSha256": "f84c66342ec0281ec634783c0976209d4e27c0df7b853a2b503885efc674b1a3",
+      "identical": true,
+      "acceptedGeneratedBytes": 51216,
+      "rejectedTruncatedFile": true
+    },
+    "diffCheck": "git -c core.whitespace=cr-at-eol diff --check für eigene vorhandene Dateien erfolgreich; App.vue-CRLF beibehalten."
+  },
+  "format": {
+    "magicHex": "0x50495856",
+    "littleEndian": true,
+    "headerBytes": 16,
+    "width": 128,
+    "height": 64,
+    "frameBytes": 1024,
+    "oneBitMeans": "dunkler LCD-Pixel",
+    "defaultFps": 5,
+    "demoDefaultSeconds": 10,
+    "defaultDemoBytes": 51216,
+    "destination": "E:/player/",
+    "automaticDeviceTransfer": false
+  },
+  "files": [
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/src/App.vue",
+      "relativePath": "web/src/App.vue",
+      "sha256": "1f16b8794df4444fe6ca712579d69a2f8fdbc249323116609ab18d63398bcc86"
+    },
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/src/components/BleImageSender.vue",
+      "relativePath": "web/src/components/BleImageSender.vue",
+      "sha256": "3cf6c90dbc4de64be62dd9c7f63964ec6161857e3e74f990267ee5e25d21ee72"
+    },
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/src/lib/ble-image-stream.js",
+      "relativePath": "web/src/lib/ble-image-stream.js",
+      "sha256": "2766c60bb24d53186c5ebf0857530e20cbec70d51651968129f3ad54a18fd98b"
+    },
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/src/lib/stream-media.js",
+      "relativePath": "web/src/lib/stream-media.js",
+      "sha256": "235b91c29cab6bbe000e6e047597097608960c27c5177e56bf3f8bb54cae3134"
+    },
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/src/lib/stream-options.js",
+      "relativePath": "web/src/lib/stream-options.js",
+      "sha256": "99c19d04be473903486e8c8f74c969e0c1995f587149ab25e7dc8d3660f4a6ae"
+    },
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/src/lib/stream-session.js",
+      "relativePath": "web/src/lib/stream-session.js",
+      "sha256": "8611ebb9cb33b4c2c5210a314a1e2384e72166c5b61a2974cc04b98e21e35643"
+    },
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/src/lib/stream-player-export.js",
+      "relativePath": "web/src/lib/stream-player-export.js",
+      "sha256": "dc6f0877167cfbd79ace3d8c2ebe161dd9204a8fbae80e8b9501673696d8dc81"
+    },
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/tests/ble-image-sender-ui.test.mjs",
+      "relativePath": "web/tests/ble-image-sender-ui.test.mjs",
+      "sha256": "b549dbd984a62e27157b7b8b698579c49fd77ed896e98ad8d57efb1d60e0b41b"
+    },
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/tests/ble-image-stream.test.mjs",
+      "relativePath": "web/tests/ble-image-stream.test.mjs",
+      "sha256": "47dc7d8bb0ae79f9a65a5668380f844a18e61afaa95225c62763ff1c94ade780"
+    },
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/tests/stream-media.test.mjs",
+      "relativePath": "web/tests/stream-media.test.mjs",
+      "sha256": "67e8930d777ccdc31554394944e710bcb3c4e020d3aa4660b070b90fce4a0179"
+    },
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/tests/stream-options.test.mjs",
+      "relativePath": "web/tests/stream-options.test.mjs",
+      "sha256": "a5d0516cb3a4126ab638ee4866de19ba53f324b353917efed8d1da4a48c6364a"
+    },
+    {
+      "path": "/workspace/scratch/d76247b6cf65/review_20261123/web_source/web/tests/stream-player-export.test.mjs",
+      "relativePath": "web/tests/stream-player-export.test.mjs",
+      "sha256": "ae266a248299f19b911715cdc4c2a1fd91b39cee3819ce5d424630780bc8afac"
+    }
+  ],
+  "deviceTestsOpen": [
+    "Tatsächliche LCD-Vorschau/Rotation/Rasterung und BLE-Fluss auf App673+ mit unterschiedlichen Bildern/Videos.",
+    "Fertige BIN nach E:/player/ übertragen und mit App675 abspielen; einmaliger Durchlauf, optionale Wiederholung und Framezähler am Gerät prüfen.",
+    "Echte Browser-/Handy-Codecs und ausreichend lange Videoausschnitte durch Root/Benutzer prüfen."
+  ],
+  "nextStep": "Root baut Web/Portable und prüft Desktop-/Handy-Oberfläche, vollständige Suite sowie gemeinsame App675-Integration; dieser Agent hat nichts publiziert.",
+  "additionalValidation": {
+    "fullSuite": "/workspace/scratch/d76247b6cf65/review_20261123/notes/web_full_node_20261123.json",
+    "fullSuiteResult": "2253 Fälle: 2242 bestanden, 8 Versions-/Release-Übergangsfehler, 3 Skips; kein endgültiger Release-Nachweis.",
+    "pixelCheck": "/workspace/scratch/d76247b6cf65/review_20261123/notes/web_sender_pixels_check.json",
+    "pixelResult": "144 Kombinationen; tatsächlicher C-Header/XBM-Pfad trifft alle 1179648 konvertierten Pixel exakt; Crop einschließlich90Grad exakt zur unabhängigen Referenz; Fit/Stretch höchstens1Grauwert Resampling-Rundung.",
+    "pixelsGeneratedWith": "Vorhandene @napi-rs/canvas 0.1.100 als reine Testbibliothek; keine Browsersteuerung.",
+    "productionChangesAfterFinalSender": "Keine; kein konkret belegter Senderfehler im Zusatzcheck."
+  }
+}

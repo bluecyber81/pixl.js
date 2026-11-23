@@ -350,3 +350,17 @@ test('web encoder matches immutable Python vectors that the actual App673 C rece
     assert.equal(hash(frame), vector.decodedSha256, vector.name);
   }
 });
+
+test('fixed Bayer cells preserve tonal coverage, black/white and inversion without changing threshold defaults', () => {
+  const make = level => {const rgba=new Uint8ClampedArray(32768);for(let i=0;i<rgba.length;i+=4)rgba.set([level,level,level,255],i);return rgba;};
+  const count = frame => [...frame].reduce((sum,value)=>sum+value.toString(2).replaceAll('0','').length,0);
+  const mid=make(128),first=rgbaToFrame(mid,{dither:'bayer'});
+  assert.equal(count(first),4096);assert.deepEqual(rgbaToFrame(mid,{dither:'bayer'}),first);
+  assert.equal(count(rgbaToFrame(make(64),{dither:'bayer'})),6144);
+  assert.equal(count(rgbaToFrame(make(192),{dither:'bayer'})),2048);
+  assert.equal(count(rgbaToFrame(make(0),{dither:'bayer'})),8192);
+  assert.equal(count(rgbaToFrame(make(255),{dither:'bayer'})),0);
+  const inverted=rgbaToFrame(mid,{dither:'bayer',invert:true});for(let i=0;i<1024;i++)assert.equal(first[i]^inverted[i],255);
+  assert.deepEqual(rgbaToFrame(mid),rgbaToFrame(mid,{dither:'threshold'}));
+  assert.throws(()=>rgbaToFrame(mid,{dither:'noise'}),{code:'STREAM_FRAME_INVALID'});
+});

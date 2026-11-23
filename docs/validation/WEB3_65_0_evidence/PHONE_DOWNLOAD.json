@@ -1,0 +1,13 @@
+{
+  "url": "https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+  "finalUrl": "https://raw.githubusercontent.com/bluecyber81/pixl.js/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+  "status": 200,
+  "contentType": "application/zip",
+  "bytes": 362493,
+  "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
+  "entries": [
+    "manifest.json",
+    "app_675.dat",
+    "app_675.bin"
+  ]
+}
