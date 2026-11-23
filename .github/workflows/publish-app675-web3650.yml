@@ -1,0 +1,56 @@
+name: Publish reviewed App675 and Web3.65.0
+
+# Integrate these three files only after both main CI runs have passed and the
+# manifest contains the exact reviewed main SHA, run attempts and asset hashes.
+on:
+  push:
+    branches: ['publish/app675-web3650']
+    paths:
+      - '.github/workflows/publish-app675-web3650.yml'
+      - 'tools/publish-reviewed-release.py'
+      - 'docs/releases/app675-web3650.json'
+
+permissions: {}
+
+concurrency:
+  group: publish-app675-web3650
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: >-
+      github.repository == 'bluecyber81/pixl.js' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/publish/app675-web3650' &&
+      github.event.deleted == false && github.event.forced == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Check exact main, both successful CI attempts and every asset
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -B tools/publish-reviewed-release.py verify docs/releases/app675-web3650.json
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Recheck exact inputs and publish complete releases without replacement
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -B tools/publish-reviewed-release.py publish docs/releases/app675-web3650.json

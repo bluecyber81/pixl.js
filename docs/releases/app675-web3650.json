@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "ready": true,
+  "repository": "bluecyber81/pixl.js",
+  "target_main_sha": "93b8076f0f93ff3320ffd00f6204f1658862b024",
+  "checks": {
+    "source": {
+      "run_id": 45201506836,
+      "attempt": 1,
+      "workflow_sha256": "b7102ebde978d19511ee2f724b47c0adcdd6096802131c7d6f8cd981c3644101"
+    },
+    "firmware": {
+      "run_id": 45201506771,
+      "attempt": 1,
+      "workflow_sha256": "17fb73f6715d31ca06f712883fda78ae48260ab3791dcae6c3c3fdc8a8838f5b"
+    }
+  },
+  "provenance": {
+    "firmware_production_commit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+    "web_source_commit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+    "firmware_source_id": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+    "application_sha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+    "application_bytes": 361892,
+    "ota_sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
+    "ota_bytes": 362493
+  },
+  "releases": [
+    {
+      "tag": "de3.102",
+      "name": "LCD DE3.102 / App675",
+      "make_latest": true,
+      "notes": "App675 für LCD/ST7567 mit vorhandenem PFS1, Z21 und S112 7.3.0. Dieses ZIP enthält ausschließlich die Anwendung.\n\nDer Animationsplayer ergänzt „Endlosschleife“ und „Bildzähler“; beide sind zu Beginn ausgeschaltet und gelten nur für die aktuelle Playersitzung. Die beiden Menüsymbole aus App674 sind enthalten. Der Bildempfänger vermeidet unnötige Neuzeichnungen.\n\nDie praktische Geräteabnahme der neuen App675-Funktionen ist noch offen. Aus den Softwareprüfungen werden keine gemessene Funkrate oder Akkulaufzeit abgeleitet.",
+      "assets": [
+        {
+          "name": "Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+          "source_commit": "93b8076f0f93ff3320ffd00f6204f1658862b024",
+          "path": "fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+          "bytes": 362493,
+          "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746"
+        }
+      ]
+    },
+    {
+      "tag": "web3.65.0",
+      "name": "Allmiibo Dateimanager 3.65.0",
+      "make_latest": false,
+      "notes": "Bild-/Videosender mit gemerkten Optionen, zeitlich begrenzter Medienauswahl, Drehung, optionaler Rasterung und lokalem PIXV-Export; kuratierte Nutzungshinweise im Figurenkatalog.\n\n[Webseite öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video öffnen](https://bluecyber81.github.io/pixl.js/?workspace=stream)\n\nZum Senden genügt LCD App673 oder neuer mit einem passenden Bluetooth-Browser. Für Portable die ZIP vollständig entpacken und Start-Dateimanager.cmd öffnen; Python ab 3.8 muss bereits vorhanden sein. Das Paket enthält keine native EXE.\n\nEine exportierte PIXV-Playerdatei zunächst bewusst lokal speichern und anschließend im Dateimanager nach E:/player/ übertragen. Der Export startet keine automatische Geräteübertragung.",
+      "assets": [
+        {
+          "name": "Allmiibo_Dateimanager_3_65_0_Portable.zip",
+          "source_commit": "f1d69f020097f21487eef99314fe7da5257b41d7",
+          "path": "downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip",
+          "bytes": 12444903,
+          "sha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd"
+        },
+        {
+          "name": "Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+          "source_commit": "f1d69f020097f21487eef99314fe7da5257b41d7",
+          "path": "downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+          "bytes": 21249310,
+          "sha256": "de82839b8cdc90f7226b1229119ebbd60a1a5cd67deb4c80e0902a640d8c487c"
+        }
+      ]
+    }
+  ]
+}
