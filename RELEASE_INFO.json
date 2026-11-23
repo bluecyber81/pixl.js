@@ -818,7 +818,7 @@
   "web_live_http_verified_checks": 323,
   "web_downloads": {
     "portable": "https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip",
-    "source": "https://github.com/bluecyber81/pixl.js/archive/a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4.zip",
+    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip",
     "status": "portable-verified-source-commit-published",
     "sourcePublished": true,
     "portablePublishedAndVerified": true,
@@ -827,10 +827,11 @@
     "portableSha256": "333fb3b8dc95de6cf8cf5c02356806b4796721a47b178e91ae4faf8e6598e0dd",
     "portableContentType": "application/x-zip-compressed",
     "verificationEvidence": "docs/validation/WEB3_65_0_evidence/HTTP_STRICT_VALIDATION.json",
-    "hosting": "The GitHub Pages portable ZIP is published and byte-verified. The immutable Web source commit is public; its standard GitHub archive URL has not been downloaded or byte-verified. A separate source ZIP is pending. The portable package requires an existing Python 3.8+ runtime and contains no native EXE.",
+    "hosting": "The GitHub Pages portable ZIP is published and byte-verified. The UI source link follows the public Web branch, while the immutable qualification commit and its archive URL are recorded separately. Neither standard GitHub archive has been downloaded or byte-verified. A separate source ZIP is pending. The portable package requires an existing Python 3.8+ runtime and contains no native EXE.",
     "sourceCommitPublished": true,
     "sourceArchiveDownloadedAndVerified": false,
-    "sourceArchiveStatus": "standard-github-archive-url-not-downloaded-or-byte-verified"
+    "sourceArchiveStatus": "standard-github-archive-url-not-downloaded-or-byte-verified",
+    "sourceLinkScope": "The actual UI source-download link follows the public web-app675 branch. The immutable qualification source remains separately pinned by web_source_commit, web_source_tree and web_source_archive_url. Neither standard GitHub archive URL has been downloaded or byte-verified."
   },
   "web_lcd_capacity_binding": {
     "qualification": "docs/validation/DE3_102_PFS.json",
@@ -936,5 +937,45 @@
       "scope": "Nine scoped interactions on the actual published website, including option persistence/reset, DE/EN, player-file creation/download, App675 browser package hash verification, and catalogue detail association. No Bluetooth/device transfer or complete browser regression suite.",
       "physicalDeviceAccess": false
     }
+  },
+  "web_metadata_ci_history": [
+    {
+      "commit": "d700e95a67dda2035a6189c16a7868d42a64a2c5",
+      "tree": "4254fe3e5d01da9aed06ec7b81aed21caffb3420",
+      "runId": 45192485217,
+      "jobId": 137754178877,
+      "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45192485217",
+      "conclusion": "failure",
+      "tests": 2273,
+      "passed": 2269,
+      "failed": 1,
+      "skipped": 3,
+      "test": "the rendered DE/EN footer offers the matching Web and LCD release assets on root and Pages",
+      "assertion": "web/tests/deployment-path.test.mjs:80 compares metadata.web_downloads.source with projectDownloads(version).source",
+      "actualMetadataLink": "https://github.com/bluecyber81/pixl.js/archive/a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4.zip",
+      "expectedActualUiLink": "https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip",
+      "reason": "The metadata follow-up incorrectly replaced the actual UI branch-download link with the immutable qualification archive link. The deployed Web product bytes were unchanged, but the source metadata contract genuinely failed.",
+      "originalLog": "docs/validation/WEB3_65_0_METADATA_CORRECTION_evidence/FAILED_WEB_CI_JOB_137754178877.log",
+      "failurePreserved": true
+    }
+  ],
+  "web_metadata_contract_verification": {
+    "passed": true,
+    "command": "node --test tests/deployment-path.test.mjs",
+    "workingDirectory": "web",
+    "nodeVersion": "24.22.3",
+    "tests": 9,
+    "passedTests": 9,
+    "failed": 0,
+    "skipped": 0,
+    "existingTestUnchanged": true,
+    "testSourceSha256": "292d0c81e75965131da55660c308264fafc5d36c04fd260a19747b550e662926",
+    "log": "docs/validation/WEB3_65_0_METADATA_CORRECTION_evidence/DEPLOYMENT_PATH_METADATA_FIX.log",
+    "logSha256": "76377ef490fc67f79312e73f2e306f0bb6f3f595161b36ef7ccb2db65a558596",
+    "testedUiSourceLink": "https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip",
+    "testedPortableLink": "https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip",
+    "scope": "The existing deployment-path test file was run unchanged after correcting only the metadata UI source link. This is a narrow local verification, not a new full-suite pass.",
+    "evidence": "docs/validation/WEB3_65_0_METADATA_CORRECTION.json",
+    "publicFullCiOnCorrectionPending": true
   }
 }
