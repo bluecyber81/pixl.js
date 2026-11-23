@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "repository": "bluecyber81/pixl.js",
+  "helperBranch": "publish/web365-source-object",
+  "baseCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+  "sourceCommit": "c18bfb4665c493a37a807415cc2437ccddad4bbd",
+  "sourceTree": "c17ad0263285ee4e9304908c89bf551e121c2e62",
+  "qualifiedBuildCommit": "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4",
+  "sourceWebSubtree": "17920de14a71fc2a07b00b644e88e6956bfe7d06",
+  "sourceQualificationCiRun": 45184306115,
+  "finalSourceHeadCiRun": 45193676314,
+  "archive": {
+    "filename": "Allmiibo_Dateimanager_3_65_0_Quellcode.zip",
+    "bytes": 21249310,
+    "sha256": "de82839b8cdc90f7226b1229119ebbd60a1a5cd67deb4c80e0902a640d8c487c",
+    "gitBlob": "c504ca28f6c4ef2d8ecaae942887b64b275fbcd1",
+    "files": 1894,
+    "prefix": "Allmiibo_Dateimanager_3_65_0_Quellcode/",
+    "sourceManifestSha256": "41b60637dcbaf626571d3eb8ad6c45fd6f41a08c45e23d4548990d0b3f258fd5",
+    "builderSha256": "5ecf8b8815fc1bcd82ccc8adfb732d134b78d38e16eeebf720ee0f38844a33d5"
+  },
+  "chunks": [
+    {
+      "path": "chunks/source-001.part",
+      "bytes": 8388608,
+      "sha256": "06192084e400000284aae3195af006a299ffcafd51c4c95605b834f07b43a112",
+      "gitBlob": "4c4414afde7619df24969ffe684992dda2e815e8",
+      "base64Characters": 11184812
+    },
+    {
+      "path": "chunks/source-002.part",
+      "bytes": 8388608,
+      "sha256": "2ae0363d03d113aaef5861b3dfa67f978f99f7ef8877eab07565450cc13edad6",
+      "gitBlob": "0f4292f3742f030ab1fd464d537b8f919b655e88",
+      "base64Characters": 11184812
+    },
+    {
+      "path": "chunks/source-003.part",
+      "bytes": 4472094,
+      "sha256": "27b0ea6dea779a3e7ab8d73388a46583de426f65b83f0afdeaf9d3e57a2eddb1",
+      "gitBlob": "75bf7b287755351792362ca254c1b653d159297e",
+      "base64Characters": 5962792
+    }
+  ],
+  "scope": "Reassemble the already twice reproduced public source archive; no rebuild, compression change, ref, tag, release or settings mutation."
+}

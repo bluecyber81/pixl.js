@@ -1,0 +1,39 @@
+name: Store exact Web3.65 source Git object
+
+on:
+  push:
+    branches: ['publish/web365-source-object']
+    paths:
+      - '.github/workflows/publish-web365-source-object.yml'
+      - 'tools/publish-web365-source-object/**'
+
+permissions: {}
+
+concurrency:
+  group: publish-web365-source-object
+  cancel-in-progress: false
+
+jobs:
+  store-verified-object:
+    if: >-
+      github.repository == 'bluecyber81/pixl.js' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/publish/web365-source-object' &&
+      github.event.deleted == false && github.event.forced == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: tools/publish-web365-source-object
+      - name: Verify pinned chunks, source binding and complete ZIP bytes
+        run: python3 -B tools/publish-web365-source-object/run.py verify
+      - name: Reverify and create only the expected Git blob
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -B tools/publish-web365-source-object/run.py publish
