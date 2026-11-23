@@ -23,6 +23,7 @@ import zipfile
 REPOSITORY = "bluecyber81/pixl.js"
 BRANCH = "publish/web365-source-object"
 BASE = "c18bfb4665c493a37a807415cc2437ccddad4bbd"
+EXPECTED_HELPER_PARENT = "e538446621df0a32826863b4e0632992a678f8a5"
 QUALIFIED = "a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4"
 WEB_TREE = "17920de14a71fc2a07b00b644e88e6956bfe7d06"
 HELPER_PATH = "tools/publish-web365-source-object"
@@ -76,7 +77,7 @@ def checkout_identity():
     require(re.fullmatch(r"[0-9a-f]{40}", head) is not None, "Invalid checkout commit")
     headers = git("cat-file", "-p", "HEAD").split("\n\n", 1)[0]
     parents = [line.split(" ", 1)[1] for line in headers.splitlines() if line.startswith("parent ")]
-    require(parents == [BASE], "Helper commit is not based directly on the approved public source commit")
+    require(parents == [EXPECTED_HELPER_PARENT], "Helper commit is not based directly on the approved public helper predecessor")
     return head
 
 
@@ -158,7 +159,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 def upload_blob(data, token):
     # Keep the exact-byte gate at the only network-writing function as well.
     verify_zip_identity(data)
-    require(isinstance(token, str) and re.fullmatch(r"[A-Za-z0-9_]+", token) is not None,
+    require(isinstance(token, str) and bool(token) and all(33 <= ord(character) <= 126 for character in token),
         "Missing or invalid job-scoped GITHUB_TOKEN")
     payload = json.dumps({"content": base64.b64encode(data).decode("ascii"), "encoding": "base64"},
         separators=(",", ":")).encode()
