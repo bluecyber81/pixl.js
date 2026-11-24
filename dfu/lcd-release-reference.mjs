@@ -1,4 +1,4 @@
-// Normal LCD App675 release; device acceptance for this build is still pending.
+// Normal LCD App675 release; scoped LCD readback and owner checks are recorded in DE3_102_LCD_READBACK.json.
 export const lcdRelease = Object.freeze({
   "board": "LCD",
   "firmwareVersion": "2.22.0-DE3.102",
@@ -15,7 +15,7 @@ export const lcdRelease = Object.freeze({
   "applicationBytes": 361892,
   "applicationBinSha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
   "artifactStatus": "stable-signed-application",
-  "hardwareAcceptance": "pending-for-this-build",
+  "hardwareAcceptance": "one-lcd-readback-and-owner-confirmed-images-player-loop-counter",
   "downloadCommit": "658d43a7fe2777778d8efa8439f73aa48210e033"
 });
 export const lcdReleasePackage = Object.freeze({

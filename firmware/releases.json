@@ -16,6 +16,21 @@
       "migrationRequired": false
     },
     {
+      "id": "de3.103-lcd-app-test1",
+      "version": "2.22.0-DE3.103",
+      "counter": 676,
+      "file": "Allmiibo_LCD_DE3_103_676_NUR_APP.zip",
+      "bytes": 254974,
+      "sha256": "4ec0b8baca9d694acdd2c3b63b466e4c6596e0e4ca460968db61a742d588f426",
+      "board": "LCD",
+      "storage": "PFS1",
+      "bootloader": "Z21",
+      "softDevice": "S112 7.3.0",
+      "applicationOnly": true,
+      "migrationRequired": false,
+      "channel": "prerelease"
+    },
+    {
       "id": "de3.101-lcd-app",
       "version": "2.22.0-DE3.101",
       "counter": 674,

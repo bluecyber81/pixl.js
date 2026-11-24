@@ -20,7 +20,7 @@
                 const candidate = new this.Package(file); await candidate.load();
                 if (sequence !== this.sequence) return false;
                 const reference = this.validatePackage(candidate);
-                if (reference?.privatePreview) candidate.previewVersion = reference.version;
+                if (reference?.privatePreview || (reference?.channel === 'prerelease' && reference.board === 'LCD')) candidate.previewVersion = reference.version;
                 this.package = candidate; this.onStatus('Paket geprüft: ' + (file.name || 'Anwendungs-OTA'), 'Package checked: ' + (file.name || 'application update'));
                 return true;
             } catch (error) {

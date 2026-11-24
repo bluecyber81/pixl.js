@@ -24,8 +24,11 @@
             const lcdMeasurementTest = !oled && version && Object.hasOwn(measurementCounters,version[1]) && item.channel === 'prerelease' &&
                 item.counter === measurementCounters[version[1]] && item.bootloader === 'Z21';
             if (!oled && version?.[1] === '97') need(lcdMeasurementTest, 'Unpassendes LCD-App670-TEST1-Profil.', 'Incorrect LCD App670 TEST1 profile.');
+            const publicLcdTest = !oled && version?.[1] === '103';
+            if (publicLcdTest) need(item.channel === 'prerelease' && item.counter === 676 && item.bootloader === 'Z21' &&
+                item.file === 'Allmiibo_LCD_DE3_103_676_NUR_APP.zip', 'Unpassendes LCD-App676-Testprofil.', 'Incorrect LCD App676 test profile.');
             const expectedId = oled ? version && `de3.${version[1]}-oled-t${version[2]}-app`
-                : lcdMeasurementTest ? `de3.${version[1]}-lcd-app-test1`
+                : publicLcdTest || lcdMeasurementTest ? `de3.${version[1]}-lcd-app-test1`
                 : lcdPreview ? `de3.${version[1]}-lcd-test1-app` : version && `de3.${version[1]}-lcd-app`;
             need(version&&item.id===expectedId&&!seen.has(item.id)&&Number.isSafeInteger(item.counter)&&item.counter>0&&item.counter<=0xffffffff,'Ungültige Firmware-Version.', 'Invalid firmware version.');
             if (!oled && version[1] === '89') need(!item.channel && item.counter === 662 && item.bootloader === 'Z21' && item.file === 'Allmiibo_LCD_DE3_89_662_NUR_APP.zip', 'Unpassendes LCD-App662-Profil.', 'Incorrect LCD App662 profile.');
