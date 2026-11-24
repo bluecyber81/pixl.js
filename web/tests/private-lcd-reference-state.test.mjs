@@ -54,7 +54,7 @@ test('App669 recognition is explicit and separate from future firmware and OLED'
   assert.equal(firmwareBoard(lcdPreview669.firmwareVersion),'LCD');
   assert.equal(buildDiagnosticBoard(lcdPreview669.firmwareVersion),'LCD');
   assert.equal(displayBuildReference(lcdPreview669.firmwareVersion).controllerDriver,'ST7567');
-  assert.equal(buildDiagnosticBoard('2.22.0-DE3.104'),null);
+  assert.equal(buildDiagnosticBoard('2.22.0-DE3.105'),null);
   assert.equal(LCD_Z21_COUNTERS['2.22.0-DE3.96-OLEDt7'],undefined);
   assert.equal(supportsFolderPublication(lcdPreview669.firmwareVersion,target669.layout.engineSha256),true);
   assert.equal(supportsFolderPublication('2.22.0-DE3.87-OLEDt6',target669.layout.engineSha256),false);
@@ -169,7 +169,7 @@ test('App670 diagnostic source matching still does not prove the installed appli
   assert.equal(diagnosticBuildIdentity({...options,build:{...options.build,sourceId:lcdPreview669.sourceId}}).firmwareReportedSourceRelation,'differs-from-package');
   assert.equal(LCD_Z21_COUNTERS[lcdPreview.firmwareVersion],670);
   assert.equal(LCD_Z21_COUNTERS['2.22.0-DE3.97-OLEDt7'],undefined);
-  assert.equal(buildDiagnosticBoard('2.22.0-DE3.104'),null);
+  assert.equal(buildDiagnosticBoard('2.22.0-DE3.105'),null);
 });
 
 test('App670 TEST1 catalogue and native handoff require the exact isolated profile', () => {

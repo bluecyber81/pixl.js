@@ -29,5 +29,5 @@ run('miniapps_stream_ui',(HERE/'miniapps_stream_ui.c.in').read_text()
 
 switch=(SRC/'app/switch2_wake/app_switch2_wake.c').read_text()
 types=switch[switch.index('typedef enum {'):switch.index('static const char *s2_tr')]
-functions='\n'.join(function(switch,n) for n in ('s2_tr','switch2_wake_load_cfg','switch2_wake_save_cfg','pid_label','switch2_wake_add_profile_items','switch2_wake_reload_menu','switch2_wake_open_profile','switch2_save_current','switch2_save_feedback','switch2_wake_on_ble_done','switch2_wake_on_scan_done','switch2_wake_toggle_scan','switch2_wake_trigger','app_switch2_wake_prepare_exit','switch2_wake_list_selected_cb','app_switch2_wake_on_boot'))
+functions='\n'.join(function(switch,n) for n in ('s2_tr','switch2_wake_load_cfg','switch2_wake_save_cfg','pid_label','switch2_wake_add_profile_items','switch2_wake_reload_menu','switch2_wake_open_profile','switch2_save_current','switch2_save_feedback','switch2_wake_on_ble_done','switch2_wake_on_scan_done','switch2_wake_toggle_scan','switch2_wake_trigger','switch2_wake_forget_response','app_switch2_wake_prepare_exit','switch2_wake_list_selected_cb','app_switch2_wake_on_boot'))
 run('miniapps_switch_ui',(HERE/'miniapps_switch_ui.c.in').read_text().replace('/* ACTUAL_SWITCH_TYPES */',types).replace('/* ACTUAL_SWITCH_FUNCTIONS */',functions),(SRC/'app/switch2_wake/switch2_protocol.c',))

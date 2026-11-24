@@ -17,7 +17,7 @@ class MiniappStartupTests(unittest.TestCase):
                 before,remainder=body.split(f'    {param}->p_handle = app;',1)
                 cleanup='startup_failed:'+remainder.split('startup_failed:',1)[1]
                 allocations=re.findall(r'app->(\w+) = (\w+)_create\(\);',before)
-                self.assertEqual(len(allocations),2 if name=='ble_stream' else 5)
+                self.assertEqual(len(allocations),2 if name=='ble_stream' else 6)
                 total+=len(allocations)+1
                 body=before+f'    {param}->p_handle = app;\n    return;\n'+cleanup
                 fields='\n'.join(f'void*{field};' for field,_ in allocations)

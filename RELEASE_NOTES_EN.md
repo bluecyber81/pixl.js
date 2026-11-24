@@ -1,5 +1,11 @@
 # Allmiibo LCD and Pixl.js OLED release notes
 
+## File manager 3.66.0 and LCD DE3.104 / App677 test
+
+Enter scrolling text on your phone to preview, send or save for the LCD animation player. Mineru’s Construct now lists the Nintendo-confirmed rewards in three Zelda titles. One OLED Test 6 tester confirmed the remote connection and display capture. The optional LCD App677 adds a confirmation before forgetting the local Switch 2 wake profile and disabling automatic wake.
+
+[Open the sender](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [LCD Test 1 phone ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_104_677_NUR_APP.zip) · [Stable LCD App675](https://github.com/bluecyber81/pixl.js/releases/tag/de3.102)
+
 ## LCD DE3.89 / App662 · stable firmware
 
 | Your LCD device | Download |
@@ -18,7 +24,7 @@ Preview, verification and backup can read a small file with a single request. A 
 
 ## OLED DE3.87 Test 6 and file manager 3.58.1
 
-The OLED prerelease improves Bluetooth remote discovery, SH1106 contrast adjustment and database slot saving. AmiiboLink retains the active slot after a read error. SPIFFS and native LittleFS were tested on simulated flash. Physical validation of App86 is pending. [OLED app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [English guide](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt) · [Test kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
+The OLED prerelease improves Bluetooth remote discovery, SH1106 contrast adjustment and database slot saving. AmiiboLink retains the active slot after a read error. SPIFFS and native LittleFS were tested on simulated flash. On 18 November 2026, a tester confirmed the remote connection and screen capture on one OLED running Test 6. The captures show the 5% and 100% contrast targets. No panel brightness measurement was reported. [OLED app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [English guide](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt) · [Test kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
 
 The file manager offers the signed OLED application for computer-based DFU. LCD DE3.87/App660 is a prerelease for PFS1, Z21 and S112 7.3.0. At the time of that release the regular LCD firmware was DE3.81/App654. [Web downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1) · [Firmware selection](docs/COMPONENTS.md)
 

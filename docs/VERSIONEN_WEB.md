@@ -1,5 +1,9 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.66.0 · Lauftext und Minerus Konstrukt
+
+Im Bereich Bild & Video lässt sich ein eigener Lauftext am Handy eingeben, abspielen, auf ein kompatibles LCD senden oder als PIXV-Datei exportieren. Der zweisprachige Figurenkatalog ergänzt die von Nintendo beschriebenen Spielwirkungen von Minerus Konstrukt. Der OLED-Teststatus beschreibt die bestätigte Fernverbindung und das abgerufene Displayfoto.
+
 ## Dateimanager 3.65.1 · Ordnerupload und Wiederaufnahme
 
 Nach einem Verbindungsabbruch kann derselbe Ordner erneut ausgewählt werden. Bereits bestätigte Dateien werden geprüft, der angefangene Schreibvorgang wird bereinigt. Bei wenig freiem Platz lässt sich der neue Ordner dateiweise füllen. Das Arbeitsverzeichnis für das abschließende Umbenennen des ganzen Baums entfällt bei dieser Auswahl.

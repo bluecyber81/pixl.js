@@ -55,7 +55,8 @@ test('both guide languages link to a dedicated OLED chapter with the published p
         assert.match(section, /de3\.87-oled-t6\/Allmiibo_OLED_DE3_87_Test6_APP\.zip"/);
         assert.match(section, /releases\/tag\/de3\.87-oled-t6"/);
         assert.doesNotMatch(section, /Allmiibo_LCD_/);
-        assert.match(section, page === 'en.html' ? /Test 6 awaits a report from a physical OLED/ : /Für Test 6 steht die Rückmeldung von einem echten OLED aus/);
+        assert.match(section, page === 'en.html' ? /remote connection and screen capture on one OLED/ : /Verbindung zur Fernbedienung und den Abruf des Displayfotos auf einem OLED/);
+        assert.match(section, page === 'en.html' ? /5% and 100%.*did not quantify the change in panel brightness/s : /5 % und 100 %.*Helligkeit am Panel änderte, blieb offen/s);
         assert.match(section, /releases\/tag\/de3\.81-oled-t1"/);
     }
     assert.equal(openGuide('#oled', ['en']).next, base + 'en.html#oled');

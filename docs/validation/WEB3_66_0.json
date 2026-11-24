@@ -1,0 +1,51 @@
+{
+  "version": "3.66.0",
+  "date": "2026-11-24",
+  "node": {
+    "total": 2297,
+    "passed": 2297,
+    "failed": 0,
+    "skipped": 0
+  },
+  "buildTests": {
+    "root": 57,
+    "pages": 57
+  },
+  "portable": {
+    "bytes": 12951055,
+    "sha256": "9f89c69bcbf1a6dc6f2817aa48a09e9ac52e359e4915a4f20204e4a09b5ff40b",
+    "extractedFileHashesChecked": 317,
+    "windowsLaunchRestartStop": "passed"
+  },
+  "browser": {
+    "lcdFirmwareSelectionChecks": 62,
+    "tickerMobileAndDesktop": {
+      "languages": [
+        "de",
+        "en"
+      ],
+      "previewAndPlayerBytes": "passed",
+      "simulatedGatt": "passed"
+    },
+    "mineruMobile": {
+      "engines": [
+        "Chromium",
+        "WebKit"
+      ],
+      "languages": [
+        "de",
+        "en"
+      ],
+      "fourGamesIncludingExistingNote": true
+    }
+  },
+  "catalogue": {
+    "figures": 956,
+    "associations": 1416,
+    "firmwareAssociations": 1348,
+    "newBilingualMineruNotes": 3
+  },
+  "lcdTestEvidence": "DE3_104_LCD_TEST1.json",
+  "oledObserved": "One OLED with Test 6: remote connection and screen capture. Captures show both requested contrast endpoints. Physical panel brightness was not measured.",
+  "deviceAcceptance": "New LCD App677 forget action and scrolling-text radio/display path await a physical device run."
+}

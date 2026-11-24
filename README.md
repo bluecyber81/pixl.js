@@ -1,14 +1,14 @@
 # Allmiibo LCD and Pixl.js OLED
 
-**Optional LCD test release DE3.103 / App676.** If the device cannot read the Switch 2 wake profile, choose “Retry load” or “Back”. Discard restores the last loaded or saved settings. App676 still awaits an on-device test. [Phone ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_103_676_NUR_APP.zip) · [Open in the web updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.103-lcd-app-test1#board=LCD) · [Test release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.103-lcd-test1).
+**Optional LCD test release DE3.104 / App677.** In Switch 2 wake, “Forget pairing” removes the locally saved profile after confirmation and turns off automatic wake. On-device testing is pending. [Phone ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_104_677_NUR_APP.zip) · [Open in the web updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.104-lcd-app-test1#board=LCD) · [Test release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.104-lcd-test1).
 
-## Current: LCD DE3.102 / App675 and file manager 3.65.1
+## Current: LCD DE3.102 / App675 and file manager 3.66.0
 
-Web 3.65.1 improves interrupted folder uploads and offers file-by-file upload when space is tight.
+Web 3.66.0 adds scrolling text to the LCD image sender and bilingual game notes for Mineru’s Construct.
 
 Historical Web 3.65.0 verification: [delivery record](docs/validation/WEB3_65_0_FINAL_DELIVERY.json).
 
-[Open file manager](https://bluecyber81.github.io/pixl.js/) · [Images & video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 in updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signed App675 ZIP for phones](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows portable ZIP](https://bluecyber81.github.io/pixl.js/downloads/web3.65.1/Allmiibo_Dateimanager_3_65_1_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.65.1.zip).
+[Open file manager](https://bluecyber81.github.io/pixl.js/) · [Images & video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 in updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signed App675 ZIP for phones](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows portable ZIP](https://bluecyber81.github.io/pixl.js/downloads/web3.66.0/Allmiibo_Dateimanager_3_66_0_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.0.zip).
 
 **Web 3.65.0** remembers image options and keeps one local file available across workspace changes for up to 30 minutes in the open page. Rotation by 90°, 180° or 270°, an optional photo dot pattern and drag & drop extend the preview. **Save for the animation player** exports a still image, the demo or a video clip as a player BIN. Start, end, frame rate and output size are shown before export; progress and cancellation are included. Processing stays local. [Instructions](https://bluecyber81.github.io/pixl.js/guide/en.html#bild-video).
 
@@ -20,7 +20,7 @@ The catalogue aligns existing Ocarina and Fatal Fury game notes with figure deta
 
 ### Sources and qualification
 
-[LCD production branch](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Web 3.65.1 tag](https://github.com/bluecyber81/pixl.js/tree/web3.65.1) · [Firmware qualification](docs/validation/DE3_102.json) · [ARM/PFS binding](docs/validation/DE3_102_PFS.json) · [Web 3.65.1 folder upload and resume tests](docs/validation/WEB3_65_1_UPLOAD.json) · [Operating notes](web/LIESMICH_3_65_1.txt) · [Deutsch](README.de.md).
+[LCD production branch](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Web 3.66.0 tag](https://github.com/bluecyber81/pixl.js/tree/web3.66.0) · [Firmware qualification](docs/validation/DE3_102.json) · [ARM/PFS binding](docs/validation/DE3_102_PFS.json) · [Web 3.65.1 folder upload and resume tests](docs/validation/WEB3_65_1_UPLOAD.json) · [Operating notes](web/LIESMICH_3_66_0.txt) · [Deutsch](README.de.md).
 
 App675 was read back on one LCD. The owner confirmed images, animation, loop and frame counter. Physical Switch 2 wake and interrupted DFU remain open. [Device readback](docs/validation/DE3_102_LCD_READBACK.json).
 
@@ -46,7 +46,7 @@ Preview, verification and backup can read a small file with a single request. A 
 
 ## OLED DE3.87 Test 6 / App86 · prerelease
 
-For the three-button Pixl.js OLED with nRF52832, 128 × 64 SH1106, compatible DFU bootloader and S112 7.2.0 (`0x0103`). The signed ZIP contains only the OLED application. It supports English and German and uses the existing SPIFFS or native LittleFS volume. Physical OLED testing is pending. [OLED app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [English test guide](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt) · [Sources and test kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
+For the three-button Pixl.js OLED with nRF52832, 128 × 64 SH1106, compatible DFU bootloader and S112 7.2.0 (`0x0103`). The signed ZIP contains only the OLED application. It supports English and German and uses the existing SPIFFS or native LittleFS volume. On 18 November 2026, a tester confirmed the remote connection and screen capture on one OLED running Test 6. [OLED app for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [English test guide](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt) · [Sources and test kit](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
 
 Test 6 advertises the remote service in the first Bluetooth advertising packet. The device test lets you compare the 5% and 100% contrast settings on the panel. The database identifies occupied and read-only slots before saving and lets you page through large favorites folders. [Browser flashing and remote setup](https://bluecyber81.github.io/pixl.js/guide/en.html#oled)
 

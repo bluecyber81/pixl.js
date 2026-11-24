@@ -1317,33 +1317,33 @@
       "evidence": "docs/validation/WEB3_65_0_FINAL_DELIVERY.json"
     }
   },
-  "web_version": "3.65.1",
+  "web_version": "3.66.0",
   "web_release_status": "normal",
-  "web_release_notes": "web/LIESMICH_3_65_1.txt",
-  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web3.65.1",
-  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.65.1.zip",
-  "web_portable_url": "https://bluecyber81.github.io/pixl.js/downloads/web3.65.1/Allmiibo_Dateimanager_3_65_1_Portable.zip",
+  "web_release_notes": "web/LIESMICH_3_66_0.txt",
+  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web3.66.0",
+  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.0.zip",
+  "web_portable_url": "https://bluecyber81.github.io/pixl.js/downloads/web3.66.0/Allmiibo_Dateimanager_3_66_0_Portable.zip",
   "web_downloads": {
-    "portable": "https://bluecyber81.github.io/pixl.js/downloads/web3.65.1/Allmiibo_Dateimanager_3_65_1_Portable.zip",
-    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.65.1.zip",
-    "portableBytes": 12691183,
-    "portableSha256": "0b9c8186766923035369edea5b1093a84fe8a7bdb1670d9b5a6ceaecee8b49c4"
+    "portable": "https://bluecyber81.github.io/pixl.js/downloads/web3.66.0/Allmiibo_Dateimanager_3_66_0_Portable.zip",
+    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.0.zip",
+    "portableBytes": 12951055,
+    "portableSha256": "9f89c69bcbf1a6dc6f2817aa48a09e9ac52e359e4915a4f20204e4a09b5ff40b"
   },
   "firmware_preview": {
-    "version": "2.22.0-DE3.103",
-    "counter": 676,
+    "version": "2.22.0-DE3.104",
+    "counter": 677,
     "board": "LCD",
     "application_only": true,
-    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_103_676_NUR_APP.zip",
-    "ota_bytes": 254974,
-    "ota_sha256": "4ec0b8baca9d694acdd2c3b63b466e4c6596e0e4ca460968db61a742d588f426",
-    "application_bytes": 362144,
-    "application_sha256": "f48f1db4258c765cca06b806050ea67ea81cbe64ca4a5641c0c0149db135c666",
-    "source_id": "6d0162f012b54082f6c854a902695a7aff4679f7e9f3433767865af7dfb11b76",
-    "source_commit": "62d502ac72c81e00da41ff5e43deb0dab27ea73d",
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_104_677_NUR_APP.zip",
+    "ota_bytes": 255262,
+    "ota_sha256": "a82996e5c47152ce92e086f5969d8ad5f2f4d22f8192dcb9f6ce081cb0e690eb",
+    "application_bytes": 362724,
+    "application_sha256": "ea503da1a61d6bd8577e139f6440d21acd706f3c50cd9d5317463202a4c3aa2c",
+    "source_id": "320ccc071c229611512e85893c80838a9731084dda435b0d9bf2f33726d64134",
+    "source_commit": "1f37cacddbffe525f00147db9b5e1b40d3aaf8a2",
     "hardware_acceptance": "pending",
     "distribution": "signed-application-prerelease",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.103-lcd-test1",
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.104-lcd-test1",
     "bootloader_profile": "Z21",
     "softdevice_requirements": [
       "0x0126"
@@ -1356,21 +1356,19 @@
       "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
       "included_in_application_ota": false,
       "installation_readback_observed": false,
-      "qualification": "Z21 full App676 BIN checkpoint/resume simulation. Physical interrupted DFU pending.",
-      "application_counter": 676
+      "qualification": "Full App677 data-phase resume simulation with Z21. Physical interruption remains open.",
+      "application_counter": 677
     },
-    "evidence": "docs/validation/DE3_103_LCD_TEST1.json",
+    "evidence": "docs/validation/DE3_104_LCD_TEST1.json",
     "status": "experimental-signed-application"
   },
   "web_upload_evidence": "docs/validation/WEB3_65_1_UPLOAD.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.65.1",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.0",
   "web_publication_date": "2026-11-24",
-  "web_portable_bytes": 12691183,
-  "web_portable_sha256": "0b9c8186766923035369edea5b1093a84fe8a7bdb1670d9b5a6ceaecee8b49c4",
   "web_qualification_date": "2026-11-24",
-  "web_evidence": "docs/validation/WEB3_65_1.json",
-  "web_test_total": 2287,
-  "web_test_passed": 2287,
-  "web_test_skipped": 0,
-  "web_test_failed": 0
+  "web_evidence": "docs/validation/WEB3_66_0.json",
+  "web_test_total": 2297,
+  "web_test_passed": 2297,
+  "web_test_failed": 0,
+  "web_test_skipped": 0
 }

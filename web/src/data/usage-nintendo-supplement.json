@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "checkedDate": "2026-11-23",
+  "checkedDate": "2026-11-24",
   "policy": "Reviewed exact catalogue IDs only. Web notes supplement the unchanged firmware CSV export. No new firmware group, downloaded figure file or in-game device test is implied.",
   "games": [
     {
@@ -400,6 +400,73 @@
           ],
           "en": "Receive more helpful items than with other amiibo.",
           "de": "Erhalte mehr hilfreiche Gegenstände als mit anderen amiibo."
+        }
+      ]
+    },
+    {
+      "id": "zelda-tears-of-the-kingdom",
+      "title": "The Legend of Zelda: Tears of the Kingdom",
+      "platform": "Switch",
+      "groupId": 1,
+      "groupLabel": "The Legend of Zelda: Tears of the Kingdom",
+      "checkedDate": "2026-11-24",
+      "source": "https://www.nintendo.com/us/amiibo/detail/minerus-construct-the-legend-of-zelda-tears-of-the-kingdom-series/",
+      "de": "Scanne Minerus Konstrukt, um zufällige Gegenstände zu erhalten. Mit etwas Glück erhältst du auch einen besonderen Stoff für Links Parasegel.",
+      "en": "Scan Mineru’s Construct for random items. You may also receive a special fabric for Link’s paraglider.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "010d000004a70902"
+          ],
+          "en": "Scan the figure for random items. You may also receive a special fabric for Link’s paraglider.",
+          "de": "Scanne die Figur, um zufällige Gegenstände zu erhalten. Mit etwas Glück erhältst du auch einen besonderen Stoff für Links Parasegel."
+        }
+      ]
+    },
+    {
+      "id": "zelda-breath-of-the-wild",
+      "title": "The Legend of Zelda: Breath of the Wild",
+      "platform": "Switch",
+      "groupId": 4,
+      "groupLabel": "The Legend of Zelda: Breath of the Wild",
+      "checkedDate": "2026-11-24",
+      "source": "https://www.nintendo.com/us/amiibo/detail/minerus-construct-the-legend-of-zelda-tears-of-the-kingdom-series/",
+      "de": "Scanne Minerus Konstrukt, um zufällige Gegenstände zu erhalten.",
+      "en": "Scan Mineru’s Construct for random items.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "010d000004a70902"
+          ],
+          "en": "Scan the figure for random items.",
+          "de": "Scanne die Figur, um zufällige Gegenstände zu erhalten."
+        }
+      ]
+    },
+    {
+      "id": "hyrule-warriors-age-of-imprisonment",
+      "title": "Hyrule Warriors: Age of Imprisonment",
+      "titleDe": "Hyrule Warriors: Chronik der Versiegelung",
+      "platform": "Switch 2",
+      "groupId": "web-hyrule-warriors-age-of-imprisonment",
+      "groupLabel": "Hyrule Warriors: Age of Imprisonment",
+      "checkedDate": "2026-11-24",
+      "source": "https://www.nintendo.com/us/amiibo/detail/minerus-construct-the-legend-of-zelda-tears-of-the-kingdom-series/",
+      "additionalSources": [
+        "https://www.nintendo.com/de-de/Spiele/Nintendo-Switch-2-Spiele/Hyrule-Warriors-Chronik-der-Versiegelung-2789659.html"
+      ],
+      "de": "Scanne Minerus Konstrukt, um zufällige Gegenstände zu erhalten.",
+      "en": "Scan Mineru’s Construct for random items.",
+      "translation": "editorial-from-primary-source",
+      "rows": [
+        {
+          "ids": [
+            "010d000004a70902"
+          ],
+          "en": "Scan the figure for random items.",
+          "de": "Scanne die Figur, um zufällige Gegenstände zu erhalten."
         }
       ]
     }

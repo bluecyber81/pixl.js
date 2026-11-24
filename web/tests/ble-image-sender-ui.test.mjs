@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import {parse,compileScript,compileTemplate} from '@vue/compiler-sfc';
 import * as Vue from 'vue';
 import {rgbaToFrame,frameToRgba} from '../src/lib/ble-image-stream.js';
-import {createFramePump,demoRgba,drawMediaFrame,loadLocalMedia} from '../src/lib/stream-media.js';
+import {createFramePump,demoRgba,drawMediaFrame,loadLocalMedia,measureTicker,drawTicker} from '../src/lib/stream-media.js';
 import {readStreamOptions,saveStreamOptions,resetStreamOptions} from '../src/lib/stream-options.js';
 import {createStreamSession,STREAM_SESSION_MAX_FILE_BYTES} from '../src/lib/stream-session.js';
 import {planPlayerExport,createPlayerExport,playerExportName,seekVideoFrame} from '../src/lib/stream-player-export.js';
@@ -16,13 +16,13 @@ const filename=new URL('../src/components/BleImageSender.vue',import.meta.url);
 const {descriptor}=parse(fs.readFileSync(filename,'utf8'),{filename:filename.pathname});
 const script=compileScript(descriptor,{id:'stream-ui'}).content.replace(/^import .*$/gm,'').replace('export default','const Component=');
 const template=compileTemplate({source:descriptor.template.content,id:'stream-ui',filename:filename.pathname,compilerOptions:{hoistStatic:false}}).code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]vue['"];?/g,(_,names)=>`const {${names.replace(/\s+as\s+/g,':')}}=Vue;`).replace('export function render','function render');
-const factory=new Function('Vue','BleImageStream','rgbaToFrame','frameToRgba','createFramePump','demoRgba','drawMediaFrame','loadLocalMedia','readStreamOptions','saveStreamOptions','resetStreamOptions','streamSession','STREAM_SESSION_MAX_FILE_BYTES','planPlayerExport','createPlayerExport','playerExportName','seekVideoFrame','document','globalThis','performance',script+'\n'+template+'\nComponent.render=render;return Component;');
+const factory=new Function('Vue','BleImageStream','rgbaToFrame','frameToRgba','createFramePump','demoRgba','drawMediaFrame','loadLocalMedia','readStreamOptions','saveStreamOptions','resetStreamOptions','streamSession','STREAM_SESSION_MAX_FILE_BYTES','planPlayerExport','createPlayerExport','playerExportName','seekVideoFrame','document','globalThis','performance','measureTicker','drawTicker',script+'\n'+template+'\nComponent.render=render;return Component;');
 const defer=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return{promise,resolve,reject};};
 const flush=async()=>{await Promise.resolve();await Promise.resolve();await Vue.nextTick();};
 function element(type,text=''){
  const listeners=new Map();let position=0;const n={type,tagName:type.toUpperCase(),text,props:{},children:[],parent:null,style:{},value:'',paused:true,ended:false,duration:20,readyState:2,seeking:false,get currentTime(){return position;},set currentTime(v){position=v;queueMicrotask(()=>this.emit('seeked'));},naturalWidth:640,naturalHeight:480,videoWidth:640,videoHeight:480,
  addEventListener(e,fn){if(!listeners.has(e))listeners.set(e,new Set());listeners.get(e).add(fn);},removeEventListener(e,fn){listeners.get(e)?.delete(fn);},emit(e){for(const fn of [...(listeners.get(e)||[])])fn({target:this});const callback=this.props['on'+e[0].toUpperCase()+e.slice(1)];callback?.({target:this});},removeAttribute(name){this[name]='';},setAttribute(name,v){this[name]=v;},getRootNode(){return {activeElement:null};},load(){},pause(){if(!this.paused){this.paused=true;this.emit('pause');}},async play(){this.paused=false;this.emit('play');},get options(){return this.children.filter(v=>v.type==='option');},
- getContext(){return this.context??=( {createImageData:()=>({data:new Uint8ClampedArray(32768)}),putImageData:img=>this.pixels=img.data.slice(),fillRect(){},drawImage(){},save(){},restore(){},translate(){},rotate(){},getImageData:()=>({data:demoRgba(2)})});}};
+ getContext(){return this.context??=( {createImageData:()=>({data:new Uint8ClampedArray(32768)}),putImageData:img=>this.pixels=img.data.slice(),fillRect(){},measureText:value=>({width:value.length*16}),fillText(){},drawImage(){},save(){},restore(){},translate(){},rotate(){},getImageData:()=>({data:demoRgba(2)})});}};
  return n;
 }
 const renderer=Vue.createRenderer({createElement:t=>element(t),createText:t=>element('#text',t),createComment:t=>element('#comment',t),setText:(n,t)=>n.text=t,setElementText:(n,t)=>{n.text=t;n.children=[];},patchProp:(n,k,o,v)=>{n.props[k]=v;if(k==='value'||k==='type'||k==='multiple')n[k]=v;},insert(n,p,a=null){if(n.parent)n.parent.children.splice(n.parent.children.indexOf(n),1);n.parent=p;const i=p.children.indexOf(a);i<0?p.children.push(n):p.children.splice(i,0,n);},remove(n){n.parent?.children.splice(n.parent.children.indexOf(n),1);n.parent=null;},parentNode:n=>n.parent,nextSibling:n=>n.parent?.children[n.parent.children.indexOf(n)+1]||null});
@@ -38,7 +38,7 @@ function mount(options={}){
  const loader=(file,{video})=>loadLocalMedia(file,{video,ImageClass:Image,urlApi:{createObjectURL:()=>`blob:test-${sources.length}`,revokeObjectURL:url=>revoked.push(url)},schedule:clock.schedule,cancel:clock.cancel});
  const values=new Map(),storage=options.storage||{getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};
  const session=options.session||createStreamSession({...clock,now:clock.now});
- const Component=factory(Vue,Client,rgbaToFrame,frameToRgba,config=>createFramePump({...config,...clock}),demoRgba,drawMediaFrame,loader,()=>readStreamOptions(storage),value=>saveStreamOptions(value,storage),()=>resetStreamOptions(storage),session,STREAM_SESSION_MAX_FILE_BYTES,planPlayerExport,options.exporter||createPlayerExport,playerExportName,seekVideoFrame,doc,browser,{now:clock.now});
+ const Component=factory(Vue,Client,rgbaToFrame,frameToRgba,config=>createFramePump({...config,...clock}),demoRgba,drawMediaFrame,loader,()=>readStreamOptions(storage),value=>saveStreamOptions(value,storage),()=>resetStreamOptions(storage),session,STREAM_SESSION_MAX_FILE_BYTES,planPlayerExport,options.exporter||createPlayerExport,playerExportName,seekVideoFrame,doc,browser,{now:clock.now},measureTicker,drawTicker);
  const props=Vue.reactive({locale:options.locale||'de_DE',blocked:!!options.blocked,onActive:v=>active.push(v),onSending:v=>sending.push(v),onExporting:v=>exporting.push(v)});let vm;
  const app=renderer.createApp({render:()=>Vue.h(Component,{...props,ref:v=>vm=v})});app.mount(root);
  return {root,app,props,calls,active,sending,exporting,doc,timers,sources,revoked,blobs,storage,session,state,get vm(){return vm;},button:label=>flat(root).find(n=>n.type==='button'&&text(n).includes(label)),video:()=>flat(root).find(n=>n.type==='video'),async advance(ms){time+=ms;for(const[id,t]of[...timers])if(t.at<=time){timers.delete(id);t.fn();}await flush();}};
@@ -46,6 +46,45 @@ function mount(options={}){
 
 test('sender opens with a bounded demo preview and no connection or transmission',()=>{
  const h=mount();try{assert.deepEqual(h.calls,[]);assert.equal(h.vm.sourceKind,'demo');assert.equal(h.vm.ready,true);assert.equal(flat(h.root).find(n=>n.type==='canvas').pixels.length,32768);assert(h.button('Demo senden').props.disabled);assert.match(text(h.root),/Dateiverbindung und Fernbedienung trennen/);assert.match(text(h.root),/OLED unterstützt diesen Bildempfang nicht/);}finally{h.app.unmount();}
+});
+
+test('scrolling text stays local until sent and exports a full player loop in both languages',async()=>{
+ for(const locale of ['en','de_DE']){
+  const h=mount({locale});try{
+   h.button(locale==='en'?'Scrolling text':'Lauftext').props.onClick();await flush();
+   assert.equal(h.vm.canExport,false);
+   h.vm.tickerText='   ';await flush();assert.equal(h.vm.canExport,false);
+   h.vm.tickerText='Grüße vom LCD';await flush();
+   const expectedFrames=Math.ceil(h.vm.tickerLayout.period/h.vm.tickerSpeed*h.vm.fps);
+   h.vm.toggleTickerPreview();await h.advance(220);
+   assert.equal(h.vm.tickerPreviewing,true);assert.deepEqual(h.calls,[]);
+   h.vm.toggleTickerPreview();assert.equal(h.vm.tickerPreviewing,false);assert.equal(h.timers.size,0);
+   await h.vm.startExport();await flush();
+   assert.equal(h.vm.exportCompleted,expectedFrames);assert.equal(h.vm.exportFileName,'ticker_lcd.bin');
+   const url=h.vm.exportUrl,bin=new DataView(await h.blobs.get(url).arrayBuffer());
+   assert.equal(bin.getUint16(4,true),expectedFrames);assert.equal(bin.byteLength,16+expectedFrames*1024);
+   h.vm.tickerSpeed=60;await flush();assert.equal(h.vm.exportUrl,'');assert(h.revoked.includes(url));
+   await h.vm.connectStream();await h.vm.startSending();await flush();
+   assert.equal(h.vm.sending,true);assert.equal(h.calls.filter(v=>v.frame).length,1);
+   assert.equal(h.vm.selectionLocked,true);assert.equal(h.vm.canExport,false);
+   h.doc.hidden=true;h.vm.visibilityChanged();assert.equal(h.vm.sending,false);assert.equal(h.timers.size,0);
+   h.vm.resetSender();assert.equal(h.vm.tickerText,'');assert.equal(h.vm.tickerSpeed,40);
+  }finally{h.app.unmount();}
+ }
+});
+
+test('text wrapping covers the last letter, repeats with a gap, and rejects an oversized export',async()=>{
+ const positions=[],ctx={measureText:()=>({width:200}),fillRect(){},fillText:(msg,x,y)=>positions.push([msg,x,y])};
+ const layout=measureTicker(ctx,'  Äß  ');assert.deepEqual(layout,{text:'Äß',period:224});
+ drawTicker(ctx,layout,0,40);assert.deepEqual(positions.splice(0),[['Äß',4,32]]);
+ drawTicker(ctx,layout,5,40);assert.deepEqual(positions.splice(0),[['Äß',-196,32],['Äß',28,32]]);
+ drawTicker(ctx,layout,224/40,40);assert.deepEqual(positions.splice(0),[['Äß',4,32]]);
+ const h=mount({unavailable:true});try{
+  h.vm.selectGenerated('ticker');h.vm.tickerText='W'.repeat(120);h.vm.tickerSpeed=24;h.vm.fps=15;await flush();
+  assert.equal(h.vm.exportValidation.error,'EXPORT_TOO_LARGE');assert.equal(h.vm.canExport,false);
+  h.vm.fps=2;await flush();assert.equal(h.vm.canExport,true);
+  h.vm.toggleTickerPreview();h.doc.hidden=true;h.vm.visibilityChanged();assert.equal(h.timers.size,0);assert.deepEqual(h.calls,[]);
+ }finally{h.app.unmount();}
 });
 test('other connections and unsupported/insecure browsers block both button and method',async()=>{
  for(const options of [{blocked:true},{unavailable:true},{insecure:true}]){const h=mount(options);try{assert(h.button('verbinden').props.disabled);await h.vm.connectStream();assert.deepEqual(h.calls,[]);if(options.blocked)assert.match(text(h.root),/Dateiverbindung oben auf der Seite/);}finally{h.app.unmount();}}

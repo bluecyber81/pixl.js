@@ -15,7 +15,9 @@ Die Einstellung **Beim Tastenstart** ist anfangs aus. Wenn sie eingeschaltet und
 
 Suche und Senden dürfen nicht gleichzeitig laufen. Ein Druck auf die jeweils andere Aktion beendet zuerst die laufende Aktion und zeigt „Suche aus; erneut“ bzw. „Senden aus; erneut“. Ein zweiter Druck nach Abschluss startet die gewünschte Aktion. Solange S112 den Abschluss noch bestätigt, erscheint „Funk wird beendet“. Das Menü bleibt damit mit dem tatsächlichen Funkbesitzer synchron.
 
-**Speicherfehler:** Eine fehlgeschlagene Speicherung bleibt als ungesicherte Änderung im RAM erhalten. Die Rückkehr oder der Schlafbeginn versucht die Speicherung erneut. Schlägt auch dies fehl, bleibt die App geöffnet. „Aenderung verwerfen“ lädt bewusst die gespeicherte Konfiguration neu und verwirft ausschließlich die ungesicherte Bearbeitung. Erst ein erfolgreicher App-Abschluss stoppt die laufende Funkaktion. Die gespeicherte Textdatei enthält Geräteadressen und gehört zum persönlichen Gerätebestand.
+**Bei einem Speicherfehler** bleibt die Änderung im RAM erhalten. Beim Verlassen der App oder vor dem Einschlafen versucht das Gerät erneut zu speichern. Schlägt auch dies fehl, bleibt die App geöffnet. „Aenderung verwerfen“ stellt die im RAM gehaltene Kopie der zuletzt geladenen oder erfolgreich gespeicherten Einstellungen wieder her. Erst ein erfolgreicher App-Abschluss stoppt die laufende Funkaktion. Die gespeicherte Textdatei enthält Geräteadressen und gehört zum persönlichen Gerätebestand.
+
+Ab LCD DE3.104/App677 entfernt **Kopplung vergessen** das lokale Weckprofil. „Abbrechen“ erhält die Einstellungen. Nach dem bestätigten Löschen ist der Tastenstart zum Wecken deaktiviert.
 
 ## BLE-Bildempfang
 

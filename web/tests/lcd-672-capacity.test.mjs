@@ -26,7 +26,7 @@ test('normal App672 folder publication requires its own qualified engine and nev
     assert.equal(supportsFolderPublication(previous.firmwareVersion, normal.layout.engineSha256), false, id);
     assert.equal(supportsFolderPublication(previous.firmwareVersion, previous.layout.engineSha256), true, id);
   }
-  for (const version of ['2.22.0-DE3.104','2.22.0-DE3.99-OLEDt7'])
+  for (const version of ['2.22.0-DE3.105','2.22.0-DE3.99-OLEDt7'])
     assert.equal(supportsFolderPublication(version, normal.layout.engineSha256), false, version);
 });
 

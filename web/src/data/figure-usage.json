@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026-11-23.nintendo-web",
+  "dataVersion": "2026-11-24.nintendo-web",
   "source": {
     "label": "Bundled firmware catalogue",
     "referenceCommit": "6e0004969cd1481a027c2eaa86838a4c3fa1553d",
@@ -206,8 +206,8 @@
     "hashPolicy": "sha256 identifies the local export input; referenceSha256 identifies the exact bytes at referenceUrl. Per-file transformations explain any difference.",
     "webSupplement": {
       "path": "web/src/data/usage-nintendo-supplement.json",
-      "sha256": "f0f9466d43a1e338276a8d6a08d0b7c489776480de8b9c5218c7ae74a045c5ac",
-      "checkedDate": "2026-11-23",
+      "sha256": "4ac9e98aaebdeca87b8733ad589da5ce9255820133b306034906cf7de09175f8",
+      "checkedDate": "2026-11-24",
       "policy": "Reviewed exact catalogue IDs only. Web notes supplement the unchanged firmware CSV export. No new firmware group, downloaded figure file or in-game device test is implied."
     },
     "firmwareDataVersion": "2026-11-16.de376"
@@ -222,16 +222,16 @@
   },
   "coverage": {
     "figures": 956,
-    "groups": 86,
-    "associations": 1414,
+    "groups": 87,
+    "associations": 1416,
     "firmwareAssociations": 1348,
-    "nintendoWebAssociations": 66,
+    "nintendoWebAssociations": 68,
     "legacyEmptyLinkColumns": 3,
-    "englishNoteAssociations": 163,
-    "uniqueEnglishNotes": 64,
-    "uniqueGermanTranslations": 64,
-    "germanNoteAssociations": 163,
-    "nintendoWebNoteAdditions": 91
+    "englishNoteAssociations": 166,
+    "uniqueEnglishNotes": 66,
+    "uniqueGermanTranslations": 66,
+    "germanNoteAssociations": 166,
+    "nintendoWebNoteAdditions": 94
   },
   "groups": [
     {
@@ -947,6 +947,16 @@
       "platform": "Switch 2",
       "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/arzga_2/index.html",
       "webOnly": true
+    },
+    {
+      "id": "web-hyrule-warriors-age-of-imprisonment",
+      "parentId": null,
+      "labelPath": [
+        "Hyrule Warriors: Age of Imprisonment"
+      ],
+      "platform": "Switch 2",
+      "sourceUrl": "https://www.nintendo.com/us/amiibo/detail/minerus-construct-the-legend-of-zelda-tears-of-the-kingdom-series/",
+      "webOnly": true
     }
   ],
   "notes": [
@@ -1332,6 +1342,18 @@
       "id": 64,
       "en": "Receive a character costume; further amiibo of the same character give game tickets. This Air Riders figure is supported on Switch, not on Nintendo 3DS.",
       "de": "Erhalte ein Charakterkostüm; weitere amiibo desselben Charakters geben Spieltickets. Diese Air-Riders-Figur wird auf Switch unterstützt, auf Nintendo 3DS nicht.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 65,
+      "en": "Scan the figure for random items. You may also receive a special fabric for Link’s paraglider.",
+      "de": "Scanne die Figur, um zufällige Gegenstände zu erhalten. Mit etwas Glück erhältst du auch einen besonderen Stoff für Links Parasegel.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 66,
+      "en": "Scan the figure for random items.",
+      "de": "Scanne die Figur, um zufällige Gegenstände zu erhalten.",
       "translation": "editorial-from-primary-source"
     }
   ],
@@ -3574,14 +3596,34 @@
       "associations": [
         {
           "groupId": 1,
-          "noteId": null,
-          "sourceLine": 1325
+          "noteId": 65,
+          "sourceLine": 1325,
+          "firmwareNoteId": null,
+          "sourceUrl": "https://www.nintendo.com/us/amiibo/detail/minerus-construct-the-legend-of-zelda-tears-of-the-kingdom-series/",
+          "webSupplement": true,
+          "platform": "Switch"
         },
         {
           "groupId": 82,
           "webOnly": true,
           "noteId": 60,
           "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/71861/~/how-to-use-amiibo-figures-%28the-legend-of-zelda%3A-ocarina-of-time%29",
+          "webSupplement": true,
+          "platform": "Switch 2"
+        },
+        {
+          "groupId": 4,
+          "webOnly": true,
+          "noteId": 66,
+          "sourceUrl": "https://www.nintendo.com/us/amiibo/detail/minerus-construct-the-legend-of-zelda-tears-of-the-kingdom-series/",
+          "webSupplement": true,
+          "platform": "Switch"
+        },
+        {
+          "groupId": "web-hyrule-warriors-age-of-imprisonment",
+          "webOnly": true,
+          "noteId": 66,
+          "sourceUrl": "https://www.nintendo.com/us/amiibo/detail/minerus-construct-the-legend-of-zelda-tears-of-the-kingdom-series/",
           "webSupplement": true,
           "platform": "Switch 2"
         }

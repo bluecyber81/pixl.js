@@ -4,7 +4,7 @@ import nintendoSupplement from './usage-nintendo-supplement.json' with { type: '
 // franchise alone could include another printing, card type or announced figure.
 export const gameGuides = [
   ...nintendoSupplement.games.map(game => ({
-    id: game.id, title: game.title, groupId: game.groupId, platform: game.platform, source: game.source,
+    id: game.id, title: game.title, titleDe: game.titleDe, groupId: game.groupId, platform: game.platform, source: game.source,
     de: game.de, en: game.en, ids: [...game.rows.flatMap(row => row.ids), ...(game.includeExistingIds || [])],
     usageIds: game.rows.flatMap(row => row.ids),
   })),
@@ -24,3 +24,7 @@ export const gameGuides = [
     ids: ['05c0000004121302', '05c4000004131302'],
   },
 ];
+
+export function gameTitle(game, german) {
+  return (german && game.titleDe) || game.title;
+}

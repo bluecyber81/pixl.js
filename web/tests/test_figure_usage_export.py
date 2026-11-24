@@ -42,14 +42,14 @@ class UsageExportTests(unittest.TestCase):
             for association in figure['associations']:
                 note = notes.get(association['noteId'])
                 if association.get('webSupplement'):
-                    self.assertIn(association['groupId'], [5, 82, 22, 23, 24, 26, 33, 44, 47,
+                    self.assertIn(association['groupId'], [1, 4, 5, 82, 22, 23, 24, 26, 33, 44, 47,
                                                           'web-yoshi-mysterious-book', 'web-fatal-fury-cotw',
-                                                          'web-kirby-forgotten-land-switch2'])
+                                                          'web-kirby-forgotten-land-switch2', 'web-hyrule-warriors-age-of-imprisonment'])
                     self.assertTrue(note['de'] and note['en'])
                     if association.get('webOnly'):
                         self.assertNotIn('sourceLine', association)
                         continue
-                    self.assertEqual(association['groupId'], 5)
+                    self.assertIn(association['groupId'], (1, 5))
                     self.assertIsNone(association['firmwareNoteId'])
                     note = notes.get(association['firmwareNoteId'])
                 elif 'sourceUrl' in association:
@@ -73,12 +73,12 @@ class UsageExportTests(unittest.TestCase):
         self.assertEqual(len(actual), 1348)
         self.assertEqual(nintendo_web_rows, sorted([*exporter.OCARINA_PRODUCTS, *exporter.TRAINING_IDS]))
         self.assertEqual(data['coverage']['firmwareAssociations'], len(actual))
-        self.assertEqual(data['coverage']['associations'], len(actual) + 66)
-        self.assertEqual(data['coverage']['nintendoWebAssociations'], 66)
+        self.assertEqual(data['coverage']['associations'], len(actual) + 68)
+        self.assertEqual(data['coverage']['nintendoWebAssociations'], 68)
         self.assertEqual(data['coverage']['figures'], 956)
-        self.assertEqual(data['coverage']['englishNoteAssociations'], 163)
-        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 64)
-        self.assertEqual(data['coverage']['germanNoteAssociations'], 163)
+        self.assertEqual(data['coverage']['englishNoteAssociations'], 166)
+        self.assertEqual(data['coverage']['uniqueGermanTranslations'], 66)
+        self.assertEqual(data['coverage']['germanNoteAssociations'], 166)
         self.assertTrue(data['policy']['germanTranslationsAreComplete'])
         self.assertEqual({row['en'] for row in data['notes'][:55] if row['de']}, {row[2] for row in rows if row[2]})
         self.assertFalse(data['policy']['verifiedInGame'])

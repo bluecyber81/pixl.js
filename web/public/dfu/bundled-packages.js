@@ -24,9 +24,10 @@
             const lcdMeasurementTest = !oled && version && Object.hasOwn(measurementCounters,version[1]) && item.channel === 'prerelease' &&
                 item.counter === measurementCounters[version[1]] && item.bootloader === 'Z21';
             if (!oled && version?.[1] === '97') need(lcdMeasurementTest, 'Unpassendes LCD-App670-TEST1-Profil.', 'Incorrect LCD App670 TEST1 profile.');
-            const publicLcdTest = !oled && version?.[1] === '103';
-            if (publicLcdTest) need(item.channel === 'prerelease' && item.counter === 676 && item.bootloader === 'Z21' &&
-                item.file === 'Allmiibo_LCD_DE3_103_676_NUR_APP.zip', 'Unpassendes LCD-App676-Testprofil.', 'Incorrect LCD App676 test profile.');
+            const publicTestCounters = {103:676, 104:677};
+            const publicLcdTest = !oled && version && Object.hasOwn(publicTestCounters, version[1]);
+            if (publicLcdTest) need(item.channel === 'prerelease' && item.counter === publicTestCounters[version[1]] && item.bootloader === 'Z21' &&
+                item.file === 'Allmiibo_LCD_DE3_' + version[1] + '_' + item.counter + '_NUR_APP.zip', 'Unpassendes LCD-Testprofil.', 'Incorrect LCD test profile.');
             const expectedId = oled ? version && `de3.${version[1]}-oled-t${version[2]}-app`
                 : publicLcdTest || lcdMeasurementTest ? `de3.${version[1]}-lcd-app-test1`
                 : lcdPreview ? `de3.${version[1]}-lcd-test1-app` : version && `de3.${version[1]}-lcd-app`;

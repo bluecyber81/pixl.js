@@ -39,7 +39,7 @@ export function packagePresentation(entry, session = {}, boot = null) {
     (diagnostic.softDeviceValid && (diagnostic.softDeviceFwid !== UPDATE_TARGET.softDevice.fwid ||
       diagnostic.softDeviceVersion !== UPDATE_TARGET.softDevice.version || diagnostic.softDeviceVariant !== UPDATE_TARGET.softDevice.variant))
   ));
-  const specialTags = { 'de3.103-lcd-app-test1': 'de3.103-lcd-test1', 'de3.73-lcd-app': 'de3.73-test646', 'de3.84-lcd-test1-app': 'de3.84-lcd-test1', 'de3.85-lcd-test1-app': 'de3.85-lcd-test1', 'de3.87-lcd-test1-app': 'de3.87-lcd-test1', 'de3.88-lcd-test1-app': 'de3.88-lcd-test1', 'de3.89-lcd-test1-app': 'de3.89-lcd-test1' };
+  const specialTags = { 'de3.104-lcd-app-test1': 'de3.104-lcd-test1', 'de3.103-lcd-app-test1': 'de3.103-lcd-test1', 'de3.73-lcd-app': 'de3.73-test646', 'de3.84-lcd-test1-app': 'de3.84-lcd-test1', 'de3.85-lcd-test1-app': 'de3.85-lcd-test1', 'de3.87-lcd-test1-app': 'de3.87-lcd-test1', 'de3.88-lcd-test1-app': 'de3.88-lcd-test1', 'de3.89-lcd-test1-app': 'de3.89-lcd-test1' };
   const releaseTag = specialTags[entry.id] || entry.version.split('-')[1].toLowerCase();
   const localDownloadUrl = deploymentPath(`firmware/${entry.file}`); // Validate even a pinned download's filename.
   const currentPhoneDownload = ['id','version','counter','file','board','bytes','sha256'].every(key => entry[key] === lcdReleasePackage[key]) &&

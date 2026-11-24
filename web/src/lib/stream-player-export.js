@@ -5,7 +5,7 @@ const fail = code => Object.assign(new Error(code), {code});
 const cancelled = signal => { if (signal?.aborted) throw fail('EXPORT_CANCELLED'); };
 
 export function planPlayerExport({kind, start = 0, end = 10, fps = 5, duration} = {}) {
-  if (!['image', 'video', 'demo'].includes(kind) || !Number.isInteger(fps) || fps < 1 || fps > 60) throw fail('EXPORT_RANGE');
+  if (!['image', 'video', 'demo', 'ticker'].includes(kind) || !Number.isInteger(fps) || fps < 1 || fps > 60) throw fail('EXPORT_RANGE');
   let frames = 1;
   if (kind === 'image') { start = 0; end = 1 / fps; }
   else {

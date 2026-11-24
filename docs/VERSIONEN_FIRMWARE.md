@@ -1,5 +1,9 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## LCD DE3.104 / App677 · Testversion
+
+Im Menü „Switch 2 wecken“ lässt sich das gespeicherte Profil über „Kopplung vergessen“ entfernen. Die Rückfrage beginnt mit „Abbrechen“. Nach erfolgreichem Entfernen ist auch das automatische Wecken beim Tastenstart aus. Die App-ZIP ist für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0. Der Praxistest für App677 steht aus.
+
 ## LCD DE3.103 / App676 · Testversion
 
 Bei einem Lesefehler im Switch-2-Weckprofil lässt sich der Ladevorgang wiederholen oder das Menü verlassen. Das Gerät schützt die zuvor gespeicherte Zuordnung. „Verwerfen“ stellt den zuletzt erfolgreich geladenen oder gespeicherten Stand wieder her.
@@ -28,7 +32,7 @@ Auf einem ST7567-LCD mit PFS1, Z21 und S112 7.3.0 genügt die App-ZIP. Das Andro
 
 ## DE3.87 OLED Test 6 / App86 · Vorabversion
 
-App86 enthält die deutsche und englische Anwendung für dreitastige OLED-Geräte mit SH1106, S112 7.2.0 und kompatiblem DFU-Bootloader. Der OLED-Gerätetest steht aus. [App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [Anleitung](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt) · [Quellen und Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
+App86 enthält die deutsche und englische Anwendung für dreitastige OLED-Geräte mit SH1106, S112 7.2.0 und kompatiblem DFU-Bootloader. Am 18. November 2026 bestätigte ein Nutzer die Verbindung zur Fernbedienung und den Abruf des Displayfotos auf einem OLED mit Test 6. [App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [Anleitung](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt) · [Quellen und Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
 
 ## LCD DE3.87 / App660 · Vorabversion
 

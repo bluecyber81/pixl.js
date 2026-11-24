@@ -1,5 +1,11 @@
 # Veröffentlichungen für Allmiibo LCD und Pixl.js OLED
 
+## Dateimanager 3.66.0 und LCD-Testversion DE3.104 / App677
+
+Lauftext am Handy eingeben, als Vorschau abspielen, ans LCD senden oder für den Animationsplayer speichern. Bei Minerus Konstrukt stehen die von Nintendo beschriebenen Belohnungen für drei Zelda-Spiele. Auf einem OLED mit Test 6 wurden Fernverbindung und Displayfoto bestätigt. Die optionale LCD-App677 kann das lokale Switch-2-Weckprofil nach Rückfrage entfernen und den automatischen Tastenstart ausschalten.
+
+[Bildsender öffnen](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [LCD-Testversion fürs Handy](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_104_677_NUR_APP.zip) · [Reguläre LCD-App675](https://github.com/bluecyber81/pixl.js/releases/tag/de3.102)
+
 ## LCD DE3.89 / App662 · stabile Firmware
 
 | Dein LCD-Gerät | Passender Download |
@@ -18,7 +24,7 @@ Vorschau, Prüfung und Sicherung kleiner Dateien können diese mit einer einzige
 
 ## OLED DE3.87 Test 6 und Dateimanager 3.58.1
 
-Die OLED-Vorabversion verbessert die Auffindbarkeit der Fernbedienung, die Abstufung des SH1106-Kontrasts und das Speichern in der Figurendatenbank. Nach einem Lesefehler behält AmiiboLink den aktiven Slot. SPIFFS und natives LittleFS wurden auf simuliertem Flash geprüft. Der Gerätetest für App86 steht aus. [OLED-App fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [Deutsche Anleitung](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
+Die OLED-Vorabversion verbessert die Auffindbarkeit der Fernbedienung, die Abstufung des SH1106-Kontrasts und das Speichern in der Figurendatenbank. Nach einem Lesefehler behält AmiiboLink den aktiven Slot. SPIFFS und natives LittleFS wurden auf simuliertem Flash geprüft. Am 18. November 2026 bestätigte ein Tester die Fernverbindung und den Abruf des Displayfotos auf einem OLED mit Test 6. Die Aufnahmen zeigen die Kontrast-Sollwerte 5 % und 100 %. Wie deutlich sich die Helligkeit am Panel änderte, blieb offen. [OLED-App fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [Deutsche Anleitung](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip)
 
 Im Dateimanager lässt sich die signierte OLED-App über den Computer übertragen. Für das LCD mit PFS1, Z21 und S112 7.3.0 ist DE3.87/App660 als Vorabversion verfügbar. Bei Erscheinen dieser Version war DE3.81/App654 die reguläre LCD-Firmware. [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1) · [Firmwarewahl](docs/COMPONENT_DOWNLOADS.md)
 

@@ -14,6 +14,8 @@
 #define MINI_APP_ID_DESKTOP 1
 #define MINI_APP_ID_SWITCH2_WAKE 10
 #define VFS_ERR_NOOBJ (-90)
+#define VFS_ERR_FAIL (-1)
+#define VFS_OK 0
 #define ICON_WAKE 1
 #define ICON_EDIT 2
 #define ICON_MODE 3
@@ -28,6 +30,8 @@ typedef struct{void*user_data;}mui_list_item_t;
 typedef void mui_view_dispatcher_t;
 typedef void mui_text_input_t;
 typedef void mui_toast_view_t;
+typedef enum {MUI_MSG_BOX_EVENT_SELECT_LEFT, MUI_MSG_BOX_EVENT_SELECT_CENTER, MUI_MSG_BOX_EVENT_SELECT_RIGHT} mui_msg_box_event_t;
+typedef struct { void *user_data; unsigned focus; const char *message, *cancel, *confirm; } mui_msg_box_t;
 typedef unsigned mui_list_view_event_t;
 typedef unsigned mini_app_exit_reason_t;
 typedef struct{unsigned id;}mini_app_t;
@@ -47,6 +51,14 @@ static unsigned getLanguage(void){return language;}
 static void*mui(void){return NULL;}
 static void mui_update(void*p){(void)p;}
 static void mui_toast_view_show(void*p,const char*s){(void)p;toasts++;snprintf(toast,sizeof toast,"%s",s);}
+static unsigned current_view, remove_calls;
+static int remove_result;
+static void*mui_msg_box_get_user_data(mui_msg_box_t*b){return b->user_data;}
+static void mui_msg_box_set_header(mui_msg_box_t*b,const char*h){(void)b;assert(!strcmp(h,"Switch 2"));}
+static void mui_msg_box_set_message(mui_msg_box_t*b,const char*m){b->message=m;}
+static void mui_msg_box_set_btn_text(mui_msg_box_t*b,const char*l,const char*c,const char*r){assert(c==NULL);b->cancel=l;b->confirm=r;}
+static void mui_msg_box_set_btn_focus(mui_msg_box_t*b,unsigned f){b->focus=f;}
+static void mui_view_dispatcher_switch_to_view(mui_view_dispatcher_t*d,unsigned v){(void)d;current_view=v;}
 static unsigned item_count,menu_ids[12];
 static const char*menu_labels[12];
 static void mui_list_view_clear_items(mui_list_view_t*p){(void)p;menus++;item_count=0;}
@@ -70,8 +82,15 @@ static uint32_t ble_switch2_scan_start(uint16_t seconds,void(*cb)(bool,const ble
 static uint32_t ble_raw_adv_start(const uint8_t*m,const uint8_t*p,uint8_t n,bool c,uint16_t d,void(*cb)(uint32_t)){(void)m;(void)p;(void)c;(void)cb;assert(n==31);advs++;sent_duration=d;if(!radio_result)adv_owner=true;return radio_result;}
 static bool mount(void){return mounted;}
 static int32_t read_cfg(const char*path,char*p,size_t n){assert(!strcmp(path,SWITCH2_WAKE_CFG_PATH)&&n==512);reads++;if(read_result>=0){size_t take=(size_t)read_result<n?(size_t)read_result:n;memcpy(p,stored,take);}return read_result;}
-typedef struct{bool(*mounted)(void);int32_t(*read_file_data)(const char*,char*,size_t);}vfs_driver_t;
-static vfs_driver_t driver={mount,read_cfg};
+static int32_t remove_cfg(const char*path){
+ assert(!strcmp(path,SWITCH2_WAKE_CFG_PATH));
+ remove_calls++;
+ if(remove_result!=VFS_OK)return remove_result;
+ if(read_result==VFS_ERR_NOOBJ)return VFS_ERR_NOOBJ;
+ stored[0]=0;read_result=VFS_ERR_NOOBJ;return VFS_OK;
+}
+typedef struct{bool(*mounted)(void);int32_t(*read_file_data)(const char*,char*,size_t);int32_t(*remove_file)(const char*);}vfs_driver_t;
+static vfs_driver_t driver={mount,read_cfg,remove_cfg};
 static vfs_driver_t*vfs_get_default_driver(void){return has_driver?&driver:NULL;}
 static int32_t vfs_persist_write(vfs_driver_t*d,const char*path,const void*p,size_t n){assert(d==&driver&&!strcmp(path,SWITCH2_WAKE_CFG_PATH)&&n<256);writes++;if(write_result<0)return write_result;if(write_result==1)return (int)n-1;memcpy(stored,p,n);stored[n]=0;read_result=(int)n;return (int)n;}
 static mini_app_inst_t inst;
@@ -109,7 +128,7 @@ static void test_profile_read_failures(void) {
   CHECK(!app.profile_loaded && item_count==2 && writes==initial_writes);
   read_result=stored_len; select_item(SWITCH2_MENU_RELOAD);
   CHECK(app.profile_loaded && !memcmp(&app.cfg,&expected,sizeof expected));
-  CHECK(!app.dirty && item_count==9 && writes==initial_writes);
+  CHECK(!app.dirty && item_count==10 && writes==initial_writes);
  }
 
  /* Simultaneous persistent read/write failure must allow an explicit discard
@@ -149,8 +168,79 @@ static void test_profile_read_failures(void) {
  write_result=0; select_item(SWITCH2_MENU_AUTO_WAKE);
  CHECK(writes==2 && app.cfg.auto_wake && !app.dirty);
 }
+
+static void test_forget_pairing(unsigned lang) {
+ reset();
+ language=lang;
+ current_view=SWITCH2_WAKE_VIEW_LIST;
+ remove_calls=0;
+ remove_result=VFS_OK;
+ mui_msg_box_t box={.user_data=&app};
+ app.p_forget_box=&box;
+ configured();
+ app.cfg.auto_wake=true;
+ app.cfg.raw_data_len=switch2_wake_build_adv(&app.cfg,app.cfg.raw_data);
+ app.cfg.has_raw_data=true;
+ CHECK(switch2_save_current(&app));
+ char original[sizeof stored];
+ strcpy(original,stored);
+ switch2_wake_cfg_t saved=app.saved_cfg;
+ app.cfg.connectable=true;
+ app.dirty=true;
+ switch2_wake_cfg_t editing=app.cfg;
+
+ switch2_wake_reload_menu(&app);
+ CHECK(menu_ids[item_count-2]==SWITCH2_MENU_FORGET);
+ CHECK(!strcmp(menu_labels[item_count-2],lang==LANGUAGE_DE_DE?"Kopplung vergessen":"Forget pairing"));
+ app.scanning=true;select_item(SWITCH2_MENU_FORGET);app.scanning=false;
+ app.waking=true;select_item(SWITCH2_MENU_FORGET);app.waking=false;
+ scan_owner=true;select_item(SWITCH2_MENU_FORGET);scan_owner=false;
+ CHECK(current_view==SWITCH2_WAKE_VIEW_LIST && !remove_calls);
+ select_item(SWITCH2_MENU_FORGET);
+ CHECK(current_view==SWITCH2_WAKE_VIEW_FORGET && box.focus==MUI_MSG_BOX_EVENT_SELECT_LEFT);
+ CHECK(!strcmp(box.cancel,"CANCEL") && !strcmp(box.confirm,lang==LANGUAGE_DE_DE?"Vergessen":"Forget"));
+ CHECK(!strcmp(box.message,lang==LANGUAGE_DE_DE?"Kopplung vergessen?":"Forget pairing?"));
+ switch2_wake_forget_response(box.focus,&box);
+ CHECK(current_view==SWITCH2_WAKE_VIEW_LIST && !remove_calls && writes==1);
+ CHECK(app.dirty && !strcmp(stored,original) && !memcmp(&app.cfg,&editing,sizeof editing));
+
+ select_item(SWITCH2_MENU_FORGET);
+ mounted=false;
+ switch2_wake_forget_response(MUI_MSG_BOX_EVENT_SELECT_RIGHT,&box);
+ CHECK(!remove_calls && !strcmp(toast,"FAILED") && app.dirty);
+ mounted=true;
+ select_item(SWITCH2_MENU_FORGET);
+ remove_result=VFS_ERR_FAIL;
+ switch2_wake_forget_response(MUI_MSG_BOX_EVENT_SELECT_RIGHT,&box);
+ CHECK(remove_calls==1 && !strcmp(stored,original) && !strcmp(toast,"FAILED"));
+ CHECK(app.dirty && !memcmp(&app.saved_cfg,&saved,sizeof saved) && !memcmp(&app.cfg,&editing,sizeof editing));
+
+ select_item(SWITCH2_MENU_FORGET);
+ remove_result=VFS_OK;
+ switch2_wake_forget_response(MUI_MSG_BOX_EVENT_SELECT_RIGHT,&box);
+ switch2_wake_cfg_t empty;
+ switch2_wake_cfg_set_default(&empty);
+ CHECK(remove_calls==2 && read_result==VFS_ERR_NOOBJ && current_view==SWITCH2_WAKE_VIEW_LIST);
+ CHECK(!app.dirty && !memcmp(&app.saved_cfg,&empty,sizeof empty) && !memcmp(&app.cfg,&empty,sizeof empty));
+ CHECK(!strcmp(toast,lang==LANGUAGE_DE_DE?"Kopplung entfernt":"Pairing forgotten"));
+ for(unsigned i=0;i<item_count;i++)CHECK(menu_ids[i]!=SWITCH2_MENU_FORGET);
+ CHECK(app_switch2_wake_prepare_exit(&inst,0) && writes==1);
+ app_switch2_wake_on_boot(NRF_POWER_RESETREAS_OFF_MASK);
+ CHECK(!advs && writes==1);
+ app.cfg=saved;
+ switch2_wake_open_profile(&app);
+ CHECK(app.profile_loaded && !memcmp(&app.cfg,&empty,sizeof empty));
+
+ /* An unsaved profile after a failed first save has no file to remove. */
+ configured(); write_result=-1; CHECK(!switch2_save_current(&app));
+ select_item(SWITCH2_MENU_FORGET);
+ switch2_wake_forget_response(MUI_MSG_BOX_EVENT_SELECT_RIGHT,&box);
+ CHECK(remove_calls==3 && !app.dirty && !memcmp(&app.cfg,&empty,sizeof empty));
+}
 int main(void){
  test_profile_read_failures();
+ test_forget_pairing(LANGUAGE_DE_DE);
+ test_forget_pairing(0);
  reset();has_driver=false;CHECK(!switch2_wake_save_cfg(&app.cfg)&&!writes);CHECK(!switch2_wake_load_cfg(&app.cfg)&&!reads);has_driver=true;mounted=false;CHECK(!switch2_wake_save_cfg(&app.cfg)&&!writes);CHECK(!switch2_wake_load_cfg(&app.cfg)&&!reads);
  reset();configured();write_result=1;CHECK(!switch2_save_current(&app)&&app.dirty);write_result=-1;for(unsigned why=0;why<3;why++)CHECK(!app_switch2_wake_prepare_exit(&inst,why)&&app.dirty);write_result=0;CHECK(app_switch2_wake_prepare_exit(&inst,0)&&!app.dirty);CHECK(switch2_wake_load_cfg(&app.cfg)&&app.cfg.has_mac&&app.cfg.has_host);
  reset();configured();write_result=-1;select_item(SWITCH2_MENU_AUTO_WAKE);CHECK(app.cfg.auto_wake&&app.dirty&&!strcmp(toast,"FAILED"));select_item(SWITCH2_MENU_MODE);CHECK(app.cfg.connectable&&app.dirty);app.cfg.has_raw_data=true;app.cfg.raw_data_len=31;select_item(SWITCH2_MENU_PID);CHECK(app.cfg.pid==SWITCH2_PID_JC2_R&&!app.cfg.has_raw_data&&!app.cfg.raw_data_len&&app.dirty);

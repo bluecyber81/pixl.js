@@ -487,7 +487,7 @@ test('App668 link snapshot selects MTUD v2 once, queues normally and reassembles
         assert.equal(f.disconnects,0);assert.equal(f.timers.size,0);
         const following=next(f);f.rx(0x14,[7]);await following;
     }
-    for(const version of [undefined,'2.22.0-DE3.94','2.22.0-DE3.104','2.22.0-DE3.97-OLEDt1','2.22.0-DE3.95-OLEDt7']) {
+    for(const version of [undefined,'2.22.0-DE3.94','2.22.0-DE3.105','2.22.0-DE3.97-OLEDt1','2.22.0-DE3.95-OLEDt7']) {
         const f=fixture(), pending=f.api.get_mtu_diagnostics(version);
         assert.deepEqual(f.writes,[[5,0,0,0]]);f.rx(5,mtuPacket());
         assert.equal((await pending).schemaVersion,1);
@@ -557,7 +557,7 @@ test(`APP670_STATUS_REGRESSION ${version} ${method} selects the actual productio
   assert.equal(data.mountProfile.flashWaitTicks,32);assert.equal(data.mountProfile.ticksPerSecond,16384);
  }else{
   assert.equal(data.scope,'packedfs-memory-status');assert.equal(data.drive,'E');
-  for(const unsupported of ['2.22.0-DE3.95','2.22.0-DE3.104','2.22.0-DE3.98-OLEDt1'])
+  for(const unsupported of ['2.22.0-DE3.95','2.22.0-DE3.105','2.22.0-DE3.98-OLEDt1'])
    assert.equal(await f.api.get_storage_gc_diagnostics(unsupported),null);
  }
  assert.deepEqual(f.writes,[[cmd,0,0,0,...request]]);assert.equal(f.timers.size,0);assert.equal(f.disconnects,0);
@@ -646,7 +646,7 @@ test(testVersion+' '+'Test 1 startup v5 falls back only on explicit unsupported 
 
 }
 
-for(const [normalCounter, normalVersion] of [[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100'],[674,'2.22.0-DE3.101'],[675,'2.22.0-DE3.102'],[676,'2.22.0-DE3.103']]) {
+for(const [normalCounter, normalVersion] of [[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100'],[674,'2.22.0-DE3.101'],[675,'2.22.0-DE3.102'],[676,'2.22.0-DE3.103'],[677,'2.22.0-DE3.104']]) {
 // App671 through App675 have normal observations, while App669/670 retain their experimental selectors.
 for(const [method,cmd,request,makePacket,schema] of [
  ['get_mtu_diagnostics',5,[1],mtuLinkPacket,2],

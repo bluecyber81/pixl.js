@@ -37,6 +37,10 @@ test('known figure IDs accept Windows CRLF and every generated flag matches the 
 });
 test('catalogue supports case, accent, multi-term, exact ID and series/type filtering', () => {
   assert.ok(filterCatalogue(data.entries, {query:'LINK zelda'}).length > 0);
+  for (const query of ['Mineru-Konstrukt', 'Minerus Konstrukt', "Mineru's Construct"]) {
+    assert.equal(filterCatalogue(data.entries, {query})[0].id, '010d000004a70902');
+  }
+  assert.ok(filterCatalogue(data.entries, { query: 'Chronik der Versiegelung' }).some(e => e.id === '010d000004a70902'));
   const mario = data.entries.find(e => e.name === 'Mario');
   assert.equal(filterCatalogue(data.entries, {query:mario.id.toUpperCase()})[0].id, mario.id);
   assert.equal(filterCatalogue([{name:'Étoile',id:'x',series:'S',type:'T',firmwareIdKnown:false}], {query:'etoile'}).length, 1);

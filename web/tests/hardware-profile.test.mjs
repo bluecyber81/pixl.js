@@ -26,7 +26,7 @@ test('App675 has its own LCD build identity while App672 through App674 remain s
 });
 
 test('App675 support does not admit a future LCD identity or attach LCD storage approval to OLED', () => {
-  for (const version of ['2.22.0-DE3.104', '2.22.0-DE3.101test', '2.22.0-DE3.101-OLEDt7', undefined]) {
+  for (const version of ['2.22.0-DE3.105', '2.22.0-DE3.101test', '2.22.0-DE3.101-OLEDt7', undefined]) {
     assert.equal(LCD_Z21_COUNTERS[version], undefined);
     assert.equal(supportsFolderPublication(version, engine), false);
     assert.equal(supportsLinkDiagnostics(version), false);
@@ -34,6 +34,6 @@ test('App675 support does not admit a future LCD identity or attach LCD storage 
     assert.equal(displayBuildReference(version), null);
   }
   assert.equal(firmwareBoard('2.22.0-DE3.101-OLEDt7'), 'OLED');
-  assert.equal(firmwareBoard('2.22.0-DE3.104'), null);
+  assert.equal(firmwareBoard('2.22.0-DE3.105'), null);
   assert.throws(() => getMigrationCapacityTarget('de3103'), {code:'MIGRATION_CAPACITY'});
 });

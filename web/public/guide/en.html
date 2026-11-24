@@ -28,7 +28,7 @@
         <a href="#diagnose">Read the device information first</a>
         <a href="#flash">Update the LCD app</a>
         <a href="#lcd-de3102">Install LCD DE3.102</a>
-        <a href="#lcd-de3103">Try LCD test release DE3.103</a>
+        <a href="#lcd-de3104">Try LCD test release DE3.104</a>
         <a href="#lcd-de387">Earlier LCD test release DE3.87</a>
         <a href="#lcd-de386">Test LCD DE3.86</a>
         <a href="#lcd-de385">Test LCD DE3.85</a>
@@ -53,13 +53,16 @@
         </section>
         <section id="flash">
           <h2>Update the LCD app over Bluetooth</h2>
+          <h3 id="lcd-de3104">Optional LCD test release DE3.104 / App677</h3>
+          <p>For LCD/ST7567 with PFS1, Z21 and S112 7.3.0. <a href="../firmware/Allmiibo_LCD_DE3_104_677_NUR_APP.zip" download>Download the signed App677 phone ZIP</a> or <a href="../dfu/web.html?package=de3.104-lcd-app-test1#board=LCD">check App677 in the web updater</a>. The package updates the application. DE3.102 / App675 remains the standard LCD release.</p>
+          <p>Open <b>Switch 2 wake → Forget pairing</b>. Cancel is selected first. Choose <b>Forget</b> to remove the profile from the LCD and turn off automatic wake. Pairing on the console is separate. Physical testing of App677 is pending.</p>
           <h3 id="lcd-de3103">Optional LCD test release DE3.103 / App676</h3>
           <p>For LCD/ST7567 with PFS1, Z21 and S112 7.3.0. <a href="../firmware/Allmiibo_LCD_DE3_103_676_NUR_APP.zip" download>Download the signed App676 phone ZIP</a> or <a href="../dfu/web.html?package=de3.103-lcd-app-test1#board=LCD">check App676 in the web updater</a>. The package updates the application. DE3.102 / App675 remains the standard LCD release.</p>
           <p>When the Switch 2 wake profile cannot be read, choose “Retry load” or “Back”. Discard restores the last valid settings. On-device testing is pending. <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.103-lcd-test1">GitHub test release</a>.</p>
           <h3 id="lcd-de3102">LCD DE3.102 / App675 · normal release</h3>
           <p>For LCD/ST7567 with Packed LittleFS (PFS1), bootloader Z21 and S112 7.3.0. Download the <a href="https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip" download>signed App675 ZIP</a>. Open <b>Settings → Firmware update</b> on the device and select the intact ZIP in nRF Device Firmware Update. The <a href="../dfu/web.html?package=de3.102-lcd-app#board=LCD">web updater opens the App675 selection directly</a>.</p>
-          <p>After restart, file manager <b>3.65.1</b> should report firmware <b>2.22.0-DE3.102</b> and application counter <b>675</b>. This application update preserves PFS1, bootloader and SoftDevice; an existing PFS1 installation does not need another storage migration.</p>
-          <p>App675 adds <b>Loop</b> and <b>Frame counter</b> to the animation player and reduces unnecessary redraws in image reception. Web3.65.1 offers <a href="#bild-video">rotation, a photo dot pattern, remembered image options and local player export</a>. Image sending remains compatible with App673+. <a href="https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675">Firmware sources and recorded software checks</a>. One LCD reported App675 and the matching compiled SourceID. The owner confirmed images, animation playback, looping and the frame counter. Switch 2 wake and an interrupted DFU transfer still need physical testing.</p>
+          <p>After restart, file manager <b>3.66.0</b> should report firmware <b>2.22.0-DE3.102</b> and application counter <b>675</b>. This application update preserves PFS1, bootloader and SoftDevice; an existing PFS1 installation does not need another storage migration.</p>
+          <p>App675 adds <b>Loop</b> and <b>Frame counter</b> to the animation player and reduces unnecessary redraws in image reception. Web3.66.0 offers <a href="#bild-video">rotation, a photo dot pattern, remembered image options and local player export</a>. Image sending remains compatible with App673+. <a href="https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675">Firmware sources and recorded software checks</a>. One LCD reported App675 and the matching compiled SourceID. The owner confirmed images, animation playback, looping and the frame counter. Switch 2 wake and an interrupted DFU transfer still need physical testing.</p>
           <p>The phone link uses the checked GitHub download. Open the newly downloaded ZIP in nRF Device Firmware Update.</p>
           <h3 id="lcd-de3101">LCD DE3.101 / App674 · previous release</h3>
           <p>For LCD/ST7567 with Packed LittleFS (PFS1), bootloader Z21 and S112 7.3.0. Download the <a href="https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip" download>signed App674 ZIP</a>. Open <b>Settings → Firmware update</b> on the device and select the intact ZIP in nRF Device Firmware Update. The <a href="../dfu/web.html?package=de3.101-lcd-app#board=LCD">web updater opens the App674 selection directly</a>.</p>
@@ -125,8 +128,8 @@
           <p>Open <b>Device &amp; diagnostics</b> and read the diagnostics. Firmware identity should report the <b>OLED</b> board. Play a game in both screen orientations and check the outer rows and columns. For the remote, report exactly which step succeeds or fails.</p>
           <h3 id="oled-remote">Connect the remote control</h3>
           <p>Leave file transfer and AmiiboLink on the awake device. Select <b>Settings → Remote → until off</b> and return to the main menu. In the file manager, open <b>Remote control</b>, choose <b>Allmiibo DE</b>, then select <b>Pixl.Remote</b> in the Bluetooth picker. Press <b>Right</b> once and check whether the selection moves on the device.</p>
-          <p>A user reported a problem connecting the OLED remote. The cause and a successful on-device button test remain unconfirmed.</p>
-          <p>Test 6 awaits a report from a physical OLED. A user reported a successful start of <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1">Test 1</a>.</p>
+          <p>On 18 November 2026, a tester confirmed the remote connection and screen capture on one OLED running Test 6. The captures show both contrast targets (5% and 100%). The tester did not quantify the change in panel brightness.</p>
+          <p>A user reported a successful start of <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1">Test 1</a>.</p>
         <p>For the remote, choose <b>Pixl.Remote</b> or <b>Pixl.Rem</b>. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt">English Test 6 guide</a>. Earlier trials: <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.85-oled-t5">Test 5</a> · <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-oled-t4">Test 4</a>.</p>
         </section>
         <section id="littlefs">
@@ -161,7 +164,8 @@
         </section>
         <section id="bild-video">
           <h2>Send an image or video to the LCD</h2>
-          <p>Open <a href="../?workspace=stream"><b>Images &amp; video</b></a> in file manager 3.65.1. Sending requires an LCD running <b>DE3.100/App673 or newer</b> and a browser with Web Bluetooth. Preview and player export also work without Bluetooth. OLED does not support this image receiver.</p>
+          <p>Open <a href="../?workspace=stream"><b>Images &amp; video</b></a> in file manager 3.66.0. Sending requires an LCD running <b>DE3.100/App673 or newer</b> and a browser with Web Bluetooth. Preview and player export also work without Bluetooth. OLED does not support this image receiver.</p>
+          <p>Choose <b>Scrolling text</b>, type your message and select a speed. Play the preview on your phone. Choose <b>Send scrolling text</b> with the LCD receiver connected, or export one pass as a player file. Turn on Loop in the LCD animation player for continuous playback.</p>
           <ol class="steps"><li><h3>Prepare the preview</h3><p>Choose a local image/video file, drop one file onto the selection area, or choose <b>Use demo</b>. The file stays on your computer or phone and is not uploaded. Check the 128 × 64 monochrome preview. Set the image format, <b>Rotation</b>, light/dark threshold and inversion. <b>Photo dot pattern</b> can preserve tonal detail.</p></li>
             <li><h3>Open and connect the receiver</h3><p>Disconnect file transfer at the top of the website, or remote control in its workspace. Open <b>BLE image stream</b> in the LCD main menu. Choose <b>Connect image receiver</b> on the website and select your device. Sending becomes available after the receiver confirms the connection.</p></li>
             <li><h3>Start transmission explicitly</h3><p>Choose <b>Send image</b>, <b>Send video</b> or <b>Send demo</b>. Selecting a file and connecting alone do not send images. A still image is sent once; videos and the demo run until stopped. The initial 5 frames/s is a target. Actual rate depends on Bluetooth and image content; video may skip intermediate frames.</p></li>

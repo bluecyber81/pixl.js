@@ -1,10 +1,11 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { lcdTest676 } from './lcd-app676-reference.mjs';
+import { lcdTest677 } from './lcd-app677-reference.mjs';
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.65.1';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.66.0';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
-import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.65.1';
-import { lcdRelease, lcdReleasePackage } from './lcd-release-reference.mjs?v=3.65.1';
+import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.66.0';
+import { lcdRelease, lcdReleasePackage } from './lcd-release-reference.mjs?v=3.66.0';
 
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -90,10 +91,10 @@ function selectedProfileMismatch(entry) {
 }
 function showSource(board, selectedVersion) {
     const oled = board === 'OLED';
-    const test676 = !oled && selectedVersion === lcdTest676.firmwareVersion;
-    const revision = oled ? 'de3.87-oled-t6' : test676 ? lcdTest676.sourceCommit : 'release/lcd-de3102-app675';
+    const preview = !oled && [lcdTest677, lcdTest676].find(item => item.firmwareVersion === selectedVersion);
+    const revision = oled ? 'de3.87-oled-t6' : preview ? preview.sourceCommit : 'release/lcd-de3102-app675';
     const sourceLink = document.getElementById('profile-source');
-    const name = oled ? 'OLED DE3.87 Test 6' : test676 ? 'LCD DE3.103 / App676' : 'LCD DE3.102 / App675';
+    const name = oled ? 'OLED DE3.87 Test 6' : preview ? 'LCD ' + preview.firmwareVersion.split('-')[1] + ' / App' + preview.applicationCounter : 'LCD DE3.102 / App675';
     sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + revision);
     setText(sourceLink, 'Quellcode ' + name, name + ' source code');
 }

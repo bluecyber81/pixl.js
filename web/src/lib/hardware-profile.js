@@ -43,13 +43,14 @@ export const LCD_Z21_COUNTERS = Object.freeze({
   '2.22.0-DE3.101': 674,
   '2.22.0-DE3.102': 675,
   '2.22.0-DE3.103': 676,
+  '2.22.0-DE3.104': 677,
 });
 const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_Z21_COUNTERS)];
 export function supportsFolderPublication(version, engine) {
   if (firmwareBoard(version) !== 'LCD') return false;
-  // The App676 test build uses the same PFS engine for directory publication as App675.
+  // The App676 and App677 test builds use the same PFS engine for directory publication as App675.
   // Storage migration has its own release-specific qualification.
-  if (version === '2.22.0-DE3.103') return engine === DE3102_MIGRATION_CAPACITY_TARGET.layout.engineSha256;
+  if (version === '2.22.0-DE3.103' || version === '2.22.0-DE3.104') return engine === DE3102_MIGRATION_CAPACITY_TARGET.layout.engineSha256;
   const profile = [DE3102_MIGRATION_CAPACITY_TARGET, DE3101_MIGRATION_CAPACITY_TARGET, DE3100_MIGRATION_CAPACITY_TARGET, DE399_MIGRATION_CAPACITY_TARGET, DE398_MIGRATION_CAPACITY_TARGET, DE397_MIGRATION_CAPACITY_TARGET, DE396_MIGRATION_CAPACITY_TARGET, DE395_MIGRATION_CAPACITY_TARGET, DE394_MIGRATION_CAPACITY_TARGET, DE393_MIGRATION_CAPACITY_TARGET, DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET].find(target => target.firmwareVersion === version) ?? MIGRATION_CAPACITY_TARGET;
   return profile.approved === true && profile.layout.engineSha256 === engine;
 }

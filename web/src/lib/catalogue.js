@@ -8,6 +8,7 @@ for (const game of gameGuides) {
   for (const id of game.ids) {
     if (!reviewedGameTitles.has(id)) reviewedGameTitles.set(id, []);
     reviewedGameTitles.get(id).push(game.title);
+    if (game.titleDe) reviewedGameTitles.get(id).push(game.titleDe);
   }
 }
 

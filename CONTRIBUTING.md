@@ -47,28 +47,22 @@ the finished bundles. The development server binds to `127.0.0.1:8010`. Normal
 tests use synthetic fixtures, mocked Bluetooth and local WASM, not a device.
 Windows-specific launcher tests are skipped on other operating systems.
 
-Upload the portable and source ZIPs to the `web3.58.2` release.
-Upload the signed LCD application, two-stage Android package and review kit to the `de3.89` release.
-The footer and license page link to those release assets. Verify their sizes and SHA-256
-after upload. Publish the contents of `dist-pages/` at the root of the `gh-pages`
-branch, preserving the test previews, firmware ZIPs and historical download URLs. Compare the published
-`firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip` with the signed release asset before
-using the Android handoff.
+Publish the portable ZIP with the web version tag and the signed LCD application ZIP with its firmware tag. The current homepage keeps App675 as its standard LCD download and offers App677 separately as a prerelease. Publish the contents of the Pages build at the root of the gh-pages branch, preserving previous test sites and downloads. Fetch and verify the public phone ZIP both from Pages and from the GitHub Release.
 Do not publish a source checkout, `node_modules/`, server state or private files.
 The CI below tests builds; it does not deploy Pages or create releases.
 
 ## Firmware changes and tests
 
-The checked-in LCD sources build DE3.89 / App662. Use the pinned SDK image from the repository root to reproduce the application.
+The checked-in LCD sources build the preview declared in RELEASE_INFO.json. Use the pinned SDK image from the repository root to reproduce the application.
 
 ```sh
 docker pull solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
-python3 tools/build_lcd.py --mode release --output build/lcd-de389
-python3 tools/check_release_ota.py --build-dir build/lcd-de389
+python3 tools/build_lcd.py --mode preview --output build/lcd-preview
+python3 tools/check_release_ota.py --preview --build-dir build/lcd-preview
 python3 tools/verify_lcd_combo.py --profile de3.89
 ```
 
-Compare the application BIN and HEX digests with the published build evidence and the contents of the signed phone ZIP. For intentional firmware changes, use development mode with a distinct version and explicit counter. [App662 build evidence](docs/validation/DE3_89_LCD_TEST1.json) · [Device readback](docs/validation/DE3_89_LCD_READBACK.json) · [Z21 build instructions](bootloader-z21/README.md)
+Compare the application BIN and HEX digests with the published build evidence and the contents of the signed phone ZIP. For intentional firmware changes, use development mode with a distinct version and explicit counter. [App677 build evidence](docs/validation/DE3_104_LCD_TEST1.json) · [Stable App675 device readback](docs/validation/DE3_102_LCD_READBACK.json) · [Z21 build instructions](bootloader-z21/README.md)
 
 For two quick storage checks from the portable CI subset, install Python
 **3.10+** and GCC on the host and run from the repository root:

@@ -8,6 +8,7 @@ import {createHash} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 import {lcdRelease, lcdReleasePackage as entry} from '../public/dfu/lcd-release-reference.mjs';
 import {lcdPreviewPackage670} from '../public/dfu/lcd-private-reference.mjs';
+import {lcdTest677} from '../public/dfu/lcd-app677-reference.mjs';
 import {lcdTest676} from '../public/dfu/lcd-app676-reference.mjs';
 
 const [directory, evidence, base] = process.argv.slice(2);
@@ -15,7 +16,7 @@ assert.ok(directory && evidence && ['/', '/pixl.js/'].includes(base), 'Expected 
 const root = path.resolve(directory), output = path.resolve(evidence);
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const version = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
-assert.equal(version, '3.65.1');
+assert.equal(version, '3.66.0');
 assert.equal(lcdRelease.artifactStatus, 'stable-signed-application');
 assert.equal(lcdRelease.firmwareChannel, 'normal');
 assert.equal(entry.id, 'de3.102-lcd-app');
@@ -111,16 +112,18 @@ try {
       check(`${width}: device choice remains a separate action`, await page.locator('#button').isEnabled());
       check(`${width}: DFU page fits viewport`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
       await screenshot(page, `dfu-checked-${width}`);
-      const candidateId = 'de3.103-lcd-app-test1';
-      await page.locator('#bundled').selectOption(candidateId);
-      check(`${width}: App676 clearly identified as a test`, /Testversion/.test(await page.locator('#bundled option:checked').innerText()));
-      check(`${width}: switching to App676 clears readiness`, await page.locator('#button').isDisabled());
-      const testPackage = page.waitForResponse(response => new URL(response.url()).pathname.endsWith('/firmware/Allmiibo_LCD_DE3_103_676_NUR_APP.zip'));
-      await page.locator('#load-bundled').click();
-      const testBytes = await (await testPackage).body();
-      check(`${width}: App676 download matches signed release bytes`, testBytes.length === lcdTest676.otaBytes && sha(testBytes) === lcdTest676.otaSha256);
-      await page.waitForFunction(() => document.querySelector('#button') && !document.querySelector('#button').disabled);
-      check(`${width}: verified App676 reports its own counter`, /Zähler 676(?:\D|$)/.test(await page.locator('#package-target').innerText()));
+      for (const ref of [lcdTest676, lcdTest677]) {
+        const candidateId = ref.firmwareVersion.split('-')[1].toLowerCase() + '-lcd-app-test1';
+        await page.locator('#bundled').selectOption(candidateId);
+        check(`${width}: App${ref.applicationCounter} clearly identified as a test`, /Testversion/.test(await page.locator('#bundled option:checked').innerText()));
+        check(`${width}: switching to App${ref.applicationCounter} clears readiness`, await page.locator('#button').isDisabled());
+        const testPackage = page.waitForResponse(response => new URL(response.url()).pathname.endsWith('/firmware/Allmiibo_LCD_' + ref.firmwareVersion.split('-')[1].replace('.', '_') + '_' + ref.applicationCounter + '_NUR_APP.zip'));
+        await page.locator('#load-bundled').click();
+        const testBytes = await (await testPackage).body();
+        check(`${width}: App${ref.applicationCounter} download matches signed release bytes`, testBytes.length === ref.otaBytes && sha(testBytes) === ref.otaSha256);
+        await page.waitForFunction(() => document.querySelector('#button') && !document.querySelector('#button').disabled);
+        check(`${width}: verified App${ref.applicationCounter} reports its own counter`, (new RegExp("Zähler " + ref.applicationCounter + "(?:\\D|$)")).test(await page.locator('#package-target').innerText()));
+      }
       await page.locator('#board-profile').selectOption('OLED');
       check(`${width}: OLED hides the normal LCD direct action`, await page.locator('#lcd-preview-download').isHidden());
       check(`${width}: board change clears readiness`, await page.locator('#button').isDisabled());

@@ -44,10 +44,10 @@ export function supportsBleTestDiagnostics(version) { return ['2.22.0-DE3.96', '
 // Read-only observations are also part of the normal App671 through App675 builds and the App676 test build. Keeping
 // these gates separate must not enable the experimental EVT! setter.
 export function supportsLinkDiagnostics(version) {
-  return ['2.22.0-DE3.95', '2.22.0-DE3.96', '2.22.0-DE3.97', '2.22.0-DE3.98', '2.22.0-DE3.99', '2.22.0-DE3.100', '2.22.0-DE3.101', '2.22.0-DE3.102', '2.22.0-DE3.103'].includes(version);
+  return ['2.22.0-DE3.95', '2.22.0-DE3.96', '2.22.0-DE3.97', '2.22.0-DE3.98', '2.22.0-DE3.99', '2.22.0-DE3.100', '2.22.0-DE3.101', '2.22.0-DE3.102', '2.22.0-DE3.103', '2.22.0-DE3.104'].includes(version);
 }
 export function supportsStorageGcDiagnostics(version) {
-  return supportsBleTestDiagnostics(version) || ['2.22.0-DE3.98', '2.22.0-DE3.99', '2.22.0-DE3.100', '2.22.0-DE3.101', '2.22.0-DE3.102', '2.22.0-DE3.103'].includes(version);
+  return supportsBleTestDiagnostics(version) || ['2.22.0-DE3.98', '2.22.0-DE3.99', '2.22.0-DE3.100', '2.22.0-DE3.101', '2.22.0-DE3.102', '2.22.0-DE3.103', '2.22.0-DE3.104'].includes(version);
 }
 
 export function normalizeBleTestConfiguration(value) {

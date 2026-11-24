@@ -78,7 +78,7 @@ test('all exported rows keep a group path and pinned source line without externa
       assert.match(row.sourceUrl, /^https:\/\/github\.com\/bluecyber81\/pixl\.js\/blob\/[0-9a-f]{40}\/fw\/data\/amiidb_link\.csv#L[1-9][0-9]*$/);
     }
   }
-  assert.deepEqual({ associations, notes, translated, official }, { associations: 1414, notes: 163, translated: 159, official: 4 });
+  assert.deepEqual({ associations, notes, translated, official }, { associations: 1416, notes: 166, translated: 162, official: 4 });
 });
 
 test('reviewed Nintendo web notes use exact editions and platforms without firmware-only group inference', () => {
@@ -174,6 +174,28 @@ test('both Kirby riders link to the official game update in DE and EN', async ()
         assert.equal(text(links[0]), locale === 'de_DE' ? 'Quelle: Nintendo-Spielupdate' : 'Source: Nintendo game update');
         assert.match(links[0].props.href, /^https:\/\/www\.nintendo\.com\/de-de\/.*2967700\.html$/);
       }
+    }
+  } finally { app.unmount(); }
+});
+
+test('Mineru shows three Nintendo rewards in both languages, with optional fabric confined to Tears of the Kingdom', async () => {
+  const { root, state, app } = await mount({ id: '010d000004a70902', locale: 'de_DE' });
+  try {
+    for (const locale of ['de_DE', 'en_US']) {
+      state.locale = locale;
+      await Vue.nextTick();
+      const german = locale === 'de_DE';
+      const rows = nodes(root, 'li');
+      for (const [game, fabric] of [['Breath of the Wild', false], ['Tears of the Kingdom', true], [german ? 'Chronik der Versiegelung' : 'Age of Imprisonment', false]]) {
+        const matches = rows.filter(row => text(nodes(row, 'strong')[0]).endsWith(game));
+        assert.equal(matches.length, 1, game);
+        const body = nodes(matches[0], 'p')[0];
+        assert.equal(body.props.lang, german ? 'de' : 'en');
+        assert.match(text(body), german ? /zufällige Gegenstände/ : /random items/);
+        assert.equal((german ? /Mit etwas Glück.*Parasegel/ : /may also.*paraglider/).test(text(body)), fabric);
+        assert.ok(nodes(matches[0], 'a').some(link => link.props.href.includes('/us/amiibo/detail/minerus-construct-')));
+      }
+      assert.ok(rows.some(row => text(nodes(row, 'strong')[0]).endsWith('Ocarina of Time')));
     }
   } finally { app.unmount(); }
 });

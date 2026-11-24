@@ -2,6 +2,7 @@ import { figureId } from './figure-info.js';
 import { gameGuides } from '../data/game-guides.js';
 
 const airRidersGuide = gameGuides.find(guide => guide.id === 'kirby-air-riders');
+const germanGameTitles = new Map(gameGuides.filter(game => game.titleDe).map(game => [game.groupId, game.titleDe]));
 
 // Corrections for the four affected associations in the signed App644 catalogue.
 // The source export remains available byte-for-byte for firmware verification.
@@ -40,7 +41,7 @@ export function figureUsage(id, data, locale = 'de_DE') {
   return figure.associations.map(association => {
     const group = groups.get(association.groupId);
     const note = notes.get(association.noteId);
-    const label = group.labelPath.join(' › ');
+    const label = (de && germanGameTitles.get(group.id)) || group.labelPath.join(' › ');
     const attribution = { groupId: group.id, label, sourceUrl: association.sourceUrl || `${linkSource.referenceUrl}#L${association.sourceLine}`,
       ...(association.webSupplement ? { webSupplement: true, platform: association.platform } : {}) };
     if (association.sourceUrl && !note) {

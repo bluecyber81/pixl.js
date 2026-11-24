@@ -10,7 +10,7 @@
     <slot v-if="selected === 'LCD'" name="lcd" />
     <article v-if="selected === 'OLED'" class="oled-trial">
       <h4>DE3.87 OLED · Test 6</h4>
-      <p>{{ de ? 'Für Pixl.js mit nRF52832, SH1106 (128 × 64), kompatiblem DFU-Bootloader und S112 7.2.0 (FWID 0x0103). Der Gerätetest für App86 steht aus.' : 'For Pixl.js with nRF52832, SH1106 (128 × 64), a compatible DFU bootloader and S112 7.2.0 (FWID 0x0103). App86 awaits testing on a physical OLED.' }}</p>
+      <p>{{ de ? 'Für Pixl.js mit nRF52832, SH1106 (128 × 64), kompatiblem DFU-Bootloader und S112 7.2.0 (FWID 0x0103). Fernverbindung und Displayfoto wurden mit App86 auf einem OLED bestätigt.' : 'For Pixl.js with nRF52832, SH1106 (128 × 64), a compatible DFU bootloader and S112 7.2.0 (FWID 0x0103). A tester confirmed the remote connection and screen capture on one OLED running App86.' }}</p>
       <p>{{ de ? 'Die App nutzt dein vorhandenes SPIFFS oder natives LittleFS. Sichere deine Dateien und halte die bisherige OLED-App bereit. Du kannst das Update am Computer direkt im Browser starten oder die gepackte ZIP am Handy in nRF Device Firmware Update öffnen.' : 'The app uses your existing SPIFFS or native LittleFS. Back up your files and keep your previous OLED app available. Start the update directly in your computer browser, or open the intact ZIP on your phone in nRF Device Firmware Update.' }}</p>
       <p>{{ de ? 'Die Fernbedienung kann in der Geräteauswahl Pixl.Remote oder Pixl.Rem heißen.' : 'The remote may appear as Pixl.Remote or Pixl.Rem in the device picker.' }}</p>
       <p v-if="differentOledTrial" role="status">{{ de ? 'Für deine gemeldete OLED-Version ist der Updatepfad zu Test 6 ungeprüft.' : 'The update path from your reported OLED version to Test 6 is unverified.' }}</p>

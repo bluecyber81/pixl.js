@@ -189,6 +189,7 @@ test('game search, filter, card and exact figure notes agree in DE and EN after 
     ['ocarina-of-time', '0100000000040002', /Gegenstände.*Hylianischen Steppe/, /items.*Hyrule Field/],
     ['kirby-forgotten-land-switch2', '1f00010004c51e03', /mehr hilfreiche Gegenstände/, /more helpful items/],
     ['miitopia', '1f00010004c51e03', /Nintendo 3DS nicht/, /not on Nintendo 3DS/],
+    ['hyrule-warriors-age-of-imprisonment', '010d000004a70902', /zufällige Gegenstände/, /random items/],
   ];
   for (const locale of ['de_DE', 'en_US']) {
     const de = locale === 'de_DE';
@@ -211,7 +212,8 @@ test('game search, filter, card and exact figure notes agree in DE and EN after 
         const details = classNode(root, 'figure-details');
         assert.ok(details);
         const usage = classNode(details, 'figure-usage');
-        const row = nodes(usage, 'li').find(row => nodes(row, 'a').some(link => link.props.href === game.source));
+        const row = nodes(usage, 'li').find(row => nodes(row, 'strong').some(title => text(title) === ((de && game.titleDe) || game.title)) &&
+          nodes(row, 'a').some(link => link.props.href === game.source));
         assert.ok(row, gameId);
         assert.match(text(row), de ? deText : enText);
         assert.match(text(row), new RegExp('Nintendo ' + game.platform));

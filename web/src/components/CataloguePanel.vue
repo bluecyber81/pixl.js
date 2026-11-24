@@ -15,7 +15,7 @@
       <label class="game-filter">{{ de ? 'Nach Spiel filtern' : 'Filter by game' }}<select v-model="gameId">
         <option value="">{{ de ? 'Alle Spiele und Figuren' : 'All games and figures' }}</option>
         <option v-if="gameId && !selectedGame" :value="gameId">{{ gameId }} · {{ de ? 'kein aktueller Spielhinweis' : 'no current game guide' }}</option>
-        <option v-for="game in gameGuides" :key="game.id" :value="game.id">{{ game.title }} · {{ game.platform }}</option>
+        <option v-for="game in gameGuides" :key="game.id" :value="game.id">{{ gameTitle(game, de) }} · {{ game.platform }}</option>
       </select></label>
       <label class="presence-filter">{{ de ? 'Bestand filtern' : 'Filter collection' }}<select v-model="presenceFilter">
         <option value="">{{ de ? 'Alle Einträge' : 'All entries' }}</option>
@@ -166,7 +166,7 @@ import { filterCatalogue, catalogueMatcher, cataloguePage, releaseLabel } from '
 import { buildCollectionPresence, collectionPresenceFor } from '../lib/collection-presence.js';
 import { publicFigureImage } from '../lib/figure-info.js';
 import { announcementGroups, catalogueDisplayName } from '../data/announced-figures.js';
-import { gameGuides } from '../data/game-guides.js';
+import { gameGuides, gameTitle } from '../data/game-guides.js';
 import GameGuide from './GameGuide.vue';
 import FigureDownload from './FigureDownload.vue';
 import FigureLinkSettings from './FigureLinkSettings.vue';
@@ -301,7 +301,10 @@ function profileCriteriaLabel(value) {
   if (value.query) fields.push((de.value ? 'Suche: ' : 'Search: ') + value.query);
   if (value.series) fields.push((de.value ? 'Serie: ' : 'Series: ') + value.series);
   if (value.kind) fields.push((de.value ? 'Art: ' : 'Type: ') + value.kind);
-  if (value.game) fields.push((de.value ? 'Spiel: ' : 'Game: ') + (gameGuides.find(game => game.id === value.game)?.title || value.game));
+  if (value.game) {
+    const game = gameGuides.find(game => game.id === value.game);
+    fields.push((de.value ? 'Spiel: ' : 'Game: ') + (game ? gameTitle(game, de.value) : value.game));
+  }
   if (value.presence) fields.push(({ observed:['Auf dem Gerät gefunden', 'Found on device'], present:['Vorhanden', 'Present'], missing:['Nicht gefunden', 'Not found'], attention:['Prüfhinweis', 'Needs inspection'], unconfirmed:['Unbestätigt / veraltet', 'Unconfirmed / outdated'] })[value.presence][de.value ? 0 : 1]);
   if (value.knownOnly) fields.push(de.value ? 'IDs mit Firmware-Namen' : 'IDs with firmware names');
   if (value.favoritesOnly) fields.push(de.value ? 'Nur Webfavoriten' : 'Web favourites only');

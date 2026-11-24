@@ -14,8 +14,8 @@
     <div class="stream-layout">
       <div class="stream-preview-card">
         <div class="stream-preview-heading"><h3>{{ text.preview }}</h3><span>128 × 64 px</span></div>
-        <canvas ref="preview" class="stream-preview" width="128" height="64" role="img" :aria-label="text.previewAlt"></canvas>
-        <p class="stream-source-name">{{ sourceKind === 'demo' ? text.demoName : fileName || text.choose }}</p>
+        <canvas ref="preview" class="stream-preview" width="128" height="64" role="img" :aria-label="tickerLayout ? text.previewAlt + ' · ' + tickerLayout.text : text.previewAlt"></canvas>
+        <p class="stream-source-name">{{ sourceKind === 'ticker' ? text.ticker : sourceKind === 'demo' ? text.demoName : fileName || text.choose }}</p>
         <p class="stream-hint">{{ text.previewHint }}</p>
         <video ref="video" v-show="sourceKind === 'video'" class="stream-video" :controls="!exporting" muted playsinline preload="auto" :loop="loopVideo" :aria-label="text.videoOriginal" @play="onVideoPlay" @pause="onVideoPause" @seeked="refreshPreview" @loadeddata="refreshPreview" @ended="onVideoEnded" @error="onMediaError"></video>
         <p v-if="sourceKind === 'video'" class="stream-hint">{{ text.videoHint }}</p>
@@ -25,7 +25,18 @@
           <label class="stream-file-label">{{ text.choose }}<input ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/gif,image/avif,video/*,.png,.jpg,.jpeg,.webp,.bmp,.gif,.avif,.mp4,.webm,.mov,.m4v,.ogv" @change="chooseFile" :disabled="selectionLocked" /></label>
           <p class="stream-hint">{{ text.dropHint }}</p>
         </div>
-        <div class="stream-source-actions"><button type="button" @click="selectDemo" :disabled="selectionLocked">{{ text.demo }}</button><button type="button" @click="resetSender" :disabled="selectionLocked">{{ text.reset }}</button></div>
+        <div class="stream-source-actions">
+          <button type="button" @click="selectGenerated('ticker')" :aria-pressed="sourceKind === 'ticker'" :disabled="selectionLocked">{{ text.ticker }}</button>
+          <button type="button" @click="selectDemo" :disabled="selectionLocked">{{ text.demo }}</button><button type="button" @click="resetSender" :disabled="selectionLocked">{{ text.reset }}</button>
+        </div>
+        <fieldset v-if="sourceKind === 'ticker'" class="stream-options stream-ticker" :disabled="selectionLocked">
+          <legend>{{ text.ticker }}</legend>
+          <label>{{ text.tickerMessage }}<input ref="tickerInput" v-model="tickerText" type="text" maxlength="120" autocomplete="off" :placeholder="text.tickerPlaceholder" /></label>
+          <label>{{ text.tickerSpeed }}<select v-model.number="tickerSpeed">
+            <option :value="24">{{ text.slow }}</option><option :value="40">{{ text.normal }}</option><option :value="60">{{ text.fast }}</option>
+          </select></label>
+          <button type="button" :disabled="!tickerLayout" @click="toggleTickerPreview">{{ tickerPreviewing ? text.pausePreview : text.playPreview }}</button>
+        </fieldset>
         <p class="stream-hint">{{ text.local }}</p>
         <p v-if="sessionNotice" class="stream-hint" role="status">{{ text.sessionNotices[sessionNotice] }}</p>
         <p v-if="loading" role="status">{{ text.loading }}</p>
@@ -43,7 +54,7 @@
           <p class="stream-hint">{{ text.fpsHint }}</p>
         </fieldset>
         <p class="stream-hint">{{ optionsStored ? text.optionsSaved : text.optionsSession }}</p>
-        <div class="stream-send-actions"><button type="button" class="stream-primary" @click="startSending" :disabled="!canSend">{{ sourceKind === 'image' ? text.sendImage : sourceKind === 'demo' ? text.startDemo : text.startVideo }}</button><button v-if="sending" type="button" @click="stopStream('stopped')">{{ text.stop }}</button></div>
+        <div class="stream-send-actions"><button type="button" class="stream-primary" @click="startSending" :disabled="!canSend">{{ sendLabel }}</button><button v-if="sending" type="button" @click="stopStream('stopped')">{{ text.stop }}</button></div>
         <p v-if="notice" class="stream-receipt" role="status" aria-live="polite">{{ text.notices[notice] }}</p>
         <p v-if="sentFrames" class="stream-stats">{{ text.sent }}: <strong>{{ sentFrames }}</strong><template v-if="sentFrames > 1"> · {{ text.actualFps }}: {{ measuredFps }}</template></p>
       </div>
@@ -53,10 +64,11 @@
       <fieldset class="stream-options" :disabled="loading || exporting || sending"><legend>{{ text.exportClip }}</legend>
         <template v-if="sourceKind === 'video'"><label>{{ text.clipStart }}<input v-model.number="clipStart" type="number" min="0" :max="mediaDuration || undefined" step="0.1" /></label><label>{{ text.clipEnd }}<input v-model.number="clipEnd" type="number" min="0" :max="mediaDuration || undefined" step="0.1" /></label><p v-if="mediaDuration" class="stream-hint">{{ text.videoDuration }}: {{ mediaDuration.toFixed(1) }} s</p></template>
         <label v-else-if="sourceKind === 'demo'">{{ text.demoDuration }}<input v-model.number="clipEnd" type="number" min="0.1" step="0.1" /></label>
+        <p v-else-if="sourceKind === 'ticker'" class="stream-hint">{{ tickerLayout ? text.tickerExport : text.tickerEmpty }}</p>
         <p v-else class="stream-hint">{{ text.stillExport }}</p>
         <p v-if="exportValidation.plan" class="stream-export-size">{{ exportValidation.plan.frames }} {{ text.frames }} · {{ formatBytes(exportValidation.plan.bytes) }} · {{ exportValidation.plan.fps }} {{ text.fpsUnit }}</p>
-        <p v-else class="stream-hint" role="status">{{ text.errors[exportValidation.error] }}</p>
-        <p class="stream-hint">{{ text.exportLimit }}</p>
+        <p v-else-if="exportValidation.error" class="stream-hint" role="status">{{ text.errors[exportValidation.error] }}</p>
+        <p class="stream-hint">{{ sourceKind === 'ticker' ? text.tickerLimit : text.exportLimit }}</p>
       </fieldset>
       <div class="stream-send-actions"><button type="button" @click="startExport" :disabled="!canExport">{{ text.exportStart }}</button><button v-if="exporting" type="button" @click="cancelExport('cancelled')">{{ text.exportCancel }}</button></div>
       <div v-if="exporting" class="stream-export-progress" role="status"><progress :value="exportCompleted" :max="exportTotal || 1" :aria-label="text.exportProgress"></progress><span>{{ exportCompleted }} / {{ exportTotal }} {{ text.frames }}</span></div>
@@ -70,20 +82,22 @@
 </template>
 <script>
 import { BleImageStream, rgbaToFrame, frameToRgba } from '../lib/ble-image-stream.js';
-import { createFramePump, demoRgba, drawMediaFrame, loadLocalMedia } from '../lib/stream-media.js';
+import { createFramePump, demoRgba, drawMediaFrame, loadLocalMedia, measureTicker, drawTicker } from '../lib/stream-media.js';
 import { readStreamOptions, saveStreamOptions, resetStreamOptions } from '../lib/stream-options.js';
 import { streamSession, STREAM_SESSION_MAX_FILE_BYTES } from '../lib/stream-session.js';
 import { planPlayerExport, createPlayerExport, playerExportName, seekVideoFrame } from '../lib/stream-player-export.js';
 
 const TEXT = {
   de_DE: {
-    title:'Bild & Video ans LCD', intro:'Wähle ein Bild oder Video und übertrage die Schwarz-Weiß-Vorschau über Bluetooth auf dein LCD. Zum Ausprobieren ist eine bewegte Demo vorbereitet.',
+    tickerLimit:'Maximal 1 MiB. Für kleinere Dateien weniger Bilder pro Sekunde wählen, das Tempo erhöhen oder den Text kürzen.',
+    title:'Bild, Video & Lauftext ans LCD', intro:'Wähle ein Bild oder Video oder gib einen Lauftext ein. Du kannst die Vorschau über Bluetooth auf dein LCD senden oder als Animation speichern.',
+    ticker:'Lauftext', tickerMessage:'Dein Text (bis zu 120 Zeichen)', tickerPlaceholder:'Zum Beispiel: Grüße vom Allmiibo!', tickerSpeed:'Tempo', slow:'Langsam', normal:'Normal', fast:'Schnell', playPreview:'Vorschau abspielen', pausePreview:'Vorschau anhalten', sendTicker:'Lauftext senden', tickerExport:'Die Datei enthält einen vollständigen Textdurchlauf. Für Endloswiedergabe „Endlosschleife“ im Player einschalten.', tickerEmpty:'Gib einen Text für die Vorschau ein.',
     step1:'Dateiverbindung und Fernbedienung trennen.', step2:'Am LCD im Hauptmenü „BLE-Bildempfang“ öffnen.', step3:'Hier verbinden, Vorschau prüfen und Senden starten.',
     blocked:'Eine andere Verbindung oder Übertragung ist noch aktiv. Trenne die Dateiverbindung oben auf der Seite beziehungsweise die Fernbedienung in ihrem Bereich. Warte laufende Übertragungen ab; die Vorschau kannst du bereits vorbereiten.',
     connect:'Mit Bildempfang verbinden', cancel:'Verbindung abbrechen', disconnect:'Verbindung trennen',
     states:{idle:'Nicht verbunden',connecting:'Bildempfang wird verbunden …',connected:'Bildempfang bereit',error:'Verbindung beendet'},
     preview:'LCD-Vorschau',previewAlt:'Schwarz-Weiß-Vorschau mit 128 mal 64 Pixeln für das LCD',previewHint:'So wird das Bild umgerechnet. Die Taste rechts am Gerät kann die Anzeige zusätzlich invertieren.',
-    choose:'Bild oder Video auswählen',demo:'Demo verwenden',demoName:'Demo · Kreis und Welle',local:'Die Datei bleibt auf diesem Gerät. Es wird nichts hochgeladen.',loading:'Datei wird geladen …',
+    choose:'Bild oder Video auswählen',demo:'Demo verwenden',demoName:'Demo · Kreis und Welle',local:'Datei und Text werden lokal verarbeitet.',loading:'Datei wird geladen …',
     imageSettings:'Bild anpassen',fit:'Bildformat',fitOptions:{fit:'Ganzes Bild einpassen',crop:'Bildfüllender Ausschnitt',stretch:'Auf 128 × 64 strecken'},threshold:'Hell-Dunkel-Grenze',invert:'Schwarz und Weiß tauschen',
     playSettings:'Wiedergabe',fps:'Ziel: Bilder pro Sekunde',loop:'Video wiederholen',fpsHint:'Die tatsächliche Bildrate hängt von Bluetooth und dem Bildinhalt ab. Beginne mit 5 Bildern/s.',
     videoOriginal:'Originalvideo zur Vorschau',videoHint:'Das Originalvideo ist stumm. Starte die Übertragung mit „Video senden“. Bei langsamer Verbindung werden Zwischenbilder ausgelassen.',
@@ -94,10 +108,12 @@ const TEXT = {
     errors:{STREAM_UNAVAILABLE:'Dieser Browser unterstützt Web Bluetooth nicht. Öffne die Seite in Chrome oder Edge auf einem unterstützten Computer oder Android-Gerät. Auf iPhone und iPad ist dieser Sender hier nicht verfügbar.',STREAM_INSECURE:'Bluetooth benötigt HTTPS oder den lokalen Portable-Dateimanager.',STREAM_NO_SELECTION:'Kein Gerät ausgewählt. Öffne am LCD „BLE-Bildempfang“ und wähle es beim nächsten Verbinden aus.',STREAM_PERMISSION:'Die Bluetooth-Berechtigung wurde nicht erteilt. Erlaube den Zugriff und verbinde erneut.',STREAM_WRONG_DEVICE:'Das gewählte Gerät passt nicht zum LCD-Bildempfang. Öffne „BLE-Bildempfang“ auf deinem Allmiibo und wähle dieses Gerät.',STREAM_BUSY:'Eine Bildübertragung ist bereits aktiv. Warte auf das Bild oder stoppe die Übertragung.',STREAM_CONNECT_FAILED:'Die Verbindung konnte nicht aufgebaut werden. Prüfe den Bildempfang am LCD und verbinde erneut.',STREAM_UNSUPPORTED:'Das Gerät stellt den benötigten Bildempfang nicht bereit. Prüfe LCD-Firmware DE3.100/App673 und öffne „BLE-Bildempfang“.',STREAM_HANDSHAKE_TIMEOUT:'Das Gerät hat den Bildempfang nicht bestätigt. Öffne am LCD „BLE-Bildempfang“ mit DE3.100/App673 oder neuer und verbinde erneut. Es wurden keine Bilddaten gesendet.',STREAM_ACK_TIMEOUT:'Eine Bestätigung des Geräts blieb aus. Die Übertragung wurde beendet. Prüfe Abstand und Bildempfang und verbinde erneut.',STREAM_PROTOCOL:'Die Antwort des Geräts war nicht gültig. Die Übertragung wurde beendet; verbinde den Bildempfang erneut.',STREAM_DISCONNECTED:'Die Bluetooth-Verbindung wurde getrennt. Öffne bei Bedarf den Bildempfang und verbinde erneut.',STREAM_CANCELLED:'Die Verbindung wurde abgebrochen.',STREAM_FRAME_INVALID:'Die Vorschau konnte nicht als 128×64-Bild gesendet werden. Wähle die Datei erneut.',MEDIA_TYPE:'Wähle eine Bild- oder Videodatei, zum Beispiel PNG, JPEG, MP4 oder WebM. SVG-Dateien werden hier nicht verwendet.',MEDIA_DECODE:'Der Browser konnte diese Datei nicht öffnen. Probiere PNG oder JPEG für Bilder beziehungsweise ein hier abspielbares MP4- oder WebM-Video.',MEDIA_DIMENSIONS:'Die Bildgröße wird nicht unterstützt. Verwende ein Bild oder Video mit höchstens 40 Millionen Pixeln pro Bild.',MEDIA_TIMEOUT:'Die Datei konnte nicht rechtzeitig geladen werden. Wähle sie erneut oder probiere eine andere Datei.',MEDIA_UNSUPPORTED:'Die Medienvorschau wird in diesem Browser nicht unterstützt.',MEDIA_PLAY:'Das Video konnte nicht gestartet werden. Prüfe die Vorschau und starte erneut.',MEDIA_PREVIEW:'Die Vorschau konnte nicht gelesen werden. Wähle die Datei erneut.',MEDIA_CANCELLED:'Die Dateiauswahl wurde abgebrochen.'}
   },
   en: {
-    title:'Images & video on the LCD',intro:'Choose an image or video and send the monochrome preview to your LCD over Bluetooth. An animated demo is ready to try.',
+    tickerLimit:'Maximum 1 MiB. For a smaller file, reduce the frame rate, increase scrolling speed or shorten the message.',
+    title:'Images, video & scrolling text on the LCD',intro:'Choose an image or video, or enter scrolling text. Send the preview to your LCD over Bluetooth or save it as an animation.',
+    ticker:'Scrolling text', tickerMessage:'Your message (up to 120 characters)', tickerPlaceholder:'For example: Hello from Allmiibo!', tickerSpeed:'Speed', slow:'Slow', normal:'Normal', fast:'Fast', playPreview:'Play preview', pausePreview:'Pause preview', sendTicker:'Send scrolling text', tickerExport:'The file contains one full pass of the message. Turn on Loop in the player for continuous playback.', tickerEmpty:'Enter a message to preview.',
     step1:'Disconnect file transfer and remote control.',step2:'Open “BLE image stream” in the LCD main menu.',step3:'Connect here, check the preview, then start sending.',blocked:'Another connection or transfer is active. Disconnect file transfer at the top of this page, or remote control in its workspace. Wait for active transfers to finish; you can prepare the preview now.',
     connect:'Connect image receiver',cancel:'Cancel connection',disconnect:'Disconnect',states:{idle:'Disconnected',connecting:'Connecting image receiver …',connected:'Image receiver ready',error:'Connection ended'},
-    preview:'LCD preview',previewAlt:'Monochrome 128 by 64 pixel preview for the LCD',previewHint:'This is the converted image. The right device button can also invert its display.',choose:'Choose image or video',demo:'Use demo',demoName:'Demo · circle and wave',local:'The file stays on this device. Nothing is uploaded.',loading:'Loading file …',
+    preview:'LCD preview',previewAlt:'Monochrome 128 by 64 pixel preview for the LCD',previewHint:'This is the converted image. The right device button can also invert its display.',choose:'Choose image or video',demo:'Use demo',demoName:'Demo · circle and wave',local:'Files and text are processed on this device.',loading:'Loading file …',
     imageSettings:'Adjust image',fit:'Image format',fitOptions:{fit:'Fit whole image',crop:'Crop to fill',stretch:'Stretch to 128 × 64'},threshold:'Light/dark threshold',invert:'Swap black and white',playSettings:'Playback',fps:'Target frames per second',loop:'Loop video',fpsHint:'Actual frame rate depends on Bluetooth and image content. Start with 5 frames/s.',
     videoOriginal:'Original video preview',videoHint:'The original video is muted. Use “Send video” to begin transmission. Slow connections skip intermediate frames.',sendImage:'Send image',startDemo:'Send demo',startVideo:'Send video',stop:'Stop sending',sent:'Frames sent',actualFps:'Average frames/s',
     notices:{imageSent:'Image sent. You can adjust the preview and send it again.',stopped:'Transmission stopped and connection closed.',hidden:'Transmission stopped because the page was left or hidden. Reconnect to continue.',ended:'Video ended; connection closed.',paused:'Video paused; transmission stopped and connection closed.'},
@@ -125,15 +141,22 @@ Object.assign(TEXT.de_DE.errors, {MEDIA_MULTIPLE:'Bitte genau eine Bild- oder Vi
 Object.assign(TEXT.en.errors, {MEDIA_MULTIPLE:'Please drop exactly one image or video file.',MEDIA_ROTATION:'This image rotation is not supported.',EXPORT_RANGE:'Choose a valid start and a later end within the video.',EXPORT_TOO_LARGE:'This clip exceeds 1 MiB. Shorten it or choose fewer frames per second.',EXPORT_FRAME:'A frame could not be prepared for the player file.',EXPORT_SEEK_TIMEOUT:'The video did not load the next frame position in time. Try a shorter clip or a different file.',EXPORT_FAILED:'The player file could not be created. Select the file again and retry.'});
 export default {
   props:{locale:{type:String,default:'de_DE'},blocked:Boolean},emits:['active','sending','exporting'],
-  data(){return {...readStreamOptions(),phase:'idle',deviceName:'',error:'',notice:'',sourceKind:'demo',fileName:'',ready:true,loading:false,sending:false,sentFrames:0,measuredFps:'0.0',dragging:false,optionsStored:true,sessionNotice:'',mediaDuration:0,clipStart:0,clipEnd:10,exporting:false,exportCompleted:0,exportTotal:0,exportError:'',exportNotice:'',exportUrl:'',exportBytes:0,exportFileName:'',unavailable:globalThis.isSecureContext === false ? 'STREAM_INSECURE' : !globalThis.navigator?.bluetooth?.requestDevice ? 'STREAM_UNAVAILABLE' : ''};},
+  data(){return {tickerText:'',tickerSpeed:40,tickerPreviewing:false,...readStreamOptions(),phase:'idle',deviceName:'',error:'',notice:'',sourceKind:'demo',fileName:'',ready:true,loading:false,sending:false,sentFrames:0,measuredFps:'0.0',dragging:false,optionsStored:true,sessionNotice:'',mediaDuration:0,clipStart:0,clipEnd:10,exporting:false,exportCompleted:0,exportTotal:0,exportError:'',exportNotice:'',exportUrl:'',exportBytes:0,exportFileName:'',unavailable:globalThis.isSecureContext === false ? 'STREAM_INSECURE' : !globalThis.navigator?.bluetooth?.requestDevice ? 'STREAM_UNAVAILABLE' : ''};},
   computed:{
     text(){return TEXT[this.locale] || TEXT.en;},
     active(){return this.phase === 'connecting' || this.phase === 'connected';},
     connected(){return this.phase === 'connected';},
     selectionLocked(){return this.sending || this.exporting || this.phase === 'connecting';},
-    canSend(){return this.connected && !this.blocked && !this.sending && !this.exporting && !this.loading && this.ready;},
+    tickerLayout(){return this.sourceKind === 'ticker' ? measureTicker(this._context, this.tickerText) : null;},
+    sendLabel(){return this.text[{image:'sendImage',video:'startVideo',demo:'startDemo',ticker:'sendTicker'}[this.sourceKind]];},
+    canSend(){return this.connected && !this.blocked && !this.sending && !this.exporting && !this.loading && this.ready && (this.sourceKind !== 'ticker' || !!this.tickerLayout);},
     preferenceOptions(){return {fit:this.fit,rotation:this.rotation,dither:this.dither,threshold:this.threshold,invert:this.invert,fps:this.fps,loopVideo:this.loopVideo};},
-    exportValidation(){try{return {plan:planPlayerExport({kind:this.sourceKind,start:this.sourceKind==='demo'?0:this.clipStart,end:this.clipEnd,fps:this.fps,duration:this.mediaDuration})};}catch(error){return {error:error.code || 'EXPORT_RANGE'};}},
+    exportValidation(){
+      if (this.sourceKind === 'ticker' && !this.tickerLayout) return {};
+      const end = this.sourceKind === 'ticker' ? this.tickerLayout.period / this.tickerSpeed : this.clipEnd;
+      try{return {plan:planPlayerExport({kind:this.sourceKind,start:this.sourceKind==='video'?this.clipStart:0,end,fps:this.fps,duration:this.mediaDuration})};}
+      catch(error){return {error:error.code || 'EXPORT_RANGE'};}
+    },
     canExport(){return this.ready && !this.loading && !this.selectionLocked && !!this.exportValidation.plan;},
   },
   created(){
@@ -145,7 +168,10 @@ export default {
       if(state.phase !== 'connected' && state.phase !== 'connecting') this.haltPlayback();
       this.$emit('active', this.active);
     }});
-    this._pump = createFramePump({capture:()=>this.captureFrame(true),send:frame=>this._client.sendFrame(frame),onFrame:()=>this.recordFrame(),onError:error=>this.sendFailed(error)});
+    this._pump = createFramePump({capture:()=>{
+      if(this.sourceKind === 'ticker')return this.captureFrame(false,this.tickerFrameAt(this._started));
+      return this.captureFrame(true);
+    },send:frame=>this._client.sendFrame(frame),onFrame:()=>this.recordFrame(),onError:error=>this.sendFailed(error)});
   },
   mounted(){
     this._canvas = document.createElement('canvas'); this._canvas.width = 128; this._canvas.height = 64;
@@ -167,13 +193,14 @@ export default {
     globalThis.removeEventListener?.('pagehide',this.pageHidden);
     this.cancelExport(); this.clearExport();
     this.haltPlayback(); this._media?.dispose(); this._media=null; this._source=null; this._client.disconnect();
-    this._demoCanvas=this._demoContext=null;
+    this._generatedCanvas=this._generatedContext=null;
     this.$emit('active',false); this.$emit('sending',false); this.$emit('exporting',false);
   },
   watch:{
     blocked(value){if(value && this.active)this.stopStream();},
     preferenceOptions:{deep:true,handler(value){this.optionsStored=saveStreamOptions(value);if(this.exporting)this.cancelExport('cancelled');this.clearExport();}},
     clipStart(){this.clipChanged();},clipEnd(){this.clipChanged();},
+    tickerText(){this.tickerChanged();},tickerSpeed(){this.tickerChanged();},
   },
   methods:{
     async connectStream(){
@@ -234,27 +261,33 @@ export default {
       }catch(error){if(this._streamMounted && selection===this._selection){if(restored)streamSession.clear();this.error=error?.code || 'MEDIA_DECODE';this._media?.dispose();this._media=null;}}
       finally{if(this._streamMounted && selection===this._selection)this.loading=false;}
     },
-    selectDemo(){
+    selectDemo(){this.selectGenerated('demo');},
+    selectGenerated(kind){
       if(this.selectionLocked)return;
       streamSession.clear();this.sessionNotice='';this.clearExport();this.exportError='';this.exportNotice='';
       ++this._selection;this.prepareSourceChange();this._media?.dispose();this._media=null;this._source=null;
-      this.sourceKind='demo';this.fileName='';this.ready=!!this._previewContext;this.loading=false;this.sentFrames=0;this._demoFrame=0;this.mediaDuration=0;this.clipStart=0;this.clipEnd=10;
+      this.sourceKind=kind;this.fileName='';this.ready=!!this._previewContext;this.loading=false;this.sentFrames=0;this._demoFrame=0;this.mediaDuration=0;this.clipStart=0;this.clipEnd=10;
       if(this.$refs.fileInput)this.$refs.fileInput.value='';this.refreshPreview();
+      if(kind === 'ticker')this.$nextTick(()=>this.$refs.tickerInput?.focus?.());
     },
     resetSender(){
       if(this.selectionLocked)return;
-      this.stopStream();Object.assign(this,resetStreamOptions());this.selectDemo();
+      this.stopStream();Object.assign(this,resetStreamOptions());this.tickerText='';this.tickerSpeed=40;this.selectDemo();
     },
-    captureFrame(advance=false,demoIndex=this._demoFrame){
+    captureFrame(advance=false,frameIndex=this.sourceKind==='ticker'?0:this._demoFrame){
       if(!this.ready || !this._previewContext)throw Object.assign(Error('preview'),{code:'MEDIA_PREVIEW'});
       let rgba;
-      if(this.sourceKind==='demo'){
-        rgba=demoRgba(demoIndex);
-        if(this.rotation){
-          if(!this._demoCanvas){this._demoCanvas=document.createElement('canvas');this._demoCanvas.width=128;this._demoCanvas.height=64;this._demoContext=this._demoCanvas.getContext('2d');}
-          if(!this._demoContext)throw Object.assign(Error('canvas'),{code:'MEDIA_UNSUPPORTED'});
-          const image=this._demoContext.createImageData(128,64);image.data.set(rgba);this._demoContext.putImageData(image,0,0);
-          rgba=drawMediaFrame(this._context,this._demoCanvas,this.fit,this.rotation);
+      if(this.sourceKind==='demo' || this.sourceKind==='ticker'){
+        if(this.sourceKind==='demo')rgba=demoRgba(frameIndex);
+        if(this.rotation || this.sourceKind==='ticker'){
+          if(!this._generatedCanvas){this._generatedCanvas=document.createElement('canvas');this._generatedCanvas.width=128;this._generatedCanvas.height=64;this._generatedContext=this._generatedCanvas.getContext('2d');}
+          if(!this._generatedContext)throw Object.assign(Error('canvas'),{code:'MEDIA_UNSUPPORTED'});
+          if(this.sourceKind==='ticker'){
+            drawTicker(this._generatedContext,this.tickerLayout,frameIndex/this.fps,this.tickerSpeed);
+          }else{
+            const image=this._generatedContext.createImageData(128,64);image.data.set(rgba);this._generatedContext.putImageData(image,0,0);
+          }
+          rgba=drawMediaFrame(this._context,this._generatedCanvas,this.fit,this.rotation);
         }
       }else rgba=drawMediaFrame(this._context,this._source,this.fit,this.rotation);
       const frame=rgbaToFrame(rgba,{threshold:this.threshold,invert:this.invert,dither:this.dither});
@@ -264,7 +297,7 @@ export default {
       return frame;
     },
     refreshPreview(){
-      if(!this._streamMounted || !this.ready || !this._previewContext || (this.sourceKind!=='demo' && !this._source))return;
+      if(!this._streamMounted || !this.ready || !this._previewContext || (['image','video'].includes(this.sourceKind) && !this._source))return;
       try{this.captureFrame();}catch(_){this.error='MEDIA_PREVIEW';this.ready=false;if(this.active)this._client.disconnect();}
     },
     async startSending(){
@@ -291,7 +324,25 @@ export default {
       if(!this._streamMounted)return;
       ++this._operation;this.haltPlayback();this._client.disconnect();this.error=error?.code || 'MEDIA_PLAY';this.notice='';
     },
-    cancelPreview(){if(this._previewRaf!=null){globalThis.cancelAnimationFrame?.(this._previewRaf);this._previewRaf=null;}},
+    cancelPreview(){if(this._previewRaf!=null){globalThis.cancelAnimationFrame?.(this._previewRaf);this._previewRaf=null;}this.tickerPreviewing=false;},
+    tickerChanged(){
+      if(this.sourceKind !== 'ticker')return;
+      this.cancelPreview();this.clearExport();this.exportError='';this.refreshPreview();
+    },
+    tickerFrameAt(start){return Math.floor(Math.max(0,performance.now()-start)*this.fps/1000);},
+    toggleTickerPreview(){
+      if(this.tickerPreviewing){this.cancelPreview();return;}
+      if(!this.tickerLayout || this.selectionLocked || document.hidden)return;
+      const start=performance.now();let last=-1;
+      this.tickerPreviewing=true;
+      const tick=()=>{
+        if(!this.tickerPreviewing)return;
+        const frame=this.tickerFrameAt(start);
+        if(last!==frame){this.captureFrame(false,frame);last=frame;}
+        this._previewRaf=globalThis.requestAnimationFrame(tick);
+      };
+      tick();
+    },
     onVideoPlay(){
       if(this.exporting){this.$refs.video?.pause();return;}
       if(this.sending || !this.ready || document.hidden)return;
@@ -323,7 +374,7 @@ export default {
       this.clearExport();this.exportError='';this.exportNotice='';this.exportCompleted=0;this.exportTotal=plan.frames;
       this.haltPlayback();
       const controller=new AbortController();this._exportController=controller;this.setExporting(true);
-      const source=this._source, kind=this.sourceKind, name=playerExportName(this.fileName || 'demo');
+      const source=this._source, kind=this.sourceKind, name=playerExportName(kind==='ticker'?'ticker':this.fileName || 'demo');
       try{
         const bytes=await createPlayerExport(plan,{
           signal:controller.signal,
@@ -350,6 +401,8 @@ export default {
 };
 </script>
 <style scoped>
+.stream-ticker input[type=text]{width:100%;min-height:44px;box-sizing:border-box;padding:8px 10px;border:1px solid #8aafb7;border-radius:7px;color:inherit;background:#fff;font:inherit;font-size:1rem;}
+.stream-ticker button{margin-top:8px;}
 .image-sender{color:#24434b;max-width:1050px;padding:clamp(14px,2.5vw,26px);background:#f6fafb;border:1px solid #c9dddf;border-radius:16px;overflow-wrap:anywhere;}
 .stream-heading,.stream-connection,.stream-preview-heading,.stream-send-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}.stream-heading{justify-content:space-between;}.stream-eyebrow{font-size:.74rem;letter-spacing:.1em;font-weight:700;margin:0 0 6px;color:#526e74;}.image-sender h2{font-size:clamp(1.35rem,3vw,1.8rem);line-height:1.25;margin:0;}.stream-tag{font-size:.75rem;padding:6px 9px;border-radius:6px;background:#e4eef1;color:#49666e;}.stream-intro{max-width:75ch;line-height:1.65;}.stream-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding-left:24px;font-size:.86rem;line-height:1.55;margin:20px 0;}.stream-steps li{padding:6px 10px 6px 2px;}.stream-connection{padding:14px 0;margin-bottom:12px;}.stream-state{font-size:.87rem;}.stream-online{font-weight:700;color:#236351;}.stream-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,1fr);gap:24px;align-items:start;}.stream-preview-card{background:#e6eff0;padding:16px;border:1px solid #c4d8da;border-radius:12px;}.stream-preview-heading{justify-content:space-between;margin-bottom:12px;}.stream-preview-heading h3{font-size:1rem;margin:0;}.stream-preview-heading span{font-size:.77rem;color:#4e686e;}.stream-preview{display:block;width:100%;height:auto;aspect-ratio:2/1;image-rendering:pixelated;background:#000;border-radius:3px;box-sizing:border-box;border:6px solid #29434a;}.stream-source-name{font-size:.9rem;font-weight:600;margin:12px 0 5px;}.stream-hint{font-size:.78rem;line-height:1.55;color:#4d666e;margin:8px 0 0;}.stream-video{display:block;max-width:100%;width:100%;max-height:230px;margin-top:16px;border-radius:6px;background:#000;}.stream-controls{display:flex;flex-direction:column;gap:12px;}.stream-file-label{display:flex;flex-direction:column;gap:7px;font-size:.88rem;font-weight:600;}.stream-file-label input{max-width:100%;min-height:44px;padding:8px 0;box-sizing:border-box;font:inherit;font-weight:400;font-size:.82rem;}.image-sender button,.image-sender select{min-height:44px;padding:9px 12px;border:1px solid #8aafb7;border-radius:8px;background:#fff;color:#24434b;font:inherit;font-size:.88rem;}.image-sender button{cursor:pointer;}.image-sender button:disabled{opacity:.5;cursor:default;}.image-sender .stream-primary{background:#236d7c;border-color:#236d7c;color:#fff;font-weight:600;}.image-sender button:focus-visible,.image-sender input:focus-visible,.image-sender select:focus-visible,.stream-help summary:focus-visible{outline:3px solid #388294;outline-offset:3px;}.stream-options{margin:4px 0 0;padding:10px 12px 12px;border:1px solid #c9dddf;border-radius:8px;min-width:0;}.stream-options legend{font-size:.8rem;font-weight:600;padding:0 5px;}.stream-options label{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:.84rem;min-height:42px;}.stream-options label+label{margin-top:8px;}.stream-options select{max-width:100%;}.stream-options input[type=range]{width:100%;accent-color:#236d7c;min-height:24px;}.stream-options .stream-check{justify-content:flex-start;}.stream-check input{width:20px;height:20px;accent-color:#236d7c;margin:0;flex-shrink:0;}.stream-options output{font-variant-numeric:tabular-nums;}.stream-send-actions{margin-top:4px;}.stream-send-actions button:first-child{flex:1;}.stream-notice{padding:12px 14px;border:1px solid #d4b987;border-radius:8px;background:#fff8e9;color:#614a20;font-size:.87rem;line-height:1.6;}.stream-receipt,.stream-stats{font-size:.85rem;line-height:1.6;margin:0;}.stream-stats{font-variant-numeric:tabular-nums;}.stream-help{margin-top:22px;padding-top:12px;border-top:1px solid #c9dddf;font-size:.85rem;line-height:1.65;}.stream-help summary{cursor:pointer;min-height:44px;align-content:center;font-weight:600;}.stream-help p{margin:6px 0 12px;}
 @media(max-width:760px){.stream-layout{grid-template-columns:1fr;gap:18px;}.stream-steps{grid-template-columns:1fr;gap:0;}.stream-preview-card{max-width:560px;width:100%;box-sizing:border-box;}.stream-options select{flex:1;}.stream-connection>button{width:100%;}}

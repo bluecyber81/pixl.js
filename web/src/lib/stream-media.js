@@ -61,6 +61,32 @@ export function drawMediaFrame(context, source, mode = 'fit', rotation = 0) {
   return context.getImageData(0, 0, 128, 64).data;
 }
 
+const TICKER_FONT = 'bold 26px system-ui, sans-serif';
+
+// One period includes the whole message and a gap. Short messages are spaced
+// by at least one screen width so the first frame is readable on its own.
+export function measureTicker(context, value) {
+  const text = value.trim();
+  if (!text || !context) return null;
+  context.font = TICKER_FONT;
+  return {text, period: Math.max(STREAM_WIDTH, Math.ceil(context.measureText(text).width) + 24)};
+}
+
+export function drawTicker(context, layout, seconds, pixelsPerSecond) {
+  context.fillStyle = '#000';
+  context.fillRect(0, 0, STREAM_WIDTH, STREAM_HEIGHT);
+  if (!layout) return;
+  context.font = TICKER_FONT;
+  context.textAlign = 'left';
+  context.textBaseline = 'middle';
+  context.fillStyle = '#fff';
+  const left = 4 - Math.floor(seconds * pixelsPerSecond) % layout.period;
+  context.fillText(layout.text, left, STREAM_HEIGHT / 2);
+  if (left + layout.period < STREAM_WIDTH) {
+    context.fillText(layout.text, left + layout.period, STREAM_HEIGHT / 2);
+  }
+}
+
 export function demoRgba(frameIndex = 0) {
   const pixels = new Uint8ClampedArray(128 * 64 * 4);
   const cx = 64 + Math.trunc(38 * Math.sin(frameIndex * 0.12));

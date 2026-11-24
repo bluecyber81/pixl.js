@@ -44,7 +44,8 @@ test('public Test 6 ZIP requires its exact digest, OLED, counter 86 and S112 0x0
   const {diagnosticBuildIdentity}=await mod('firmware-build-reference.js');
   const identity=diagnosticBuildIdentity({firmwareVersion:entry.version,boot:{settingsCrcValid:true,applicationCounter:86}});
   assert.equal(identity.packageReference.otaSha256,entry.sha256);
-  assert.equal(identity.packageReference.hardwareAcceptance,'pending');
+  assert.equal(identity.packageReference.hardwareAcceptance,'tester-reported-remote-and-screen-capture-on-one-oled');
+  assert.equal(identity.packageReference.artifactStatus,'experimental-signed-application');
   assert.equal(identity.applicationHashVerified,false);
 });
 

@@ -30,7 +30,7 @@ test('App674 is an exact new application profile using the unchanged App672 engi
   assert.equal(normal.layout.engineSha256, '3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f');
   assert.equal(supportsFolderPublication(normal.firmwareVersion, normal.layout.engineSha256), true);
   assert.equal(supportsFolderPublication(app672.firmwareVersion, normal.layout.engineSha256), true);
-  for (const version of ['2.22.0-DE3.104','2.22.0-DE3.101-OLEDt7'])
+  for (const version of ['2.22.0-DE3.105','2.22.0-DE3.101-OLEDt7'])
     assert.equal(supportsFolderPublication(version, normal.layout.engineSha256), false, version);
   assert.equal(supportsFolderPublication(normal.firmwareVersion, getMigrationCapacityTarget('de398').layout.engineSha256), false);
 });

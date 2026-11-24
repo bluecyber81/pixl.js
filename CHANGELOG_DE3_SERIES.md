@@ -1,5 +1,12 @@
 # Allmiibo LCD application and file manager history
 
+## DE3.104 / App677 (LCD test) and Web 3.66.0 · 24 November 2026
+
+- Add confirmed removal of the local LCD wake profile, including button-start wake.
+- Add phone scrolling text, local preview and one-pass player export. Extend the bilingual Mineru game notes and record the scoped OLED Test 6 remote and screen-capture result.
+
+[Earlier LCD versions](docs/VERSIONEN_FIRMWARE.md) · [File manager versions](docs/VERSIONEN_WEB.md)
+
 ## DE3.99 / App672 · 22 November 2026
 
 - Complete the Chameleon import continuation after successful save retry; preserve cancel/discard behavior.

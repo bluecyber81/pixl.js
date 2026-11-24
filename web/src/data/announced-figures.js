@@ -65,6 +65,7 @@ export const announcementGroups = [
 
 // German names are edition-specific, including the machine shipped with each Air Riders pack.
 export const catalogueAliases = new Map([
+  ['010d000004a70902', ['Mineru-Konstrukt', 'Minerus Konstrukt']],
   ['1f00000004c41e03', ['Kirby & Warp-Stern']],
   ['1f03010004c91e03', ['Waddle-Dee-Assistent & Flügel-Stern']],
   ['1f01000004c61e03', ['Meta-Knight & Schatten-Stern']],
