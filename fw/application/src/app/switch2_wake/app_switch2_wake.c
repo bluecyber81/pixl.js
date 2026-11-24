@@ -9,6 +9,7 @@
 #include "mini_app_registry.h"
 #include "mui_include.h"
 #include "mui_list_view.h"
+#include "mui_msg_box.h"
 #include "mui_text_input.h"
 #include "mui_toast_view.h"
 #include "nrf_error.h"
@@ -35,6 +36,7 @@ typedef enum {
     SWITCH2_WAKE_VIEW_LIST = 0,
     SWITCH2_WAKE_VIEW_TEXT_INPUT = 1,
     SWITCH2_WAKE_VIEW_TOAST = 2,
+    SWITCH2_WAKE_VIEW_FORGET,
 } switch2_wake_view_id_t;
 
 typedef enum {
@@ -49,6 +51,7 @@ typedef enum {
     SWITCH2_MENU_DISCARD,
     SWITCH2_MENU_EXIT,
     SWITCH2_MENU_RELOAD,
+    SWITCH2_MENU_FORGET,
 } switch2_menu_item_t;
 
 typedef enum {
@@ -64,6 +67,7 @@ typedef struct {
     mui_view_dispatcher_t *p_view_dispatcher_toast;
     mui_list_view_t *p_list_view;
     mui_text_input_t *p_text_input;
+    mui_msg_box_t *p_forget_box;
     mui_toast_view_t *p_toast_view;
     switch2_wake_cfg_t cfg;
     switch2_wake_cfg_t saved_cfg;
@@ -164,6 +168,10 @@ static void switch2_wake_add_profile_items(app_switch2_wake_t *app) {
 
     if (app->dirty) mui_list_view_add_item(app->p_list_view, ICON_BACK,
         s2_tr("Aenderung verwerfen", "Discard unsaved"), (void *)SWITCH2_MENU_DISCARD);
+
+    if (app->cfg.has_mac || app->cfg.has_host || app->cfg.auto_wake)
+        mui_list_view_add_item(app->p_list_view, ICON_EDIT,
+            s2_tr("Kopplung vergessen", "Forget pairing"), (void *)SWITCH2_MENU_FORGET);
 }
 
 static void switch2_wake_reload_menu(app_switch2_wake_t *app) {
@@ -383,6 +391,25 @@ static void switch2_wake_open_mac_editor(app_switch2_wake_t *app, switch2_edit_t
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SWITCH2_WAKE_VIEW_TEXT_INPUT);
 }
 
+static void switch2_wake_forget_response(mui_msg_box_event_t event, mui_msg_box_t *box) {
+    app_switch2_wake_t *app = mui_msg_box_get_user_data(box);
+    if (event == MUI_MSG_BOX_EVENT_SELECT_RIGHT) {
+        vfs_driver_t *driver = vfs_get_default_driver();
+        int32_t result = driver && driver->mounted()
+            ? driver->remove_file(SWITCH2_WAKE_CFG_PATH) : VFS_ERR_FAIL;
+        if (result == VFS_OK || result == VFS_ERR_NOOBJ) {
+            switch2_wake_cfg_set_default(&app->cfg);
+            app->saved_cfg = app->cfg;
+            app->dirty = false;
+            switch2_wake_reload_menu(app);
+            mui_toast_view_show(app->p_toast_view, s2_tr("Kopplung entfernt", "Pairing forgotten"));
+        } else {
+            mui_toast_view_show(app->p_toast_view, _T(FAILED));
+        }
+    }
+    mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SWITCH2_WAKE_VIEW_LIST);
+}
+
 static void switch2_wake_list_selected_cb(mui_list_view_event_t event, mui_list_view_t *p_list_view,
                                           mui_list_item_t *p_item) {
     app_switch2_wake_t *app = p_list_view->user_data;
@@ -434,6 +461,17 @@ static void switch2_wake_list_selected_cb(mui_list_view_event_t event, mui_list_
         app->dirty = false;
         switch2_wake_reload_menu(app);
         break;
+    case SWITCH2_MENU_FORGET:
+        if (app->scanning || app->waking || ble_miniapp_radio_busy()) {
+            mui_toast_view_show(app->p_toast_view, s2_tr("Funk aktiv", "Radio busy"));
+            break;
+        }
+        mui_msg_box_set_header(app->p_forget_box, "Switch 2");
+        mui_msg_box_set_message(app->p_forget_box, s2_tr("Kopplung vergessen?", "Forget pairing?"));
+        mui_msg_box_set_btn_text(app->p_forget_box, _T(CANCEL), NULL, s2_tr("Vergessen", "Forget"));
+        mui_msg_box_set_btn_focus(app->p_forget_box, MUI_MSG_BOX_EVENT_SELECT_LEFT);
+        mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SWITCH2_WAKE_VIEW_FORGET);
+        break;
     case SWITCH2_MENU_EXIT:
         /* prepare_exit can reject an unsaved config. Only a successful kill
          * cancels radio ownership, so a rejected return leaves truthful state. */
@@ -454,6 +492,8 @@ static void app_switch2_wake_on_run(mini_app_inst_t *p_app_inst) {
     if (!app->p_list_view) goto startup_failed;
     app->p_text_input = mui_text_input_create();
     if (!app->p_text_input) goto startup_failed;
+    app->p_forget_box = mui_msg_box_create();
+    if (!app->p_forget_box) goto startup_failed;
     app->p_toast_view = mui_toast_view_create();
     if (!app->p_toast_view) goto startup_failed;
     app->p_view_dispatcher_toast = mui_view_dispatcher_create();
@@ -464,9 +504,12 @@ static void app_switch2_wake_on_run(mini_app_inst_t *p_app_inst) {
     mui_list_view_set_user_data(app->p_list_view, app);
     mui_list_view_set_selected_cb(app->p_list_view, switch2_wake_list_selected_cb);
     mui_text_input_set_user_data(app->p_text_input, app);
+    mui_msg_box_set_user_data(app->p_forget_box, app);
+    mui_msg_box_set_event_cb(app->p_forget_box, switch2_wake_forget_response);
     mui_toast_view_set_user_data(app->p_toast_view, app);
     mui_view_dispatcher_add_view(app->p_view_dispatcher, SWITCH2_WAKE_VIEW_LIST, mui_list_view_get_view(app->p_list_view));
     mui_view_dispatcher_add_view(app->p_view_dispatcher, SWITCH2_WAKE_VIEW_TEXT_INPUT, mui_text_input_get_view(app->p_text_input));
+    mui_view_dispatcher_add_view(app->p_view_dispatcher, SWITCH2_WAKE_VIEW_FORGET, mui_msg_box_get_view(app->p_forget_box));
     mui_view_dispatcher_add_view(app->p_view_dispatcher_toast, SWITCH2_WAKE_VIEW_TOAST, mui_toast_view_get_view(app->p_toast_view));
     mui_view_dispatcher_attach(app->p_view_dispatcher, MUI_LAYER_WINDOW);
     mui_view_dispatcher_attach(app->p_view_dispatcher_toast, MUI_LAYER_TOAST);
@@ -477,6 +520,7 @@ static void app_switch2_wake_on_run(mini_app_inst_t *p_app_inst) {
 startup_failed:
     mui_view_dispatcher_free(app->p_view_dispatcher_toast);
     mui_toast_view_free(app->p_toast_view);
+    mui_msg_box_free(app->p_forget_box);
     mui_text_input_free(app->p_text_input);
     mui_list_view_free(app->p_list_view);
     mui_view_dispatcher_free(app->p_view_dispatcher);
@@ -504,6 +548,7 @@ static void app_switch2_wake_on_kill(mini_app_inst_t *p_app_inst) {
     mui_view_dispatcher_free(app->p_view_dispatcher);
     mui_list_view_free(app->p_list_view);
     mui_text_input_free(app->p_text_input);
+    mui_msg_box_free(app->p_forget_box);
 
     mui_view_dispatcher_detach(app->p_view_dispatcher_toast, MUI_LAYER_TOAST);
     mui_view_dispatcher_free(app->p_view_dispatcher_toast);
