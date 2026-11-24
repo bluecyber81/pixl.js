@@ -129,7 +129,7 @@ async function runChecks() {
         assert.equal(await trial.locator('a[href$=".zip"]').getAttribute('href'), oledZip);
         assert.ok(await lcd.isDisabled());
       }
-      await guidePage.evaluate(() => { document.querySelector('#app')._vnode.component.proxy.bootInfo = {settingsCrcValid:true, applicationCounter:85}; });
+      await guidePage.evaluate(() => { document.querySelector('#app')._vnode.component.proxy.bootInfo = {settingsCrcValid:true, applicationCounter:87}; });
       await trial.locator('[role=status]').waitFor();
       assert.equal(await trial.locator('[href$=".zip"]').count(), 0);
       for (const version of ['2.23.0-DE3.91-OLEDt10']) {
@@ -240,7 +240,7 @@ async function runChecks() {
       }
       assert.match(requirements, /unter 21|below 21/);
       assert.equal(await guidePage.locator('#android-de380').count(), 1);
-      const appLink = section.locator('a[download][href$="Allmiibo_LCD_DE3_89_662_NUR_APP.zip"]');
+      const appLink = guidePage.locator('a[download][href$="Allmiibo_LCD_DE3_89_662_NUR_APP.zip"]');
       assert.match(await appLink.locator('..').innerText(), /Z21.*662/s);
       assert.equal(await appLink.evaluate(a => new URL(a.href).pathname), base + 'firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip');
       checks.push({locale,feature:'Android Z21 combo guide and DE3.89 application-only choice', guide, externalAssetUrl:comboAsset});

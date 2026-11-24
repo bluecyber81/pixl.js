@@ -1,0 +1,34 @@
+{
+  "version": "3.65.1",
+  "date": "2026-11-24",
+  "node": {
+    "total": 2287,
+    "passed": 2287,
+    "failed": 0,
+    "skipped": 0
+  },
+  "buildTests": {
+    "root": 57,
+    "pages": 57
+  },
+  "portable": {
+    "bytes": 12691183,
+    "sha256": "0b9c8186766923035369edea5b1093a84fe8a7bdb1670d9b5a6ceaecee8b49c4",
+    "extractedFileHashesChecked": 315,
+    "windowsLaunchRestartStop": "passed"
+  },
+  "browser": {
+    "remoteKeyboard": [
+      "de",
+      "en"
+    ],
+    "dfuAndFolderSyncChecks": 88,
+    "lcdFirmwareSelectionChecksPerBuild": 54,
+    "catalogueChecksPerBuild": 338,
+    "screenAwakeChecksPerBuild": 133,
+    "rootAndPages": true
+  },
+  "uploadEvidence": "WEB3_65_1_UPLOAD.json",
+  "lcdTestEvidence": "DE3_103_LCD_TEST1.json",
+  "deviceAcceptance": "App675 scoped observation on one LCD. First physical App676 test and complete radio upload benchmark pending."
+}

@@ -1368,5 +1368,9 @@
   "web_portable_bytes": 12691183,
   "web_portable_sha256": "0b9c8186766923035369edea5b1093a84fe8a7bdb1670d9b5a6ceaecee8b49c4",
   "web_qualification_date": "2026-11-24",
-  "web_evidence": "docs/validation/WEB3_65_1_UPLOAD.json"
+  "web_evidence": "docs/validation/WEB3_65_1.json",
+  "web_test_total": 2287,
+  "web_test_passed": 2287,
+  "web_test_skipped": 0,
+  "web_test_failed": 0
 }
