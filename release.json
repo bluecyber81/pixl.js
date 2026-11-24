@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "application": "allmiibo-dateimanager",
-  "version": "3.65.1",
+  "version": "3.66.0",
   "base": "/pixl.js/",
   "channel": "normal",
-  "packageManifestSha256": "f3552454e74e8a151d94b8b90d4267503581ff466e2a9130b1f0f91dbacb29d1",
+  "packageManifestSha256": "f8d1b686954b492dbb69a5e206c9a72ca8df9b24a5db25aa42e39fe99031b61d",
   "firmware": {
     "id": "de3.102-lcd-app",
     "version": "2.22.0-DE3.102",

@@ -11,12 +11,14 @@ export function nrfDfuLink(entry) {
             file: 'https://github.com/bluecyber81/pixl.js/releases/download/de3.' + oled[1] + '-oled-t' + oled[2] + '/' + entry.file
         });
     }
-    if (entry?.version === '2.22.0-DE3.103' || entry?.id === 'de3.103-lcd-app-test1') {
-        if (entry.version !== '2.22.0-DE3.103' || entry.id !== 'de3.103-lcd-app-test1' ||
-            entry.board !== 'LCD' || entry.counter !== 676 || entry.channel !== 'prerelease' ||
+    const preview = [{minor:103, counter:676}, {minor:104, counter:677}].find(({minor}) =>
+        entry?.version === '2.22.0-DE3.' + minor || entry?.id === 'de3.' + minor + '-lcd-app-test1');
+    if (preview) {
+        if (entry.version !== '2.22.0-DE3.' + preview.minor || entry.id !== 'de3.' + preview.minor + '-lcd-app-test1' ||
+            entry.board !== 'LCD' || entry.counter !== preview.counter || entry.channel !== 'prerelease' ||
             entry.applicationOnly !== true || entry.migrationRequired !== false || entry.storage !== 'PFS1' ||
             entry.bootloader !== 'Z21' || entry.softDevice !== 'S112 7.3.0' ||
-            entry.file !== 'Allmiibo_LCD_DE3_103_676_NUR_APP.zip') return null;
+            entry.file !== 'Allmiibo_LCD_DE3_' + preview.minor + '_' + preview.counter + '_NUR_APP.zip') return null;
         return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({
             file: 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file
         });

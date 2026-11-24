@@ -28,7 +28,7 @@
         <a href="#diagnose">Zuerst den Gerätestand lesen</a>
         <a href="#flash">LCD-App aktualisieren</a>
         <a href="#lcd-de3102">LCD DE3.102 installieren</a>
-        <a href="#lcd-de3103">LCD-Testversion DE3.103 prüfen</a>
+        <a href="#lcd-de3104">LCD-Testversion DE3.104 prüfen</a>
         <a href="#lcd-de387">Frühere LCD-Testversion DE3.87</a>
         <a href="#lcd-de386">LCD DE3.86 testen</a>
         <a href="#lcd-de385">LCD DE3.85 testen</a>
@@ -53,13 +53,16 @@
         </section>
         <section id="flash">
           <h2>LCD-App per Bluetooth aktualisieren</h2>
+          <h3 id="lcd-de3104">Optionale LCD-Testversion DE3.104 / App677</h3>
+          <p>Für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0. <a href="../firmware/Allmiibo_LCD_DE3_104_677_NUR_APP.zip" download>App677 als signierte Handy-ZIP laden</a> oder <a href="../dfu/web.html?package=de3.104-lcd-app-test1#board=LCD">App677 im Web-Updater prüfen</a>. Das Paket aktualisiert die Anwendung. DE3.102 / App675 bleibt die normale LCD-Ausgabe.</p>
+          <p>Öffne <b>Switch 2 wecken → Kopplung vergessen</b>. Zuerst ist „Abbrechen“ ausgewählt. Wähle <b>Vergessen</b>, um das Profil auf dem LCD zu entfernen und den automatischen Tastenstart auszuschalten. Die Kopplung auf der Konsole wird separat verwaltet. Der Gerätetest für App677 steht aus.</p>
           <h3 id="lcd-de3103">Optionale LCD-Testversion DE3.103 / App676</h3>
           <p>Für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0. <a href="../firmware/Allmiibo_LCD_DE3_103_676_NUR_APP.zip" download>App676 als signierte Handy-ZIP laden</a> oder <a href="../dfu/web.html?package=de3.103-lcd-app-test1#board=LCD">App676 im Web-Updater prüfen</a>. Das Paket aktualisiert die Anwendung. DE3.102 / App675 bleibt die normale LCD-Ausgabe.</p>
           <p>Bei einem Lesefehler im Switch-2-Weckprofil lassen sich „Erneut laden“ und „Zurück“ wählen. „Verwerfen“ stellt die zuletzt gültigen Einstellungen wieder her. Die Prüfung am Gerät steht aus. <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.103-lcd-test1">Testrelease auf GitHub</a>.</p>
           <h3 id="lcd-de3102">LCD DE3.102 / App675 · normale Ausgabe</h3>
           <p>Für LCD/ST7567 mit Packed LittleFS (PFS1), Bootloader Z21 und S112 7.3.0. Lade die <a href="https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip" download>signierte App675-ZIP</a>. Öffne am Gerät <b>Einstellungen → Firmware-Update</b> und wähle die gepackte ZIP in nRF Device Firmware Update. Der <a href="../dfu/web.html?package=de3.102-lcd-app#board=LCD">Web-Updater öffnet die App675-Auswahl direkt</a>.</p>
-          <p>Nach dem Neustart zeigt Dateimanager <b>3.65.1</b> die Firmware <b>2.22.0-DE3.102</b> und den App-Zähler <b>675</b>. Das Anwendungsupdate erhält PFS1, Bootloader und SoftDevice; ein vorhandenes PFS1 braucht keine erneute Umstellung.</p>
-          <p>App675 ergänzt im Animationsplayer <b>Endlosschleife</b> und <b>Bildzähler</b> und reduziert unnötige Neuzeichnungen im BLE-Bildempfang. Web3.65.1 bietet <a href="#bild-video">Drehung, Punktraster, gemerkte Bildoptionen und lokalen Playerexport</a>. Der Bildsender bleibt mit App673+ kompatibel. <a href="https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675">Firmwarequellen und dokumentierte Softwareprüfungen</a>. Auf einem LCD wurden App675 und die kompilierte SourceID ausgelesen. Der Besitzer bestätigte Bilder, Animation, Schleife und Bildzähler. Die Prüfung von Switch-2-Wecken und einer unterbrochenen DFU-Übertragung steht aus.</p>
+          <p>Nach dem Neustart zeigt Dateimanager <b>3.66.0</b> die Firmware <b>2.22.0-DE3.102</b> und den App-Zähler <b>675</b>. Das Anwendungsupdate erhält PFS1, Bootloader und SoftDevice; ein vorhandenes PFS1 braucht keine erneute Umstellung.</p>
+          <p>App675 ergänzt im Animationsplayer <b>Endlosschleife</b> und <b>Bildzähler</b> und reduziert unnötige Neuzeichnungen im BLE-Bildempfang. Web3.66.0 bietet <a href="#bild-video">Drehung, Punktraster, gemerkte Bildoptionen und lokalen Playerexport</a>. Der Bildsender bleibt mit App673+ kompatibel. <a href="https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675">Firmwarequellen und dokumentierte Softwareprüfungen</a>. Auf einem LCD wurden App675 und die kompilierte SourceID ausgelesen. Der Besitzer bestätigte Bilder, Animation, Schleife und Bildzähler. Die Prüfung von Switch-2-Wecken und einer unterbrochenen DFU-Übertragung steht aus.</p>
           <p>Der Handy-Link verwendet den geprüften GitHub-Download. Öffne die neu heruntergeladene ZIP in nRF Device Firmware Update.</p>
           <h3 id="lcd-de3101">LCD DE3.101 / App674 · frühere Ausgabe</h3>
           <p>Für LCD/ST7567 mit Packed LittleFS (PFS1), Bootloader Z21 und S112 7.3.0. Lade die <a href="https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip" download>signierte App674-ZIP</a>. Öffne am Gerät <b>Einstellungen → Firmware-Update</b> und wähle die gepackte ZIP in nRF Device Firmware Update. Der <a href="../dfu/web.html?package=de3.101-lcd-app#board=LCD">Web-Updater öffnet die App674-Auswahl direkt</a>.</p>
@@ -125,8 +128,8 @@
           <p>Öffne <b>Gerät &amp; Diagnose</b> und lies die Diagnose. Unter Firmwarekennung sollte das Board <b>OLED</b> erscheinen. Prüfe beim Spielen beide Displayausrichtungen und die äußeren Pixelreihen. Melde für die Fernbedienung den genauen Schritt, an dem sie reagiert oder hängen bleibt.</p>
           <h3 id="oled-remote">Fernbedienung verbinden</h3>
           <p>Beende am wachen Gerät die Dateiübertragung und AmiiboLink. Aktiviere <b>Einstellungen → Fernsteuern → bis Aus</b> und kehre ins Hauptmenü zurück. Wähle im Dateimanager unter <b>Fernbedienung</b> das Profil <b>Allmiibo DE</b> und im Bluetooth-Fenster <b>Pixl.Remote</b>. Drücke einmal <b>Rechts</b> und prüfe, ob die Markierung am Gerät weiterwandert.</p>
-          <p>Zur OLED-Fernbedienung liegt eine Fehlermeldung vor. Die Ursache und ein erfolgreicher Tastentest am Gerät sind offen.</p>
-          <p>Für Test 6 steht die Rückmeldung von einem echten OLED aus. Ein Nutzer meldete einen erfolgreichen Start von <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1">Test 1</a>.</p>
+          <p>Am 18. November 2026 bestätigte ein Nutzer die Verbindung zur Fernbedienung und den Abruf des Displayfotos auf einem OLED mit Test 6. Die Displayfotos zeigen beide Kontrast-Sollwerte (5 % und 100 %). Wie deutlich sich die Helligkeit am Panel änderte, blieb offen.</p>
+          <p>Ein Nutzer meldete einen erfolgreichen Start von <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.81-oled-t1">Test 1</a>.</p>
         <p>Wähle für die Fernbedienung <b>Pixl.Remote</b> oder <b>Pixl.Rem</b>. <a href="https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt">Deutsche Anleitung für Test 6</a>. Frühere Testversionen: <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.85-oled-t5">Test 5</a> · <a href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.84-oled-t4">Test 4</a>.</p>
         </section>
         <section id="littlefs">
@@ -161,7 +164,8 @@
         </section>
         <section id="bild-video">
           <h2>Bild oder Video ans LCD senden</h2>
-          <p>Öffne im Dateimanager 3.65.1 den Bereich <a href="../?workspace=stream"><b>Bild &amp; Video</b></a>. Für das Senden brauchst du ein LCD mit <b>DE3.100/App673 oder neuer</b> und einen Browser mit Web Bluetooth. Vorschau und Playerexport funktionieren auch ohne Bluetooth. OLED unterstützt diesen Bildempfang nicht.</p>
+          <p>Öffne im Dateimanager 3.66.0 den Bereich <a href="../?workspace=stream"><b>Bild &amp; Video</b></a>. Für das Senden brauchst du ein LCD mit <b>DE3.100/App673 oder neuer</b> und einen Browser mit Web Bluetooth. Vorschau und Playerexport funktionieren auch ohne Bluetooth. OLED unterstützt diesen Bildempfang nicht.</p>
+          <p>Wähle <b>Lauftext</b>, gib deinen Text ein und stelle das Tempo ein. Spiele die Vorschau am Handy ab. Über <b>Lauftext senden</b> erscheint der Text auf dem verbundenen LCD. Für die spätere Wiedergabe kannst du einen Durchlauf als Playerdatei speichern und im Animationsplayer „Endlosschleife“ einschalten.</p>
           <ol class="steps"><li><h3>Vorschau vorbereiten</h3><p>Wähle eine lokale Bild-/Videodatei, lege eine Datei im Auswahlfeld ab oder wähle <b>Demo verwenden</b>. Die Datei bleibt auf deinem Computer oder Handy und wird nicht hochgeladen. Prüfe die Schwarz-Weiß-Vorschau mit 128 × 64 Pixeln. Stelle Bildformat, <b>Drehen</b>, Hell-Dunkel-Grenze und Inversion ein. <b>Punktraster für Fotos</b> kann Helligkeitsabstufungen besser darstellen.</p></li>
             <li><h3>Bildempfang öffnen und verbinden</h3><p>Trenne die Dateiverbindung oben auf der Webseite beziehungsweise die Fernbedienung in ihrem Bereich. Öffne am LCD im Hauptmenü <b>BLE-Bildempfang</b>. Wähle auf der Webseite <b>Mit Bildempfang verbinden</b> und dein Gerät. Erst nach der Bestätigung des Empfängers ist Senden verfügbar.</p></li>
             <li><h3>Übertragung ausdrücklich starten</h3><p>Klicke <b>Bild senden</b>, <b>Video senden</b> oder <b>Demo senden</b>. Auswahl und Verbinden allein senden keine Bilder. Ein Bild wird einmal übertragen; Videos und Demo laufen bis zum Stoppen. Die voreingestellten 5 Bilder/s sind ein Zielwert. Die tatsächliche Rate hängt von Bluetooth und Bildinhalt ab; bei Videos können Zwischenbilder ausgelassen werden.</p></li>
