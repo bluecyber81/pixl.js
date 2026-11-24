@@ -574,6 +574,41 @@ test('folder publication requires the actual atomic PackedFS profile in the curr
   await assert.rejects(probe);
 });
 
+test('a new LCD folder can be filled file by file without publishing the whole tree', async () => {
+  for (const direct of [false, true]) {
+    const routes = [];
+    const success = route => async options => {
+      routes.push(route);
+      return { completed: 1, skipped: 0, job: options.job };
+    };
+    const app = connected(harness({ createSyncJob: () => ({ completed: [] }),
+      executeSyncJob: success('files'), executeNewFolderUpload: success('tree') }));
+    readyCurrentSync(app);
+    app.firmwareVersion = '2.22.0-DE3.91';
+    app.supports_folder_publish = async () => true;
+    app.syncPlan = { ...app.syncPlan, schema: 1, directories: [{ path: 'E:/New', status: 'create' }],
+      entries: [{ targetPath: 'E:/New/a.bin', status: 'add', expected: null }] };
+    app.syncSelected = ['E:/New/a.bin'];
+    assert.equal(app.syncNewFolderTarget, 'E:/New');
+    await app.run_sync(direct);
+    assert.deepEqual(routes, [direct ? 'files' : 'tree']);
+  }
+});
+
+test('file-by-file choice is not offered for an existing target or a folder comparison', async () => {
+  const app = connected(harness());
+  readyCurrentSync(app);
+  app.firmwareVersion = '2.22.0-DE3.91';
+  app.syncPlan = { ...app.syncPlan, schema: 1, directories: [], entries: [
+    { targetPath: 'E:/existing.bin', status: 'change', expected: { size: 3 } }] };
+  app.syncSelected = ['E:/existing.bin'];
+  assert.ok(!app.syncNewFolderTarget);
+  await app.run_sync(true);
+  assert.ok(app.syncPlan);
+  app.syncFolderContents = true;
+  assert.ok(!app.syncNewFolderTarget);
+});
+
 test('a dropped folder upload resumes in the same tab only on the original device and firmware', async () => {
   const first = deferred(), requests = [];
   const h = harness({createSyncJob:()=>({completed:[]}), executeSyncJob: async request => {
@@ -719,7 +754,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.65.0'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.65.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -731,7 +766,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.65.0.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.65.1.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -818,7 +853,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.65.0.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.65.1.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -2000,10 +2035,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.65.0.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.65.1.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.65.0.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.65.1.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2918,7 +2953,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.65.0');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.65.1');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

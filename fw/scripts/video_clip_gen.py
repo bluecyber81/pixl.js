@@ -1,74 +1,73 @@
-#!/usr/bin/python3
-
-import sys
-import io
+#!/usr/bin/env python3
+"""Convert a directory of still images to a PIXV animation for the 128×64 player."""
+import argparse
 import os
-from PIL import Image, ImageOps
-from struct import *
+from pathlib import Path
+import struct
+import tempfile
 
-def get_im_size(file):
-    with Image.open(file) as im:
-        return im.size
-
-
-def write_xbm(data, fp):
-    byte_count = 0
-    lines = str(data).split("\\n")
-    for line in lines:
-        if line.startswith("0x"):
-            hex_list = line.split(",")
-            for h in hex_list:
-                if h.startswith("0x"):
-                    fp.write(bytes.fromhex(h[2:]))
-                    byte_count = byte_count + 1
-    return byte_count
+from PIL import Image
 
 
-def get_xbm(file):
-    with Image.open(file) as im:
-        with io.BytesIO() as output:
-            bw = im.convert("1")
-            bw = ImageOps.invert(bw)
-            bw.save(output, format="xbm")
-            return output.getvalue()
+HEADER = struct.Struct("<IHHHHI")
+MAGIC = 0x50495856
+
+
+def write_clip(fps, input_dir, output_file):
+    if not 1 <= fps <= 60:
+        raise ValueError("frame rate must be between 1 and 60 fps")
+    output_file = output_file.parent.resolve() / output_file.name
+    frames = sorted(input_dir.resolve().iterdir(), key=lambda path: path.name)
+    if output_file in frames:
+        # Allow re-export next to the inputs, but never replace a source image.
+        with output_file.open("rb") as previous:
+            if previous.read(4) != struct.pack("<I", MAGIC):
+                raise ValueError(f"output would replace an input: {output_file.name}")
+        frames.remove(output_file)
+    if not 1 <= len(frames) <= 65535:
+        raise ValueError("the input directory must contain 1 to 65535 image frames")
+
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=output_file.parent, delete=False) as stream:
+            temporary = Path(stream.name)
+            for index, path in enumerate(frames):
+                if not path.is_file():
+                    raise ValueError(f"expected an image file: {path.name}")
+                with Image.open(path) as image:
+                    if index == 0:
+                        width, height = image.size
+                        if not (1 <= width <= 128 and 1 <= height <= 64):
+                            raise ValueError(f"{path.name}: {width}×{height} exceeds the 128×64 display")
+                        stream.write(HEADER.pack(MAGIC, len(frames), fps, width, height, 0))
+                    elif image.size != (width, height):
+                        raise ValueError(f"{path.name}: expected {width}×{height}, got {image.width}×{image.height}")
+                    # Preserve Pillow's original one-bit dithering. The player's
+                    # XBM rows use dark=1, least significant pixel first, with padding.
+                    with image.convert("1") as mono:
+                        stream.write(mono.tobytes("raw", "1;IR"))
+            size = stream.tell()
+        os.replace(temporary, output_file)
+        temporary = None
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+    return len(frames), width, height, size
+
 
 def main():
-    if len(sys.argv) < 4:
-        print("usage: video_clip.py [fps] [input_dir] [output_file]")
-        exit(1)
-   
-    fps = sys.argv[1]
-    input_dir = sys.argv[2]
-    output_file = sys.argv[3]
-
-    files = os.listdir(input_dir)
-    files.sort()
-
-    fp = open(output_file, "wb")
-
-    im_size = get_im_size(input_dir + "/" + files[0])
-
-    # magic + frame_count + fps + width + height + reserved
-    # 4b + 2b + 2b + 2b + 2b + 4b = 16 bytes
-    head = pack("<IHHHHI", 0x50495856,  len(files), int(fps), im_size[0], im_size[1], 0)
-    fp.write(head)
-
-    out_dirname, out_filename = os.path.split(output_file)
-
-    total_bytes_count = 16
-    for file in files:
-        byte_count = write_xbm(get_xbm(input_dir + "/" + file), fp)
-        total_bytes_count = total_bytes_count + byte_count
-        # print("process %s .. %d bytes written." % (file, byte_count ))
-
-    fp.close()
-
-    print("successfully created %s with %dx%d@%dfps, %d frames, %d bytes" % (out_filename, im_size[0], im_size[1], int(fps), len(files), total_bytes_count))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("fps", type=int, help="frames per second (1–60)")
+    parser.add_argument("input_dir", type=Path, help="images of equal size, in filename order")
+    parser.add_argument("output_file", type=Path, help="destination PIXV file")
+    args = parser.parse_args()
+    try:
+        count, width, height, size = write_clip(args.fps, args.input_dir, args.output_file)
+    except (OSError, ValueError, SyntaxError, Image.DecompressionBombError) as exc:
+        parser.exit(1, f"Cannot create clip: {exc}\n")
+    print(f"successfully created {args.output_file.name} with {width}x{height}@{args.fps}fps, "
+          f"{count} frames, {size} bytes")
 
 
-######
-main()
-
-
-#ffmpeg -y -i cxk.mp4 -vf "scale=128:64:flags=lanczos,hue=s=0" -r 10 "out/%04d.bmp"
-#ffmpeg -y -i badapple.mp4 -ss 0:0 -t 60 -vf "scale=80:64:increase:flags=lanczos,hue=s=0" -r 10 "out2/%04d.bmp"
+if __name__ == "__main__":
+    main()

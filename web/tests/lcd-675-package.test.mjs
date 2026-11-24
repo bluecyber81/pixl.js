@@ -20,7 +20,7 @@ const references = [lcdRelease, ...lcdPreviews];
 test('normal App675 archive binds its ZIP, BIN and init target to the qualified firmware without the private-test label', async () => {
   assert.equal(lcdRelease.artifactStatus, 'stable-signed-application');
   assert.equal(lcdRelease.firmwareChannel, 'normal');
-  assert.equal(lcdRelease.hardwareAcceptance, 'pending-for-this-build');
+  assert.equal(lcdRelease.hardwareAcceptance, 'one-lcd-readback-and-owner-confirmed-images-player-loop-counter');
   assert.equal(lcdRelease.productionCommit, '658d43a7fe2777778d8efa8439f73aa48210e033');
   assert.equal(lcdRelease.productionTree, 'b5476cc3ee8c1b297f3648fe63b02aae8772e22b');
   assert.equal(lcdRelease.downloadCommit, lcdRelease.productionCommit);

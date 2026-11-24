@@ -71,34 +71,13 @@ def encode_frame_packet(xbm_1024: bytes, prev_xbm: bytes | None = None, force_ke
 def gray_bytes_to_xbm_128x64(gray_bytes: bytes, threshold: int = 128, invert: bool = False) -> bytes:
     if len(gray_bytes) != 8192 or not 0 <= threshold <= 255:
         raise ValueError("Expected 8192 gray pixels and threshold 0..255")
-    out = bytearray(1024)
-    if not invert:
-        for i in range(1024):
-            off = i * 8
-            b = 0
-            if gray_bytes[off + 0] >= threshold: b |= 1
-            if gray_bytes[off + 1] >= threshold: b |= 2
-            if gray_bytes[off + 2] >= threshold: b |= 4
-            if gray_bytes[off + 3] >= threshold: b |= 8
-            if gray_bytes[off + 4] >= threshold: b |= 16
-            if gray_bytes[off + 5] >= threshold: b |= 32
-            if gray_bytes[off + 6] >= threshold: b |= 64
-            if gray_bytes[off + 7] >= threshold: b |= 128
-            out[i] = b
-    else:
-        for i in range(1024):
-            off = i * 8
-            b = 0
-            if gray_bytes[off + 0] < threshold: b |= 1
-            if gray_bytes[off + 1] < threshold: b |= 2
-            if gray_bytes[off + 2] < threshold: b |= 4
-            if gray_bytes[off + 3] < threshold: b |= 8
-            if gray_bytes[off + 4] < threshold: b |= 16
-            if gray_bytes[off + 5] < threshold: b |= 32
-            if gray_bytes[off + 6] < threshold: b |= 64
-            if gray_bytes[off + 7] < threshold: b |= 128
-            out[i] = b
-    return bytes(out)
+    dark, light = (b"0", b"1") if invert else (b"1", b"0")
+    cutoff = math.ceil(threshold)
+    shades = dark * cutoff + light * (256 - cutoff)
+    bits = bytes(gray_bytes).translate(shades)
+    # The first source pixel is bit 0 of the first LCD byte. Binary digits
+    # are read most significant first, so reverse them before packing.
+    return int(bits[::-1], 2).to_bytes(1024, "little")
 
 
 def generate_demo_frame(frame_idx: int) -> bytes:

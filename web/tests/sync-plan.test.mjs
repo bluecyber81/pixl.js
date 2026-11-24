@@ -255,3 +255,106 @@ test('two immediate Execute calls cannot both claim the same job across crypto a
   await first
   assert.equal(vfs.log.filter(entry => entry.op === 'write').length, 1)
 })
+
+
+test('PackedFS folder additions publish directly, hash each result, and reserve the staged replacement path for existing files', async () => {
+  const vfs = memoryVfs()
+  vfs.put('E:/tags/old.bin', [0], metadata(0, 'keep this note'))
+  const files = [localFile('one', []), localFile('old.bin', [4]),
+    { relativePath:'series/two', file:localFile('two', [1, 2]) },
+    { relativePath:'series/three', file:localFile('three', [3]) }]
+  const plan = await compare(vfs, files)
+  const direct = [], replacements = []
+  await execute(vfs, plan, files, {
+    writeNewPackedFile: async (path, bytes, options) => {
+      direct.push(path)
+      assert.deepEqual(options.rawMeta128, new Uint8Array(128).fill(255))
+      await options.beforeWrite()
+      await vfs.api.writeFile(path, bytes, options)
+    },
+    uploadFile: options => {
+      replacements.push(options.path)
+      return safeUpload({...vfs.api, ...options})
+    }
+  })
+  assert.deepEqual(replacements, ['E:/tags/old.bin'])
+  assert.deepEqual(direct, ['E:/tags/one', 'E:/tags/series/two', 'E:/tags/series/three'])
+  assert.equal(vfs.nodes.get(replacements[0]).meta.notes, 'keep this note')
+  for (const path of direct) assert(vfs.log.some(event => event.op === 'read' && event.args[0] === path))
+  assert.equal(vfs.log.filter(event => event.op === 'mkdir').length, 1)
+  assert.deepEqual(vfs.bytes('E:/tags/one'), [])
+  assert.deepEqual(vfs.bytes('E:/tags/series/three'), [3])
+})
+
+test('the locked PackedFS guard detects late collisions, parent changes and cancellation without committing a file', async () => {
+  for (const change of ['exact', 'case', 'parent permission', 'ancestor permission', 'folder', 'abort']) {
+    const vfs = memoryVfs()
+    const parent = 'E:/tags/series', path = parent + '/New.bin'
+    vfs.nodes.set(parent, {type:1, meta:metadata()})
+    const files = [{relativePath:'series/New.bin', file:localFile('New.bin', [])}]
+    const plan = await compare(vfs, files), controller = new AbortController()
+    let afterGuard = false, collision
+    await assert.rejects(execute(vfs, plan, files, { signal:controller.signal,
+      writeNewPackedFile: async (_path, _bytes, {beforeWrite}) => {
+        if (change === 'exact' || change === 'case') {
+          collision = change === 'exact' ? path : parent + '/new.bin'
+          vfs.put(collision, [9])
+        }
+        if (change === 'parent permission') vfs.nodes.get(parent).meta = metadata(4)
+        if (change === 'ancestor permission') vfs.nodes.get('E:/tags').meta = metadata(4)
+        if (change === 'folder') vfs.nodes.set(path, {type:1, meta:metadata()})
+        if (change === 'abort') controller.abort()
+        await beforeWrite()
+        afterGuard = true
+      }
+    }), change)
+    assert.equal(afterGuard, false, change)
+    if (collision) assert.deepEqual(vfs.bytes(collision), [9])
+    else if (change === 'folder') assert.equal(vfs.nodes.get(path).type, 1)
+    else assert(!vfs.nodes.has(path))
+  }
+})
+
+test('a cut before or after PackedFS CLOSE resumes with just the planned files and verified bytes', async () => {
+  for (const lostCloseReply of [false, true]) {
+    const vfs = memoryVfs(), files = [localFile('a'),localFile('b')], written = []
+    // Other uploads can own recovery files in this same folder.
+    const foreignStage = 'E:/tags/~u0123456789ab'
+    vfs.put(foreignStage, [0x51, 0x52])
+    const plan = await compare(vfs, files), job = createSyncJob(plan)
+    let cut = true
+    const run = () => execute(vfs, plan, files, {job, writeNewPackedFile: async (path, bytes, {beforeWrite}) => {
+      await beforeWrite()
+      written.push(path)
+      if (cut && path.endsWith('/b')) {
+        cut = false
+        if (lostCloseReply) vfs.put(path, bytes)
+        vfs.disconnect()
+        vfs.api.assertSession()
+      }
+      vfs.put(path, bytes)
+    }})
+    await assert.rejects(run(), {code:'SESSION_CHANGED'})
+    assert.deepEqual(job.completed, ['E:/tags/a'])
+    assert.equal(vfs.nodes.has('E:/tags/b'), lostCloseReply)
+    vfs.reconnect()
+    const result = await run()
+    assert.equal(result.skipped, lostCloseReply ? 2 : 1)
+    assert.equal(written.length, lostCloseReply ? 2 : 3)
+    assert.deepEqual([...vfs.nodes.keys()].sort(), ['E:/','E:/tags','E:/tags/a','E:/tags/b',foreignStage])
+    assert.deepEqual(vfs.bytes(foreignStage), [0x51, 0x52])
+    assert.deepEqual(vfs.bytes('E:/tags/b'), [7,8,9])
+  }
+})
+
+test('an incorrect device hash after PackedFS CLOSE is never checkpointed as verified', async () => {
+  const vfs = memoryVfs(), files = [localFile('a')]
+  const plan = await compare(vfs, files), job = createSyncJob(plan)
+  await assert.rejects(execute(vfs, plan, files, {job,
+    writeNewPackedFile: async (path, _bytes, {beforeWrite}) => {
+      await beforeWrite()
+      vfs.put(path, [9,9,9])
+    }
+  }), {code:'SYNC_VERIFY'})
+  assert.deepEqual(job.completed, [])
+})

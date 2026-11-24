@@ -36,9 +36,15 @@ class SenderTests(unittest.TestCase):
             with self.assertRaises(ValueError):sender.encode_frame_packet(bytes(n))
             with self.assertRaises(ValueError):sender.encode_frame_packet(bytes(1024),bytes(n))
     def test_gray_orientation_and_inversion(self):
-        pixels=bytes([255,0,0,0,0,0,0,255])+bytes(8184)
-        normal=sender.gray_bytes_to_xbm_128x64(pixels);inv=sender.gray_bytes_to_xbm_128x64(pixels,invert=True)
-        self.assertEqual(normal[0],129);self.assertEqual(normal[1:],bytes(1023));self.assertEqual(inv,bytes(b^255 for b in normal))
+        # ST7567 and the browser both set the XBM bit for a dark LCD pixel.
+        pixels = bytes([0, 255, 128, 127, 129, 255, 255, 255]) + bytes([255]) * 8184
+        normal = sender.gray_bytes_to_xbm_128x64(pixels)
+        self.assertEqual(normal, bytes([0x09]) + bytes(1023))
+        self.assertEqual(sender.gray_bytes_to_xbm_128x64(pixels, invert=True),
+                         bytes(b ^ 255 for b in normal))
+        self.assertEqual(sender.gray_bytes_to_xbm_128x64(pixels, 0), bytes(1024))
+        self.assertEqual(sender.gray_bytes_to_xbm_128x64(pixels, 255),
+                         bytes([0x1d]) + bytes(1023))
         for length in (0,8191,8193):
             with self.assertRaises(ValueError):sender.gray_bytes_to_xbm_128x64(bytes(length))
     def test_characteristic_capacity(self):

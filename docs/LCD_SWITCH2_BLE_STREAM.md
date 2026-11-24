@@ -29,6 +29,10 @@ python fw/scripts/stream_video_to_pixl.py --fps 5
 python fw/scripts/stream_video_to_pixl.py eigenes_video.mp4 --fps 5 --scale fit
 ```
 
+In der Grundeinstellung erscheinen dunkle Videopixel auf dem LCD dunkel, genau wie in der Vorschau des Dateimanagers. Mit `--invert` werden Schwarz und Weiß vertauscht.
+
+Für die Wiedergabe ohne Bluetooth erstellt `python fw/scripts/video_clip_gen.py 10 frames clip.bin` aus dem Ordner `frames` eine Animation. Alle Bilder müssen gleich groß sein und in 128 × 64 Pixel passen. Zulässig sind 1 bis 60 Bilder pro Sekunde. Bei ungültigen Bildern bleibt eine vorhandene Zieldatei erhalten.
+
 Bei mehreren erreichbaren Pixl.js-Geräten fordert der Sender eine konkrete Auswahl über `--mac`. Unter Plattformen, die statt einer MAC-Adresse eine Gerätekennung liefern, ist die entsprechende Kennung zu verwenden. Die am Gerät angezeigte Adresse hilft bei der Auswahl. `--invert`, `--threshold 0..255` und `--scale fit|stretch|crop` steuern die Darstellung. `--help` funktioniert auch ohne installierte BLE-Abhängigkeit. `Ctrl+C` beendet den Sender; interaktive Einzeltasten während der Wiedergabe sind wie im ursprünglichen Sender nur unter Windows verfügbar.
 
 Die Ziel-FPS des Senders und die vom Decoder gezählten vollständigen Bilder sind keine gemessene physische LCD-Bildrate. Das Programm passt keine globalen Verbindungsintervalle, Sendepuffer oder Schlafzeitwerte an. Die Startvorgabe 5 FPS dient als zurückhaltender Bedienwert und ersetzt keinen Durchsatztest.

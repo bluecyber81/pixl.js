@@ -1,0 +1,54 @@
+{
+  "readUtc": "2026-11-24T09:33:06.522287+00:00",
+  "version": "2.22.0-DE3.102",
+  "board": "LCD",
+  "sourceId": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+  "previousFaultKind": 0,
+  "runtime": {
+    "disconnects": 1,
+    "timeouts": 0,
+    "allocation_failures": 0,
+    "queue_overflows": 0,
+    "vfs_errors": 0,
+    "free_heap": 10636,
+    "minimum_sampled_free_heap": 10636,
+    "stack_reservation": 8192,
+    "samples": 2
+  },
+  "boot": {
+    "application_counter": 675,
+    "bootloader_counter": 21,
+    "softdevice_fwid": "0x126",
+    "softdevice_version_code": 7003000,
+    "boot_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+    "settings_crc_valid": true
+  },
+  "cachedStartup": {
+    "firstDispatchMs": 2565,
+    "mountMs": 1923,
+    "physicalReadErrors": 0,
+    "header": "PXST"
+  },
+  "ownerReported": {
+    "date": "2026-11-23",
+    "scope": [
+      "images",
+      "animation playback",
+      "player loop",
+      "frame counter"
+    ]
+  },
+  "pairedReads": {
+    "sampleFiles": 4,
+    "payloadBytes": 2160,
+    "pairedRuns": 6,
+    "medianSingleMs": 1872.5,
+    "medianBatchMs": 1500.15,
+    "payloadDigestsMatched": true
+  },
+  "limits": [
+    "Cached startup event on one LCD.",
+    "No device application BIN hash.",
+    "No interrupted DFU measurement."
+  ]
+}

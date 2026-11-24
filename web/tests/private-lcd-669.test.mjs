@@ -189,8 +189,8 @@ test('the mobile current download uses normal App675 while retained App669 keeps
   assert.ok(lcdPreviewPackages.includes(lcdPreviewPackage));
   assert.ok(html.includes('https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip'));
   assert.match(html, /DE3\.102 \/ App675/);
-  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.65.0'"));
+  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.65.1'"));
   assert.equal(catalog.packages[0].version, '2.22.0-DE3.102');
-  assert.ok(page.includes("'./lcd-release-reference.mjs?v=3.65.0'"));
+  assert.ok(page.includes("'./lcd-release-reference.mjs?v=3.65.1'"));
 });
 

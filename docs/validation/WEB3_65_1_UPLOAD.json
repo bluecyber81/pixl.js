@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "date": "2026-11-24",
+  "scope": "production browser interacting with a simulated GATT peripheral; separate native PackedFS capacity model",
+  "browser": "157.0.8103.79",
+  "fixture": {
+    "manifestSha256": "cbf3a2f3393d5a2ca953371982cbae5acc5701bb96548905dabf1683d83e889b",
+    "selectedFiles": 1081,
+    "payloadBytes": 658806,
+    "nonemptySubdirectories": 53,
+    "emptySubdirectoriesOutsideBrowserSelection": 2
+  },
+  "interruption": {
+    "fileNumber": 33,
+    "bytesInInterruptedWrite": 242,
+    "behavior": "reconnect through the browser UI, recheck acknowledged files and independently hash all final model files"
+  },
+  "runs": [
+    {
+      "webVersion": "3.65.0",
+      "firmwareProfile": "2.22.0-DE3.102",
+      "destinationMode": "existing-empty",
+      "checkpointFiles": 32,
+      "filesVerifiedBySha256": 1081,
+      "extraFileSizes": [
+        242
+      ],
+      "directoryListCommands": 28080,
+      "totalCommands": 38316,
+      "atomicWriterOpens": 0,
+      "atomicWriterAborts": 0,
+      "renames": 1081
+    },
+    {
+      "webVersion": "3.65.1",
+      "firmwareProfile": "2.22.0-DE3.103",
+      "destinationMode": "existing-empty",
+      "checkpointFiles": 32,
+      "filesVerifiedBySha256": 1081,
+      "extraFileSizes": [],
+      "directoryListCommands": 6247,
+      "totalCommands": 13187,
+      "atomicWriterOpens": 1082,
+      "atomicWriterAborts": 1,
+      "renames": 0
+    },
+    {
+      "webVersion": "3.65.1",
+      "firmwareProfile": "2.22.0-DE3.103",
+      "destinationMode": "new-filewise",
+      "checkpointFiles": 32,
+      "filesVerifiedBySha256": 1081,
+      "extraFileSizes": [],
+      "directoryListCommands": 6247,
+      "totalCommands": 13188,
+      "atomicWriterOpens": 1082,
+      "atomicWriterAborts": 1,
+      "renames": 0
+    }
+  ],
+  "compatibleApp675": {
+    "productionBuildBeforeWebVersionBump": true,
+    "existingEmpty": {
+      "webVersion": "3.65.1-candidate",
+      "firmwareProfile": "2.22.0-DE3.102",
+      "destinationMode": "existing-empty",
+      "checkpointFiles": 32,
+      "filesVerifiedBySha256": 1081,
+      "extraFileSizes": [],
+      "directoryListCommands": 6247,
+      "totalCommands": 13187,
+      "atomicWriterOpens": 1082,
+      "atomicWriterAborts": 1,
+      "renames": 0
+    },
+    "newFilewise": {
+      "webVersion": "3.65.1-candidate",
+      "firmwareProfile": "2.22.0-DE3.102",
+      "destinationMode": "new-filewise",
+      "checkpointFiles": 32,
+      "filesVerifiedBySha256": 1081,
+      "extraFileSizes": [],
+      "directoryListCommands": 6247,
+      "totalCommands": 13188,
+      "atomicWriterOpens": 1082,
+      "atomicWriterAborts": 1,
+      "renames": 0
+    }
+  },
+  "capacityModel": {
+    "engineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
+    "totalBlocks": 512,
+    "blockBytes": 4096,
+    "usedBlocksBeforeUpload": 236,
+    "comparableStartingAllocation": "historical directory layout and file sizes plus 39000 bytes of synthetic ballast",
+    "contents": "synthetic verifiable data",
+    "publishWholeTreeRenameResult": -28,
+    "wholeTreeBytesFreeBeforeCleanup": 225280,
+    "directFinalEntriesVerified": 2273,
+    "directBytesFreeBeforeCleanup": 241664,
+    "directUsedBlocksAfterCleanupGcRemount": 236,
+    "originalEntriesVerifiedAfterCleanup": 1137
+  },
+  "physicalFullUploadTiming": null
+}

@@ -1,9 +1,10 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
+import { lcdTest676 } from './lcd-app676-reference.mjs';
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.65.0';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.65.1';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
-import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.65.0';
-import { lcdRelease, lcdReleasePackage } from './lcd-release-reference.mjs?v=3.65.0';
+import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.65.1';
+import { lcdRelease, lcdReleasePackage } from './lcd-release-reference.mjs?v=3.65.1';
 
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -60,7 +61,12 @@ function targetDescription(target) {
     if (!target) return '';
     const lines = [choose(`Gewählte Anwendung · Zähler ${target.counter} · Hardwarefeld ${target.hardware} · erlaubte SoftDevice-FWIDs ${target.softDevices.map(hexId).join(', ')}.`,
         `Selected application · counter ${target.counter} · hardware field ${target.hardware} · accepted SoftDevice FWIDs ${target.softDevices.map(hexId).join(', ')}.`)];
-    if (latestState.previewVersion) lines.unshift(choose('Privates LCD-Prüfpaket', 'Private LCD test package') + ' · ' + latestState.previewVersion);
+    if (latestState.previewVersion) {
+        const published = AllmiiboFirmwareReleases.packages.some(entry => entry.board === 'LCD' &&
+            entry.version === latestState.previewVersion && entry.channel === 'prerelease');
+        const label = published ? choose('LCD-Testversion', 'LCD test release') : choose('Privates LCD-Prüfpaket', 'Private LCD test package');
+        lines.unshift(label + ' · ' + latestState.previewVersion);
+    }
     const ref = recentBootReference();
     if (ref) {
         const {app, bl, sd} = ref;
@@ -82,6 +88,15 @@ function selectedProfileMismatch(entry) {
     const name = ref.bl === 11 ? 'BL8' : 'Z' + ref.bl;
     return !entry.bootloader.split('/').includes(name) || ref.sd !== 0x0126;
 }
+function showSource(board, selectedVersion) {
+    const oled = board === 'OLED';
+    const test676 = !oled && selectedVersion === lcdTest676.firmwareVersion;
+    const revision = oled ? 'de3.87-oled-t6' : test676 ? lcdTest676.sourceCommit : 'release/lcd-de3102-app675';
+    const sourceLink = document.getElementById('profile-source');
+    const name = oled ? 'OLED DE3.87 Test 6' : test676 ? 'LCD DE3.103 / App676' : 'LCD DE3.102 / App675';
+    sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + revision);
+    setText(sourceLink, 'Quellcode ' + name, name + ' source code');
+}
 function controls() {
     const previewDownload = document.getElementById('lcd-preview-download');
     if (previewDownload) previewDownload.hidden = boardSelect.value !== 'LCD';
@@ -99,6 +114,7 @@ function controls() {
     bundledSelect.disabled = latestState.busy || latestState.loading || loading ||
         !bundled?.catalog.packages.some(entry => entry.board === boardSelect.value);
     const selected = bundled?.catalog.packages.find(entry => entry.id === bundledSelect.value);
+    showSource(boardSelect.value, selected?.version || latestState.previewVersion);
     const mismatch = selectedProfileMismatch(selected);
     const downgrade = selected && recentBootReference()?.app > selected.counter;
     const packageBlocked = entry => Boolean(boardConflict || bundledSelect.disabled || !entry ||
@@ -222,10 +238,6 @@ function profileInfo() {
     const oled = boardSelect.value === 'OLED';
     document.getElementById('lcd-downloads').hidden = oled;
     document.getElementById('oled-downloads').hidden = !oled;
-    const sourceLink = document.getElementById('profile-source');
-    sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + (oled ? 'de3.87-oled-t6' : 'release/lcd-de3102-app675'));
-    setText(sourceLink, oled ? 'Quellcode OLED DE3.87 Test 6' : 'Quellcode LCD DE3.102 / App675',
-        oled ? 'OLED DE3.87 Test 6 source code' : 'LCD DE3.102 / App675 source code');
     setText(document.getElementById('profile-title'),
         oled ? 'OLED-Firmware übertragen' : 'LCD-Firmware übertragen',
         oled ? 'Update OLED firmware' : 'Update LCD firmware');

@@ -1,5 +1,11 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## LCD DE3.103 / App676 · Testversion
+
+Bei einem Lesefehler im Switch-2-Weckprofil lässt sich der Ladevorgang wiederholen oder das Menü verlassen. Das Gerät schützt die zuvor gespeicherte Zuordnung. „Verwerfen“ stellt den zuletzt erfolgreich geladenen oder gespeicherten Stand wieder her.
+
+Die signierte App-ZIP ist für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0 vorgesehen. Der erste Gerätetest für App676 steht aus. Für DE3.102 ist die [Bestätigung auf einem LCD](validation/DE3_102_LCD_READBACK.json) dokumentiert.
+
 ## DE3.102 / App675 · Player-Optionen und Bildempfang
 
 Die normale LCD-App ergänzt **Endlosschleife** und **Bildzähler** im Dateimenü des Animationsplayers. Beide Optionen starten ausgeschaltet und gelten für die aktuelle Playersitzung. Beim Wiederholen wird die Datei erneut geöffnet und ihr Header vollständig geprüft; es bleibt bei einem Bildpuffer. Der BLE-Bildempfang zeichnet vollständige Bilder oder sichtbare Statusänderungen neu. Das App673-Protokoll und die PFS1-Engine bleiben unverändert.

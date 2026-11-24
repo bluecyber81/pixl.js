@@ -31,70 +31,20 @@ trailing data. Invalid or incomplete files stop safely instead of being played.
 
 ## How to generate animation files
 
+The converter uses Python and Pillow. FFmpeg is needed only to extract frames from a video. On Ubuntu or WSL, install them with `sudo apt install ffmpeg python3 python3-pil`. On Windows, use your Python interpreter with Pillow and an FFmpeg executable on the search path.
 
-First prepare the video file that needs to be converted, usually ending in mp4, but other formats are also acceptable.
+From the repository root, extract frames into an empty folder. This example keeps the first 10 seconds at 10 frames per second and fits the source inside 128 × 64 pixels while preserving its proportions.
 
-The following operations need to be run under Linux.
-Also you can use WSL2 to quickly create an Ubuntu Linux environment under Windows.
-
-First execute the following command to install the necessary tools
-
-```
-sudo apt install ffmpeg python3-pip
-sudo pip3 install imageio -i https://pypi.tuna.tsinghua.edu.cn/simple
-```
-
-For Ubuntu you will need to install packages running the next command:
-
-```
-sudo apt install ffmpeg python3 python3-imageio
-```
-
-If you preffer the MSYS MINGW64 environment you can install the packages using this commands:
-
-```
-pacman -S mingw-w64-x86_64-ffmpeg mingw-w64-x86_64-python mingw-w64-x86_64-python-imageio
-```
-
-
-Then execute the ffmpeg command to convert the animation into independent frame pictures.
-```
+```sh
 mkdir frames
-ffmpeg -y -i badapple.mp4 -ss 0:0 -t 60 -vf "scale=128:64:decrease:flags=lanczos,hue=s=0" -r 10 "frames/%04d.bmp"
+ffmpeg -i input.mp4 -t 10 -vf "fps=10,scale=128:64:force_original_aspect_ratio=decrease:flags=lanczos,hue=s=0" frames/%04d.bmp
+python3 fw/scripts/video_clip_gen.py 10 frames clip.bin
 ```
-Parameter description is as follows:
 
-* -i badapple.mp4: This is the input video file
-* -ss 0:0: intercept from 0:0 of the video. If you do not want to intercept part of the video, you do not need to provide this parameter.
-* -t 60: intercept 60 seconds of video. If you convert the entire video, you do not need to provide this parameter.
-* -vf "scale=128:64:decrease:flags=lanczos,hue=s=0" : Convert the video to a 128x64 image, retaining the aspect ratio of the video
-* -r 10: The converted fps is 10
-* "frames/%04d.bmp": The converted video files are stored in the frames directory and the format is bmp
+Frames are read in filename order. Use 1–65,535 images of the same dimensions and 1–60 frames per second. An invalid frame or rate leaves an existing clip intact. Shorten the clip or reduce its frame size to fit the available device storage.
 
-If the video is larger, you can reduce the video size as follows:
+## Play or stream a clip
 
-* Given the -ss -t parameters, intercept part of the video
-* Reduce the output resolution, such as 80x64, etc.
+In the Allmiibo file manager, upload the completed clip to `E:/player/`. Open Animation Player on the LCD, select the file and press the middle button. On DE3.102 or later, the player also offers Loop and Frame counter for the current session.
 
-Finally, execute the following command to convert it to a customized animation file
-
-```
-python3 fw/scripts/video_clip_gen.py 10 frames badapple.bin
-```
-Parameter description is as follows:
-
-* 10: The converted fps is 10, for example, it is the same as the fps converted by ffmpeg, otherwise the playback speed will be incorrect.
-* frames: directory of pictures converted by ffmpeg
-* badapple.bin: converted animation file
-
-## Play animation files
-
-Transfer the converted video files to the player directory of Flash storage in Pixl.js through the web page. The player directory cannot be created manually.
-
-Open Pixl.js, select [Animation Player], list all the files in the player directory, then select the video file you want to play, and press the middle button to play.
-
-Notice:
-
-* Although the Flash storage is 1.8MB of space, due to the characteristics of the SPIFFS file system, when the available space is less than 30%, writing will be very slow or even fail.
-* If you encounter slow writing, you can restore upload speed by formatting the disk.
-* Deleting large files it is slow, please be patient.
+To stream a video directly from the PC, open the BLE image receiver on the LCD and run `python3 fw/scripts/stream_video_to_pixl.py input.mp4` with Bleak and FFmpeg installed. The standard video polarity matches the web preview. Use `--invert` to swap black and white.

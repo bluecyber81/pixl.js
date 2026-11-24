@@ -1,8 +1,10 @@
 # Allmiibo Dateimanager
 
-## Normale Ausgabe 3.65.0 und LCD DE3.102 / App675
+## Normale Ausgabe 3.65.1 und LCD DE3.102 / App675
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signierte App-ZIP](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip).
+Web 3.65.1 verbessert die Wiederaufnahme von Ordneruploads und bietet einen dateiweisen Upload bei knappem Speicher.
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signierte App-ZIP](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.65.1/Allmiibo_Dateimanager_3_65_1_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.65.1.zip).
 
 Der Bildsender merkt die Bildoptionen, behält eine ausgewählte Datei beim Bereichwechsel vorübergehend und ergänzt Drehung, Punktraster sowie Drag & Drop. Der lokale Playerexport erzeugt aus Bild, Demo oder Videoausschnitt eine PIXV-BIN mit Vorschau der Dateigröße, Fortschritt und Abbruch. Die fertige Datei wird ausdrücklich gespeichert und anschließend über den Dateibereich nach **E:/player/** übertragen. Eine Datei bis 128 MiB wird höchstens 30 Minuten in der geöffneten Seite gemerkt; ein Export ist auf 1 MiB begrenzt.
 

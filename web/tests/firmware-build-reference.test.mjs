@@ -34,7 +34,7 @@ for (const reference of releases) test(`App${reference.counter} diagnostics keep
 });
 
 test('future and OLED versions never inherit the App675 package or its declared source match', () => {
-  for (const version of ['2.22.0-DE3.103', '2.22.0-DE3.101-OLEDt7']) {
+  for (const version of ['2.22.0-DE3.104', '2.22.0-DE3.101-OLEDt7']) {
     const identity = diagnosticBuildIdentity({firmwareVersion:version, boot:{settingsCrcValid:true, applicationCounter:675},
       build:{schemaVersion:1, board:'LCD', sourceId:releases[2].sourceId, previousFault:null}});
     assert.notEqual(identity.packageReference?.applicationCounter, 675);

@@ -11,6 +11,16 @@ export function nrfDfuLink(entry) {
             file: 'https://github.com/bluecyber81/pixl.js/releases/download/de3.' + oled[1] + '-oled-t' + oled[2] + '/' + entry.file
         });
     }
+    if (entry?.version === '2.22.0-DE3.103' || entry?.id === 'de3.103-lcd-app-test1') {
+        if (entry.version !== '2.22.0-DE3.103' || entry.id !== 'de3.103-lcd-app-test1' ||
+            entry.board !== 'LCD' || entry.counter !== 676 || entry.channel !== 'prerelease' ||
+            entry.applicationOnly !== true || entry.migrationRequired !== false || entry.storage !== 'PFS1' ||
+            entry.bootloader !== 'Z21' || entry.softDevice !== 'S112 7.3.0' ||
+            entry.file !== 'Allmiibo_LCD_DE3_103_676_NUR_APP.zip') return null;
+        return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({
+            file: 'https://bluecyber81.github.io/pixl.js/firmware/' + entry.file
+        });
+    }
     // Normal releases use exact profiles at the normal Pages root. Retained
     // App671 links remain valid and cannot alias the newer application.
     const normal = [

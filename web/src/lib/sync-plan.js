@@ -1,5 +1,5 @@
-import { assertPortableEntryName, assertDevicePath, assertWritableDevicePath, joinDevicePath, portableNameKey } from './portable-names.js'
-import { snapshotFile, sha256Bytes, deviceFileSha256, checkedDirectory, copyMetadata, metadataKey, directoryPathAccess, writableDirectoryPath as writableRoot, UPLOAD_LIMITS } from './safe-upload.js'
+import { assertPortableEntryName, assertDevicePath, assertWritableDevicePath, joinDevicePath, portableNameKey, splitDevicePath } from './portable-names.js'
+import { snapshotFile, sha256Bytes, deviceFileSha256, checkedDirectory, targetEntry, copyMetadata, metadataKey, directoryPathAccess, writableDirectoryPath as writableRoot, UPLOAD_LIMITS } from './safe-upload.js'
 import { commonVersion, folderBinding, isHistoryConflict } from './sync-history.js'
 
 export const SYNC_LIMITS = Object.freeze({ maxEntries: 4096, maxDepth: 32, maxBytes: 16 * 1024 * 1024 })
@@ -178,7 +178,7 @@ const desiredPresent = (original, current) => current?.expected?.size === origin
 /** Job data stays in RAM. Every invocation verifies the device identity, plan,
  * local bytes and actual destination bytes afresh. No blind offset resume and
  * no deletes. The caller keeps the same file selection and serializes the job. */
-export async function executeSyncJob({ job, plan, deviceKey, files, selectedPaths, readDirectory, readFile, readFileDigest, createDirectory, uploadFile, assertSession, signal, onProgress }) {
+export async function executeSyncJob({ job, plan, deviceKey, files, selectedPaths, readDirectory, readFile, readFileDigest, createDirectory, uploadFile, writeNewPackedFile, assertSession, signal, onProgress }) {
   const check = () => checkpoint(assertSession, signal)
   check()
   if (job?.schema !== 1 || ['running', 'validating'].includes(job.state) || job.deviceKey !== checkedDeviceKey(deviceKey) || plan?.deviceKey !== deviceKey ||
@@ -223,6 +223,9 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
         throw new SyncError('SYNC_STALE', 'A destination changed after comparison; compare again.', { preflightTarget: entry.targetPath })
       }
     }
+    // An atomic creation checks its entire path while PackedFS owns the writer
+    // lock. This set only avoids repeated mkdir discovery, never authorizes a write.
+    const knownDirectories = new Set(fresh.directories.filter(dir => dir.status === 'existing').map(dir => dir.path))
     for (const entry of wanted) {
       check()
       const current = currentByPath.get(entry.targetPath)
@@ -230,8 +233,10 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
         if (!job.completed.includes(entry.targetPath)) job.completed.push(entry.targetPath)
         ++skipped; observe(onProgress, { phase: 'syncing', path: entry.targetPath, done: completed + skipped, total: wanted.length, filesDone: completed + skipped, filesTotal: wanted.length }); continue
       }
+      const atomicAdd = !entry.expected && typeof writeNewPackedFile === 'function'
       const ancestors = plan.directories.filter(directory => entry.targetPath.startsWith(directory.path + '/')).sort((a, b) => a.path.length - b.path.length)
       for (const directory of ancestors) {
+        if (atomicAdd && knownDirectories.has(directory.path)) continue
         check()
         const slash = directory.path.lastIndexOf('/'), parent = slash === 2 ? directory.path.slice(0, 3) : directory.path.slice(0, slash), name = directory.path.slice(slash + 1)
         const listing = checkedDirectory(await readDirectory(parent)); check()
@@ -241,6 +246,7 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
           if (!await writableRoot(parent, readDirectory, check)) fail('SYNC_STALE', 'The selected folder or an ancestor is no longer writable.')
           await createDirectory(directory.path); check()
         }
+        knownDirectories.add(directory.path)
       }
       check()
       // Pin an immutable byte snapshot immediately before handing it to the
@@ -248,12 +254,36 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
       const uploadBytes = await snapshotFile(sources.files.get(entry.targetPath).file); check()
       if (await sha256Bytes(uploadBytes) !== entry.sha256) fail('SYNC_LOCAL_CHANGED', 'A selected file changed before upload; compare again.')
       check()
-      const parentPath = entry.targetPath.slice(0, entry.targetPath.lastIndexOf('/')) + (entry.targetPath.lastIndexOf('/') === 2 ? '/' : '')
-      if (!await writableRoot(parentPath, readDirectory, check)) fail('SYNC_STALE', 'The selected folder or an ancestor is no longer writable.')
+      const {parent, name} = splitDevicePath(entry.targetPath)
+      const requireWritableParent = async () => {
+        if (!await writableRoot(parent, readDirectory, check)) fail('SYNC_STALE', 'The selected folder or an ancestor is no longer writable.')
+      }
+      const progress = update => observe(onProgress, { ...update, filesDone: completed + skipped, filesTotal: wanted.length })
       try {
-        const result = await uploadFile({ path: entry.targetPath, file: new Blob([uploadBytes]), replace: !!entry.expected, expected: entry.expected,
-          onProgress: update => observe(onProgress, { ...update, filesDone: completed + skipped, filesTotal: wanted.length }) })
-        if (!result?.verified || result.sha256 !== entry.sha256 || result.size !== entry.size) fail('SYNC_VERIFY', 'The upload adapter did not confirm the planned contents.')
+        if (atomicAdd) {
+          // RAW128 OPEN stages privately; only CLOSE publishes. Read the old
+          // namespace after OPEN, while the engine excludes competing mutations.
+          // A failed guard aborts the writer even for a zero-length payload.
+          await writeNewPackedFile(entry.targetPath, uploadBytes, {
+            rawMeta128: new Uint8Array(128).fill(255),
+            beforeWrite: async () => {
+              check()
+              await requireWritableParent()
+              const entries = checkedDirectory(await readDirectory(parent))
+              check()
+              if (targetEntry(entries, name)) fail('SYNC_STALE', 'The new file name is already occupied.')
+            },
+            onProgress: value => progress({phase:'uploading', path:entry.targetPath, done:value.written_bytes, total:entry.size})
+          })
+          check()
+          const sha = await deviceFileSha256(entry.targetPath, entry.size, {readFile, readFileDigest, check, sizeError:'SYNC_VERIFY'})
+          if (sha !== entry.sha256) fail('SYNC_VERIFY', 'The new file failed device SHA-256 verification.')
+        } else {
+          await requireWritableParent()
+          const result = await uploadFile({ path: entry.targetPath, file: new Blob([uploadBytes]), replace: !!entry.expected,
+            expected: entry.expected, onProgress: progress })
+          if (!result?.verified || result.sha256 !== entry.sha256 || result.size !== entry.size) fail('SYNC_VERIFY', 'The upload adapter did not confirm the planned contents.')
+        }
       } catch (error) {
         // Even then it is re-read before any resumed operation.
         if (error.committed === true && !job.completed.includes(entry.targetPath)) job.completed.push(entry.targetPath)

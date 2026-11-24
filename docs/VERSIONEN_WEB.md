@@ -1,5 +1,11 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.65.1 · Ordnerupload und Wiederaufnahme
+
+Nach einem Verbindungsabbruch kann derselbe Ordner erneut ausgewählt werden. Bereits bestätigte Dateien werden geprüft, der angefangene Schreibvorgang wird bereinigt. Bei wenig freiem Platz lässt sich der neue Ordner dateiweise füllen. Das Arbeitsverzeichnis für das abschließende Umbenennen des ganzen Baums entfällt bei dieser Auswahl.
+
+[Ordnerupload-Prüfung](validation/WEB3_65_1_UPLOAD.json) · [Bedienhinweise](../web/LIESMICH_3_65_1.txt)
+
 ## Dateimanager 3.65.0 · Bildoptionen und lokaler Playerexport
 
 **Bild & Video** merkt die Einstellungen und behält eine ausgewählte Datei bis 128 MiB höchstens 30 Minuten in der geöffneten Seite. Rotation um 90°, 180° oder 270°, ein optionales Punktraster für Fotos und Drag & Drop ergänzen die 128 × 64-Vorschau. Zurücksetzen lädt die Ausgangswerte und die Demo. Auswahl und Senden bleiben getrennt; Bereichwechsel oder Ausblenden starten keine Übertragung neu.

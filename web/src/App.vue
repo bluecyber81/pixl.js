@@ -557,7 +557,11 @@
         <div class="sync-pages"><button type="button" @click="syncPage--" :disabled="busy || syncPage <= 1">{{ $t('tools.previous') }}</button>
           <span>{{ $t('tools.page', {page:syncPage,total:syncPageCount}) }}</span>
           <button type="button" @click="syncPage++" :disabled="busy || syncPage >= syncPageCount">{{ $t('tools.next') }}</button></div>
-        <el-button type="primary" @click="run_sync" :disabled="!connected || busy || !syncSelected.length">{{ $t('info.syncRun', { count: syncSelected.length }) }}</el-button>
+        <el-button type="primary" @click="run_sync()" :disabled="!connected || busy || !syncSelected.length">{{ $t('info.syncRun', { count: syncSelected.length }) }}</el-button>
+        <div v-if="syncNewFolderTarget">
+          <p>{{ $t('info.directFolderHint') }}</p>
+          <el-button @click="run_sync(true)" :disabled="!connected || busy">{{ $t('info.directFolderAction') }}</el-button>
+        </div>
       </section>
       <TransferStatus v-if="transfer" :transfer="transfer" :stats="transferStats" :format-size="format_size" :can-cancel="true" :cancelling="transferCancelling" @cancel="cancel_transfer" />
       <p v-if="syncStatus" role="status">{{ syncStatus }}</p>
@@ -599,9 +603,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a href="https://github.com/bluecyber81/pixl.js/tree/web-app675" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.65.0' : '3.65.0 source code' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.65.0 (ZIP)' : 'Windows 3.65.0 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.65.0 (ZIP)' : '3.65.0 source code (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.65.1" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.65.1' : '3.65.1 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.65.1 (ZIP)' : 'Windows 3.65.1 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.65.1 (ZIP)' : '3.65.1 source code (ZIP)' }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
@@ -770,6 +774,10 @@ export default {
         status: 'deviceOnly', comparison: comparison || 'deviceOnly', targetPath: path, relativePath: path.slice(prefix.length), size, history
       }));
       return [...entries, ...remoteRows].sort((a,b) => a.relativePath.localeCompare(b.relativePath));
+    },
+    syncNewFolderTarget() {
+      return !this.syncFolderContents && firmwareBoard(this.firmwareVersion) === 'LCD' &&
+        newFolderUploadRoot(this.syncPlan, this.syncSelected);
     },
     syncCounts() {
       const counts = {all:this.syncOverview.length, add:0, deviceOnly:0, change:0, same:0, blocked:0};
@@ -1448,14 +1456,16 @@ export default {
       }
       return this.download_device_file(entry.targetPath, name, size, true);
     },
-    async run_sync() {
+    async run_sync(directFolder = false) {
       if (!this.connected || this.busy || !this.syncPlan || !this.syncSelected.length) return;
+      if (directFolder && !this.syncNewFolderTarget) return;
       const generation = this.sessionGeneration, deviceKey = pixl.get_device_key?.();
       if (generation !== this._syncGeneration || !deviceKey || deviceKey !== this._syncDeviceKey) {
         this.invalidate_sync(); this.show_transfer_error(new Error(this.$t('info.syncIdentity'))); return;
       }
       const plan = this.syncPlan, selectedPaths = this.syncSelected.slice();
       const confirm = this.$t('info.syncConfirm',{count:selectedPaths.length}) +
+        (directFolder ? ' ' + this.$t('info.directFolderProgress', {path:this.syncNewFolderTarget}) : '') +
         (this.syncResume ? ' ' + this.$t('info.uploadReplaceCheckpoint') : '');
       try { await this.ask_dialog(()=>this.$confirm(confirm,this.$t('info.syncOpen'),this.confirm_options())); }
       catch(error) { this.show_transfer_error(error); return; }
@@ -1463,7 +1473,7 @@ export default {
       if (this.syncResume) this.forget_sync();
       const request = Object.freeze({plan, selectedPaths, job:createSyncJob(plan), firmwareVersion:this.firmwareVersion,
         files:this._syncFiles, inputs:this._syncInputs, nameEdits:this._syncNameEdits, folderName:this.syncFolderName,
-        folderContents:this.syncFolderContents, binding:this.syncHistoryReady?.binding, history:this._syncHistory,
+        folderContents:this.syncFolderContents, directFolder, binding:this.syncHistoryReady?.binding, history:this._syncHistory,
         historyFile:this._syncHistoryFile, historyName:this.syncHistoryName});
       return this.execute_folder_upload(request, generation);
     },
@@ -1483,7 +1493,7 @@ export default {
     },
     async supports_folder_publish(generation) {
       // RAW128 OPEN carries two length bytes, a mode byte, the path (up to 65 bytes) and 128 bytes of metadata.
-      if (firmwareBoard(this.firmwareVersion) !== 'LCD' || (proto.get_transport_diagnostics()?.maxRequestPayload ?? 0) < 196) return false;
+      if (firmwareBoard(this.firmwareVersion) !== 'LCD' || (proto.get_transport_diagnostics?.()?.maxRequestPayload ?? 0) < 196) return false;
       this.assert_session(generation);
       const info = await proto.vfs_storage_info_extended('E');
       this.assert_session(generation);
@@ -1526,12 +1536,15 @@ export default {
       const controller = new AbortController(); this.workflowCancelling=false; this._syncController = controller; this.syncing = true;
       this.syncHistoryReady = null; this.syncStatus = ''; const adapters = this.folder_upload_adapters(generation);
       try {
-        const eligible = job.newFolderUpload || (!request.folderContents && plan.rootPath.startsWith('E:/') && newFolderUploadRoot(plan, selectedPaths));
-        const publishFolder = eligible && await this.supports_folder_publish(generation);
+        const eligible = job.newFolderUpload || (!request.directFolder && !request.folderContents && plan.rootPath.startsWith('E:/') && newFolderUploadRoot(plan, selectedPaths));
+        const selected = new Set(selectedPaths);
+        const hasNewFiles = plan.rootPath.startsWith('E:/') && plan.entries.some(entry => entry.status === 'add' && selected.has(entry.targetPath));
+        const packedWriter = (eligible || hasNewFiles) && await this.supports_folder_publish(generation);
+        const publishFolder = eligible && packedWriter;
         if (job.newFolderUpload && !publishFolder) throw new Error(this.$t('info.folderCapabilityChanged'));
         const execute = publishFolder ? executeNewFolderUpload : executeSyncJob;
         const result = await execute({job,plan,files,deviceKey:pixl.get_device_key?.(),selectedPaths,
-          ...adapters, signal:controller.signal,
+          ...adapters, signal:controller.signal, writeNewPackedFile:packedWriter ? adapters.writeFile : undefined,
           uploadFile: async options => {
             interruptedReplacement = null;
             try {

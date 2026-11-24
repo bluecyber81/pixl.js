@@ -92,6 +92,11 @@ jobs:
         run: |
           python3 --version
           gcc --version
+      - name: PC image converter and LCD player compatibility
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends python3-pil
+          /usr/bin/python3 -B fw/tests/media/test_clip_converter.py
       - name: Production CRC pair and independent oracles
         run: python3 fw/tests/de3/test_packed_crc_pair_de355.py
       - name: LittleFS NOR wear and interrupted writes

@@ -1,10 +1,14 @@
 # Allmiibo LCD and Pixl.js OLED
 
-## Current: LCD DE3.102 / App675 and file manager 3.65.0
+**Optional LCD test release DE3.103 / App676.** If the device cannot read the Switch 2 wake profile, choose “Retry load” or “Back”. Discard restores the last loaded or saved settings. App676 still awaits an on-device test. [Phone ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_103_676_NUR_APP.zip) · [Open in the web updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.103-lcd-app-test1#board=LCD) · [Test release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.103-lcd-test1).
 
-**Published Web verification.** The unchanged Web product was qualified at [`a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4`](https://github.com/bluecyber81/pixl.js/commit/a0f4fd3ac69fe6cd84ea14ef3e42cfc9a44d5fe4); the corrected public metadata head c18bfb also passed [complete Source checks](https://github.com/bluecyber81/pixl.js/actions/runs/45193676314). The [final Pages deployment](https://github.com/bluecyber81/pixl.js/actions/runs/45198958839) includes the separate source package. Final coverage combines 321 unchanged earlier HTTP results with three fresh downloads, covering all 324 files; nine scoped UI checks remain bound to the unchanged product. [Evidence and limits](docs/validation/WEB3_65_0_FINAL_DELIVERY.json). The two complete workflows for the combined main commit are tracked separately in [GitHub Actions for main](https://github.com/bluecyber81/pixl.js/actions?query=branch%3Amain).
+## Current: LCD DE3.102 / App675 and file manager 3.65.1
 
-[Open file manager](https://bluecyber81.github.io/pixl.js/) · [Images & video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 in updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signed App675 ZIP for phones](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows portable ZIP](https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app675.zip) · [Reproduced source package (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.65.0/Allmiibo_Dateimanager_3_65_0_Quellcode.zip).
+Web 3.65.1 improves interrupted folder uploads and offers file-by-file upload when space is tight.
+
+Historical Web 3.65.0 verification: [delivery record](docs/validation/WEB3_65_0_FINAL_DELIVERY.json).
+
+[Open file manager](https://bluecyber81.github.io/pixl.js/) · [Images & video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 in updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signed App675 ZIP for phones](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows portable ZIP](https://bluecyber81.github.io/pixl.js/downloads/web3.65.1/Allmiibo_Dateimanager_3_65_1_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.65.1.zip).
 
 **Web 3.65.0** remembers image options and keeps one local file available across workspace changes for up to 30 minutes in the open page. Rotation by 90°, 180° or 270°, an optional photo dot pattern and drag & drop extend the preview. **Save for the animation player** exports a still image, the demo or a video clip as a player BIN. Start, end, frame rate and output size are shown before export; progress and cancellation are included. Processing stays local. [Instructions](https://bluecyber81.github.io/pixl.js/guide/en.html#bild-video).
 
@@ -16,9 +20,9 @@ The catalogue aligns existing Ocarina and Fatal Fury game notes with figure deta
 
 ### Sources and qualification
 
-[LCD production branch](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Web branch](https://github.com/bluecyber81/pixl.js/tree/web-app675) · [Firmware qualification](docs/validation/DE3_102.json) · [ARM/PFS binding](docs/validation/DE3_102_PFS.json) · [Web qualification](docs/validation/WEB3_65_0.json) · [Operating notes](web/LIESMICH_3_65_0.txt) · [Deutsch](README.de.md).
+[LCD production branch](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Web branch](https://github.com/bluecyber81/pixl.js/tree/web3.65.1) · [Firmware qualification](docs/validation/DE3_102.json) · [ARM/PFS binding](docs/validation/DE3_102_PFS.json) · [Web qualification](docs/validation/WEB3_65_0.json) · [Operating notes](web/LIESMICH_3_65_1.txt) · [Deutsch](README.de.md).
 
-This combined main branch contains the complete App675 firmware and normal Web3.65.0. All 720 firmware production inputs match the immutable LCD production commit `658d43a7fe2777778d8efa8439f73aa48210e033` and SourceID `9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46`; the original package remains bound to that commit. Separate web and historical firmware branches retain their own revisions. Software checks and physical acceptance are recorded separately. Outstanding device checks include image transmission, real video codecs, player looping, frame counter and Switch 2 wake. OLED Test6/App86 retains its separate hardware and package route; private web editions remain separate historical revisions.
+App675 was read back on one LCD. The owner confirmed images, animation, loop and frame counter. Physical Switch 2 wake and interrupted DFU remain open. [Device readback](docs/validation/DE3_102_LCD_READBACK.json).
 
 ## Historical downloads and separate OLED releases
 

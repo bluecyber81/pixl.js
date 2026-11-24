@@ -30,7 +30,7 @@ test('App675 is an exact new application profile using the unchanged App672 engi
   assert.equal(normal.layout.engineSha256, '3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f');
   assert.equal(supportsFolderPublication(normal.firmwareVersion, normal.layout.engineSha256), true);
   assert.equal(supportsFolderPublication(app672.firmwareVersion, normal.layout.engineSha256), true);
-  for (const version of ['2.22.0-DE3.103','2.22.0-DE3.102-OLEDt7'])
+  for (const version of ['2.22.0-DE3.104','2.22.0-DE3.102-OLEDt7'])
     assert.equal(supportsFolderPublication(version, normal.layout.engineSha256), false, version);
   assert.equal(supportsFolderPublication(normal.firmwareVersion, getMigrationCapacityTarget('de398').layout.engineSha256), false);
 });
@@ -72,7 +72,10 @@ test('App675 source archive preserves original engine sources and adds the separ
     return zip.file(name).async('uint8array');
   };
   const binding = JSON.parse(await zip.file('APP675_BINDING.json').async('string'));
-  for (const [key,value] of Object.entries(lcdRelease)) assert.deepEqual(binding[key], value, key);
+  const {hardwareAcceptance, ...packageIdentity} = lcdRelease;
+  assert.equal(binding.hardwareAcceptance, 'pending-for-this-build');
+  assert.equal(hardwareAcceptance, json('RELEASE_INFO.json').hardware_acceptance);
+  for (const [key,value] of Object.entries(packageIdentity)) assert.deepEqual(binding[key], value, key);
   assert.equal(binding.capacityProfile, 'de3102');
   assert.equal(binding.simulatorProfile, 'de399');
   assert.equal(binding.wasm.path, 'web/public/lfs-capacity-de399.wasm');

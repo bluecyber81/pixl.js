@@ -1,0 +1,92 @@
+{
+  "version": "2.22.0-DE3.103",
+  "board": "LCD",
+  "counter": 676,
+  "productionCommit": "62d502ac72c81e00da41ff5e43deb0dab27ea73d",
+  "sourceId": "6d0162f012b54082f6c854a902695a7aff4679f7e9f3433767865af7dfb11b76",
+  "sourceInputs": 720,
+  "package": {
+    "name": "Allmiibo_LCD_DE3_103_676_NUR_APP.zip",
+    "sha256": "4ec0b8baca9d694acdd2c3b63b466e4c6596e0e4ca460968db61a742d588f426",
+    "bytes": 254974,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 676,
+        "sd_req": [
+          294
+        ],
+        "bytes": 362144,
+        "sha256": "f48f1db4258c765cca06b806050ea67ea81cbe64ca4a5641c0c0149db135c666",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 362144,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ],
+    "identicalWebPackage": "web/public/firmware/Allmiibo_LCD_DE3_103_676_NUR_APP.zip",
+    "publicKeySource": "bootloader-z19/fw/bootloader/src/dfu_public_key.c",
+    "publicKeySourceSha256": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3"
+  },
+  "artifacts": {
+    "pixljs.bin": "f48f1db4258c765cca06b806050ea67ea81cbe64ca4a5641c0c0149db135c666",
+    "pixljs.hex": "1dee01e2d144b8e845f78898b135fad5ca47df07f5d441762c33da961ae110c5",
+    "pixljs.out": "20ec75d4942c492cb454f5bb8a29580bd06448f255ee3310aeb67d9a39edc0f3",
+    "pixljs.map": "2d87c1b4cc7f4a6338d5d4c59bdcebad907b315c38bb687a1d85b319931952db"
+  },
+  "linkerBudget": {
+    "binary_bytes": 362144,
+    "linker_flash_used_bytes": 362156,
+    "observed": {
+      "flash_reserve_bytes": 10580,
+      "heap_stack_gap_bytes": 1672,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "identicalIndependentBinAndHex": true,
+  "hostSuitesPassed": 198,
+  "z21SimulatedResume": {
+    "payloadBytes": 362144,
+    "cutOffsets": [
+      40,
+      180264,
+      360488
+    ],
+    "resumeOffsets": [
+      0,
+      131072,
+      327680
+    ],
+    "checkpointCount": 5,
+    "additionalPageErases": 10,
+    "finalCrc32": 2113222050,
+    "passed": true,
+    "sha256": "f48f1db4258c765cca06b806050ea67ea81cbe64ca4a5641c0c0149db135c666",
+    "cutKinds": [
+      "link",
+      "link",
+      "cold-restart"
+    ],
+    "duplicateExecuteExtraErases": 0,
+    "modeledLinkCutsDuringCheckpoint": 5,
+    "modeledCheckpointPowerCuts": 455,
+    "modeledAdmissionOrCompletionFailures": 8,
+    "sanitizers": [
+      "ASan",
+      "UBSan",
+      "LSan-positive-control"
+    ],
+    "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access."
+  },
+  "deviceAcceptance": "pending",
+  "physicalSwitch2Wake": "pending",
+  "previousDeviceEvidence": "DE3_102_LCD_READBACK.json"
+}

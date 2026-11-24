@@ -11,6 +11,7 @@ function harness(supported=true,extra={}){
         addEventListener:(n,fn)=>windowEvents[n]=fn,AllmiiboDfuUpdater:FakeUpdater,SecureDfuPackage:class{},SecureDfu:class{},CRC32:{buf(){}},...extra});
     context.window=context;
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/language-preference.js'),'utf8'),context);
+    context.lcdTest676 = require('../public/dfu/lcd-app676-reference.mjs').lcdTest676;
     context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
     context.lcdRelease = require('../public/dfu/lcd-release-reference.mjs').lcdRelease;
     context.lcdReleasePackage = require('../public/dfu/lcd-release-reference.mjs').lcdReleasePackage;
@@ -148,9 +149,9 @@ test('DFU speed and remaining time count only bytes acknowledged in this attempt
 test('all scripts/styles are bundled locally and order includes CRC before bounded package loader',()=>{
     const resources=[...html.matchAll(/<(?:script|link)\b[^>]*(?:src|href)="([^"]+)"/g)].map(m=>m[1]);
     for(const resource of resources){assert.ok(!/^(https?:|\/\/)/.test(resource));assert.ok(fs.existsSync(path.join(__dirname,'../public/dfu',resource.split('?')[0])),resource);}
-    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js?v=3.65.0"'));
-    assert.ok(html.indexOf('src="secure-dfu.js?v=3.65.0"')<html.indexOf('src="page.js?v=3.65.0"'));
-    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.65.0"'));
+    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js?v=3.65.1"'));
+    assert.ok(html.indexOf('src="secure-dfu.js?v=3.65.1"')<html.indexOf('src="page.js?v=3.65.1"'));
+    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.65.1"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
     assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip','../firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.89','https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','../guide/#android-de381','../firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip','../guide/#lcd-de388','../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip','../guide/#lcd-de387','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675','../guide/index.html#iphone','../','../licenses/index.html']);
@@ -543,4 +544,23 @@ test('the page validates the real normal App675 ZIP before historical references
     assert.deepEqual(h.options.validatePackage(parsed), {board:'LCD',counter:675,version:'2.22.0-DE3.102',privatePreview:false});
     h.nodes.get('board-profile').value = 'OLED';
     assert.throws(() => h.options.validatePackage(parsed), /anderen Display/);
+});
+
+test('public App676 deep link, manual ZIP and changes back to App675 show the respective source', () => {
+    const location = new URL('https://example.test/dfu/web.html?package=de3.103-lcd-app-test1#board=LCD');
+    const h = harness(true, {location});
+    const select = h.nodes.get('bundled');
+    const source = h.nodes.get('profile-source');
+    const current = h.context.lcdTest676;
+    assert.equal(select.value, 'de3.103-lcd-app-test1');
+    assert.match(select.children.find(option => option.value === select.value).textContent, /Testversion/);
+    assert.equal(source.href, 'https://github.com/bluecyber81/pixl.js/tree/' + current.sourceCommit);
+    select.value = 'de3.102-lcd-app';
+    select.events.change();
+    assert.match(source.href, /release\/lcd-de3102-app675$/);
+    select.value = '';
+    h.options.onState({busy:false, loading:false, ready:true, previewVersion:current.firmwareVersion,
+        target:{counter:676,hardware:52,softDevices:[0x0126]}});
+    assert.match(h.nodes.get('package-target').textContent, /LCD-Testversion.*DE3\.103/);
+    assert.equal(source.href, 'https://github.com/bluecyber81/pixl.js/tree/' + current.sourceCommit);
 });

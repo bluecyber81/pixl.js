@@ -68,15 +68,17 @@ try {
       await page.route('**/*', route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
       await page.addInitScript(installPeripheral,REMOTE_UUIDS);
       await page.goto(origin+base);
-      const testKit=page.locator('footer.source-footer').getByRole('link',{name:locale==='de-DE'?'LCD DE3.89 / App662 · Prüfpaket (ZIP)':'LCD DE3.89 / App662 · test kit (ZIP)'});
-      assert.equal(await testKit.getAttribute('href'),'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip');
       const footer = page.locator('footer.source-footer');
-      const archives = locale === 'de-DE' ? ['Windows 3.58.2 (ZIP)', 'Quellcode 3.58.2 (ZIP)', 'OLED DE3.87 / App86 · Prüfpaket (ZIP)'] :
-        ['Windows 3.58.2 (ZIP)', '3.58.2 source code (ZIP)', 'OLED DE3.87 / App86 · test kit (ZIP)'];
-      const files = ['Allmiibo_Dateimanager_3_58_2_Portable.zip', 'Allmiibo_Dateimanager_3_58_2_Quellcode.zip', 'Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip'];
-      for (const [i, name] of archives.entries()) {
-        assert.equal(await footer.getByRole('link', { name, exact:true }).getAttribute('href'),
-          'https://github.com/bluecyber81/pixl.js/releases/download/' + (i===2?'de3.87-oled-t6':'web3.58.2') + '/' + files[i]);
+      const version = JSON.parse(await fs.readFile(path.join(dist, 'release.json'), 'utf8')).version;
+      const de = locale === 'de-DE';
+      const links = [
+        ['Windows ' + version + ' (ZIP)', 'https://bluecyber81.github.io/pixl.js/downloads/web' + version + '/Allmiibo_Dateimanager_' + version.replaceAll('.', '_') + '_Portable.zip'],
+        [de ? 'Quellcode ' + version + ' (ZIP)' : version + ' source code (ZIP)', 'https://github.com/bluecyber81/pixl.js/archive/refs/tags/web' + version + '.zip'],
+        [de ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)', 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip'],
+        [de ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)', 'https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip'],
+      ];
+      for (const [name, href] of links) {
+        assert.equal(await footer.getByRole('link', { name, exact:true }).getAttribute('href'), href);
       }
       const nav = page.locator('.workspace-nav [aria-controls="remote-workspace"]');
       await nav.click();

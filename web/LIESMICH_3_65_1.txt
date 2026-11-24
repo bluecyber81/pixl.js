@@ -1,0 +1,109 @@
+Allmiibo Dateimanager 3.65.1 – normale Ausgabe für LCD DE3.102 / App675
+
+Ordnerupload: Nach einer Unterbrechung dieselbe Quelle und dasselbe Ziel auswählen. Bei knappem Speicher den dateiweisen Upload wählen. Bereits bestätigte Dateien bleiben erhalten.
+Folder upload: Select the same source and destination after reconnecting. Use file-by-file upload when space is limited.
+
+Online: https://bluecyber81.github.io/pixl.js/
+Bild & Video: https://bluecyber81.github.io/pixl.js/?workspace=stream
+Windows-Portable: https://bluecyber81.github.io/pixl.js/downloads/web3.65.1/Allmiibo_Dateimanager_3_65_1_Portable.zip
+Webquellen: https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.65.1.zip
+LCD-Updater: https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD
+Signierte App675-ZIP fürs Handy: https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip
+
+Windows: lokale Ausgabe starten
+
+1. Die komplette Portable-ZIP in einen eigenen Ordner entpacken.
+2. Python 3.8 oder neuer muss vorhanden sein. Das Paket enthält den Python-/CMD-
+   Starter; ein eigener Python-Interpreter oder eine EXE ist nicht enthalten.
+3. Start-Dateimanager.cmd öffnen. Der lokale Server bindet an 127.0.0.1:8765.
+   Falls der Browser nicht automatisch aufgeht, die Adresse in Chrome oder Edge öffnen.
+4. Stop-Dateimanager.cmd beendet dieselbe lokale Instanz. Ein fremder Dienst am
+   gewählten Port wird nicht beendet. Einen anderen Port wählt z.B. -Port 8766.
+
+Start-Dateimanager-Direkt.cmd zeigt den Server in der Konsole; Strg-C beendet ihn.
+package.json, release_version.py und die Starter gehören zusammen. Node/npm sind
+zum Benutzen der fertigen Ausgabe nicht erforderlich.
+
+Bild & Video: Vorschau und Bluetooth
+
+1. Eine lokale Bild-/Videodatei auswählen, eine Datei ablegen oder Demo verwenden.
+2. Einpassen/Ausschnitt/Strecken, Drehen, Hell-Dunkel-Grenze und Inversion einstellen.
+   „Punktraster für Fotos“ bildet Helligkeitsabstufungen durch ein festes Raster ab.
+   Die Vorschau zeigt 128 × 64 Pixel. Die Medien werden nicht hochgeladen.
+3. Dateiverbindung und Fernbedienung trennen. Am LCD „BLE-Bildempfang“ öffnen.
+4. „Mit Bildempfang verbinden“ und anschließend ausdrücklich Bild, Video oder Demo
+   senden. Voreingestellte 5 Bilder/s sind ein Zielwert, keine zugesicherte Funkrate.
+5. Stoppen, Ausblenden und Bereichwechsel beenden die Übertragung. Es gibt keine
+   automatische Wiederaufnahme. Am Gerät schaltet links die Informationen um,
+   rechts invertiert die Anzeige, und Mitte beendet den Bildempfang.
+
+Die Bildoptionen werden auf diesem Gerät gespeichert, sofern der Browser das
+erlaubt. Eine lokale Datei bis 128 MiB bleibt höchstens 30 Minuten ab Auswahl in
+der geöffneten Seite verfügbar; größere Dateien können verwendet werden, müssen
+nach einem Bereichwechsel aber erneut ausgewählt werden. Neuladen oder Schließen
+der Seite verwirft die gemerkte Datei. „Zurücksetzen“ lädt Vorgaben und Demo.
+
+Videos benötigen einen vom Browser unterstützten Codec, zum Beispiel ein hier
+abspielbares MP4 oder WebM. GIF wird als Einzelbild verarbeitet. Bluetooth-Senden
+setzt einen unterstützten Web-Bluetooth-Browser und LCD App673 oder neuer voraus.
+Vorschau und Playerexport funktionieren ohne Bluetooth. OLED unterstützt den
+LCD-Bildempfang nicht.
+
+Für den Animationsplayer speichern
+
+1. Unter der Vorschau „Für den Animationsplayer speichern“ öffnen.
+2. Für Video Anfang und Ende wählen; für die Demo eine Dauer einstellen.
+   Die Bildrate wird unter Wiedergabe eingestellt. Größe und Bildanzahl prüfen.
+3. „Player-Datei erstellen“ starten. Fortschritt und „Export abbrechen“ sind
+   vorhanden. Bei mehr als 1 MiB den Ausschnitt oder die Bildrate verkleinern.
+4. Erst nach erfolgreichem Export „Datei speichern“ wählen. Die fertige BIN
+   im Dateibereich nach E:/player/ kopieren. Die normale Speicherprüfung gilt.
+5. Auf dem LCD den Animationsplayer öffnen und die Datei auswählen.
+
+Der Export erzeugt das bestehende PIXV-Format (128 × 64, 1 Bit pro Pixel).
+Er schreibt nichts automatisch auf das Gerät. Ausblenden oder Verlassen beendet
+einen laufenden Export; eine unvollständige Datei wird nicht zum Download angeboten.
+
+Neu in LCD DE3.102 / App675
+
+- Im Dateimenü des Animationsplayers lassen sich „Endlosschleife“ und „Bildzähler“
+  vor dem Start umschalten. Beide starten ausgeschaltet und gelten für die aktuelle
+  Playersitzung; sie erzeugen keine dauerhaften Einstellungs-Schreibvorgänge.
+- Der Bildempfang zeichnet vollständige Bilder und sichtbare Statusänderungen neu.
+  Einzelne Transportteile lösen keine unnötigen Bildschirmneuzeichnungen aus.
+  Das bisherige App673-Übertragungsformat bleibt erhalten.
+- Die App674-Menüsymbole bleiben enthalten. Das neue Webangebot ist mit App673+
+  nutzbar; App675 ergänzt die Player-Optionen und die Anzeigeoptimierung.
+
+Katalog und weitere Fehlerbehebungen
+
+Ocarina- und Fatal-Fury-Hinweise werden zwischen Spielübersicht, Filter und
+Figurendetails vereinheitlicht. Belegte weitere Spielzuordnungen für Sword Kirby
+& Dragoon und Noir Dedede & Hydra ergänzen den Katalog. Die Nintendo-Quellen
+stehen bei den Angaben. Switch und 3DS bleiben getrennt; die neuen Webzuordnungen
+erzeugen keine erfundenen Firmwaregruppen.
+
+Erneute Auswahl derselben Datei nach Ladefehler, Dateierkennung bei generischem
+Binärtyp und Wiederherstellung bei schnellen Bereichwechseln sind korrigiert.
+Sicherungen, PC-/Gerätevergleich, Synchronisation, Fernbedienung und Diagnose
+bleiben verfügbar.
+
+Firmwareauswahl und Prüfgrenzen
+
+App675 ist für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0 (FWID 0x0126) bestimmt.
+Das signierte App-Update erhält Dateisystem, Bootloader und SoftDevice. Ein
+eingerichtetes PFS1-Gerät benötigt keine erneute Speicherumstellung. Das ältere
+Android-Komplettpaket enthält weiterhin App662; danach folgt App675 separat.
+OLED Test6/App86 und frühere private Webausgaben bleiben eigene Pfade.
+
+PORTABLE-MANIFEST.json und SHA256SUMS.txt binden die enthaltenen Dateien.
+Auf einem LCD wurden App675, die kompilierte SourceID, Z21 und S112 ausgelesen.
+Der Besitzer bestätigte Bilder, Animation, Schleife und Bildzähler auf diesem LCD.
+Switch-2-Wecken, weitere Videocodecs und eine echte DFU-Unterbrechung bleiben offen.
+App676 (DE3.103) ist eine zusätzliche LCD-Testversion. Sie schützt das Weckprofil
+bei Lesefehlern. Der erste Gerätetest dieser neuen App steht aus.
+
+Webquellen: https://github.com/bluecyber81/pixl.js/tree/web3.65.1
+LCD-Produktionsquellen: https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675
+Lizenzen und mitgelieferte Simulatorquellen: im Dateimanager unter Quellen und
+Lizenzen; vollständige Lizenztexte liegen außerdem unter dist/licenses.
