@@ -48,6 +48,7 @@ typedef enum {
     SWITCH2_MENU_SAVE_CFG,
     SWITCH2_MENU_DISCARD,
     SWITCH2_MENU_EXIT,
+    SWITCH2_MENU_RELOAD,
 } switch2_menu_item_t;
 
 typedef enum {
@@ -65,10 +66,12 @@ typedef struct {
     mui_text_input_t *p_text_input;
     mui_toast_view_t *p_toast_view;
     switch2_wake_cfg_t cfg;
+    switch2_wake_cfg_t saved_cfg;
     switch2_edit_target_t edit_target;
     bool waking;
     bool scanning;
     bool dirty;
+    bool profile_loaded;
 } app_switch2_wake_t;
 
 static app_switch2_wake_t *s_active_app = NULL;
@@ -82,13 +85,16 @@ static void format_mac_plain(const uint8_t mac[6], char out[13]) {
 }
 
 static bool switch2_wake_load_cfg(switch2_wake_cfg_t *cfg) {
-    switch2_wake_cfg_set_default(cfg);
     vfs_driver_t *driver = vfs_get_default_driver();
     if (!driver || !driver->mounted()) return false;
     /* One extra byte rejects oversized/truncated text. Never mount/format as
      * a side effect of a wake option or bypass the storage recovery latch. */
     char text[513];
     int32_t n = driver->read_file_data(SWITCH2_WAKE_CFG_PATH, text, sizeof(text)-1);
+    if (n == VFS_ERR_NOOBJ) {
+        switch2_wake_cfg_set_default(cfg);
+        return true;
+    }
     if (n < 0 || n >= (int32_t)sizeof(text)-1 || memchr(text, 0, (size_t)n)) return false;
     text[n] = 0;
     return switch2_wake_parse_cfg(cfg, text);
@@ -108,11 +114,7 @@ static const char *pid_label(uint16_t pid) {
     return "Custom";
 }
 
-static void switch2_wake_reload_menu(app_switch2_wake_t *app) {
-    uint16_t focus = mui_list_view_get_focus(app->p_list_view);
-    uint16_t scroll = mui_list_view_get_scroll_offset(app->p_list_view);
-    mui_list_view_clear_items(app->p_list_view);
-
+static void switch2_wake_add_profile_items(app_switch2_wake_t *app) {
     char sub[16];
 
     mui_list_view_add_item_ext(app->p_list_view, ICON_WAKE,
@@ -162,7 +164,17 @@ static void switch2_wake_reload_menu(app_switch2_wake_t *app) {
 
     if (app->dirty) mui_list_view_add_item(app->p_list_view, ICON_BACK,
         s2_tr("Aenderung verwerfen", "Discard unsaved"), (void *)SWITCH2_MENU_DISCARD);
+}
 
+static void switch2_wake_reload_menu(app_switch2_wake_t *app) {
+    uint16_t focus = mui_list_view_get_focus(app->p_list_view);
+    uint16_t scroll = mui_list_view_get_scroll_offset(app->p_list_view);
+    mui_list_view_clear_items(app->p_list_view);
+    if (app->profile_loaded)
+        switch2_wake_add_profile_items(app);
+    else
+        mui_list_view_add_item(app->p_list_view, ICON_BACK,
+            s2_tr("Erneut laden", "Retry load"), (void *)SWITCH2_MENU_RELOAD);
     mui_list_view_add_item(app->p_list_view, ICON_BACK, _T(MAIN_RETURN),
                            (void *)SWITCH2_MENU_EXIT);
 
@@ -174,10 +186,23 @@ static void switch2_wake_reload_menu(app_switch2_wake_t *app) {
     mui_list_view_set_scroll_offset(app->p_list_view, scroll);
 }
 
+static void switch2_wake_open_profile(app_switch2_wake_t *app) {
+    app->profile_loaded = switch2_wake_load_cfg(&app->cfg);
+    if (app->profile_loaded)
+        app->saved_cfg = app->cfg;
+    else
+        mui_toast_view_show(app->p_toast_view, s2_tr("Lesefehler", "Read failed"));
+    switch2_wake_reload_menu(app);
+}
+
 static bool switch2_save_current(app_switch2_wake_t *app) {
+    if (!app->profile_loaded) return false;
     app->dirty = true;
     bool saved = switch2_wake_save_cfg(&app->cfg);
-    if (saved) app->dirty = false;
+    if (saved) {
+        app->saved_cfg = app->cfg;
+        app->dirty = false;
+    }
     return saved;
 }
 static void switch2_save_feedback(app_switch2_wake_t *app) {
@@ -364,6 +389,10 @@ static void switch2_wake_list_selected_cb(mui_list_view_event_t event, mui_list_
     (void)event;
     uint32_t sel = (uint32_t)(uintptr_t)p_item->user_data;
 
+    if (!app->profile_loaded && sel != SWITCH2_MENU_EXIT) {
+        if (sel == SWITCH2_MENU_RELOAD) switch2_wake_open_profile(app);
+        return;
+    }
     switch (sel) {
     case SWITCH2_MENU_WAKE:
         switch2_wake_trigger(app);
@@ -401,7 +430,7 @@ static void switch2_wake_list_selected_cb(mui_list_view_event_t event, mui_list_
         switch2_save_feedback(app);
         break;
     case SWITCH2_MENU_DISCARD:
-        switch2_wake_load_cfg(&app->cfg);
+        app->cfg = app->saved_cfg;
         app->dirty = false;
         switch2_wake_reload_menu(app);
         break;
@@ -432,7 +461,6 @@ static void app_switch2_wake_on_run(mini_app_inst_t *p_app_inst) {
     p_app_inst->p_handle = app;
     s_active_app = app;
     ble_disable();
-    switch2_wake_load_cfg(&app->cfg);
     mui_list_view_set_user_data(app->p_list_view, app);
     mui_list_view_set_selected_cb(app->p_list_view, switch2_wake_list_selected_cb);
     mui_text_input_set_user_data(app->p_text_input, app);
@@ -443,7 +471,7 @@ static void app_switch2_wake_on_run(mini_app_inst_t *p_app_inst) {
     mui_view_dispatcher_attach(app->p_view_dispatcher, MUI_LAYER_WINDOW);
     mui_view_dispatcher_attach(app->p_view_dispatcher_toast, MUI_LAYER_TOAST);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher_toast, SWITCH2_WAKE_VIEW_TOAST);
-    switch2_wake_reload_menu(app);
+    switch2_wake_open_profile(app);
     mui_view_dispatcher_switch_to_view(app->p_view_dispatcher, SWITCH2_WAKE_VIEW_LIST);
     return;
 startup_failed:
@@ -502,8 +530,7 @@ void app_switch2_wake_on_boot(uint32_t wakeup_reason) {
     }
 
     switch2_wake_cfg_t cfg;
-    switch2_wake_load_cfg(&cfg);
-    if (!cfg.auto_wake || !cfg.has_mac) {
+    if (!switch2_wake_load_cfg(&cfg) || !cfg.auto_wake || !cfg.has_mac) {
         return;
     }
 

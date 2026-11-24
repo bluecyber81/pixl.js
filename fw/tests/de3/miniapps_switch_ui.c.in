@@ -13,6 +13,13 @@
 #define SWITCH2_WAKE_ADV_DURATION_10MS 300
 #define MINI_APP_ID_DESKTOP 1
 #define MINI_APP_ID_SWITCH2_WAKE 10
+#define VFS_ERR_NOOBJ (-90)
+#define ICON_WAKE 1
+#define ICON_EDIT 2
+#define ICON_MODE 3
+#define ICON_SAVE 4
+#define ICON_BACK 5
+#define LANGUAGE_DE_DE 1
 #define NRF_SUCCESS 0
 #define NRF_ERROR_BUSY 1
 #define NRF_ERROR_INTERNAL 2
@@ -35,11 +42,26 @@ static int write_result,read_result;
 static uint32_t radio_result;
 static unsigned sent_duration;
 static char stored[600],toast[64];
-static const char* s2_tr(const char*a,const char*b){(void)b;return a;}
+static unsigned language = LANGUAGE_DE_DE;
+static unsigned getLanguage(void){return language;}
 static void*mui(void){return NULL;}
 static void mui_update(void*p){(void)p;}
 static void mui_toast_view_show(void*p,const char*s){(void)p;toasts++;snprintf(toast,sizeof toast,"%s",s);}
-static void switch2_wake_reload_menu(app_switch2_wake_t*p){(void)p;menus++;}
+static unsigned item_count,menu_ids[12];
+static const char*menu_labels[12];
+static void mui_list_view_clear_items(mui_list_view_t*p){(void)p;menus++;item_count=0;}
+static unsigned mui_list_view_get_focus(mui_list_view_t*p){(void)p;return 0;}
+static unsigned mui_list_view_get_scroll_offset(mui_list_view_t*p){(void)p;return 0;}
+static void mui_list_view_set_focus(mui_list_view_t*p,uint16_t x){(void)p;assert(x<item_count);}
+static void mui_list_view_set_scroll_offset(mui_list_view_t*p,uint16_t x){(void)p;(void)x;}
+static unsigned mui_list_view_item_size(mui_list_view_t*p){(void)p;return item_count;}
+static void mui_list_view_add_item(mui_list_view_t*p,unsigned icon,const char*label,void*id){
+ (void)p;(void)icon;assert(item_count<12);
+ menu_ids[item_count]=(unsigned)(uintptr_t)id;menu_labels[item_count++]=label;
+}
+static void mui_list_view_add_item_ext(mui_list_view_t*p,unsigned icon,const char*label,const char*sub,void*id){
+ (void)sub;mui_list_view_add_item(p,icon,label,id);
+}
 static void switch2_wake_open_mac_editor(app_switch2_wake_t*p,switch2_edit_target_t t){(void)p;(void)t;}
 static void ble_switch2_scan_stop(void){scan_stops++;}
 static void ble_raw_adv_stop(void){adv_stops++;}
@@ -62,9 +84,73 @@ static void mini_app_launcher_kill(mini_app_launcher_t*l,unsigned id){assert(l==
 static app_switch2_wake_t app;
 static mui_list_view_t list;
 static void select_item(unsigned n){mui_list_item_t item={.user_data=(void*)(uintptr_t)n};switch2_wake_list_selected_cb(0,&list,&item);}
-static void reset(void){memset(&app,0,sizeof app);s_active_app=&app;switch2_wake_cfg_set_default(&app.cfg);inst.p_handle=&app;inst.p_app=&main_app;main_app.id=1;launcher.p_main_app_inst=&inst;list.user_data=&app;app.p_list_view=&list;writes=reads=menus=toasts=scans=advs=scan_stops=adv_stops=kills=0;mounted=has_driver=true;scan_owner=adv_owner=false;write_result=radio_result=0;read_result=-1;stored[0]=toast[0]=0;}
+static void reset(void){memset(&app,0,sizeof app);s_active_app=&app;switch2_wake_cfg_set_default(&app.cfg);app.saved_cfg=app.cfg;app.profile_loaded=true;inst.p_handle=&app;inst.p_app=&main_app;main_app.id=1;launcher.p_main_app_inst=&inst;list.user_data=&app;app.p_list_view=&list;writes=reads=menus=toasts=scans=advs=scan_stops=adv_stops=kills=0;mounted=has_driver=true;scan_owner=adv_owner=false;write_result=radio_result=0;read_result=VFS_ERR_NOOBJ;stored[0]=toast[0]=0;language=LANGUAGE_DE_DE;}
 static void configured(void){CHECK(parse_mac_str("11:22:33:44:55:66",app.cfg.controller_mac));CHECK(parse_mac_str("A1:B2:C3:D4:E5:F6",app.cfg.host_mac));app.cfg.has_mac=app.cfg.has_host=true;}
+
+static void test_profile_read_failures(void) {
+ reset(); configured();
+ CHECK(switch2_save_current(&app));
+ switch2_wake_cfg_t expected = app.cfg;
+ int stored_len = read_result;
+ for (unsigned lang=0; lang<2; lang++) {
+  language=lang;
+  memset(&app.cfg, 0, sizeof app.cfg); /* New foreground instance. */
+  read_result=-1;
+  unsigned initial_writes=writes;
+  switch2_wake_open_profile(&app);
+  CHECK(!app.profile_loaded && !app.dirty && item_count==2);
+  CHECK(menu_ids[0]==SWITCH2_MENU_RELOAD && menu_ids[1]==SWITCH2_MENU_EXIT);
+  CHECK(!strcmp(menu_labels[0],lang==LANGUAGE_DE_DE ? "Erneut laden" : "Retry load"));
+  CHECK(!strcmp(toast,lang==LANGUAGE_DE_DE ? "Lesefehler" : "Read failed"));
+  select_item(SWITCH2_MENU_MODE); select_item(SWITCH2_MENU_SAVE_CFG);
+  CHECK(!switch2_save_current(&app) && !app.dirty && writes==initial_writes);
+  CHECK(app_switch2_wake_prepare_exit(&inst,0));
+  select_item(SWITCH2_MENU_RELOAD);
+  CHECK(!app.profile_loaded && item_count==2 && writes==initial_writes);
+  read_result=stored_len; select_item(SWITCH2_MENU_RELOAD);
+  CHECK(app.profile_loaded && !memcmp(&app.cfg,&expected,sizeof expected));
+  CHECK(!app.dirty && item_count==9 && writes==initial_writes);
+ }
+
+ /* Simultaneous persistent read/write failure must allow an explicit discard
+  * and exit without persisting empty addresses or the unsaved edit. */
+ write_result=-1;
+ select_item(SWITCH2_MENU_PID);
+ CHECK(app.dirty && app.cfg.pid!=expected.pid);
+ read_result=-1;
+ unsigned old_reads=reads, old_writes=writes;
+ select_item(SWITCH2_MENU_DISCARD);
+ CHECK(!app.dirty && !memcmp(&app.cfg,&expected,sizeof expected));
+ CHECK(reads==old_reads && writes==old_writes);
+ select_item(SWITCH2_MENU_EXIT);
+ CHECK(kills==1 && writes==old_writes);
+
+ /* A later normal mode save must preserve the originally learned addresses. */
+ write_result=0; select_item(SWITCH2_MENU_MODE);
+ CHECK(switch2_wake_load_cfg(&app.cfg));
+ expected.connectable=true;
+ CHECK(!memcmp(&app.cfg,&expected,sizeof expected));
+ write_result=-1; select_item(SWITCH2_MENU_MODE); select_item(SWITCH2_MENU_DISCARD);
+ CHECK(!memcmp(&app.cfg,&expected,sizeof expected));
+
+ /* A malformed existing file is protected even if earlier fields are valid. */
+ strcpy(stored,"mac=11:22:33:44:55:66\nmode=invalid");
+ read_result=(int)strlen(stored); old_writes=writes;
+ CHECK(!switch2_wake_load_cfg(&app.cfg) && !memcmp(&app.cfg,&expected,sizeof expected));
+ switch2_wake_open_profile(&app); select_item(SWITCH2_MENU_SAVE_CFG);
+ CHECK(!app.profile_loaded && !app.dirty && writes==old_writes);
+
+ /* Only a real file-not-found indication enables first-use defaults. */
+ reset(); app.profile_loaded=false; switch2_wake_open_profile(&app);
+ CHECK(app.profile_loaded && !app.cfg.has_mac && !app.cfg.has_host);
+ CHECK(app.cfg.pid==SWITCH2_PID_JC2_L && !writes);
+ write_result=-1; select_item(SWITCH2_MENU_PID); select_item(SWITCH2_MENU_DISCARD);
+ CHECK(!app.dirty && app.cfg.pid==SWITCH2_PID_JC2_L && writes==1);
+ write_result=0; select_item(SWITCH2_MENU_AUTO_WAKE);
+ CHECK(writes==2 && app.cfg.auto_wake && !app.dirty);
+}
 int main(void){
+ test_profile_read_failures();
  reset();has_driver=false;CHECK(!switch2_wake_save_cfg(&app.cfg)&&!writes);CHECK(!switch2_wake_load_cfg(&app.cfg)&&!reads);has_driver=true;mounted=false;CHECK(!switch2_wake_save_cfg(&app.cfg)&&!writes);CHECK(!switch2_wake_load_cfg(&app.cfg)&&!reads);
  reset();configured();write_result=1;CHECK(!switch2_save_current(&app)&&app.dirty);write_result=-1;for(unsigned why=0;why<3;why++)CHECK(!app_switch2_wake_prepare_exit(&inst,why)&&app.dirty);write_result=0;CHECK(app_switch2_wake_prepare_exit(&inst,0)&&!app.dirty);CHECK(switch2_wake_load_cfg(&app.cfg)&&app.cfg.has_mac&&app.cfg.has_host);
  reset();configured();write_result=-1;select_item(SWITCH2_MENU_AUTO_WAKE);CHECK(app.cfg.auto_wake&&app.dirty&&!strcmp(toast,"FAILED"));select_item(SWITCH2_MENU_MODE);CHECK(app.cfg.connectable&&app.dirty);app.cfg.has_raw_data=true;app.cfg.raw_data_len=31;select_item(SWITCH2_MENU_PID);CHECK(app.cfg.pid==SWITCH2_PID_JC2_R&&!app.cfg.has_raw_data&&!app.cfg.raw_data_len&&app.dirty);
@@ -75,7 +161,8 @@ int main(void){
  switch2_wake_toggle_scan(&app);CHECK(adv_stops==1&&!app.waking&&!scans);CHECK(strstr(toast,"erneut"));switch2_wake_toggle_scan(&app);CHECK(!scans&&strstr(toast,"beendet"));adv_owner=false;switch2_wake_toggle_scan(&app);CHECK(scans==1&&app.scanning);switch2_wake_toggle_scan(&app);CHECK(!app.scanning&&scan_stops==2);
  reset();configured();app.cfg.auto_wake=true;CHECK(switch2_save_current(&app));writes=0;
  app_switch2_wake_on_boot(0);app_switch2_wake_on_boot(8);app_switch2_wake_on_boot(1|2);app_switch2_wake_on_boot(1|4);CHECK(!advs&&!writes);
- main_app.id=4;app_switch2_wake_on_boot(1);CHECK(!advs);main_app.id=1;app_switch2_wake_on_boot(1);CHECK(advs==1&&sent_duration==200&&!writes);adv_owner=false;mounted=false;app_switch2_wake_on_boot(1);CHECK(advs==1);
+ main_app.id=4;app_switch2_wake_on_boot(1);CHECK(!advs&&!reads);main_app.id=1;app_switch2_wake_on_boot(1);CHECK(advs==1&&sent_duration==200&&!writes&&reads==1);adv_owner=false;mounted=false;app_switch2_wake_on_boot(1);CHECK(advs==1);
+ mounted=true;read_result=-1;app_switch2_wake_on_boot(1);CHECK(advs==1&&!writes);
  s_active_app=NULL;switch2_wake_on_ble_done(0);switch2_wake_on_scan_done(false,NULL); /* Late callback guard. */
  printf("PASS %u Switch UI/VFS/boot assertions; actual callbacks, mocked storage/radio\n",checks);
  return 0;
