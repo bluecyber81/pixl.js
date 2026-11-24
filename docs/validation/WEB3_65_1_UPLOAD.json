@@ -101,5 +101,26 @@
     "directUsedBlocksAfterCleanupGcRemount": 236,
     "originalEntriesVerifiedAfterCleanup": 1137
   },
-  "physicalFullUploadTiming": null
+  "physicalFullUploadTiming": null,
+  "browserRenderingCheck": {
+    "method": "Both production builds used the same protocol optimization. The final build also memoizes the visible comparison rows. The two destination modes ran concurrently on the same Windows host in each pair.",
+    "timingScope": "Host wall clock from transfer confirmation to UI completion, including interrupted connection and resume. Browser workload and other host load affect these observations. Physical BLE throughput was not measured.",
+    "wallTimeMsByDestination": {
+      "existing-empty": {
+        "beforeTableMemoization": 99751,
+        "final": 45320
+      },
+      "new-filewise": {
+        "beforeTableMemoization": 101483,
+        "final": 40447
+      }
+    },
+    "controlsVerifiedInFinalBuild": [
+      "uncheck on two pages and retain the selections when paging",
+      "clear and reselect all 1081 entries via external selection buttons",
+      "filter empty and populated rows",
+      "change row labels between German and English",
+      "disable checkboxes while writing"
+    ]
+  }
 }

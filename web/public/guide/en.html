@@ -28,6 +28,7 @@
         <a href="#diagnose">Read the device information first</a>
         <a href="#flash">Update the LCD app</a>
         <a href="#lcd-de3102">Install LCD DE3.102</a>
+        <a href="#lcd-de3103">Try LCD test release DE3.103</a>
         <a href="#lcd-de387">Earlier LCD test release DE3.87</a>
         <a href="#lcd-de386">Test LCD DE3.86</a>
         <a href="#lcd-de385">Test LCD DE3.85</a>
@@ -58,7 +59,7 @@
           <h3 id="lcd-de3102">LCD DE3.102 / App675 · normal release</h3>
           <p>For LCD/ST7567 with Packed LittleFS (PFS1), bootloader Z21 and S112 7.3.0. Download the <a href="https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip" download>signed App675 ZIP</a>. Open <b>Settings → Firmware update</b> on the device and select the intact ZIP in nRF Device Firmware Update. The <a href="../dfu/web.html?package=de3.102-lcd-app#board=LCD">web updater opens the App675 selection directly</a>.</p>
           <p>After restart, file manager <b>3.65.1</b> should report firmware <b>2.22.0-DE3.102</b> and application counter <b>675</b>. This application update preserves PFS1, bootloader and SoftDevice; an existing PFS1 installation does not need another storage migration.</p>
-          <p>App675 adds <b>Loop</b> and <b>Frame counter</b> to the animation player and reduces unnecessary redraws in image reception. Web3.65.1 offers <a href="#bild-video">rotation, a photo dot pattern, remembered image options and local player export</a>. Image sending remains compatible with App673+. <a href="https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675">Firmware sources and recorded software checks</a>. Physical LCD acceptance is recorded separately.</p>
+          <p>App675 adds <b>Loop</b> and <b>Frame counter</b> to the animation player and reduces unnecessary redraws in image reception. Web3.65.1 offers <a href="#bild-video">rotation, a photo dot pattern, remembered image options and local player export</a>. Image sending remains compatible with App673+. <a href="https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675">Firmware sources and recorded software checks</a>. One LCD reported App675 and the matching compiled SourceID. The owner confirmed images, animation playback, looping and the frame counter. Switch 2 wake and an interrupted DFU transfer still need physical testing.</p>
           <p>The phone link uses the checked GitHub download. Open the newly downloaded ZIP in nRF Device Firmware Update.</p>
           <h3 id="lcd-de3101">LCD DE3.101 / App674 · previous release</h3>
           <p>For LCD/ST7567 with Packed LittleFS (PFS1), bootloader Z21 and S112 7.3.0. Download the <a href="https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip" download>signed App674 ZIP</a>. Open <b>Settings → Firmware update</b> on the device and select the intact ZIP in nRF Device Firmware Update. The <a href="../dfu/web.html?package=de3.101-lcd-app#board=LCD">web updater opens the App674 selection directly</a>.</p>

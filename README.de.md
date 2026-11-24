@@ -20,7 +20,7 @@ Der Figurenkatalog führt vorhandene Ocarina-/Fatal-Fury-Spielhinweise mit den F
 
 ### Quellen und Prüfstand
 
-[LCD-Produktionszweig](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Webzweig](https://github.com/bluecyber81/pixl.js/tree/web3.65.1) · [Firmware-Prüfbericht](docs/validation/DE3_102.json) · [ARM-/PFS-Bindung](docs/validation/DE3_102_PFS.json) · [Web-Prüfbericht](docs/validation/WEB3_65_0.json) · [Bedienhinweise](web/LIESMICH_3_65_1.txt) · [English](README.md).
+[LCD-Produktionszweig](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Web-Tag 3.65.1](https://github.com/bluecyber81/pixl.js/tree/web3.65.1) · [Firmware-Prüfbericht](docs/validation/DE3_102.json) · [ARM-/PFS-Bindung](docs/validation/DE3_102_PFS.json) · [Ordnerupload und Wiederaufnahme mit Web 3.65.1](docs/validation/WEB3_65_1_UPLOAD.json) · [Bedienhinweise](web/LIESMICH_3_65_1.txt) · [English](README.md).
 
 App675 wurde auf einem LCD ausgelesen. Der Besitzer bestätigte Bilder, Animation, Schleife und Bildzähler. Der Praxistest für Switch-2-Wecken und ein unterbrochenes DFU-Update steht aus. [Geräteprüfung](docs/validation/DE3_102_LCD_READBACK.json).
 

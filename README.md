@@ -20,7 +20,7 @@ The catalogue aligns existing Ocarina and Fatal Fury game notes with figure deta
 
 ### Sources and qualification
 
-[LCD production branch](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Web branch](https://github.com/bluecyber81/pixl.js/tree/web3.65.1) · [Firmware qualification](docs/validation/DE3_102.json) · [ARM/PFS binding](docs/validation/DE3_102_PFS.json) · [Web qualification](docs/validation/WEB3_65_0.json) · [Operating notes](web/LIESMICH_3_65_1.txt) · [Deutsch](README.de.md).
+[LCD production branch](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Web 3.65.1 tag](https://github.com/bluecyber81/pixl.js/tree/web3.65.1) · [Firmware qualification](docs/validation/DE3_102.json) · [ARM/PFS binding](docs/validation/DE3_102_PFS.json) · [Web 3.65.1 folder upload and resume tests](docs/validation/WEB3_65_1_UPLOAD.json) · [Operating notes](web/LIESMICH_3_65_1.txt) · [Deutsch](README.de.md).
 
 App675 was read back on one LCD. The owner confirmed images, animation, loop and frame counter. Physical Switch 2 wake and interrupted DFU remain open. [Device readback](docs/validation/DE3_102_LCD_READBACK.json).
 

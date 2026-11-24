@@ -2,7 +2,7 @@
 
 ## Normale Ausgabe 3.65.1 und LCD DE3.102 / App675
 
-Web 3.65.1 verbessert die Wiederaufnahme von Ordneruploads und bietet einen dateiweisen Upload bei knappem Speicher.
+Web 3.65.1 verbessert die Wiederaufnahme von Ordneruploads und bietet einen dateiweisen Upload bei knappem Speicher. Zusätzlich zur normalen App675 ist die [LCD-Testversion App676](public/guide/index.html#lcd-de3103) für die Prüfung des Switch-2-Weckprofils verfügbar.
 
 [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signierte App-ZIP](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.65.1/Allmiibo_Dateimanager_3_65_1_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.65.1.zip).
 
@@ -12,7 +12,7 @@ App675 ergänzt die optionalen Player-Einstellungen **Endlosschleife** und **Bil
 
 Der Katalog vereinheitlicht bereits vorhandene Ocarina-/Fatal-Fury-Hinweise in Filter, Spielübersicht und Figurendetails. Nintendo-belegte Kirby-Zuordnungen kommen hinzu. Bestehende Übersetzungen, Shadow-Link-Einschränkung, Yoshi-Webzuordnungen und die Unterscheidung von Switch und 3DS bleiben erhalten. Die Webdaten erfinden keine Firmwaregruppen oder Geräte-Spielordner.
 
-[Bedienung und Änderungen](LIESMICH_3_65_0.txt) · [Deutsche Anleitung](public/guide/index.html#bild-video) · [English guide](public/guide/en.html#bild-video) · [Web-Prüfbericht](../docs/validation/WEB3_65_0.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [App675-Simulatorquellen](public/sources/LCD_DE3_102_App675_Simulatorquellen.zip) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_102_PFS.json).
+[Bedienung und Änderungen](LIESMICH_3_65_1.txt) · [Deutsche Anleitung](public/guide/index.html#bild-video) · [English guide](public/guide/en.html#bild-video) · [Ordnerupload-Prüfung 3.65.1](../docs/validation/WEB3_65_1_UPLOAD.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [App675-Simulatorquellen](public/sources/LCD_DE3_102_App675_Simulatorquellen.zip) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_102_PFS.json).
 
 Die PFS1-Engine und die Simulator-WASM bleiben bytegleich zu App672. Die tatsächliche App675 besitzt eigene BIN-/HEX-/OTA-/SourceID-Bindungen und einen frischen ARM-Layoutnachweis. Frühere Crossmount-Prüfungen sind ausdrücklich als wiederverwendete Prüfung derselben Engine gekennzeichnet. Hardwareabnahme und native Windowsausführung werden getrennt von lokalen Softwaretests berichtet.
 

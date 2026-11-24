@@ -1,6 +1,8 @@
 # LCD App675 – DE3.102
 
-Stand: 23. November 2026. Normaler LCD-Anwendungsstand. Die lokale Softwarequalifizierung und der unabhängige GitHub-Lauf sind abgeschlossen. Die echte Geräteabnahme bleibt offen.
+**Nachtrag vom 24. November 2026.** Auf einem LCD wurden App675, die kompilierte SourceID, Z21 und S112 7.3.0 ausgelesen. Der Besitzer bestätigte Bilder, Animation, Schleife und Bildzähler. Switch-2-Wecken und eine unterbrochene DFU-Übertragung sind weiterhin offen. [Geräteprüfung](validation/DE3_102_LCD_READBACK.json).
+
+**Ursprünglicher Prüfstand vom 23. November 2026.** Normaler LCD-Anwendungsstand. Die lokale Softwarequalifizierung und der unabhängige GitHub-Lauf sind abgeschlossen. Die echte Geräteabnahme bleibt offen.
 
 ## Was sich ändert
 
@@ -48,7 +50,7 @@ Gegenüber App674 kommen **540 Byte Firmware** hinzu. Die interne Flashreserve b
 
 Die gelinkte ARM-Playerstruktur wächst von 52 auf 120 Byte, also um 68 Byte einschließlich begrenztem Dateipfad. Im konkret geprüften Menümodell mit einem Clip benötigen Player und Liste zusammen 104 Byte mehr Heap; nach dem Beenden wird der gesamte Speicher zurückgegeben. Andere Dateianzahlen können andere Listenkapazitätsschritte auslösen. Es gibt keinen zusätzlichen Framepuffer und keine neuen persistenten Einstellungsdateien.
 
-## Offene Geräteabnahme und nächster Schritt
+## Zum Zeitpunkt der Veröffentlichung am 23. November offene Geräteprüfungen
 
 Auf einem echten LCD-Gerät stehen noch Bild-/Videostream, Verbindungstrennung und erneute Verbindung, Wechsel und Beenden der Miniapps, Loop/Bildzähler sowie Switch-2-Scan/Wecken aus. Eine konkrete Steigerung von Bildrate oder Akkulaufzeit wurde nicht gemessen. Nach der Web-Veröffentlichung folgt eine kurze Geräteabnahme mit vorhandener Laufzeitdiagnose vor und nach normaler Nutzung.
 

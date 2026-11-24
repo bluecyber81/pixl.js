@@ -68,6 +68,7 @@ function harness(overrides = {}) {
   // while the VM isolates the browser fakes from the Node test process.
   Object.defineProperty(context, 'showSaveFilePicker', { get: () => window.showSaveFilePicker });
   context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
+  context.lcdTest676 = require('../public/dfu/lcd-app676-reference.mjs').lcdTest676;
   context.lcdRelease = require('../public/dfu/lcd-release-reference.mjs').lcdRelease;
   context.app674 = require('../public/dfu/lcd-app674-reference.mjs').lcdRelease;
   context.app673 = require('../public/dfu/lcd-app673-reference.mjs').lcdRelease;

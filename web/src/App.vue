@@ -542,7 +542,7 @@
             @click="syncFilter = key; syncPage = 1">{{ $t('info.compare_' + key) }} ({{ count }})</button>
         </div>
         <div class="selection-actions"><button type="button" :disabled="busy" @click="select_plan('sync',true)">{{ $t('workflow.onlyNew') }}</button><button type="button" :disabled="busy" @click="select_plan('sync',false)">{{ $t('workflow.clearSelection') }}</button><span>{{ $t('workflow.selectedCount',{count:syncSelected.length}) }}</span></div>
-        <div class="sync-entries">
+        <div class="sync-entries" v-memo="[syncPagedEntries, syncSelected, busy, connected, language]">
           <div v-for="entry in syncPagedEntries" :key="entry.targetPath" class="sync-entry">
             <label><input v-if="entry.status === 'add' || entry.status === 'change'" type="checkbox" :value="entry.targetPath" v-model="syncSelected" :disabled="busy">
               <span>{{ $t('info.compare_' + entry.comparison) }} · {{ entry.relativePath }}</span>

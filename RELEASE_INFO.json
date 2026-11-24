@@ -1318,14 +1318,16 @@
     }
   },
   "web_version": "3.65.1",
-  "web_release_status": "release-candidate",
+  "web_release_status": "normal",
   "web_release_notes": "web/LIESMICH_3_65_1.txt",
   "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web3.65.1",
   "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.65.1.zip",
   "web_portable_url": "https://bluecyber81.github.io/pixl.js/downloads/web3.65.1/Allmiibo_Dateimanager_3_65_1_Portable.zip",
   "web_downloads": {
     "portable": "https://bluecyber81.github.io/pixl.js/downloads/web3.65.1/Allmiibo_Dateimanager_3_65_1_Portable.zip",
-    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.65.1.zip"
+    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.65.1.zip",
+    "portableBytes": 12691183,
+    "portableSha256": "0b9c8186766923035369edea5b1093a84fe8a7bdb1670d9b5a6ceaecee8b49c4"
   },
   "firmware_preview": {
     "version": "2.22.0-DE3.103",
@@ -1360,5 +1362,11 @@
     "evidence": "docs/validation/DE3_103_LCD_TEST1.json",
     "status": "experimental-signed-application"
   },
-  "web_upload_evidence": "docs/validation/WEB3_65_1_UPLOAD.json"
+  "web_upload_evidence": "docs/validation/WEB3_65_1_UPLOAD.json",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.65.1",
+  "web_publication_date": "2026-11-24",
+  "web_portable_bytes": 12691183,
+  "web_portable_sha256": "0b9c8186766923035369edea5b1093a84fe8a7bdb1670d9b5a6ceaecee8b49c4",
+  "web_qualification_date": "2026-11-24",
+  "web_evidence": "docs/validation/WEB3_65_1_UPLOAD.json"
 }

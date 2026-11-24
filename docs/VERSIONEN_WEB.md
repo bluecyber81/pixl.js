@@ -4,7 +4,7 @@
 
 Nach einem Verbindungsabbruch kann derselbe Ordner erneut ausgewählt werden. Bereits bestätigte Dateien werden geprüft, der angefangene Schreibvorgang wird bereinigt. Bei wenig freiem Platz lässt sich der neue Ordner dateiweise füllen. Das Arbeitsverzeichnis für das abschließende Umbenennen des ganzen Baums entfällt bei dieser Auswahl.
 
-[Ordnerupload-Prüfung](validation/WEB3_65_1_UPLOAD.json) · [Bedienhinweise](../web/LIESMICH_3_65_1.txt)
+[Webquellen zum Tag 3.65.1](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.65.1.zip) · [Ordnerupload-Prüfung](validation/WEB3_65_1_UPLOAD.json) · [Bedienhinweise](../web/LIESMICH_3_65_1.txt)
 
 ## Dateimanager 3.65.0 · Bildoptionen und lokaler Playerexport
 

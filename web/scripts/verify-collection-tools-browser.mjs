@@ -369,9 +369,9 @@ try {
     await page.locator('.catalogue .search-field input').waitFor();
     const announced = page.locator('.catalogue .announcements');
     await announced.locator('summary').focus(); await page.keyboard.press('Enter');
-    check(kind + ' official announcements list contains nine linked figures', await announced.locator('li > a').count() === 9 && await announced.evaluate(el => el.open));
-    check(kind + ' exactly two Zelda community ID proposals', await announced.locator('.proposed-id').count() === 2);
-    await fits(page, kind + ' nine announcements', '.catalogue .announcements', zoom);
+    check(kind + ' five announcement-only figures have official links', await announced.locator('li > a').count() === 5 && await announced.evaluate(el => el.open));
+    check(kind + ' catalogued Kirby and Zelda editions do not appear twice', await announced.locator('.group-title').allTextContents().then(titles => titles.every(title => !/Zelda|Kirby/.test(title))));
+    await fits(page, kind + ' announcement-only releases', '.catalogue .announcements', zoom);
     await shot(page, kind + '-announcements-de', announced);
     await textScale(page, 1);
     await announced.locator('summary').click();
@@ -392,9 +392,13 @@ try {
     await page.locator('.catalogue .reset-filters').click();
     await seriesFilters.locator('summary').click();
     await page.locator('.catalogue .search-field input').fill('0101000004ff0902');
-    check(kind + ' proposed Zelda ID outside main inventory', await announced.locator('li').count() === 1 && await page.locator('.catalogue .entries > li').count() === 0);
+    const zelda = page.locator('.catalogue .entries > li').filter({has:page.getByText('0101000004ff0902',{exact:true})});
+    await zelda.waitFor();
+    check(kind + ' reviewed Zelda ID appears once in the main inventory', await zelda.count() === 1 && await announced.count() === 0);
     await chooseLanguage(page, 'en');
-    check(kind + ' English Nintendo guide and proposed ID', (await announced.innerText()).includes('Unconfirmed community ID') && await announced.getByRole('link', { name: 'Nintendo game guide' }).count() === 1);
+    await selectFigure(page, '0101000004ff0902');
+    const zeldaDetails = page.locator('.catalogue .selected-detail');
+    check(kind + ' English Zelda details link the Nintendo guide and community ID source', await zeldaDetails.getByRole('link',{name:'Nintendo Japan game guide'}).count() === 1 && await zeldaDetails.locator('a').filter({hasText:'Community source for the figure ID'}).count() === 1);
     await chooseLanguage(page, 'de_DE');
     let usagePanel = await selectFigure(page, german.id);
     check(kind + ' German catalogue version is visible', await usagePanel.locator('.usage-version').innerText() === `Katalogstand: ${usage.dataVersion}`);

@@ -4,7 +4,7 @@
 
 Bei einem Lesefehler im Switch-2-Weckprofil lässt sich der Ladevorgang wiederholen oder das Menü verlassen. Das Gerät schützt die zuvor gespeicherte Zuordnung. „Verwerfen“ stellt den zuletzt erfolgreich geladenen oder gespeicherten Stand wieder her.
 
-Die signierte App-ZIP ist für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0 vorgesehen. Der erste Gerätetest für App676 steht aus. Für DE3.102 ist die [Bestätigung auf einem LCD](validation/DE3_102_LCD_READBACK.json) dokumentiert.
+Die signierte App-ZIP ist für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0 vorgesehen. Der erste Gerätetest für App676 steht aus. [Handy-ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_103_676_NUR_APP.zip) · [App676 im Web-Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.103-lcd-app-test1#board=LCD). Für DE3.102 ist die [Bestätigung auf einem LCD](validation/DE3_102_LCD_READBACK.json) dokumentiert.
 
 ## DE3.102 / App675 · Player-Optionen und Bildempfang
 
@@ -12,7 +12,7 @@ Die normale LCD-App ergänzt **Endlosschleife** und **Bildzähler** im Dateimen�
 
 App675 ist für LCD/ST7567, PFS1, Z21 und S112 7.3.0 bestimmt. Das signierte App-Update erhält Dateisystem und Systemkomponenten. Die Menüsymbole aus App674 bleiben enthalten. Web3.65.0 ergänzt gemerkte Bildoptionen, Rotation, Punktraster, Drag & Drop und lokalen Playerexport; der Websender bleibt mit App673+ kompatibel.
 
-Zwei lokale Builds und der unabhängige GitHub-Build liefern dieselben BIN-/HEX-Bytes. 198 Hostskripte, 13 lokale ARM-Prüfgruppen und die aktuelle App675-Update-Datenphase sind bestanden. Die GitHub-Prüfung belegt zusätzlich die positive LeakSanitizer-Kontrolle. Diese Softwareprüfungen ersetzen keine physische Abnahme von Bildübertragung, Player oder Switch-2-Wecken. [Firmware-Prüfbericht](validation/DE3_102.json) · [Releasehinweise](DE3_102_RELEASE.md) · [Signierte App675-ZIP](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip).
+Zwei lokale Builds und der unabhängige GitHub-Build liefern dieselben BIN-/HEX-Bytes. 198 Hostskripte, 13 lokale ARM-Prüfgruppen und die aktuelle App675-Update-Datenphase sind bestanden. Die GitHub-Prüfung belegt zusätzlich die positive LeakSanitizer-Kontrolle. Am 24. November wurden App675 und die kompilierte SourceID auf einem LCD ausgelesen. Bilder, Animation, Schleife und Bildzähler hat der Besitzer bestätigt. Der Test von Switch-2-Wecken und einer echten DFU-Unterbrechung steht aus. [Firmware-Prüfbericht](validation/DE3_102.json) · [Releasehinweise](DE3_102_RELEASE.md) · [Signierte App675-ZIP](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip).
 
 ## LCD DE3.101 / App674 · normale Firmware vom 22.11.2026
 
