@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "application": "allmiibo-dateimanager",
+  "version": "3.66.1",
+  "base": "/pixl.js/test/transfer4/",
+  "channel": "isolated-test-path",
+  "label": "Transfer Test 4",
+  "sourceTag": "web3.66.1-transfer-test4",
+  "packageManifestSha256": "e5b14f16c14fed50049b549eb6a7a45c37ee902cbeb80bf464c9c168db8634c7",
+  "firmware": {
+    "id": "de4.1-lcd-app",
+    "version": "2.22.0-DE4.1",
+    "counter": 678,
+    "path": "firmware/Allmiibo_LCD_DE4_1_678_NUR_APP.zip",
+    "bytes": 255266,
+    "sha256": "beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0"
+  }
+}
