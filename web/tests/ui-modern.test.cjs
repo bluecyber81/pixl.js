@@ -39,6 +39,7 @@ function harness(overrides = {}) {
     ...require('../src/lib/transfer-observation.js'),
     ...require('../src/lib/rename-confirmation.js'),
     ...require('../src/lib/build-version.js'),
+    projectDownloads: require('../src/lib/project-downloads.js').projectDownloads,
     dfuReference: require('../src/lib/release-packages.js').dfuReference,
     sharedEventDispatcher: () => dispatcher, getElementLocale: language => ({ name: language }), webVersion: require('../package.json').version, console,
     defineAsyncComponent: loader => ({ loader }), DeviceStorageCard: {},
