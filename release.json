@@ -1,16 +1,16 @@
 {
   "schema": 1,
   "application": "allmiibo-dateimanager",
-  "version": "3.66.0",
+  "version": "3.66.1",
   "base": "/pixl.js/",
   "channel": "normal",
-  "packageManifestSha256": "f8d1b686954b492dbb69a5e206c9a72ca8df9b24a5db25aa42e39fe99031b61d",
+  "packageManifestSha256": "ef231e24881357feee39f1d0cc7c4d03ea96613aef4a12e238c7f2678f3fe8fd",
   "firmware": {
-    "id": "de3.102-lcd-app",
-    "version": "2.22.0-DE3.102",
-    "counter": 675,
-    "path": "firmware/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
-    "bytes": 362493,
-    "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746"
+    "id": "de4.1-lcd-app",
+    "version": "2.22.0-DE4.1",
+    "counter": 678,
+    "path": "firmware/Allmiibo_LCD_DE4_1_678_NUR_APP.zip",
+    "bytes": 255266,
+    "sha256": "beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0"
   }
 }

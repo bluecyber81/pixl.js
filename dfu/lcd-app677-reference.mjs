@@ -11,6 +11,6 @@ export const lcdTest677 = Object.freeze({
   "otaBytes": 255262,
   "otaSha256": "a82996e5c47152ce92e086f5969d8ad5f2f4d22f8192dcb9f6ce081cb0e690eb",
   "artifactStatus": "experimental-signed-application",
-  "hardwareAcceptance": "pending",
+  "hardwareAcceptance": "one-lcd-readback-and-owner-confirmed-general-operation",
   "releaseTag": "de3.104-lcd-test1"
 });
