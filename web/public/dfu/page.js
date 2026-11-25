@@ -1,13 +1,13 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { lcdTest676 } from './lcd-app676-reference.mjs';
 import { lcdTest677 } from './lcd-app677-reference.mjs';
-import { lcdTest680, lcdTest680Package } from './lcd-app680-reference.mjs';
+import { lcdFinal680, lcdFinal680Package } from './lcd-app680-reference.mjs?v=3.66.3';
 import { lcdTest679, lcdTest679Package } from './lcd-app679-reference.mjs';
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.66.2';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.66.3';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
-import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.66.2';
-import { lcdRelease, lcdReleasePackage } from './lcd-release-reference.mjs?v=3.66.2';
+import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.66.3';
+import { lcdRelease } from './lcd-release-reference.mjs?v=3.66.3';
 
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -64,6 +64,7 @@ function targetDescription(target) {
     if (!target) return '';
     const lines = [choose(`Gewählte Anwendung · Zähler ${target.counter} · Hardwarefeld ${target.hardware} · erlaubte SoftDevice-FWIDs ${target.softDevices.map(hexId).join(', ')}.`,
         `Selected application · counter ${target.counter} · hardware field ${target.hardware} · accepted SoftDevice FWIDs ${target.softDevices.map(hexId).join(', ')}.`)];
+    if (target.counter === lcdFinal680Package.counter && !latestState.previewVersion) lines.unshift(choose('Finale LCD-Ausgabe DE4.2 / App680', 'Final LCD release DE4.2 / App680') + ' · ' + lcdFinal680.firmwareVersion);
     if (latestState.previewVersion) {
         const published = AllmiiboFirmwareReleases.packages.some(entry => entry.board === 'LCD' &&
             entry.version === latestState.previewVersion && entry.channel === 'prerelease');
@@ -95,11 +96,11 @@ function selectedProfileMismatch(entry) {
 }
 function showSource(board, selectedVersion) {
     const oled = board === 'OLED';
-    const preview = !oled && [lcdTest680, lcdTest679, lcdTest677, lcdTest676, ...lcdPreviews].find(item => item.firmwareVersion === selectedVersion);
+    const preview = !oled && [lcdFinal680, lcdRelease, lcdTest679, lcdTest677, lcdTest676, ...lcdPreviews].find(item => item.firmwareVersion === selectedVersion);
     const previous = !oled && selectedVersion === '2.22.0-DE3.102';
-    const revision = oled ? 'de3.87-oled-t6' : [lcdTest679, lcdTest680].includes(preview) ? preview.releaseTag : preview ? preview.sourceCommit : previous ? 'release/lcd-de3102-app675' : 'release/lcd-de41-app678';
+    const revision = oled ? 'de3.87-oled-t6' : [lcdTest679, lcdFinal680, lcdRelease].includes(preview) ? preview.releaseTag : preview ? preview.sourceCommit : previous ? 'release/lcd-de3102-app675' : 'de4.2';
     const sourceLink = document.getElementById('profile-source');
-    const name = oled ? 'OLED DE3.87 Test 6' : preview ? 'LCD ' + preview.firmwareVersion.replace('2.22.0-', '') + ' / App' + preview.applicationCounter : previous ? 'LCD DE3.102 / App675' : 'LCD DE4.1 / App678';
+    const name = oled ? 'OLED DE3.87 Test 6' : preview ? 'LCD ' + preview.firmwareVersion.replace('2.22.0-', '') + ' / App' + preview.applicationCounter : previous ? 'LCD DE3.102 / App675' : 'LCD DE4.2 / App680';
     sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + revision);
     setText(sourceLink, 'Quellcode ' + name, name + ' source code');
 }
@@ -112,7 +113,7 @@ function controls() {
     const boardConflict = boardHints.length > 1 || handoffBoard && handoffBoard !== boardSelect.value;
     const ref = recentBootReference();
     const target = latestState.target;
-    const transferCandidate = [lcdTest679Package, lcdTest680Package].find(entry => target?.counter === entry.counter);
+    const transferCandidate = [lcdTest679Package, lcdFinal680Package].find(entry => target?.counter === entry.counter);
     const candidateConflict = transferCandidate && ref && (selectedProfileMismatch(transferCandidate) || ref.app > target.counter);
     const targetConflict = candidateConflict || target && ref && (!target.softDevices.includes(ref.sd) ||
         boardSelect.value === 'OLED' && ref.app > target.counter);
@@ -128,7 +129,7 @@ function controls() {
     const packageBlocked = entry => Boolean(boardConflict || bundledSelect.disabled || !entry ||
         entry.board !== boardSelect.value || selectedProfileMismatch(entry) || ref && ref.app > entry.counter);
     loadBundled.disabled = packageBlocked(selected);
-    loadPreview.disabled = packageBlocked(bundled?.catalog.packages.find(entry => entry.id === lcdReleasePackage.id));
+    loadPreview.disabled = packageBlocked(bundled?.catalog.packages.find(entry => entry.id === lcdFinal680Package.id));
     if (downgrade) setText(bundledInfo, 'Die gelesene Anwendung hat einen höheren Zähler. Wähle eine gleich neue oder neuere Version.', 'The installed application has a higher counter. Choose the same or a newer version.');
     if (mismatch) setText(bundledInfo, `Dieses Paket setzt ${selected.bootloader} und ${selected.softDevice} voraus. Die zuletzt gelesenen Bootdaten weichen davon ab.`, `This package requires ${selected.bootloader} and ${selected.softDevice}. The most recent boot readings differ from this profile.`);
     if (boardConflict) setText(bundledInfo, 'Die Displayauswahl widerspricht dem Gerätelink. Öffne die DFU-Seite vom passenden Gerät erneut.',
@@ -227,7 +228,7 @@ function transferEstimate(state, now) {
 }
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
-    validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}, [lcdRelease, lcdTest679, lcdTest680, ...lcdPreviews]),
+    validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}, [lcdFinal680, lcdRelease, lcdTest679, ...lcdPreviews]),
     createDfu: () => new SecureDfu(CRC32.buf, undefined, 0, { extendCrc32: CRC32.buf, probeInitPacket: boardSelect.value === 'LCD',
         windowedFirmwareWrites: boardSelect.value === 'LCD' }),
     onStatus: (de, en) => setText(statusText, de, en),
@@ -252,9 +253,9 @@ function profileInfo() {
         oled ? 'OLED-Firmware übertragen' : 'LCD-Firmware übertragen',
         oled ? 'Update OLED firmware' : 'Update LCD firmware');
     setText(document.getElementById('profile-description'),
-        oled ? 'OLED SH1106 · S112 7.2.0 · vorhandenes SPIFFS oder natives LittleFS. Test 6 benötigt noch einen Praxistest auf einem OLED.'
+        oled ? 'OLED SH1106 · S112 7.2.0 · vorhandenes SPIFFS oder natives LittleFS. Fernbedienung und Displayfoto wurden auf einem OLED bestätigt.'
             : 'LCD · PFS1 · S112 7.3.0. Wähle eine App für deinen Bootloader.',
-        oled ? 'OLED SH1106 · S112 7.2.0 · existing SPIFFS or native LittleFS. Test 6 still requires a physical OLED trial.'
+        oled ? 'OLED SH1106 · S112 7.2.0 · existing SPIFFS or native LittleFS. Remote control and screen capture were confirmed on one OLED.'
             : 'LCD · PFS1 · S112 7.3.0. Choose an application for your bootloader.');
     setText(bundledInfo,
         oled ? 'Veröffentlichte OLED-App für SH1106 und S112 7.2.0 wählen.' : defaultBundledInfo,
@@ -279,7 +280,7 @@ function populateCatalog(id) {
             `${entry.version} · ${preview ? 'test release' : entry === current ? 'stable release' : 'earlier stable release'} · ${entry.bootloader} · ${size}`);
         bundledSelect.appendChild(option);
     }
-    const selectedId = id === undefined && boardSelect.value === 'LCD' ? lcdReleasePackage.id : id;
+    const selectedId = id === undefined && boardSelect.value === 'LCD' ? lcdFinal680Package.id : id;
     const selected = entries.find(entry => entry.id === selectedId);
     if (selected) {
         bundledSelect.value = selected.id;
@@ -301,6 +302,7 @@ try {
     bundled = new AllmiiboBundledPackages.Loader({catalog:runtimeCatalog,updater,
         pageUrl:globalThis.location.href,onStatus:(de, en) => setText(statusText, de, en),onState:controls});
     const requested = new URLSearchParams(globalThis.location.search).getAll('package');
+    if (requested.length === 1 && requested[0] === 'de4.2-b2-lcd-app-test') requested[0] = lcdFinal680Package.id;
     // Historical Test 1 links point to the same signed App662 archive.
     if (requested.length === 1 && requested[0] === 'de3.89-lcd-test1-app') requested[0] = 'de3.89-lcd-app';
     const selected = requested.length === 1 && bundled.catalog.packages.find(entry => entry.id === requested[0]);
@@ -334,7 +336,7 @@ loadBundled.addEventListener('click', loadSelectedPackage);
 loadPreview.addEventListener('click', () => {
     controls();
     if (loadPreview.disabled) return;
-    bundledSelect.value = lcdReleasePackage.id;
+    bundledSelect.value = lcdFinal680Package.id;
     profileInfo();
     return loadSelectedPackage();
 });

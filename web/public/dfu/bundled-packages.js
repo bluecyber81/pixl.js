@@ -19,14 +19,14 @@
                 'Unpassendes LCD-App678-Profil.', 'Incorrect LCD App678 profile.');
             const transfers = {
                 '2.22.0-DE4.2-b1': {counter:679, id:'de4.2-b1-lcd-app-test', file:'Allmiibo_LCD_DE4_2_b1_App679_NUR_APP_TEST.zip', bytes:257000, sha256:'1e508061e86d75addb1345d5d8c9b0eac94ebf02081c519517461e952a7f5f17'},
-                '2.22.0-DE4.2-b2': {counter:680, id:'de4.2-b2-lcd-app-test', file:'Allmiibo_LCD_DE4_2_b2_App680_NUR_APP_TEST.zip', bytes:257040, sha256:'4348e1757224b076064039feda58b86329b4db0d84681f15fcb22918f148f7ca'},
+                '2.22.0-DE4.2-b2': {counter:680, id:'de4.2-lcd-app', file:'Allmiibo_LCD_DE4_2_App680_NUR_APP.zip', bytes:257040, sha256:'4348e1757224b076064039feda58b86329b4db0d84681f15fcb22918f148f7ca'},
             };
             const transfer = Object.hasOwn(transfers, item.version) && transfers[item.version];
             if (transfer) {
                 need(!seen.has(item.id) && Object.entries(transfer).every(([key,value]) => item[key] === value) &&
                     item.board === 'LCD' && item.storage === 'PFS1' && item.bootloader === 'Z21' && item.softDevice === 'S112 7.3.0' &&
-                    item.channel === 'prerelease' && item.applicationOnly === true && item.migrationRequired === false,
-                    `Das Paket passt nicht zum signierten LCD-Test App${transfer.counter}.`, `The package does not match the signed LCD App${transfer.counter} test.`);
+                    (transfer.counter === 680 ? !item.channel : item.channel === 'prerelease') && item.applicationOnly === true && item.migrationRequired === false,
+                    `Das Paket passt nicht zum signierten LCD-App${transfer.counter}.`, `The package does not match the signed LCD App${transfer.counter} release.`);
                 seen.add(item.id);
                 return Object.freeze({...item});
             }
@@ -79,7 +79,7 @@
         if (board === 'LCD' && (targetCounter === 679 || targetCounter === 680)) {
             const required = targetCounter === 679 ? '2.22.0-DE4.2-b1' : '2.22.0-DE4.2-b2';
             need(entry?.version === required && candidate.image.target.softDevices.length === 1,
-                `Wähle für App${targetCounter} die passende signierte LCD-Test-ZIP.`, `For App${targetCounter}, select the matching signed LCD test ZIP.`);
+                `Wähle für App${targetCounter} die passende signierte LCD-ZIP.`, `For App${targetCounter}, select the matching signed LCD ZIP.`);
         }
         need(!entry || entry.board === board, 'Diese ZIP gehört zum anderen Display. Wähle das passende Gerät und Paket.',
             'This ZIP targets the other display. Select the matching device and package.');

@@ -36,6 +36,14 @@ class NormalReleaseIdentityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'exact header'):
             self.identity(version='2.22.0-DE3.104', counter=677, version_header_sha256=digest)
 
+    def test_promoted_app680_keeps_its_exact_compiled_build_label(self):
+        self.header.write_text('#define VERSION "2.22.0-DE4.2-b2"\n#define TARGET 0\n')
+        digest = build_lcd.sha256(self.header)
+        self.assertEqual(self.identity(version='2.22.0-DE4.2-b2', counter=680, version_header_sha256=digest),
+                         ('2.22.0-DE4.2-b2', 680, digest))
+        with self.assertRaisesRegex(ValueError, 'exact header'):
+            self.identity(version='2.22.0-DE4.2', counter=680, version_header_sha256=digest)
+
     def test_candidate_does_not_claim_unavailable_binary_qualification(self):
         self.assertEqual(self.identity('candidate', application_sha256=None,
                                       production_source_id_sha256=None)[:2], ('2.22.0-DE3.98', 671))

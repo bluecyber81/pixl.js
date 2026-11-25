@@ -6,7 +6,6 @@ export function projectDownloads(buildVersion) {
   const fileVersion = version.replaceAll('.', '_');
   return {
     version,
-    transferBeta680: 'firmware/Allmiibo_LCD_DE4_2_b2_App680_NUR_APP_TEST.zip',
     transferBeta: 'firmware/Allmiibo_LCD_DE4_2_b1_App679_NUR_APP_TEST.zip',
     labelSuffix: version === buildVersion ? '' : ' · ' + version,
     portable: directory + 'Allmiibo_Dateimanager_' + fileVersion + '_Portable.zip',

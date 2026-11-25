@@ -1,23 +1,22 @@
 # Allmiibo LCD and Pixl.js OLED
 
-## LCD DE4.1 / App678 and file manager 3.66.2
+## LCD DE4.2 / App680 and file manager 3.66.3
 
-DE4.1 is the regular firmware for the nRF52832 Allmiibo with an ST7567 LCD, existing Packed LittleFS (PFS1), Z21 bootloader and Nordic S112 7.3.0 (FWID 0x0126). A compatible LCD running App675, App676 or App677 can update directly. Back up your files and select the intact signed ZIP in **nRF Device Firmware Update** on your phone. After restart, **Device & diagnostics** should show **2.22.0-DE4.1** and application counter **678**.
+**DE4.2 is the owner-confirmed final release** for the nRF52832 Allmiibo with an ST7567 LCD, existing Packed LittleFS (PFS1), Z21 bootloader and Nordic S112 7.3.0 (FWID 0x0126). **Device & diagnostics** shows **2.22.0-DE4.2-b2 / App680**. If you already see that version and counter, you have the final release. The signed application ZIP is byte-for-byte identical to the tested package.
 
-[LCD phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Update in browser](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.1-lcd-app#board=LCD) · [Verification kit with BIN and HEX](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_App678_Pruefpaket.zip) · [GitHub release](https://github.com/bluecyber81/pixl.js/releases/tag/de4.1)
+[LCD phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Update an LCD in the browser](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.2-lcd-app#board=LCD) · [Verification kit with BIN and HEX](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_Pruefpaket.zip) · [GitHub release](https://github.com/bluecyber81/pixl.js/releases/tag/de4.2)
 
-- **Switch 2 wake:** A failed settings save can be retried. “Forget pairing” asks for confirmation with Cancel selected initially. Confirming removes the local wake profile and turns off automatic button-start wake.
-- **Images and video:** The receiver refreshes the display on complete frames and status changes. The animation player offers a session-only loop and frame counter. Preview scrolling text on your phone and send it to the LCD or save it for the player.
-- **File transfers.** On compatible LCDs, Web 3.66.2 groups small reads for backups and content checks. New subfolders can be published in stages. Windows Web DFU uses larger confirmed transfer windows on LCD. The firmware selector defaults to DE4.1. [Optional LCD App680 beta](https://github.com/bluecyber81/pixl.js/releases/tag/de4.2-b2-lcd-transfer-test)
-- **File manager:** Version 3.66.2 recognizes the DE4 family for supported LCD features and verifies the matching update package. The catalogue includes the English and German game notes for Mineru’s Construct.
+- **Collection checks and backup.** The file manager reads small files in groups on supported LCDs. On the same App680 LCD, checking the contents of 26 figures of 540 bytes each took 10.29 seconds with file manager 3.66.2, down from 20.85 seconds with 3.66.1. Both runs took about 44 seconds for 25 files of 2 KiB each. A complete backup ZIP has yet to be timed on hardware with 3.66.3.
+- **Folder uploads.** App680 can create several small files together in PFS1. The file manager uses this when adding new subfolders. After reconnecting, a folder upload can resume in the same browser tab.
+- **Switch 2, images and video.** “Forget pairing” removes the local wake profile after confirmation. The animation player supports looping. You can preview scrolling text on your phone and send it to the LCD.
 
-[Open file manager](https://bluecyber81.github.io/pixl.js/) · [Image & video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.2/Allmiibo_Dateimanager_3_66_2_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.2.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
+[Highlights since DE3.10](docs/PROJECT_OVERVIEW.md)
 
-The 24 November device report covers the immediately preceding App677. Physical App678 readback and interrupted DFU on hardware were pending at publication. [DE4.1 qualification](docs/validation/DE4_1.json) · [App677 owner report](https://github.com/bluecyber81/pixl.js/releases/tag/de3.104-lcd-test1)
+[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.3/Allmiibo_Dateimanager_3_66_3_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.3.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
 
-## Historical downloads and separate OLED releases
+## OLED and older LCD devices
 
-The SH1106 OLED has its own update path. The historical two-stage Android package includes App662 for compatible older LCDs that need Z21 and S112 7.3.0. Install DE4.1 as a separate application after the system update. [Requirements and storage migration](docs/INSTALLATION.md) · [OLED test release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-oled-t6)
+**DE3.87 Test 6 / App86** is the separate release for the three-button SH1106 OLED. The historical two-stage Android package includes App662 for compatible older LCDs with a bootloader counter below 21. After completing both stages and confirming Z21 and S112 7.3.0, install the separate App680 LCD application. [OLED test release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-oled-t6) · [Installation requirements and storage migration](docs/INSTALLATION.md)
 
 ## Archive: LCD DE3.89 / App662
 
@@ -54,7 +53,7 @@ For Allmiibo LCD with ST7567, PFS1, Z21 and S112 7.3.0. The ZIP updates the LCD 
 
 ## LCD DE3.85 / App658 · earlier test release
 
-For **LCD/ST7567 with Packed LittleFS (PFS1), Z21 and S112 7.3.0**. [App-only ZIP for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip) · [Sources and proof package](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip). This update keeps the bootloader, SoftDevice and collection. On 18 November 2026 the owner reported successful LCD testing. Their diagnostic identifies App658, Z21 and S112 7.3.0. A physical Android DFU interruption and resumption remains an open test. DE3.81 / App654 remains the regular LCD release.
+For **LCD/ST7567 with Packed LittleFS (PFS1), Z21 and S112 7.3.0**. [App-only ZIP for phones](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_658_NUR_APP.zip) · [Sources and proof package](https://github.com/bluecyber81/pixl.js/releases/download/de3.85-lcd-test1/Allmiibo_LCD_DE3_85_App658_Pruefpaket.zip). This update keeps the bootloader, SoftDevice and collection. On 18 November 2026 the owner reported successful LCD testing. Their diagnostic identifies App658, Z21 and S112 7.3.0. A physical Android DFU interruption and resumption remains an open test. DE3.81 / App654 was the regular LCD release at that time.
 
 **Settings → Device test** now cycles through pixel/button information, remote status and the backlight test. Short Center advances; on the light page, Left sets 5% PWM and Right 100%. Short Center returns to the information page; long Center exits. Leaving or sleep restores the previous backlight setting. PWM target/readback values are not measured physical brightness. The larger temporary mount-cache configuration is an experiment, with no claimed real-device speedup yet.
 

@@ -313,9 +313,7 @@
       <template #lcd>
       <CurrentLcdDownloads :connected="connected" :version="firmwareVersion" :boot="bootInfo" :locale="language" />
       <div class="tool-section">
-        <h3>LCD DE4.2-b2 / App680 · Beta</h3>
-        <p>{{ language.startsWith('de') ? 'App680 nutzt beim Schreiben Ordnerfilter und aktualisiert das Dateisystem-Manifest atomar. Auf einem LCD wurden das Update und ein kurzer Upload mit SHA-Prüfung getestet. Die App-ZIP setzt Z21 und S112 7.3.0 voraus.' : 'App680 uses directory filters during writes and updates the filesystem manifest atomically. The update and a short upload with SHA verification were tested on one LCD. The app ZIP requires Z21 and S112 7.3.0.' }}</p>
-        <p><a :href="archiveLinks.transferBeta680" download>{{ language.startsWith('de') ? 'App680 fürs Handy herunterladen (ZIP)' : 'Download App680 for your phone (ZIP)' }}</a> · <a :href="'dfu/web.html?package=de4.2-b2-lcd-app-test' + (connected ? lastDfuReference || '' : '')">{{ language.startsWith('de') ? 'App680 im Web-DFU öffnen' : 'Open App680 in Web DFU' }}</a></p>
+        <p>{{ language.startsWith('de') ? 'DE4.2 / App680 ist die finale LCD-Version. Das Gerät meldet 2.22.0-DE4.2-b2. Wenn diese Version bereits installiert ist, ist kein weiteres Flashen erforderlich.' : 'DE4.2 / App680 is the final LCD release. The device reports 2.22.0-DE4.2-b2. If this version is already installed, there is no need to flash it again.' }}</p>
         <h3>LCD DE4.2-b1 / App679 · Beta</h3>
         <p>{{ language.startsWith('de') ? 'App679 unterstützt den Gruppen-Upload kleiner Dateien ebenfalls. Das App-Update setzt Z21 und S112 7.3.0 voraus.' : 'App679 also supports grouped small-file uploads. The app update requires Z21 and S112 7.3.0.' }}</p>
         <p><a :href="archiveLinks.transferBeta" download>{{ language.startsWith('de') ? 'App679 fürs Handy herunterladen (ZIP)' : 'Download App679 for your phone (ZIP)' }}</a> · <a :href="'dfu/web.html?package=de4.2-b1-lcd-app-test' + (connected ? lastDfuReference || '' : '')">{{ language.startsWith('de') ? 'App679 im Web-DFU öffnen' : 'Open App679 in Web DFU' }}</a></p>
@@ -611,9 +609,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.66.2" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.2' : '3.66.2 source code' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.66.2 (ZIP)' : 'Windows 3.66.2 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.2 (ZIP)' : '3.66.2 source code (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.66.3" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.3' : '3.66.3 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.66.3 (ZIP)' : 'Windows 3.66.3 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.3 (ZIP)' : '3.66.3 source code (ZIP)' }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>

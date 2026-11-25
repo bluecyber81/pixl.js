@@ -1,6 +1,6 @@
 import { lcdReleasePackage as package674 } from '../../public/dfu/lcd-app674-reference.mjs';
 import { lcdRelease as app675, lcdReleasePackage as package675 } from '../../public/dfu/lcd-app675-reference.mjs';
-import { lcdTest680, lcdTest680Package } from '../../public/dfu/lcd-app680-reference.mjs';
+import { lcdTest680, lcdTest680Package, lcdFinal680, lcdFinal680Package } from '../../public/dfu/lcd-app680-reference.mjs';
 import { lcdTest679, lcdTest679Package } from '../../public/dfu/lcd-app679-reference.mjs';
 import { lcdReleasePackage } from '../../public/dfu/lcd-release-reference.mjs';
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
@@ -44,14 +44,15 @@ export function packagePresentation(entry, session = {}, boot = null) {
     (diagnostic.softDeviceValid && (diagnostic.softDeviceFwid !== UPDATE_TARGET.softDevice.fwid ||
       diagnostic.softDeviceVersion !== UPDATE_TARGET.softDevice.version || diagnostic.softDeviceVariant !== UPDATE_TARGET.softDevice.variant))
   ));
-  const specialTags = { [lcdTest680Package.id]:lcdTest680.releaseTag, [lcdTest679Package.id]:lcdTest679.releaseTag, 'de3.104-lcd-app-test1': 'de3.104-lcd-test1', 'de3.103-lcd-app-test1': 'de3.103-lcd-test1', 'de3.73-lcd-app': 'de3.73-test646', 'de3.84-lcd-test1-app': 'de3.84-lcd-test1', 'de3.85-lcd-test1-app': 'de3.85-lcd-test1', 'de3.87-lcd-test1-app': 'de3.87-lcd-test1', 'de3.88-lcd-test1-app': 'de3.88-lcd-test1', 'de3.89-lcd-test1-app': 'de3.89-lcd-test1' };
+  const specialTags = { [lcdFinal680Package.id]:lcdFinal680.releaseTag, [lcdTest680Package.id]:lcdTest680.releaseTag, [lcdTest679Package.id]:lcdTest679.releaseTag, 'de3.104-lcd-app-test1': 'de3.104-lcd-test1', 'de3.103-lcd-app-test1': 'de3.103-lcd-test1', 'de3.73-lcd-app': 'de3.73-test646', 'de3.84-lcd-test1-app': 'de3.84-lcd-test1', 'de3.85-lcd-test1-app': 'de3.85-lcd-test1', 'de3.87-lcd-test1-app': 'de3.87-lcd-test1', 'de3.88-lcd-test1-app': 'de3.88-lcd-test1', 'de3.89-lcd-test1-app': 'de3.89-lcd-test1' };
   const releaseTag = specialTags[entry.id] || entry.version.split('-')[1].toLowerCase();
   const localDownloadUrl = deploymentPath(`firmware/${entry.file}`); // Validate even a pinned download's filename.
   const samePackage = reference => ['id','version','counter','file','board','bytes','sha256']
     .every(key => entry[key] === reference[key]);
   const previous = [[package675, app675.downloadCommit], [package674, 'a39d43c7dea2681be1981695837b2cb8473db926']].find(([descriptor]) => samePackage(descriptor));
   let downloadUrl = localDownloadUrl;
-  if (samePackage(lcdReleasePackage)) downloadUrl = 'https://github.com/bluecyber81/pixl.js/releases/download/de4.1/' + entry.file;
+  if (samePackage(lcdFinal680Package)) downloadUrl = 'https://github.com/bluecyber81/pixl.js/releases/download/' + lcdFinal680.releaseTag + '/' + entry.file;
+  else if (samePackage(lcdReleasePackage)) downloadUrl = 'https://github.com/bluecyber81/pixl.js/releases/download/de4.1/' + entry.file;
   else if (samePackage(lcdTest680Package)) downloadUrl = 'https://github.com/bluecyber81/pixl.js/releases/download/' + lcdTest680.releaseTag + '/' + entry.file;
   else if (samePackage(lcdTest679Package)) downloadUrl = 'https://github.com/bluecyber81/pixl.js/releases/download/' + lcdTest679.releaseTag + '/' + entry.file;
   else if (previous) downloadUrl = 'https://github.com/bluecyber81/pixl.js/raw/' + previous[1] + '/fw/releases/' + entry.file;
@@ -87,8 +88,8 @@ export function currentLcdDownloads(entry, session, boot) {
 export function firmwarePackageText(locale='de_DE') {
   return String(locale).startsWith('de')?{
     systemGuide:'Android-Komplettpaket mit Z21 und Anleitung',
-    source:'Quellcode der LCD-Firmware DE4.1 / App678',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
-    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. Die normale DE4.1 / App678 setzt Z21 voraus. Ein bestehendes PFS1-Dateisystem benötigt dafür keine erneute Speicherumstellung.',
+    source:'Quellcode der LCD-Firmware DE4.2 / App680',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
+    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. Die normale DE4.2 / App680 setzt Z21 voraus. Ein bestehendes PFS1-Dateisystem benötigt dafür keine erneute Speicherumstellung.',
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Der Browser prüft die Paket-Prüfsumme und vergleicht den App-Zähler mit einer aktuellen Gerätediagnose. Z15, Z17 und Z19 prüfen die Signatur und können auch eine ältere, gültig signierte Anwendung installieren. Bootloader-Pakete haben einen eigenen Versionszähler.',
     download:'ZIP herunterladen',dfu:'Dieses Paket im Updater öffnen',
@@ -99,8 +100,8 @@ export function firmwarePackageText(locale='de_DE') {
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
   }:{
     systemGuide:'Full Android package with Z21 and instructions',
-    source:'Source code for LCD firmware DE4.1 / App678',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
-    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. Normal DE4.1 / App678 requires Z21. An existing PFS1 filesystem does not need another storage migration for this update.',
+    source:'Source code for LCD firmware DE4.2 / App680',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
+    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. Normal DE4.2 / App680 requires Z21. An existing PFS1 filesystem does not need another storage migration for this update.',
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The browser verifies the package checksum and compares the application counter when a recent device reading is available. Z15, Z17 and Z19 check the signature and can install an older, validly signed application. Bootloader packages have a separate version counter.',
     download:'Download ZIP',dfu:'Open this package in the updater',

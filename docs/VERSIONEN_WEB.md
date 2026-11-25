@@ -1,5 +1,9 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.66.3 · 25. November 2026
+
+Die normale Homepage und die Windows-Ausgabe bieten DE4.2 / App680 als reguläres LCD-Update an. Die getrennte OLED-Auswahl führt zu DE3.87 Test 6 / App86. Auf unterstützten LCDs liest der Dateimanager kleine Dateien gruppenweise. Die Auswahl **Schnellübersicht** im Figurenkatalog liest nur die Verzeichnisse, **Dateiinhalte prüfen** liest die passenden BIN-Dateien. [Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.3/Allmiibo_Dateimanager_3_66_3_Portable.zip) · [Web-Release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.3)
+
 ## Dateimanager 3.66.2 · 25. November 2026
 
 Die normalen Datei- und Ordnerübertragungen, Sicherungen und die Inhaltsprüfung im Figurenkatalog verwenden die schnellen Wege auf unterstützten LCDs. Das LCD-Web-DFU verwendet nach der Gerätebestätigung größere Schreibfenster. DE4.1/App678 bleibt die stabile Vorauswahl. App680 und App679 stehen im LCD-Updater als Vorabversionen zur Auswahl. [Änderungen und Bedienung](../web/LIESMICH_3_66_2.txt)

@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "tag": "de4.2-b2-lcd-transfer-test",
+  "board": "LCD",
+  "firmware": "2.22.0-DE4.2-b2",
+  "counter": 680,
+  "production_commit": "e6dc031f206ce0d545111ad9f952bc3da4aaaee9",
+  "source_id": "16425b76fc84dc65bd9893d1d8337741abbf0fa8e4fc1aa3545183fb57fe600e",
+  "engine_sha256": "15db90c7d572bfc3043664a90ed077125a9645bca46055ae2fe0dafe0cb055c0",
+  "production_input_count": 722,
+  "files": {
+    "app_only_zip": {
+      "name": "Allmiibo_LCD_DE4_2_b2_App680_NUR_APP_TEST.zip",
+      "sha256": "4348e1757224b076064039feda58b86329b4db0d84681f15fcb22918f148f7ca",
+      "bytes": 257040
+    },
+    "application_bin": {
+      "sha256": "b1b560b945f6a4b4cb66d1d67580695c732ec460950fbe1b903b6d94baab3f08",
+      "bytes": 364464
+    },
+    "application_hex": {
+      "sha256": "01dfc60948bfbabd9b8ddfaacf0d3471c1bc5018c8d3561ca3a55e087b1f5c98",
+      "bytes": 1025260
+    }
+  },
+  "build": {
+    "reproduced_bin_and_hex": true,
+    "pins": {
+      "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 12.2.Rel1 (Build arm-12.24)) 12.2.1 20221205",
+      "compiler_sha256": "a3c5b9d3b1d05160462b6c86e46f3a3471db314f6406f0e6a98973524ab00da3",
+      "make": "GNU Make 4.3",
+      "sdk_archive_sha256": "f726a4e717a0d8e00fe3de9f1e76b19a0c9646291de00097a75cda44c4bcd6d6"
+    },
+    "linker_budget": {
+      "binary_bytes": 364464,
+      "linker_flash_used_bytes": 364476,
+      "observed": {
+        "flash_reserve_bytes": 8260,
+        "heap_stack_gap_bytes": 1672,
+        "stack_reserved_bytes": 8192
+      },
+      "minimum": {
+        "flash_reserve_bytes": 8192,
+        "heap_stack_gap_bytes": 1536,
+        "stack_reserved_bytes": 8192
+      }
+    },
+    "host_suites": 199,
+    "host_suites_passed": 199,
+    "independent_init_packet_verifiers": 2,
+    "pfs_group_interruption_cases": 1014,
+    "pfs_other_interruption_cases": 636,
+    "pfs_no_space_cases": 5,
+    "all_files_reread_after_model_remount": 1081
+  },
+  "hardware": {
+    "sample": "one LCD with Z21 and S112 7.3.0",
+    "verified_app_dfu_bytes": 364464,
+    "windows_chrome_seconds_to_final_execute": 50.223,
+    "firmware_and_source_id_readback": true,
+    "engine_id_readback": true,
+    "folder_files": 13,
+    "folder_bytes": 8528,
+    "web_seconds": [
+      37.242,
+      35.701
+    ],
+    "mochi_seconds": [
+      33.731
+    ],
+    "full_1081_file_radio_upload_seconds": null,
+    "physical_interrupted_dfu": null,
+    "running_application_bin_hash_measured": false
+  },
+  "compatibility": {
+    "filesystem": "PFS1",
+    "softdevice_fwid": "0x0126",
+    "application_only": true,
+    "filesystem_migration": false
+  }
+}

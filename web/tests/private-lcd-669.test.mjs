@@ -144,7 +144,7 @@ test('private App669 recognition binds the actual signed application ZIP, BIN an
   assert.equal(await updater.setPackage(new File([bytes], 'renamed.zip')), true);
   assert.equal(state.previewVersion, '2.22.0-DE3.96');
   assert.equal(state.ready, true);
-  assert.equal(catalog.packages[0].counter, 678);
+  assert.equal(catalog.packages[0].counter, 680);
   assert.equal(catalog.packages.find(item => item.id === 'de3.89-lcd-app').counter, 662);
   assert.equal(catalog.packages.find(item => item.id === 'de3.100-lcd-app').counter, 673);
   assert.equal(catalog.packages.some(item => item.counter === 669), false);
@@ -182,15 +182,15 @@ test('App669 diagnostics and capacity require the new exact source, counter and 
   assert.equal(supportsFolderPublication('2.22.0-DE3.87-OLEDt6',profile.layout.engineSha256),false);
 });
 
-test('the mobile current download uses normal App678 while retained App669 keeps its own runtime package', () => {
+test('the mobile current download uses normal App680 while retained App669 keeps its own runtime package', () => {
   const html = readFileSync(new URL('../public/dfu/web.html', import.meta.url), 'utf8');
   const page = readFileSync(new URL('../public/dfu/page.js', import.meta.url), 'utf8');
-  assert.match(html, /App678 direkt laden und prüfen/);
+  assert.match(html, /App680 direkt laden und prüfen/);
   assert.ok(lcdPreviewPackages.includes(lcdPreviewPackage));
-  assert.ok(html.includes('https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip'));
-  assert.match(html, /DE4\.1 \/ App678/);
-  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.66.2'"));
-  assert.equal(catalog.packages[0].version, '2.22.0-DE4.1');
-  assert.ok(page.includes("'./lcd-release-reference.mjs?v=3.66.2'"));
+  assert.ok(html.includes('https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip'));
+  assert.match(html, /DE4\.2 \/ App680/);
+  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.66.3'"));
+  assert.equal(catalog.packages[0].version, '2.22.0-DE4.2-b2');
+  assert.ok(page.includes("'./lcd-release-reference.mjs?v=3.66.3'"));
 });
 

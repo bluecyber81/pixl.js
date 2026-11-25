@@ -95,7 +95,7 @@ export function updateCheckText(locale = 'de_DE', preview = null) {
   const copy = previousRelease ? { ...strings, preview: strings.previousRelease, previewProfile: strings.previousRelease,
     overall: { ...strings.overall, preview: strings.previousReleaseMatch },
     fields: { ...strings.fields, previewBootCounter: strings.fields.targetBootCounter } } : strings;
-  const version = UPDATE_TARGET.application.version, short = version.split('-').at(-1);
+  const version = UPDATE_TARGET.application.version, short = 'DE4.2';
   const application = preview || UPDATE_TARGET.application;
   return { ...copy, target: `${german ? 'Aktuelle LCD-Ausgabe' : 'Current LCD release'} · ${short} / App${UPDATE_TARGET.application.counter} · Z21 · S112 7.3.0`,
     targets: { ...copy.targets, application: `${preview ? copy.previewProfile + ' · ' : ''}${application.version} · ${german ? 'Zähler' : 'counter'} ${application.counter}`,
