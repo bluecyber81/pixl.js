@@ -29,6 +29,12 @@ if (transferTest) {
       const eyebrow = '<p class="eyebrow">';
       if (!marked.includes(eyebrow)) throw new Error('Missing visible DFU version');
       marked = marked.replace(eyebrow, eyebrow + transferTestLabel + ' · ');
+      for (const name of ['secure-dfu.js', 'page.js']) {
+        const ref = name + '?v=' + release.version + '"';
+        if (!marked.includes(ref)) throw new Error('Missing updater client reference: ' + name);
+        const hash = digest(fs.readFileSync(path.join(output, 'dfu', name))).slice(0, 16);
+        marked = marked.replace(ref, name + '?v=' + release.version + '-' + hash + '"');
+      }
     }
     fs.writeFileSync(file, marked);
   }

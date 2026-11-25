@@ -76,5 +76,16 @@
   "includedFirmware": {
     "application": "DE4.1 App678",
     "sha256": "beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0"
+  },
+  "dfu": {
+    "status": "host Z21 model, complete signed App678",
+    "gattWrites": 3200,
+    "dataWrites": 2657,
+    "crcQueries": 358,
+    "objects": 89,
+    "previousGATTWrites": 5500,
+    "maximumDataWritesPerCheckedWindow": 8,
+    "maximumDataPayloadBytes": 140,
+    "physicalWindowsDfuTiming": "pending"
   }
 }

@@ -32,6 +32,10 @@ dieselben Dateien 17,28 Sekunden. Das entspricht rund 47 % weniger Zeit.
 Die beiliegende LCD-Firmware ist DE4.1 / App678. Der DFU-Updater nutzt die
 in Test 2 geprüfte Wortausrichtung. Bestätigt Z21 das vollständige
 142-Byte-Init-Paket, sendet er anschließend bis zu 140 Byte je Datenpaket.
+Nach einer ersten bestätigten Gerätequittung kann er bis zu acht Schreibvorgänge
+mit einer gemeinsamen CRC-Prüfung bündeln. Im Z21-Modell sank die Zahl der
+GATT-Schreibvorgänge für App678 von 5.500 auf 3.200. Eine Windows-DFU-Zeit
+über Funk ist noch offen.
 
 English
 
@@ -62,6 +66,9 @@ the same files. That is about 47% less elapsed time.
 The bundled LCD firmware is DE4.1 / App678. The DFU updater uses the word
 alignment tested in Transfer Test 2. When Z21 confirms the full 142-byte
 init packet, the updater subsequently sends up to 140 bytes per data write.
+After the first device acknowledgement it can group up to eight writes per
+CRC check. The Z21 model needed 3,200 GATT writes for App678, down from
+5,500. Windows firmware-update timing over Bluetooth is pending.
 
 Online-Test / Online test
 https://bluecyber81.github.io/pixl.js/test/transfer4/
