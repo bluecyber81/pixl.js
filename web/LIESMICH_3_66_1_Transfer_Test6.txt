@@ -1,0 +1,11 @@
+Allmiibo Dateimanager 3.66.1 – Transfer Test 6
+
+DE
+Diesen Ordner vollständig entpacken und Start-Dateimanager.cmd öffnen. Der lokale Start benötigt Python 3.8 oder neuer. Der lokale Server startet den Dateimanager im Browser. In Chrome oder Edge am Computer unter „Dateien“ mit „Bluetooth-Dateiübertragung“ auf dem LCD verbinden.
+Der Ordner-Upload spart auf App679 und App680 bei neuen Unterordnern Revisionsabfragen. Beim Gruppenabschluss wartet der Browser auf die Speicherbestätigung des Geräts. Bestehende Dateien und eine unterbrochene Gruppe werden beim Fortsetzen geprüft. Für einen vollständigen Vergleich „Vergleich nur lesend erstellen“ verwenden.
+Unter „Update“ ist LCD DE4.1/App678 die stabile Vorauswahl. App680 (DE4.2-b2, LCD) und App679 (DE4.2-b1, LCD) sind separate Testpakete. Beide setzen Packed LittleFS, Z21 und S112 7.3.0 voraus. Die ZIP fürs Handy unverändert speichern. Die App-ZIP enthält ausschließlich die Anwendung. Zu App680 siehe dist/guide/LCD-DE4.2-b2.txt.
+
+EN
+Extract the entire folder and run Start-Dateimanager.cmd. The local launcher requires Python 3.8 or newer. Use Chrome or Edge on the computer. Open “Bluetooth file transfer” on the LCD and connect from Files.
+Folder uploads on App679 and App680 avoid redundant revision queries for newly created subfolders. The browser waits for the device’s storage receipt on group completion. On resume it checks existing files and any interrupted group. Use the read-only comparison for a complete content check.
+Update defaults to stable LCD DE4.1/App678. App680 (DE4.2-b2, LCD) and App679 (DE4.2-b1, LCD) are separate test packages. Both require Packed LittleFS, Z21 and S112 7.3.0. Save the original ZIP for use on your phone. The app ZIP contains only the application. See dist/guide/LCD-DE4.2-b2.txt for App680 build details.

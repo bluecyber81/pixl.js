@@ -3,15 +3,16 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {lcdRelease, lcdReleasePackage} from '../public/dfu/lcd-release-reference.mjs';
+import {lcdTest680,lcdTest680Package} from '../public/dfu/lcd-app680-reference.mjs';
 import {lcdTest679,lcdTest679Package} from '../public/dfu/lcd-app679-reference.mjs';
 import {buildTarget} from './build-targets.mjs';
-import {transferTestLabel, transferTestTag} from '../src/lib/project-downloads.js';
+import {transferTestLabel, transferTestTag, transferBaseTag} from '../src/lib/project-downloads.js';
 
 const web = fileURLToPath(new URL('../', import.meta.url));
 const mode = process.argv[2];
 if (process.argv.length !== 3) throw new Error('Expected one build target');
 const [folder, base] = buildTarget(mode), output = path.join(web, folder);
-const transferTest = mode === 'test-transfer5' || process.env.VITE_BUILD_LABEL === transferTestLabel;
+const transferTest = mode === 'test-transfer6' || process.env.VITE_BUILD_LABEL === transferTestLabel;
 const packageBytes = fs.readFileSync(path.join(web, 'package.json'));
 const release = JSON.parse(packageBytes);
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -46,17 +47,22 @@ if (firmware.length !== lcdReleasePackage.bytes || digest(firmware) !== lcdRelea
     lcdReleasePackage.sha256 !== lcdRelease.otaSha256) throw new Error('Built firmware package differs from its exact release binding');
 const manifest = {schema:1, application:'allmiibo-dateimanager', version:release.version,
   base, channel:mode.startsWith('test-') ? 'isolated-test-path' : transferTest ? 'test' : 'normal',
-  ...(transferTest ? {label:transferTestLabel, sourceTag:transferTestTag} : {}),
+  ...(transferTest ? {label:transferTestLabel, sourceTag:transferTestTag, sourceTagStatus:'planned-local', sourceBaseTag:transferBaseTag} : {}),
   packageManifestSha256:digest(packageBytes), firmware:{id:lcdReleasePackage.id,
     version:lcdReleasePackage.version, counter:lcdReleasePackage.counter,
     path:firmwarePath, bytes:firmware.length, sha256:digest(firmware)}};
 if (transferTest) {
-  const file = 'firmware/' + lcdTest679Package.file;
-  const candidate = fs.readFileSync(path.join(output,file));
-  if (candidate.length !== lcdTest679Package.bytes || digest(candidate) !== lcdTest679Package.sha256 ||
-      lcdTest679.otaSha256 !== lcdTest679Package.sha256) throw new Error('Bundled test firmware differs from its signed reference');
-  manifest.testFirmware = {id:lcdTest679Package.id, version:lcdTest679Package.version, counter:lcdTest679Package.counter,
-    path:file, bytes:candidate.length, sha256:digest(candidate), board:'LCD', applicationOnly:true, hardwareAcceptance:lcdTest679.hardwareAcceptance};
+  const candidates = [[lcdTest680Package, lcdTest680], [lcdTest679Package, lcdTest679]];
+  const [current, previous] = candidates.map(([entry, reference]) => {
+    const file = 'firmware/' + entry.file;
+    const candidate = fs.readFileSync(path.join(output,file));
+    if (candidate.length !== entry.bytes || digest(candidate) !== entry.sha256 || reference.otaSha256 !== entry.sha256)
+      throw new Error('Bundled test firmware differs from its signed reference: ' + entry.file);
+    return {id:entry.id, version:entry.version, counter:entry.counter, path:file, bytes:candidate.length, sha256:entry.sha256,
+      board:'LCD', applicationOnly:true, hardwareAcceptance:reference.hardwareAcceptance};
+  });
+  manifest.testFirmware = current;
+  manifest.previousTestFirmware = previous;
 }
 fs.writeFileSync(path.join(output, 'release.json'), JSON.stringify(manifest, null, 2) + '\n');
 console.log(JSON.stringify({mode, version:release.version, firmware:lcdReleasePackage.id, manifest:'release.json'}));

@@ -1,0 +1,11 @@
+LCD DE4.2-b2 / App680 - Transfer Test 6
+
+DE: Lokale signierte LCD-Testanwendung für Packed LittleFS, Bootloader Z21 und S112 7.3.0 (0x0126). Die ZIP enthält nur die Anwendung. Neue Caches für häufig gelesene Verzeichnisdaten und die Metadaten-Tabelle sollen Schreibzugriffe beschleunigen. Die stabile Vorauswahl ist DE4.1/App678. App679 bleibt als Vergleich im Katalog verfügbar. Für eine vollständige Messung gelten die am echten Gerät erfassten Zeiten.
+
+EN: Local signed LCD test application for Packed LittleFS, bootloader Z21 and S112 7.3.0 (0x0126). The ZIP contains only the application. New caches for directory data and the storage manifest aim to speed up writes. DE4.1/App678 is the default. App679 remains available for comparison. Use the measured device results to assess transfer times.
+
+Source commit  e6dc031f206ce0d545111ad9f952bc3da4aaaee9
+SourceID       16425b76fc84dc65bd9893d1d8337741abbf0fa8e4fc1aa3545183fb57fe600e
+PackedFS SHA   15db90c7d572bfc3043664a90ed077125a9645bca46055ae2fe0dafe0cb055c0
+Application    b1b560b945f6a4b4cb66d1d67580695c732ec460950fbe1b903b6d94baab3f08 (364464 bytes)
+OTA SHA-256    4348e1757224b076064039feda58b86329b4db0d84681f15fcb22918f148f7ca (257040 bytes)

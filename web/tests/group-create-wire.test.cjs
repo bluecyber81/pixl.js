@@ -37,11 +37,11 @@ test('group codec preserves UTF-8 names and hashes all framed bytes within the a
     await assert.rejects(groupCreateFrames(folder,items,revision,1,243))
 })
 
-test('actual queue serializes group writes with ATT responses and waits for one correlated app receipt',async()=>{
+test('group uses ATT responses for BEGIN and DATA, and keeps the queue until the durable COMMIT receipt',async()=>{
   let started, unblock
   const begin=new Promise(r=>{started=r}), latch=new Promise(r=>{unblock=r})
   const f=await readDigestWire({},{groupWire:async(cmd,data,withoutResponse)=>{
-    assert.equal(withoutResponse,false)
+    assert.equal(withoutResponse, cmd === 0x28 && data[0] === 2)
     if(cmd===0x27)return {payload:cap}
     if(data[0]===0){started();await latch}
     if(data[0]===2)return {payload:receipt()}
@@ -73,3 +73,40 @@ test('unsupported, malformed, unrelated, early and wrong-generation receipts nev
     if(mode==='early'||mode==='reject')assert(!f.requests.some(w=>w[0]===0x28&&w[4]===2))
   }
 })
+
+test('local COMMIT write completion alone neither confirms the group nor releases the queue',async()=>{
+  let committed
+  const sawCommit = new Promise(resolve=>{committed=resolve})
+  const f=await readDigestWire({},{groupWire:async(cmd,frame,withoutResponse)=>{
+    if(cmd===0x27)return {payload:cap}
+    if(frame[0]===2) {
+      assert.equal(withoutResponse,true)
+      committed()
+    }
+    return null
+  }})
+  await f.api.vfs_probe_group_create(version)
+  const group=f.api.vfs_group_create(parent,entries,revision)
+  await sawCommit
+  const queued=f.api.vfs_small_create_revision(version)
+  await new Promise(resolve=>setImmediate(resolve))
+  assert(!f.requests.some(frame=>frame[0]===0x22))
+  f.bus.emit('ble_rx_data',Uint8Array.from([0x28,0,0,0,...receipt()]).buffer)
+  assert.equal(await group,next)
+  await queued
+  assert.equal(f.requests.at(-1)[0],0x22)
+})
+
+test('App680 and App679 require their own PackedFS identity and a live grouped capability',async()=>{
+  const {supportsFolderPublication,firmwareBoard}=require('../src/lib/hardware-profile.js');
+  const old='2.22.0-DE4.2-b1', current='2.22.0-DE4.2-b2', oldEngine='4b779ad5f10e12d881e0c96c4495c6db3290cbac3c015b50d11dd73dc8189758';
+  const newEngine='15db90c7d572bfc3043664a90ed077125a9645bca46055ae2fe0dafe0cb055c0';
+  assert.equal(firmwareBoard(current),'LCD');
+  for (const [v,engine,enabled] of [[current,newEngine,true],[old,oldEngine,true],[old,newEngine,false],[current,oldEngine,false]])
+    assert.equal(supportsFolderPublication(v,engine),enabled);
+  for(const status of [0,255]){
+    const f=await readDigestWire({},{groupWire:async()=>({status,payload:status?[]:cap})});
+    assert.equal(await f.api.vfs_probe_group_create(current),status===0);
+    assert.deepEqual(f.requests.map(packet=>packet[0]),[0x27]);
+  }
+});
