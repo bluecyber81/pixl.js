@@ -1382,5 +1382,38 @@
   "web_test_total": 2306,
   "web_test_passed": 2306,
   "web_test_failed": 0,
-  "web_test_skipped": 0
+  "web_test_skipped": 0,
+  "firmware_preview": {
+    "version": "2.22.0-DE4.2-b1",
+    "counter": 679,
+    "board": "LCD",
+    "status": "experimental-signed-application",
+    "hardware_acceptance": "pending",
+    "application_only": true,
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE4_2_b1_App679_NUR_APP_TEST.zip",
+    "application_bytes": 364416,
+    "application_sha256": "320863d4a3d140cc6082ec827cee2ddbfd1ec55ec37509305d195ecb9183a93e",
+    "ota_bytes": 257000,
+    "ota_sha256": "1e508061e86d75addb1345d5d8c9b0eac94ebf02081c519517461e952a7f5f17",
+    "source_commit": "1ae532485a4e765d4915e6ea7da9d92d4498a858",
+    "source_id": "4765a2b88d7a9e4af396ab1d83318f1124423df69d13fd3e3ca2326b93d774c6",
+    "engine_sha256": "4b779ad5f10e12d881e0c96c4495c6db3290cbac3c015b50d11dd73dc8189758",
+    "host_firmware_suites": 198,
+    "tested_bootloader": {
+      "name": "Z21",
+      "counter": 21,
+      "source": "bootloader-z21",
+      "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+      "included_in_application_ota": false,
+      "installation_readback_observed": false,
+      "qualification": "App679 data-phase simulation with the Z21 sources, including link and cold-reset interruptions. Physical validation pending.",
+      "application_counter": 679
+    },
+    "softdevice_requirements": [
+      "0x0126"
+    ],
+    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de4.2-b1-lcd-transfer-test",
+    "evidence": "docs/validation/DE4_2_B1_APP679.json",
+    "build_instructions": "docs/BUILD_DE4_2_B1_APP679.md"
+  }
 }

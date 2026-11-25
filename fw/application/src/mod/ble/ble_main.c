@@ -215,7 +215,7 @@ static volatile uint16_t m_previous_pwr_mgmt_sleep_timeout = BLE_CONNECT_SLEEP_T
 typedef struct {
     uint32_t request_result, retry_tick;
     uint16_t interval, latency, timeout;
-    uint8_t rx_phy, tx_phy, attempts, phy_status;
+    uint8_t rx_phy, tx_phy, attempts, phy_status, interval_attempts;
     bool params_valid, phy_valid, pending, retry;
 } ble_link_profile_t;
 static volatile ble_link_profile_t m_link_profile;
@@ -259,6 +259,38 @@ static void ble_link_phy_observe(const ble_gap_evt_phy_update_t *update) {
     }
 }
 
+/* GAP intervals are in units of 1.25 ms. The ordinary 20–75 ms preference
+ * also serves other applications. Only a subscribed file session asks for
+ * 20–30 ms, and only if the actual link interval is slower. */
+static void ble_file_interval_poll(void) {
+    const uint16_t min_interval = 16, max_interval = 24;
+    CRITICAL_REGION_ENTER();
+    if (m_link_profile.params_valid && m_link_profile.interval > max_interval && !m_link_profile.retry &&
+        m_link_profile.interval_attempts < 2 && m_sessions_enabled && m_file_mode && !m_remote_mode &&
+        !m_mode_pending && m_conn_handle != BLE_CONN_HANDLE_INVALID &&
+        m_nus_session_handle == m_conn_handle && m_release_handle == BLE_CONN_HANDLE_INVALID &&
+        ble_work_can_send()) {
+        const uint32_t now = app_timer_cnt_get();
+        const bool phy_starting = m_link_profile.pending &&
+            app_timer_cnt_diff_compute(now, m_link_profile.retry_tick) < APP_TIMER_TICKS(1000);
+        const bool retry_due = !m_link_profile.interval_attempts ||
+            app_timer_cnt_diff_compute(now, m_link_profile.retry_tick) >= APP_TIMER_TICKS(1000);
+        if (!phy_starting && retry_due) {
+            const ble_gap_conn_params_t params = {
+                .min_conn_interval = min_interval, .max_conn_interval = max_interval,
+                .slave_latency = 0, .conn_sup_timeout = m_link_profile.timeout
+            };
+            const uint32_t result = sd_ble_gap_conn_param_update(m_conn_handle, &params);
+            /* A central may keep its original interval. Retry only one local BUSY;
+             * the measured interval is updated solely by the GAP event observer. */
+            m_link_profile.interval_attempts = result == NRF_ERROR_BUSY ? m_link_profile.interval_attempts + 1 : 2;
+            /* PHY retries have finished before this policy may reuse their timestamp. */
+            m_link_profile.retry_tick = now;
+        }
+    }
+    CRITICAL_REGION_EXIT();
+}
+
 static void ble_phy_tuning_poll(void) {
 #if (BLE_GAP_PHYS_SUPPORTED & BLE_GAP_PHY_2MBPS)
     CRITICAL_REGION_ENTER();
@@ -285,6 +317,7 @@ static void ble_phy_tuning_poll(void) {
     }
     CRITICAL_REGION_EXIT();
 #endif
+    ble_file_interval_poll();
 }
 #endif
 

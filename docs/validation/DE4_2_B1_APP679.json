@@ -1,0 +1,203 @@
+{
+  "version": "2.22.0-DE4.2-b1",
+  "board": "LCD",
+  "counter": 679,
+  "sourceCommit": "1ae532485a4e765d4915e6ea7da9d92d4498a858",
+  "sourceId": "4765a2b88d7a9e4af396ab1d83318f1124423df69d13fd3e3ca2326b93d774c6",
+  "sourcesBound": 722,
+  "binarySha256": "320863d4a3d140cc6082ec827cee2ddbfd1ec55ec37509305d195ecb9183a93e",
+  "hexSha256": "9482d3f1bb97d4a306c5f4cb972b9f385da90096922260316c039a76ba4eed1b",
+  "binaryBytes": 364416,
+  "otaFile": "Allmiibo_LCD_DE4_2_b1_App679_NUR_APP_TEST.zip",
+  "otaSha256": "1e508061e86d75addb1345d5d8c9b0eac94ebf02081c519517461e952a7f5f17",
+  "otaBytes": 257000,
+  "engineSha256": "4b779ad5f10e12d881e0c96c4495c6db3290cbac3c015b50d11dd73dc8189758",
+  "targetS112Fwid": "0x0126",
+  "minimaAndObserved": {
+    "binary_bytes": 364416,
+    "linker_flash_used_bytes": 364428,
+    "observed": {
+      "flash_reserve_bytes": 8308,
+      "heap_stack_gap_bytes": 1672,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "buildReproduced": true,
+  "independentVerifier": {
+    "name": "Allmiibo_LCD_DE4_2_b1_App679_NUR_APP_TEST.zip",
+    "sha256": "1e508061e86d75addb1345d5d8c9b0eac94ebf02081c519517461e952a7f5f17",
+    "bytes": 257000,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 679,
+        "sd_req": [
+          294
+        ],
+        "bytes": 364416,
+        "sha256": "320863d4a3d140cc6082ec827cee2ddbfd1ec55ec37509305d195ecb9183a93e",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 364416,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ]
+  },
+  "initialSizeModel": {
+    "rows": 1081,
+    "bytes": 658806,
+    "exactReadbackAfterRemount": 1081,
+    "count": {
+      "list": 104,
+      "space": 51,
+      "mkdir": 53,
+      "small": 1049,
+      "rename": 46,
+      "raw": 32
+    },
+    "units": [
+      "readBytes",
+      "programBytes",
+      "blockErases",
+      "syncs",
+      "readCalls"
+    ],
+    "total": [
+      2050768128,
+      24148992,
+      6917,
+      7227,
+      8010813
+    ]
+  },
+  "groupedSizeModel": {
+    "rows": 1081,
+    "bytes": 658806,
+    "exactReadbackAfterRemount": 1081,
+    "count": {
+      "list": 104,
+      "space": 51,
+      "mkdir": 53,
+      "group": 280,
+      "rename": 46,
+      "raw": 32
+    },
+    "units": [
+      "readBytes",
+      "programBytes",
+      "blockErases",
+      "syncs",
+      "readCalls"
+    ],
+    "total": [
+      883394816,
+      9887488,
+      2791,
+      2666,
+      3450761
+    ]
+  },
+  "validation": {
+    "hardware": "pending",
+    "acceptedInitDataPhaseZ21Model": {
+      "payloadBytes": 364416,
+      "cutOffsets": [
+        40,
+        180264,
+        360488
+      ],
+      "resumeOffsets": [
+        0,
+        131072,
+        327680
+      ],
+      "checkpointCount": 5,
+      "additionalPageErases": 10,
+      "finalCrc32": 3776947984,
+      "passed": true,
+      "sha256": "320863d4a3d140cc6082ec827cee2ddbfd1ec55ec37509305d195ecb9183a93e",
+      "cutKinds": [
+        "link",
+        "link",
+        "cold-restart"
+      ],
+      "duplicateExecuteExtraErases": 0,
+      "modeledLinkCutsDuringCheckpoint": 5,
+      "modeledCheckpointPowerCuts": 455,
+      "modeledAdmissionOrCompletionFailures": 8,
+      "sanitizers": [
+        "ASan",
+        "UBSan",
+        "LSan-positive-control"
+      ],
+      "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access."
+    },
+    "powerCutGroups": {
+      "harness": "Linux GCC ASan and UBSan; simulated reset abandons the prior RAM",
+      "granularity": "every NOR program, erase or sync in a four-file commit crossing a shard boundary",
+      "faultModes": [
+        "cut-after",
+        "torn-half",
+        "return-io-before"
+      ],
+      "events": 157,
+      "cases": 471,
+      "committedAndChecked": 10,
+      "oldAndResumedOnce": 461,
+      "guardTests": [
+        "stale-generation",
+        "empty batch and overlimit",
+        "duplicate",
+        "existing-foreign-path",
+        "mixed-parent",
+        "traversal",
+        "oversize",
+        "open-reader",
+        "lost-ack",
+        "duplicate retry refused"
+      ],
+      "filesVerifiedAfterRepeatedRemount": 48
+    },
+    "linkedCortexM4BatchRead": {
+      "passed": true,
+      "deviceAccess": false,
+      "sourceId": "4765a2b88d7a9e4af396ab1d83318f1124423df69d13fd3e3ca2326b93d774c6",
+      "binSha256": "320863d4a3d140cc6082ec827cee2ddbfd1ec55ec37509305d195ecb9183a93e",
+      "cases": [
+        "linked_registration_and_exact_unchanged_PXSC_new_PXBR",
+        "actual_linked_READ_SHA_TLSF_empty_UTF8_max4x572_and_minimum_payload",
+        "linked_full_preflight_bounds_and_revision_errors_leave_TLSF_unchanged",
+        "linked_read_error_grow_shrink_postrevision_SHA_and_storage_readiness_guards",
+        "actual_TLSF_exhaustion_and_cleanup_restore_identical_free_space_and_largest_block"
+      ],
+      "expectedCounter": 679,
+      "firmwareCounter": 679,
+      "smallReadStaticBytes": 12,
+      "initialTlsfFree": 12196,
+      "maxResponseTlsfFreeDelta": 2296,
+      "finalTlsfFree": 12196,
+      "linkedCallMaxObservedStack": 688,
+      "scope": "Actual linked Cortex-M4 parser, guards, registry, TLSF, SHA256 and response chunking. Storage readiness/generation and read_file_data plus response capture are explicit modeled boundaries. No full BLE caller/interrupt stack, physical media/radio throughput or installation claim."
+    },
+    "linkedCortexM4Other": [
+      "menu",
+      "stack watermark",
+      "AES",
+      "JEDEC",
+      "display profile",
+      "rotation",
+      "device test",
+      "build fault"
+    ],
+    "recipient": "On each of host ASan/UBSan and ARM32 QEMU 11 group-specific integration cases passed.",
+    "scope": "Synthetic NOR, transport and resets, no physical radio or device timings."
+  }
+}

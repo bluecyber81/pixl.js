@@ -333,10 +333,16 @@ static void capability_and_lifecycle(void) {
     }
     puts("PASS unchanged PXSC/legacyREAD/SHA, replacement, each disconnect boundary, failed TX and no retained state");
 }
+#ifdef PIXL_GROUP_CREATE_ENABLE
+#include "group_create_679.inc"
+#endif
 int main(void) {
     for (unsigned i = 0; i < sizeof(new_data); ++i) { old_data[i] = (uint8_t)(7*i+3); new_data[i] = (uint8_t)(13*i+5); }
     for (unsigned i = 0; i < sizeof(meta); ++i) meta[i] = (uint8_t)(9*i+17);
     baseline(); df_core_init();
+#ifdef PIXL_GROUP_CREATE_ENABLE
+    group_contract();
+#endif
     success_cases(); invalid_requests(); exact_request_and_path_bounds(); error_cases(); busy_ownership(); capability_and_lifecycle();
     df_proto_vfs_cleanup(); drop(); REQUIRE(live == 0);
     printf("{\"passed\":true,\"accepted\":%u,\"rejected\":%u,\"allocationFailures\":%u,\"ioFailures\":%u,\"lifecycleCases\":%u,\"maxReadOwnedHeap\":%zu,\"maxDigestOwnedHeap\":%zu,\"liveAtEnd\":%zu,\"pointerBytes\":%zu}\n",

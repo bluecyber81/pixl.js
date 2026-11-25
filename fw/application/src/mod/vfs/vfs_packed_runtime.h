@@ -13,6 +13,11 @@
 uint64_t vfs_packed_revision(void);
 #ifdef PIXL_SMALL_CREATE_ENABLE
 #define VFS_SMALL_CREATE_MAX 572u
+#ifdef PIXL_GROUP_CREATE_ENABLE
+#include "packed_fs.h"
+int32_t vfs_packed_create_group(uint64_t expected, const pfs_small_item_t *items,
+                               unsigned count, uint64_t *after);
+#endif
 int32_t vfs_packed_create_small(char *path, uint64_t expected, const uint8_t *data, size_t size);
 int32_t vfs_packed_publish_small(char *stage, const char *target, uint64_t expected);
 #endif

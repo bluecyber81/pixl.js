@@ -33,6 +33,9 @@ static unsigned critical_depth, phy_calls, disconnect_calls, tx_calls, checks;
 static uint32_t now, phy_result;
 static uint8_t requested_rx, requested_tx;
 static uint16_t requested_handle;
+static unsigned interval_calls;
+static uint32_t interval_result;
+static ble_gap_conn_params_t requested_interval;
 static bool work_ready, vfs_idle = true, m_ble_initialized = true;
 static bool inject_disconnect, pending_disconnect;
 static bool m_sessions_enabled = true, m_file_mode = true, m_remote_mode, m_mode_pending;
@@ -86,6 +89,12 @@ static uint32_t nrf_ble_gatt_att_mtu_periph_set(void *gatt,uint16_t value) {
 uint32_t sd_ble_gap_phy_update(uint16_t handle,const ble_gap_phys_t *phys) {
     ++phy_calls;requested_handle=handle;requested_rx=phys->rx_phys;requested_tx=phys->tx_phys;
     return phy_result;
+}
+uint32_t sd_ble_gap_conn_param_update(uint16_t handle, const ble_gap_conn_params_t *params) {
+    CHECK(handle==m_conn_handle && critical_depth>0);
+    ++interval_calls;
+    requested_interval=*params;
+    return interval_result;
 }
 uint32_t sd_ble_gap_disconnect(uint16_t handle,uint8_t reason) {
     (void)handle;(void)reason;++disconnect_calls;return NRF_SUCCESS;
@@ -222,6 +231,29 @@ int main(void) {
     work_ready=false;ble_process_pending();CHECK(phy_calls==before);work_ready=true;
     ble_process_pending();CHECK(phy_calls==before+1);
     pass("mode_handoff_and_closing_session_gates");
+
+    disconnect_peer(7);connect_peer(7,60,0,400);phy_event(7,0,2,2);
+    before=interval_calls;ble_process_pending();CHECK(interval_calls==before);
+    file_session();m_remote_mode=true;ble_process_pending();CHECK(interval_calls==before);m_remote_mode=false;
+    now=0xffff80;interval_result=NRF_ERROR_BUSY;ble_process_pending();
+    CHECK(interval_calls==before+1 && requested_interval.min_conn_interval==16 &&
+          requested_interval.max_conn_interval==24 && requested_interval.slave_latency==0 &&
+          requested_interval.conn_sup_timeout==400);
+    now=(now+999)&0xffffff;ble_process_pending();CHECK(interval_calls==before+1);
+    now=(now+1)&0xffffff;interval_result=NRF_SUCCESS;ble_process_pending();
+    CHECK(interval_calls==before+2);query();CHECK(u16(response.data+16)==60);
+    now+=10000;ble_process_pending();CHECK(interval_calls==before+2 && m_conn_handle==7);
+    params.evt.gap_evt.conn_handle=7;
+    params.evt.gap_evt.params.conn_param_update.conn_params=(ble_gap_conn_params_t){24,24,0,400};
+    event(&params);query();CHECK(u16(response.data+16)==24);
+    pass("slow_file_link_requests_20_to_30_ms_busy_once_observed_only_on_gap_event");
+
+    disconnect_peer(7);connect_peer(7,12,0,400);file_session();phy_event(7,0,2,2);
+    before=interval_calls;ble_process_pending();CHECK(interval_calls==before);
+    disconnect_peer(7);connect_peer(7,60,0,400);file_session();phy_event(7,0,2,2);
+    interval_result=NRF_ERROR_NOT_SUPPORTED;ble_process_pending();now+=2000;ble_process_pending();
+    CHECK(interval_calls==before+1 && m_conn_handle==7);
+    pass("fast_or_rejecting_central_keeps_its_existing_link");
 
     ble_evt_t peer={0};peer.header.evt_id=BLE_GAP_EVT_PHY_UPDATE_REQUEST;peer.evt.gap_evt.conn_handle=7;
     before=phy_calls;phy_result=NRF_ERROR_BUSY;event(&peer);CHECK(phy_calls==before+1&&requested_rx==BLE_GAP_PHY_AUTO);

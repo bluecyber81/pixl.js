@@ -23,6 +23,10 @@ typedef struct {
     uint8_t bytes[VFS_SMALL_CREATE_MAX + 1];
 } small_file_t;
 static small_file_t *pending;
+#ifdef PIXL_GROUP_CREATE_ENABLE
+#include "bulk_wire.h"
+static bulk_rx_t *bulk;
+#endif
 APP_TIMER_DEF(deadline_timer);
 static bool timer_ready, needs_stop;
 static uint32_t generation;
@@ -32,19 +36,49 @@ static void deadline(void *context) { expired_generation = (uint32_t)(uintptr_t)
 
 void df_small_create_cancel(void) {
     if (needs_stop && app_timer_stop(deadline_timer) == NRF_SUCCESS) needs_stop = false;
+#ifdef PIXL_GROUP_CREATE_ENABLE
+    if (bulk) { mui_mem_free(bulk); bulk = NULL; }
+#endif
     if (pending) {
         mui_mem_free(pending);
         pending = NULL;
     }
 }
 
+/* Single-file and group requests share the timer and exactly one transient buffer. */
+static void *reserve_input(size_t bytes) {
+    if (!timer_ready) {
+        if (app_timer_create(&deadline_timer, APP_TIMER_MODE_SINGLE_SHOT, deadline) != NRF_SUCCESS) return NULL;
+        timer_ready = true;
+    }
+    df_small_create_cancel();
+    if (needs_stop || generation == UINT32_MAX) return NULL;
+    void *buffer = mui_mem_malloc(bytes);
+    if (!buffer) return NULL;
+    ++generation;
+    if (app_timer_start(deadline_timer, APP_TIMER_TICKS(30000), (void *)(uintptr_t)generation) != NRF_SUCCESS) {
+        mui_mem_free(buffer);
+        return NULL;
+    }
+    needs_stop = true;
+    return buffer;
+}
+
 void df_proto_vfs_expire_small(void) {
-    if (pending && expired_generation == generation) df_small_create_cancel();
+    if (expired_generation == generation && (pending
+#ifdef PIXL_GROUP_CREATE_ENABLE
+        || bulk
+#endif
+        )) df_small_create_cancel();
 }
 
 bool df_small_create_pending(void) {
     df_proto_vfs_expire_small();
-    return pending != NULL;
+    return pending != NULL
+#ifdef PIXL_GROUP_CREATE_ENABLE
+        || bulk != NULL
+#endif
+        ;
 }
 
 static uint16_t read16(const uint8_t *p) {
@@ -122,11 +156,56 @@ void df_small_create_capability(df_event_t *evt) {
         out.data[2] = 'B'; out.data[3] = 'R'; out.data[5] = DF_VFS_BATCH_MAX_FILES;
     }
 #endif
+#ifdef PIXL_GROUP_CREATE_ENABLE
+    if (in->cmd == DF_PROTO_CMD_VFS_GROUP_CAP) {
+        out.data[2] = 'B'; out.data[3] = 'G'; out.data[5] = PFS_BULK_LIMIT;
+    }
+#endif
     put16(out.data + 6, VFS_SMALL_CREATE_MAX);
     put64(out.data + 8, revision);
     df_core_send_frame(&out);
 }
 
+#ifdef PIXL_GROUP_CREATE_ENABLE
+void df_proto_vfs_cancel_group(void) {
+    if (bulk) df_small_create_cancel();
+}
+static int group_sha(const uint8_t *bytes, size_t size, uint8_t out[32]) {
+    return mbedtls_sha256_ret(bytes, size, out, 0);
+}
+static int commit_group(uint64_t expected, const pfs_small_item_t *items, unsigned count, uint64_t *after) {
+    if (df_small_available_revision() != expected) return VFS_ERR_FAIL;
+    return (int)vfs_packed_create_group(expected, items, count, after);
+}
+void df_group_request(df_event_t *evt) {
+    if (evt->type != DF_EVENT_DATA_RECEVIED) return;
+    df_frame_t *in = evt->df;
+    df_proto_vfs_expire_small();
+    if (in->status || in->chunk || !in->length || in->length > df_core_max_payload()) goto invalid;
+    if (in->data[0] == 0) {
+        if (in->length != 15 || bulk || !df_proto_vfs_is_idle() ||
+            !read64(in->data + 5) || read64(in->data + 5) != df_small_available_revision()) goto invalid;
+        bulk = reserve_input(sizeof(*bulk));
+        if (!bulk) goto invalid;
+        bulk_forget(bulk);
+    }
+    if (!bulk) goto invalid;
+    bulk_receipt_t receipt;
+    const int state = bulk_frame(bulk, in->data, in->length, group_sha, commit_group, &receipt);
+    if (state == BULK_MORE) return;
+    if (state != BULK_COMMITTED) goto invalid;
+    df_small_create_cancel();
+    df_frame_t reply = {.cmd = in->cmd, .length = 14};
+    reply.data[0] = 1; reply.data[1] = receipt.files;
+    for (unsigned i=0; i<4; ++i) reply.data[2+i] = (uint8_t)(receipt.id >> (8*i));
+    put64(reply.data+6, receipt.revision);
+    df_core_send_frame(&reply);
+    return;
+invalid:
+    df_proto_vfs_cancel_group();
+    failure(in->cmd, RUNTIME_DIAG_BAD_REQUEST);
+}
+#endif
 static bool start(const uint8_t *payload, size_t length, uint32_t id, size_t *header) {
     if (length < 49 || !id || !df_proto_vfs_is_idle()) return false;
     uint64_t revision = read64(payload + 5);
@@ -135,13 +214,7 @@ static bool start(const uint8_t *payload, size_t length, uint32_t id, size_t *he
         path_size > length - 49 || !allowed_path(payload + 49, path_size, true)) return false;
     *header = 49 + path_size;
     if (length - *header > size) return false;
-    if (!timer_ready) {
-        if (app_timer_create(&deadline_timer, APP_TIMER_MODE_SINGLE_SHOT, deadline) != NRF_SUCCESS) return false;
-        timer_ready = true;
-    }
-    df_small_create_cancel();
-    if (needs_stop || generation == UINT32_MAX) return false;
-    pending = mui_mem_malloc(sizeof(*pending));
+    pending = reserve_input(sizeof(*pending));
     if (!pending) return false;
     pending->revision = revision;
     pending->id = id;
@@ -150,12 +223,6 @@ static bool start(const uint8_t *payload, size_t length, uint32_t id, size_t *he
     memcpy(pending->digest, payload + 15, 32);
     memcpy(pending->path, payload + 49, path_size);
     pending->path[path_size] = 0;
-    ++generation;
-    if (app_timer_start(deadline_timer, APP_TIMER_TICKS(30000), (void *)(uintptr_t)generation) != NRF_SUCCESS) {
-        df_small_create_cancel();
-        return false;
-    }
-    needs_stop = true;
     return true;
 }
 
