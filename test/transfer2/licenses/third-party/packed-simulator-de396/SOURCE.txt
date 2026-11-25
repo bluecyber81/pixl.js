@@ -1,0 +1,39 @@
+Exact App669 / LCD DE3.96 TEST1 simulator source binding
+=======================================================
+Public firmware source commit: feb6c58ad14998f31aef07dc84d8dc0732e32ede
+https://github.com/bluecyber81/pixl.js/tree/feb6c58ad14998f31aef07dc84d8dc0732e32ede
+Firmware SourceID: dea06409b9ff20a12f446a7baed683b6442573ed427c5dc87cd4bed2885df858
+Linked ARM binding: docs/validation/DE3_96_PFS.json
+Engine SHA256: 3574b8ea61e7c1563a77eb806eb2ae1fbe3f2d94196d3a2d72e89ca3a6b3b21d
+WASM SHA256: d3a2e2d9378440c58051349502c51a7977ef7863d1cb2eec303d002b659a8a56
+
+The six core/LittleFS files are byte-identical to the frozen LCD App669 build.
+The exact simulator is qualified separately from firmware hardware acceptance.
+The RAM-only simulation harness and freestanding helpers are retained from
+App668; the complete 12-file source set is pinned individually. Earlier
+App668/App667/App665 profiles and their WASM/source archives remain unchanged.
+
+The freestanding capacity build omits BOARD_LCD and PIXL_TEST_DIAGNOSTICS.
+It executes storage operations without SDK timing or GC diagnostic state.
+Its core-heap high-water mark is not a measurement of full firmware RAM.
+Fresh App668/App669 cross-mount tests and linked ARM layout/engine checks
+bind the modeled filesystem to the final application.
+
+Pinned official WASI SDK 34.0 Linux x86_64 toolchain:
+Clang 23.1.0-wasi-sdk / LLVM commit 895aa2c896ada719451be2e3673c83da8ddf1141.
+https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-34
+https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-34/wasi-sdk-34.0-x86_64-linux.tar.gz
+Archive SHA256: b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4
+Compiler/linker binary hashes and exact versions: SOURCE_BINDING.json.
+The compiler is not included. Verify the archive hash before extracting it.
+
+Reproduce from the root of the extracted source archive:
+  python3 web/scripts/build-capacity-de396.py --sdk /path/to/wasi-sdk-34.0-x86_64-linux --output /path/to/new-evidence-directory
+The builder checks compiler/linker hashes and versions, all source hashes,
+the engine identity and exact output bytes. SDK default config is disabled.
+
+The simulator performs no device operations. The per-archive capacity check
+and current-device migration gates remain mandatory. Host tests do not prove
+physical free space, radio speed, power-loss safety or hardware acceptance.
+The signed application update is a separate artifact; this WASM never updates
+a device. GPL-2.0-LICENSE and LITTLEFS-LICENSE.md are included.
