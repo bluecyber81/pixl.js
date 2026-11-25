@@ -3,22 +3,43 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {lcdRelease, lcdReleasePackage} from '../public/dfu/lcd-release-reference.mjs';
+import {buildTarget} from './build-targets.mjs';
+import {transferTestLabel, transferTestTag} from '../src/lib/project-downloads.js';
 
 const web = fileURLToPath(new URL('../', import.meta.url));
-const targets = {root:['dist','/'], pages:['dist-pages','/pixl.js/'], 'test-app670':['dist-test-app670','/pixl.js/test/app670/']};
 const mode = process.argv[2];
-if (!Object.hasOwn(targets, mode) || process.argv.length !== 3) throw new Error('Expected root, pages or test-app670');
-const [folder, base] = targets[mode], output = path.join(web, folder);
+if (process.argv.length !== 3) throw new Error('Expected one build target');
+const [folder, base] = buildTarget(mode), output = path.join(web, folder);
+const transferTest = mode === 'test-transfer1' || process.env.VITE_BUILD_LABEL === transferTestLabel;
 const packageBytes = fs.readFileSync(path.join(web, 'package.json'));
 const release = JSON.parse(packageBytes);
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 if (!fs.statSync(path.join(output, 'index.html')).isFile()) throw new Error('Built UI is missing');
+// Vite's public/ pages bypass HTML transformation. Mark the standalone
+// updater too, so a direct bookmark identifies the transfer test.
+if (transferTest) {
+  for (const relative of ['index.html', 'dfu/web.html']) {
+    const file = path.join(output, relative);
+    const html = fs.readFileSync(file, 'utf8');
+    if (html.includes(' · ' + transferTestLabel + '</title>')) continue;
+    const title = /(<title>[^<]+)(<\/title>)/;
+    if (!title.test(html)) throw new Error('Missing page title: ' + relative);
+    let marked = html.replace(title, '$1 · ' + transferTestLabel + '$2');
+    if (relative === 'dfu/web.html') {
+      const eyebrow = '<p class="eyebrow">';
+      if (!marked.includes(eyebrow)) throw new Error('Missing visible DFU version');
+      marked = marked.replace(eyebrow, eyebrow + transferTestLabel + ' · ');
+    }
+    fs.writeFileSync(file, marked);
+  }
+}
 const firmwarePath = 'firmware/' + lcdReleasePackage.file;
 const firmware = fs.readFileSync(path.join(output, firmwarePath));
 if (firmware.length !== lcdReleasePackage.bytes || digest(firmware) !== lcdReleasePackage.sha256 ||
     lcdReleasePackage.sha256 !== lcdRelease.otaSha256) throw new Error('Built firmware package differs from its exact release binding');
 const manifest = {schema:1, application:'allmiibo-dateimanager', version:release.version,
-  base, channel:mode === 'test-app670' ? 'isolated-test-path' : 'normal',
+  base, channel:mode.startsWith('test-') ? 'isolated-test-path' : transferTest ? 'test' : 'normal',
+  ...(transferTest ? {label:transferTestLabel, sourceTag:transferTestTag} : {}),
   packageManifestSha256:digest(packageBytes), firmware:{id:lcdReleasePackage.id,
     version:lcdReleasePackage.version, counter:lcdReleasePackage.counter,
     path:firmwarePath, bytes:firmware.length, sha256:digest(firmware)}};

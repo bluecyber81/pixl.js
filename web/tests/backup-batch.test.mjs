@@ -35,7 +35,7 @@ const addSmall = f => {
 test('App670 full backup uses bounded read batches and preserves empty files, hashes, metadata and large-file fallback',async()=>{
   const f=fixture();addSmall(f);f.vfs.put('E:/g-large',new Uint8Array(573).fill(9));f.vfs.put('E:/h-small',[8,7],metadata(4,'note'))
   const result=await createBackup(f.options),archive=await loadBackupZip(result.blob,{JSZip})
-  assert.deepEqual(f.readBatches.map(files=>files.length),[4,2]);assert.deepEqual(f.singles,['E:/g-large','E:/h-small'])
+  assert.deepEqual(f.readBatches.map(files=>files.length),[4,3]);assert.deepEqual(f.singles,['E:/g-large'])
   assert.equal(result.profile.operations.fileReads,8);assert.equal(result.profile.operations.digestReplies,0)
   assert.equal(result.manifest.resume.reusedFiles,0)
   for(const entry of archive.entries.filter(entry=>entry.type==='file')) {
@@ -43,6 +43,20 @@ test('App670 full backup uses bounded read batches and preserves empty files, ha
     assert.deepEqual(bytes,f.vfs.nodes.get(entry.sourcePath).bytes);assert.equal(entry.sha256,sha(bytes))
   }
   assert.deepEqual(archive.entries.find(entry=>entry.sourcePath==='E:/h-small').metadata,metadata(4,'note'))
+})
+
+test('mixed-size backup keeps archive order and packs small reads to the negotiated UTF-8 request size',async()=>{
+  const f=fixture()
+  for (let i=0;i<12;i++) {
+    f.vfs.put('E:/a'+String(i).padStart(2,'0')+'ä.bin',new Uint8Array(i%2 ? 1024 : 540).fill(i))
+  }
+  const result=await createBackup({...f.options,readTransportStats:()=>({maxRequestPayload:42})})
+  assert.deepEqual(f.readBatches.map(group=>group.length),[2,2,2])
+  assert.equal(f.singles.length,6)
+  const archive=await loadBackupZip(result.blob,{JSZip})
+  const paths=archive.entries.map(row=>row.sourcePath)
+  assert.deepEqual(paths,[...paths].sort())
+  for (const path of paths) assert.deepEqual(readBackupArchiveFile(archive,path),f.vfs.nodes.get(path).bytes)
 })
 
 test('App670 cached ZIP digests are genuinely batched and changed members are freshly read as a batch',async()=>{

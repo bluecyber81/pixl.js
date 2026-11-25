@@ -199,6 +199,16 @@ function verificationNotifications(fixture) {
   return { frames: packets.length, payloadBytes: packets.reduce((sum, frame) => sum + frame.length - 4, 0),
     wireBytes: packets.reduce((sum, frame) => sum + frame.length, 0) };
 }
+
+test('safe upload of an identical file on a full drive verifies the target and reports zero uploaded bytes', async () => {
+  const f = await digestUploadHarness({replace:true})
+  f.vfs.put(f.target,f.source,f.oldMetadata)
+  f.app.read_drive_info = async () => [{label:'E',status:0,freeBytes:0,totalBytes:2097152}]
+  await f.run()
+  assert.deepEqual(f.digestCalls.map(c => c.path), [f.target, f.target])
+  assert.equal(f.app.lastTransfer.bytes,0); assert.equal(f.app.lastTransfer.verified,true)
+  assert(!f.vfs.log.some(e => ['write','rename','remove','meta'].includes(e.op)))
+})
 const digestMutations = fixture => fixture.vfs.log.filter(entry => ['write', 'rename', 'remove', 'meta'].includes(entry.op));
 
 test('small upload digest uses the real App665 SHA path for both stage and target with fewer verification notifications', async t => {

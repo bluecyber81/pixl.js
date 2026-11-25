@@ -26,6 +26,65 @@ function adapter(tree = { 'E:/': [file('a.bin')] }, content = {}) {
 }
 const run = (options = {}) => auditCollection({ ...adapter().options, ...options });
 
+test('full audit groups 1081 standard BINs into 270 bounded batch reads and one single, with identical results',async()=>{
+  const tree={'E:/':Array.from({length:1081},(_,i)=>file('f'+i+'.bin'))};
+  const a=adapter(tree), b=adapter(tree), groups=[];
+  let probes=0;
+  const faster=await auditCollection({...a.options,readRevision:async()=>{++probes;return '0000000000000001';},
+    readFilesBatch:async(files,{revision})=>{
+      assert.equal(revision,'0000000000000001');
+      groups.push(files.length);
+      return files.map(row=>({...row,bytes:tag(A,row.size)}));
+    }});
+  const single=await auditCollection(b.options);
+  assert.deepEqual(faster,single);
+  assert.equal(groups.length,270);assert(groups.every(n=>n===4));assert.equal(probes,1);
+  assert.equal(a.calls.filter(c=>c[0]==='read').length,1);assert.equal(b.calls.filter(c=>c[0]==='read').length,1081);
+});
+
+test('batch audit respects remaining budget and reserved paths, keeps large reads single, and never batches in quick mode',async()=>{
+  const tree={'E:/':[file('a.bin'),file('v3.bin',2048),file('settings.bin'),file('key_retail.bin'),file('c.bin'),file('over.bin')]};
+  const a=adapter(tree), groups=[];
+  const options={...a.options,limits:{bytes:3128},readRevision:async()=>'0000000000000001',readFilesBatch:async files=>{
+    groups.push(files.map(({path})=>path));
+    return files.map(row=>({...row,bytes:tag(A,row.size)}));
+  }};
+  const report=await auditCollection(options);
+  assert.deepEqual(groups,[['E:/a.bin','E:/c.bin']]);
+  assert.deepEqual(a.calls.filter(c=>c[0]==='read').map(c=>c[1]),['E:/v3.bin']);
+  assert.equal(report.stats.filesRead,3);assert.equal(report.stats.bytesRead,3128);assert.equal(report.complete,false);
+  await auditCollection({...options,mode:'quick',readRevision:()=>assert.fail(),readFilesBatch:()=>assert.fail()});
+});
+
+test('audit falls back once on unsupported batch, and rejects a failed, truncated or mismatched group before using its bytes',async()=>{
+  for(const mode of ['unsupported','throw','wrong path','mutated request','short','size','cancel']){
+    const a=adapter({'E:/':Array.from({length:8},(_,i)=>file('f'+i+'.bin'))});
+    const controller=new AbortController();let calls=0;
+    const report=await auditCollection({...a.options,signal:controller.signal,readRevision:async()=>'0000000000000001',
+      readFilesBatch:async files=>{
+        calls++;
+        if(mode==='unsupported')return null;
+        if(mode==='throw')throw new Error('radio interrupted');
+        const result=files.map(row=>({...row,bytes:tag(A,row.size)}));
+        if(mode==='wrong path')result.at(-1).path=files[0].path;
+        if(mode==='mutated request')result.at(-1).path=files.at(-1).path=files[0].path;
+        if(mode==='short')result.at(-1).bytes=new Uint8Array(1);
+        if(mode==='size')result.pop();
+        if(mode==='cancel')controller.abort();
+        return result;
+      }});
+    assert.equal(calls,1);
+    if(mode==='unsupported'){
+      assert.equal(report.complete,true);assert.equal(report.stats.readAttempts,8);
+      assert.equal(a.calls.filter(c=>c[0]==='read').length,8);
+    }else{
+      assert.equal(report.complete,false);assert.equal(report.stats.filesRead,0);
+      assert.equal(report.stats.readAttempts,4);assert.equal(report.status,mode==='cancel'?'cancelled':'partial');
+      assert.equal(a.calls.filter(c=>c[0]==='read').length,0);assert.deepEqual(report.missing,[]);
+    }
+  }
+});
+
 test('year-only Ocarina announcements can be found on a device and are never reported as missing before release', async () => {
   const link = '0100000004fd0902', zelda = '0101000004ff0902', smash = '01000000037c0002';
   const subset = COLLECTION_AUDIT_CATALOGUE.entries.filter(figure => [link, zelda, smash].includes(figure.id));

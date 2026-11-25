@@ -1,0 +1,149 @@
+{
+  "web": "3.66.1 Transfer Test 1",
+  "basedOn": "b78b2c91efb930edec8b18091da27f6f1cce06b2",
+  "date": "2026-11-25",
+  "hardwareReads": {
+    "environment": "Windows, native Web Bluetooth in Chrome 158.0.8127.88, one owner LCD running DE4.1. Repeated in A/B/B/A order on the same connection for each comparison. No device file was written, renamed or deleted. File payloads, names, addresses and individual digests are omitted.",
+    "existingFigureVerification": {
+      "browserDataPath": "native Web Bluetooth",
+      "firmware": "2.22.0-DE4.1",
+      "files": 24,
+      "bytes": 12960,
+      "hashesMatched": true,
+      "verifyRuns": [
+        {
+          "method": "full",
+          "seconds": 8.863,
+          "rxBytes": 13248,
+          "rxFrames": 72
+        },
+        {
+          "method": "digest",
+          "seconds": 3.825,
+          "rxBytes": 864,
+          "rxFrames": 24
+        },
+        {
+          "method": "digest",
+          "seconds": 3.749,
+          "rxBytes": 864,
+          "rxFrames": 24
+        },
+        {
+          "method": "full",
+          "seconds": 11.25,
+          "rxBytes": 13248,
+          "rxFrames": 72
+        }
+      ]
+    },
+    "smallFileContents": {
+      "browserDataPath": "native Web Bluetooth",
+      "firmware": "2.22.0-DE4.1",
+      "files": 24,
+      "bytes": 12066,
+      "groups": 6,
+      "hashesMatched": true,
+      "runs": [
+        {
+          "batch": false,
+          "seconds": 7.964
+        },
+        {
+          "batch": true,
+          "seconds": 8.999
+        },
+        {
+          "batch": true,
+          "seconds": 9
+        },
+        {
+          "batch": false,
+          "seconds": 11.251
+        }
+      ]
+    },
+    "independentWindowsBleDirectorySample": {
+      "client": "Python/WinRT/Bleak, same physical LCD, negotiated application MTU 250, 10 root directory lists per run",
+      "secondsUsingWriteWithResponse": [
+        2.325,
+        2.475
+      ],
+      "secondsUsingWriteWithoutResponse": [
+        2.475,
+        2.249
+      ],
+      "identicalListing": true
+    },
+    "interpretation": "Device SHA-256 reduced both elapsed time and bytes for verification. The small content-read and directory samples show overlapping times across methods."
+  },
+  "signedAppDfuModel": {
+    "package": "Allmiibo_LCD_DE4_1_678_NUR_APP.zip",
+    "initBytes": 142,
+    "imageBytes": 362724,
+    "imageSha256": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
+    "freshUpdate": [
+      {
+        "client": "3.66.1 baseline",
+        "initWrites": 8,
+        "firmwareWrites": 18154,
+        "controlWrites": 273,
+        "totalWrites": 18435
+      },
+      {
+        "client": "test, larger write confirmed on fresh init",
+        "initWrites": 1,
+        "firmwareWrites": 2569,
+        "controlWrites": 2754,
+        "totalWrites": 5324
+      },
+      {
+        "client": "test, peer silently truncates to 20 bytes",
+        "initWrites": 9,
+        "firmwareWrites": 18154,
+        "controlWrites": 277,
+        "totalWrites": 18440
+      }
+    ],
+    "result": "All three runs reconstructed the exact init and firmware. The model uses 4096-byte firmware objects. Counts are host GATT writes. No physical flash time was measured."
+  },
+  "folderUploadModel": {
+    "mode": "New mixed directory, sufficient workspace, 1081 files on simulated storage, interruption after the 33rd stored file, resume and SHA-256 verification of every final file. Existing-directory mode is a different workflow.",
+    "files": 1081,
+    "payloadBytes": 658806,
+    "verified": 1081,
+    "extraFiles": 0,
+    "old": {
+      "directoryQueries": 1306,
+      "regularFileOpens": 1081,
+      "individualDigestQueries": 1114
+    },
+    "test": {
+      "directoryQueries": 201,
+      "regularFileOpens": 28,
+      "compactCreates": 1053,
+      "individualDigestQueries": 61
+    }
+  },
+  "manifestBasedReadModel": {
+    "fixture": "1081 sizes and paths, 658806 bytes total from original manifest, synthetic file contents",
+    "fullCollectionContent": {
+      "files": 1069,
+      "bytes": 615272,
+      "oldReadRequests": 1069,
+      "testReadRequests": 293,
+      "reportsMatched": true
+    },
+    "backupContent": {
+      "files": 1081,
+      "oldReadRequests": 299,
+      "testReadRequests": 298,
+      "entriesAndHashesMatched": true
+    },
+    "scope": "Counts exclude directory, revision and capability queries."
+  },
+  "pending": [
+    "Full native Windows DFU run and comparison with the same package in the mobile app",
+    "Physical upload of the complete 1081-file fixture with interruption and a completed Mochi comparison on the same device."
+  ]
+}

@@ -1376,6 +1376,13 @@ function read_bytes_array(bb, size) {
     return bytes;
 }
 
+// These application queries send their result in a separate protocol reply.
+// Keep commands with modifying subcommands (notably the MTU test) out of this set.
+const readQueriesWithReply = new Set([
+    0x01, 0x04, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, // version, diagnostics and display
+    0x10, 0x14, 0x16, 0x1c, 0x1d, 0x1f, 0x21,              // drives, files, directories, metadata and digests
+]);
+
 async function tx_data_frame(cmd, status, chunk, data) {
     const generation = transport_generation;
     if (data) data.flip();
@@ -1385,6 +1392,14 @@ async function tx_data_frame(cmd, status, chunk, data) {
     const maximum = profile?.maxRequestPayload ?? DF_MAX_DATA_SIZE;
     if (payload.length > maximum) throw new Error('File-transfer request is too large');
     const capacity = chunked ? profile.gattValueCapacity - DF_HEADER_SIZE : DF_MAX_DATA_SIZE;
+    // Only a complete single-frame request can rely on its application receipt.
+    // The queue still waits for both the browser write and the firmware reply.
+    const useProtocolReply = chunked && payload.length <= capacity && (
+        readQueriesWithReply.has(cmd) || (cmd === 0x05 && payload.length <= 1) ||
+        cmd === 0x15 || (cmd === 0x23 && payload[0] <= 1) ||
+        (cmd === 0x24 && vfs_small_read_capable()) ||
+        (cmd === 0x26 && small_batch_capability?.generation === generation && !!small_batch_capability.value)
+    );
     let offset = 0, sequence = 0;
     do {
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
@@ -1398,12 +1413,7 @@ async function tx_data_frame(cmd, status, chunk, data) {
         // Await every GATT write; no concurrent writes and no fragments from
         // an earlier connection can leak into a replacement session.
         const wire = frame.toArrayBuffer();
-        // A single negotiated read/write frame already receives a file-protocol reply.
-        // Wait for both that reply and the browser send before advancing the offset.
-        const acknowledgedWrite = cmd === 0x15 || cmd === 0x23 && payload[0] <= 1 ||
-            cmd === 0x24 && vfs_small_read_capable() ||
-            cmd === 0x26 && small_batch_capability?.generation === generation && !!small_batch_capability.value;
-        await pixl.tx_data(wire, acknowledgedWrite && chunked && payload.length <= capacity);
+        await pixl.tx_data(wire, useProtocolReply);
         offset += length; ++sequence;
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
         ++transport_stats.txFrames;

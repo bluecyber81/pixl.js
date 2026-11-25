@@ -10,6 +10,7 @@ const localChanged = () => { throw new SyncError('SYNC_LOCAL_CHANGED', 'Local fi
 const randomHex = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), n => n.toString(16).padStart(2, '0')).join('')
 const isNeutral = entry => metadataKey(entry.meta) === emptyKey
 const validRevision = value => typeof value === 'string' && /^[0-9a-f]{16}$/.test(value) && value !== '0000000000000000'
+const fitsSmallCreate = entry => entry.size <= 572
 const singleCommit = (before, after) => before.slice(0,8) === after.slice(0,8) &&
   parseInt(before.slice(8),16) + 1 === parseInt(after.slice(8),16)
 
@@ -165,7 +166,7 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
     let continuousReceipts = true
     const candidate = !/^~u[a-f0-9]{8,12}$/.test(targetName) &&
       typeof createSmall === 'function' && typeof readCreateRevision === 'function' && typeof publishSmallFolder === 'function' &&
-      wanted.every(entry => entry.size <= 572) ? await readCreateRevision() : null
+      wanted.some(fitsSmallCreate) ? await readCreateRevision() : null
     check()
     if (candidate !== null && !validRevision(candidate) || state?.nativeReceipts && !candidate) stale()
     async function published(entries) {
@@ -229,16 +230,19 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       await createDirectory(stageDir); state.dirs.push(dir); check()
       proof = null
     }
-    if (candidate && !proof) {
-      const anchor = await audit(state.stagePath, true)
-      proof = anchor.revision
-      verifiedPaths = anchor.found
-    }
-    for (const entry of wanted) {
+    // Ordinary writes cannot return a storage revision. Do them first, then
+    // hash their stored bytes in one audit before chaining small-file receipts.
+    const writeOrder = candidate ? [...wanted.filter(entry => !fitsSmallCreate(entry)), ...wanted.filter(fitsSmallCreate)] : wanted
+    for (const entry of writeOrder) {
       if (completed.has(entry.targetPath)) continue
       const path = staged(state.stagePath, entry.targetPath), parts = splitDevicePath(path)
       let consecutive = true
-      if (candidate) {
+      if (candidate && fitsSmallCreate(entry)) {
+        if (!proof) {
+          const anchor = await audit(state.stagePath, true)
+          proof = anchor.revision
+          verifiedPaths = anchor.found
+        }
         state.inFlight = entry.targetPath
         let next
         try {
@@ -254,13 +258,16 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
         consecutive = singleCommit(proof,next)
         if (consecutive) verifiedPaths.add(entry.targetPath)
         proof = next
-      } else await writeFile(path, payloads.get(entry.targetPath), {
-        rawMeta128:emptyMetadata.slice(),
-        beforeWrite:async () => {
-          if (targetEntry(await list(parts.parent), parts.name)) stale()
-          state.inFlight = entry.targetPath
-        }
-      })
+      } else {
+        await writeFile(path, payloads.get(entry.targetPath), {
+          rawMeta128:emptyMetadata.slice(),
+          beforeWrite:async () => {
+            if (targetEntry(await list(parts.parent), parts.name)) stale()
+            state.inFlight = entry.targetPath
+          }
+        })
+        proof = null
+      }
       completed.add(entry.targetPath); job.completed.push(entry.targetPath); state.inFlight = null
       if (!consecutive) {
         continuousReceipts = false
@@ -276,7 +283,7 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       // entries. Each single-commit receipt validates the stored file's SHA.
       // The firmware checks this exact revision and the no-clobber rename
       // under the same writer lock. Any intervening mutation rejects publication.
-      if (!continuousReceipts || !ordered.every(path => verifiedPaths.has(path))) {
+      if (!proof || !continuousReceipts || !ordered.every(path => verifiedPaths.has(path))) {
         proof = (await audit(state.stagePath, false)).revision
       }
     } else {

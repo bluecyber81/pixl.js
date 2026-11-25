@@ -121,8 +121,8 @@ function nativeApi(s, hook = () => {}) {
     }
   }
 }
-async function setup(selected = [0,1,2]) {
-  const vfs = packedVfs(), files = fixtureFiles()
+async function setup(selected = [0,1,2], files = fixtureFiles()) {
+  const vfs = packedVfs()
   const plan = await createSyncPlan({...vfs.api,rootPath:root,deviceKey:identity,files})
   const job = createSyncJob(plan)
   const selectedPaths = selected.map(i => root + '/' + files[i].relativePath)
@@ -309,6 +309,60 @@ test('persistent per-file receipts and a stable revision verify a closed small-f
   assert.equal(s.actions.filter(a=>a.kind==='hash' || a.kind==='open').length,0)
   assert.equal(atPublish, afterLastReceipt, 'the guarded publish directly consumes the final receipt')
   for (let i=0;i<3;i++) assert.deepEqual(s.nodes.get(root+'/'+s.files[i].relativePath).bytes,bytesOf(i))
+})
+
+const mixedFiles = () => [572, 573, 0, 1024, 540].map((size, i) => ({
+  relativePath: 'ManySmall/f' + i,
+  file: new File([new Uint8Array(size).fill(i + 1)], 'f' + i)
+}))
+const mixedSetup = () => setup([0,1,2,3,4], mixedFiles())
+
+test('mixed folders use guarded creates through 572 bytes and hash each ordinary write before the first create', async () => {
+  const s = await mixedSetup()
+  const verified = () => s.actions.filter(a => a.kind === 'hash').map(a => a.path.split('/').at(-1))
+  const native = nativeApi(s, phase => {
+    if (phase === 'start' || phase === 'publish') assert.deepEqual(verified(), ['f1','f3'])
+  })
+  const result = await s.run(native)
+  assert.equal(result.uploadedBytes, 2709)
+  assert.deepEqual(native.actions.map(p => p.split('/').at(-1)), ['f0','f2','f4'])
+  assert.deepEqual(s.actions.filter(a => a.kind === 'open').map(a => a.path.split('/').at(-1)), ['f1','f3'])
+  for (const {relativePath,file} of s.files) {
+    assert.deepEqual(s.nodes.get(root + '/' + relativePath).bytes, new Uint8Array(await file.arrayBuffer()))
+  }
+})
+
+test('a mixed folder refuses corrupt ordinary data before starting any small create', async () => {
+  const s = await mixedSetup(), native = nativeApi(s)
+  s.setHook(({kind, phase, path}) => {
+    if (kind === 'write' && phase === 'after' && path.endsWith('/f1')) s.nodes.get(path).bytes[10] ^= 1
+  })
+  await assert.rejects(s.run(native), {code:'SYNC_STALE'})
+  assert.equal(native.actions.length, 0)
+  assert(!s.nodes.has(target))
+})
+
+test('mixed folder resume verifies a lost ordinary CLOSE or a lost small receipt and writes each file only once', async () => {
+  for (const interrupt of ['large', 'small']) {
+    const s = await mixedSetup()
+    let cut = false
+    function disconnect() { if (!cut) { cut = true; s.disconnect() } }
+    const native = nativeApi(s, (phase,path) => {
+      if (interrupt === 'small' && phase === 'commit' && path.endsWith('/f0')) disconnect()
+    })
+    s.setHook(({kind,phase,path}) => {
+      if (interrupt === 'large' && kind === 'write' && phase === 'after' && path.endsWith('/f1')) disconnect()
+    })
+    await assert.rejects(s.run(native), {code:'DISCONNECTED'})
+    s.reconnect()
+    const result = await s.run(native)
+    assert.equal(result.skipped, interrupt === 'large' ? 1 : 3)
+    assert.equal(native.actions.length, 3)
+    assert.equal(s.actions.filter(a => a.kind === 'open').length, 2)
+    for (const {relativePath,file} of s.files) {
+      assert.deepEqual(s.nodes.get(root + '/' + relativePath).bytes, new Uint8Array(await file.arrayBuffer()))
+    }
+  }
 })
 
 test('a gap in the receipt sequence requires fresh full hashes before conditional publication', async () => {

@@ -210,6 +210,15 @@ export async function safeUpload({ path, file, replace = false, expected, readDi
     original = await snapshot(existing)
     desiredMetadata = requestedMetadata || original?.metadata || null
     if (expected !== undefined && !sameExpected(original, expected)) fail('UPLOAD_STALE', 'The destination changed after the comparison.')
+    if (original && original.size === sourceBytes.byteLength && original.sha256 === sourceHash &&
+        metadataKey(original.metadata) === metadataKey(desiredMetadata)) {
+      await checkWritableParent()
+      const confirmed = await snapshot(targetEntry(await list(), name))
+      if (!sameExpected(confirmed, original)) fail('UPLOAD_STALE', 'The destination changed while checking the matching file.')
+      check(); progress('complete', sourceBytes.byteLength)
+      return {path, size:sourceBytes.byteLength, sha256:sourceHash, replaced:false, unchanged:true, verified:true,
+        cancelledAfterCommit:false, recoveryFiles:[], recovery:{...receipt}}
+    }
     const free = await getFreeBytes(parent[0]); check()
     // The original must coexist with the complete staged file. Never subtract
     // its allocation here. Filesystem overhead may still make the write fail.

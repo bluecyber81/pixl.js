@@ -16,7 +16,7 @@ import { lcdRelease as app671 } from '../../public/dfu/lcd-app671-reference.mjs'
 
 const dist = path.resolve(process.env.ALLMIIBO_DIST_DIR || fileURLToPath(new URL('../../dist', import.meta.url)))
 const base = process.env.ALLMIIBO_TEST_BASE_PATH || '/'
-assert.ok(['/', '/pixl.js/', '/pixl.js/test/app670/'].includes(base))
+assert.ok(['/', '/pixl.js/', '/pixl.js/test/app670/', '/pixl.js/test/transfer1/'].includes(base))
 const origin = 'https://bluecyber81.github.io'
 const read = relative => fs.readFileSync(path.join(dist, relative), 'utf8')
 const sha = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -115,9 +115,11 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.deepEqual(fs.readFileSync(path.join(dist, 'licenses', file)), fs.readFileSync(path.join(webRoot, file)), file)
     assert.ok(index.includes(`href="${file}"`), file)
   }
-  assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip" download'))
-  assert.ok(index.includes('pixl.js/blob/web3.66.1/docs/VERSIONEN_WEB.md'))
-  assert.ok(index.includes('pixl.js/blob/web3.66.1/docs/VERSIONEN_FIRMWARE.md'))
+  const transferTest = base === '/pixl.js/test/transfer1/' || process.env.VITE_BUILD_LABEL === 'Transfer Test 1'
+  const sourceTag = transferTest ? 'web3.66.1-transfer-test1' : 'web3.66.1'
+  assert.ok(index.includes(`href="https://github.com/bluecyber81/pixl.js/archive/refs/tags/${sourceTag}.zip" download`))
+  assert.ok(index.includes('pixl.js/blob/' + sourceTag + '/docs/VERSIONEN_WEB.md'))
+  assert.ok(index.includes('pixl.js/blob/' + sourceTag + '/docs/VERSIONEN_FIRMWARE.md'))
   assert.ok(!index.includes('releases/download/web3.66.1/'))
   for (const releaseFile of [
     'de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip',

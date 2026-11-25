@@ -43,6 +43,7 @@
       if (typeof crc32 !== 'function') throw new Error('A CRC32 implementation is required');
       this.crc32 = crc32;
       this.extendCrc32 = options.extendCrc32;
+      this.probeInitPacket = options.probeInitPacket === true && typeof this.extendCrc32 === 'function';
       this._prefix = null;
       this.bluetooth = bluetooth || globalThis.navigator?.bluetooth;
       this.delay = Math.max(0,Number(delay)||0);
@@ -91,6 +92,7 @@
       if(OWNERS.get(device)?.active)throw new Error('This Bluetooth device already has an active DFU session');
       this._ownerToken={active:true};OWNERS.set(device,this._ownerToken);
       this._active=true;this._epoch++;this._device=device;this._disconnected=false;this._finalAck=false;this._finalExecute=false;
+      this._packetBytes=20;
       this._localDisconnectRequested=false;this._stopAfterAck=false;
       this._listen(device,'gattserverdisconnected',()=>{
         if(device.gatt.connected)return; // A deferred event from a previous connection.
@@ -143,7 +145,9 @@
       else if(characteristic.properties?.writeWithoutResponse&&typeof characteristic.writeValueWithoutResponse==='function')write=characteristic.writeValueWithoutResponse.bind(characteristic);
       else if(typeof characteristic.writeValue==='function')write=characteristic.writeValue.bind(characteristic);
       else throw new Error('DFU characteristic has no supported write method');
-      await this._bounded(write(value),this.timeouts.operation,'Bluetooth write');
+      const writing=this._bounded(write(value),this.timeouts.operation,'Bluetooth write');
+      this._writing=writing;
+      try{await writing;}finally{if(this._writing===writing)this._writing=null;}
     }
     sendOperation(characteristic,operation,buffer){
       const extra=buffer?asBytes(buffer):new Uint8Array();const value=new Uint8Array(operation.length+extra.length);value.set(operation);value.set(extra,operation.length);
@@ -189,11 +193,50 @@
         error.expectedOffset=expectedOffset;error.receivedOffset=received;throw error;
       }
     }
-    async _checksum(bytes,expectedOffset){
-      const v=await this.sendControl([3]);this._checkOffset(v,expectedOffset);
+    async _checksum(bytes,expectedOffset,type){
+      const v=await this.sendControl([3]);this._checkOffset(v,expectedOffset,type);
       if(v.getUint32(4,true)!==this._prefixCrc(bytes,expectedOffset))throw new Error('DFU CRC32 mismatch');
     }
+    async _measureInitWrite(bytes){
+      // Web Bluetooth does not expose the ATT MTU. Try only genuine bytes of
+      // a freshly created command object. Its signed contents are checked
+      // before Execute. Never probe an existing object or the firmware image.
+      const size=Math.min(244,bytes.length);
+      await this.sendControl([2,0,0]);
+      let acceptedByHost=true;
+      try{await this._write(this.packetChar,bytes.subarray(0,size));}
+      catch(error){
+        if(!this._active||!this._device.gatt.connected)throw error;
+        acceptedByHost=false;
+      }
+      const state=await this.sendControl([3]);
+      if(state.byteLength!==8)throw new Error('Invalid DFU checksum response length');
+      const offset=state.getUint32(0,true);
+      if(offset>size||state.getUint32(4,true)!==this._prefixCrc(bytes,offset))throw new Error('DFU init packet offset or CRC32 mismatch');
+      if(acceptedByHost&&offset===size){
+        this._packetBytes=size;
+        return size;
+      }
+      // The OS may reject, drop or truncate a long Write Without Response.
+      // Only the command object may be recreated here, after a real checksum.
+      await this.sendControl([2,1,0]);
+      await this._create(1,bytes.length);
+      return 0;
+    }
     async _stream(bytes,start,end,type){
+      if(this._packetBytes>20){
+        for(let pos=start;pos<end;pos+=this._packetBytes){
+          const next=Math.min(pos+this._packetBytes,end);
+          await this._write(this.packetChar,bytes.subarray(pos,next));
+          if(type==='firmware'&&next===bytes.length)this.dispatchEvent('phase','verify');
+          // A host may fragment the long write. One ordered checksum command
+          // checks the entire prefix regardless of the number of ATT packets.
+          // It also provides the final object check immediately before Execute.
+          await this._checksum(bytes,next,type);
+          this.progress(type,bytes.length,next);
+        }
+        return;
+      }
       for(let pos=start;pos<end;pos+=20){
         this._assertActive();const next=Math.min(pos+20,end);
         // A resolved Write Without Response only describes the host write.
@@ -222,7 +265,12 @@
       if(bytes.length>state.maxSize)throw new Error('Init packet exceeds bootloader object size');
       let offset=state.offset;
       if(offset>bytes.length)this.log('Ein längeres Init-Paket eines früheren DFU-Versuchs wird neu angelegt. Die Firmwaredaten werden anschließend weiter mit CRC geprüft.', 'Replacing the longer init packet from an earlier update. The firmware transfer will continue with CRC verification.');
-      if(!offset||offset>bytes.length||state.crc!==this._prefixCrc(bytes,offset)){await this._create(1,bytes.length);offset=0;}
+      if(!offset||offset>bytes.length||state.crc!==this._prefixCrc(bytes,offset)){
+        await this._create(1,bytes.length);offset=0;
+        if(this.probeInitPacket&&bytes.length>20&&this.packetChar.properties?.writeWithoutResponse){
+          offset=await this._measureInitWrite(bytes);
+        }
+      }
       this.progress('init',bytes.length,offset);
       if(offset<bytes.length)await this._stream(bytes,offset,bytes.length,'init');
       // A complete matching init packet still requires Execute; SELECT alone
@@ -276,7 +324,13 @@
           disconnectObserved:this._disconnected,localDisconnectRequested:this._localDisconnectRequested,rebootObserved:false});
         return device;
       }catch(error){this._disconnect();throw error;}
-      finally{this._cleanup();this._disconnect();this._busy=false;}
+      finally{
+        // A disconnect can reject the notification waiter before the host's
+        // outstanding GATT write settles. Keep ownership until that bounded
+        // operation ends so its completion cannot overlap a resumed session.
+        if(this._writing)await this._writing.catch(()=>{});
+        this._cleanup();this._disconnect();this._busy=false;
+      }
     }
     cancel(){
       if(!this._busy||!this._active)return;

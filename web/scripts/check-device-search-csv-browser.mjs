@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 // Install only the browser peripheral boundary. The production BLE, protocol, VFS,
 // catalogue, download and Vue code run unchanged in an isolated browser context.
-export function installReadOnlyPeripheral({files, directories, digests = {}, capacity, powerDiagnostics, flashDiagnostics, firmwareVersion = '2.22.0-DE3.66'}) {
+export function installReadOnlyPeripheral({files, directories, digests = {}, capacity, powerDiagnostics, flashDiagnostics, batchRead = false, firmwareVersion = '2.22.0-DE3.66'}) {
   const encoder = new TextEncoder(), decoder = new TextDecoder();
   const commands = [], violations = [];
   window.testPeripheral = { commands, violations, connections: 0 };
@@ -20,8 +20,27 @@ export function installReadOnlyPeripheral({files, directories, digests = {}, cap
     if (cmd === 0x08 && powerDiagnostics && frame.length === 4) return powerDiagnostics;
     if (cmd === 0x0b && flashDiagnostics && frame.length === 4) return flashDiagnostics;
     if (cmd === 0x10) return [1, 0, 69, ...string('Test'), ...dword(capacity.total), ...dword(capacity.free)];
-    if (cmd === 0x22 && firmwareVersion === '2.22.0-DE3.88' && frame.length === 4)
+    if (cmd === 0x22 && (firmwareVersion === '2.22.0-DE3.88' || batchRead) && frame.length === 4)
       return [80,88,83,67,1,7,...word(572),...dword(42),...dword(3)];
+    if (cmd === 0x25 && batchRead && frame.length === 4)
+      return [80,88,66,82,1,4,...word(572),...dword(42),...dword(3)];
+    if (cmd === 0x26 && batchRead && frame[4] === 0 && frame[5] >= 1 && frame[5] <= 4) {
+      const view = new DataView(frame.buffer, frame.byteOffset, frame.byteLength);
+      if (view.getUint32(6,true) !== 42 || view.getUint32(10,true) !== 3) throw Error('Wrong batch revision');
+      let offset = 14;
+      record.paths = [];
+      for (let i = 0; i < frame[5]; ++i) {
+        const length = view.getUint16(offset, true);
+        const path = decoder.decode(frame.subarray(offset + 2, offset + 2 + length));
+        offset += 2 + length;
+        const size = view.getUint16(offset, true);
+        offset += 2;
+        if (!Object.hasOwn(files, path) || files[path].length !== size || size > 572) throw Error('Wrong batch file');
+        record.paths.push(path);
+      }
+      if (offset !== frame.length) throw Error('Unexpected batch length');
+      return record.paths.flatMap(path => files[path]);
+    }
     if (cmd === 0x12 || cmd === 0x16 || cmd === 0x21 || cmd === 0x24) {
       const length = frame[4] | frame[5] << 8;
       record.path = decoder.decode(frame.subarray(6, 6 + length));
@@ -194,6 +213,30 @@ export async function checkDeviceSearchAndCsv({browser, url, check, shot}) {
     assert.deepEqual(runtimeErrors, []);
     assert.deepEqual(external, []);
   } finally { await context.close(); }
+  // Exercise the same two figures through the current LCD's batched reader,
+  // including real app wiring, UTF-8 path encoding and multi-frame replies.
+  const batchContext = await browser.newContext({locale:'de-DE', acceptDownloads:true, serviceWorkers:'block'});
+  try {
+    await batchContext.addInitScript(installReadOnlyPeripheral, {files, capacity, batchRead:true, firmwareVersion:'2.22.0-DE4.1'});
+    await batchContext.route('**/*', route => new URL(route.request().url()).origin === new URL(url).origin ? route.continue() : route.abort());
+    const page = await batchContext.newPage();
+    page.setDefaultTimeout(10000);
+    await page.goto(url);
+    await page.locator('.header-tools').getByRole('button', {name:'Verbinden', exact:true}).click();
+    await page.locator('.version-context').getByText('2.22.0-DE4.1', {exact:true}).waitFor();
+    await page.locator('.workspace-nav button[aria-controls="catalogue-workspace"]').click();
+    const collection = page.locator('.collection-assistant');
+    await collection.getByRole('button', {name:'Sammlung prüfen', exact:true}).click();
+    const action = collection.getByRole('button', {name:'Bestand als CSV speichern'});
+    await action.waitFor();
+    const state = await page.evaluate(() => window.testPeripheral);
+    assert.deepEqual(state.violations, []);
+    assert.deepEqual(state.commands.filter(c => c.cmd === 0x26).map(c => c.paths), [Object.keys(files)]);
+    check('DE4.1 full figure audit reads both files with one batch and no individual read', !state.commands.some(c => [0x12,0x14,0x24].includes(c.cmd)));
+    const [csv] = await Promise.all([page.waitForEvent('download'), action.click()]);
+    const report = await readFile(await csv.path(), 'utf8');
+    check('DE4.1 batch audit exports both verified figure IDs', ['0000000000000002','0000000000340102'].every(id => report.includes('"0x'+id+'";"Vorhanden · ID bestätigt"')));
+  } finally { await batchContext.close(); }
   await checkStoredBackupControls({browser, url, check});
 }
 

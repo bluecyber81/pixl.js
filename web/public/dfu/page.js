@@ -162,7 +162,7 @@ function updateAwake() {
 awakeChoice.addEventListener('change', updateAwake);
 window.addEventListener('pagehide', () => { awake?.dispose(); awake = null; });
 window.addEventListener('pageshow', () => { if (!awake) { awake = newAwakeController(); updateAwake(); } });
-let phaseText;
+let phaseText, rateFormat;
 let currentPhaseIndex = -1, currentPhaseFailed = false;
 const phaseItems = phaseNames.map(name => document.getElementById('phase-' + name));
 function renderPhaseDetail() {
@@ -179,6 +179,7 @@ language.subscribe(({ locale }) => {
 }, pageLocales);
 language.subscribe(({ locale }) => {
     phaseText = dfuPhaseLanguages[locale];
+    rateFormat = new Intl.NumberFormat(phaseText.lang, { maximumFractionDigits: 1 });
     phases.lang = phaseText.lang;
     phaseItems.forEach((item, index) => { item.textContent = phaseText.steps[index]; });
     reconnectLink.textContent = phaseText.open;
@@ -215,13 +216,13 @@ function transferEstimate(state, now) {
     if (elapsed < 1000 || bytes === 0 || state.currentBytes === state.totalBytes) return '';
     const bytesPerSecond = 1000 * bytes / elapsed;
     const remaining = Math.ceil((state.totalBytes - state.currentBytes) / bytesPerSecond);
-    const rate = (bytesPerSecond / 1024).toLocaleString(phaseText.lang, { maximumFractionDigits: 1 });
+    const rate = rateFormat.format(bytesPerSecond / 1024);
     return ` · ${rate} KiB/s · ≈ ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')} min`;
 }
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
     validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}, [lcdRelease, ...lcdPreviews]),
-    createDfu: () => new SecureDfu(CRC32.buf, undefined, 0, { extendCrc32: CRC32.buf }),
+    createDfu: () => new SecureDfu(CRC32.buf, undefined, 0, { extendCrc32: CRC32.buf, probeInitPacket: true }),
     onStatus: (de, en) => setText(statusText, de, en),
     onPhase: showPhase,
     onState: state => { latestState = state; document.getElementById('package-target').textContent = targetDescription(state.target); controls(); },

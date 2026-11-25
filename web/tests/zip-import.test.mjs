@@ -13,6 +13,37 @@ const mutations = vfs => vfs.log.filter(item => ['write', 'rename', 'remove', 'm
 async function backup(vfs, rootPath = 'E:/') { return createBackup({ rootPath, ...vfs.api, preserveLegacyNames: true }) }
 async function load(blob) { return loadBackupZip(blob, { JSZip }) }
 async function simple() { const vfs = memoryVfs(); vfs.put('E:/tags/a.bin', [1, 2, 3], metadata(0x81, 'original note')); return { vfs, result: await backup(vfs) } }
+
+test('ZIP comparison, fresh preflight, staging and committed-file verification use supported device digests', async () => {
+  const {result} = await simple(), archive = await load(result.blob)
+  const target = memoryVfs(), path = 'E:/tags/a.bin'
+  target.put(path, [3,2,1])
+  const calls = []
+  const options = {readFileDigest: async (file,size) => {
+    calls.push(file)
+    const bytes = Uint8Array.from(target.bytes(file)); assert.equal(bytes.length,size)
+    return sha256Bytes(bytes)
+  }}
+  const plan = await preview(archive, target, options)
+  assert.equal(plan.entries.find(e => e.targetPath === path).status, 'change')
+  const done = await execute(plan, target, [path], options)
+  assert.equal(done.filesCompleted, 1)
+  assert.deepEqual(target.bytes(path), [1,2,3])
+  assert.equal(target.log.filter(e => e.op === 'read').length, 0)
+  assert.deepEqual(calls, [path,path,path,'E:/tags/~uabcdef012345',path,path])
+})
+
+test('an unavailable ZIP digest falls back to exact reads and an invalid or failed reply blocks writes', async () => {
+  const {result} = await simple(), archive = await load(result.blob), path = 'E:/tags/a.bin'
+  const target = memoryVfs(); target.put(path,[3,2,1])
+  const plan = await preview(archive, target, {readFileDigest:async () => null})
+  assert.equal(target.log.filter(e => e.op === 'read').length, 1)
+  for (const digest of [async () => 'invalid', async () => {throw Error('lost connection')}]) {
+    await assert.rejects(execute(plan,target,[path],{readFileDigest:digest}))
+    assert.equal(mutations(target).length, 0)
+    assert.deepEqual(target.bytes(path),[3,2,1])
+  }
+})
 async function rewritten(blob, change, updateManifestHash = false) {
   const zip = await JSZip.loadAsync(await blob.arrayBuffer()); await change(zip)
   if (updateManifestHash) {

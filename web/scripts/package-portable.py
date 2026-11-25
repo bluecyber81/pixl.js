@@ -16,19 +16,24 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def package(output, verify=False):
+def package(output, verify=False, transfer_test=False):
     version = release_version(WEB)
     file_version = version.replace('.', '_')
     dist = WEB / 'dist'
     release = json.loads((dist / 'release.json').read_text(encoding='utf-8'))
     package_bytes = (WEB / 'package.json').read_bytes()
+    channel = 'test' if transfer_test else 'normal'
     if release.get('application') != 'allmiibo-dateimanager' or release.get('version') != version or \
-            release.get('base') != '/' or release.get('channel') != 'normal' or \
+            release.get('base') != '/' or release.get('channel') != channel or \
             release.get('packageManifestSha256') != sha(package_bytes):
-        raise ValueError('The normal root build does not match package.json; build and qualify it first.')
+        raise ValueError('The requested root build does not match its release channel or package.json.')
+    if transfer_test and (version != '3.66.1' or release.get('label') != 'Transfer Test 1'
+                          or release.get('sourceTag') != 'web3.66.1-transfer-test1'):
+        raise ValueError('The root build is missing the expected Transfer Test 1 identity.')
+    suffix = '_Transfer_Test1' if transfer_test else ''
     names = ['LICENSE', 'package.json', 'release_version.py', 'dateimanager_launcher.py', 'serve_local.py',
              'Start-Dateimanager.cmd', 'Start-Dateimanager-Direkt.cmd', 'Stop-Dateimanager.cmd',
-             'Start-Dateimanager.ps1', 'Stop-Dateimanager.ps1', 'LIESMICH_' + file_version + '.txt']
+             'Start-Dateimanager.ps1', 'Stop-Dateimanager.ps1', 'LIESMICH_' + file_version + suffix + '.txt']
     files = {}
     for name in names:
         source = WEB / name
@@ -43,12 +48,14 @@ def package(output, verify=False):
     manifest = {'schema':1, 'version':version, 'entrypoint':'Start-Dateimanager.cmd',
                 'runtime':'Python 3.8 or newer', 'nativeExecutable':False,
                 'files':[{'path':name, 'bytes':len(data), 'sha256':sha(data)} for name,data in sorted(files.items())]}
+    if transfer_test:
+        manifest.update({key:release[key] for key in ('channel', 'label', 'sourceTag')})
     files['PORTABLE-MANIFEST.json'] = (json.dumps(manifest, ensure_ascii=False, indent=2) + '\n').encode('utf-8')
     files['SHA256SUMS.txt'] = ''.join(sha(data) + '  ' + name + '\n' for name,data in sorted(files.items())).encode('utf-8')
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=True)
-    top = 'Allmiibo_Dateimanager_' + file_version
-    archive = output / (top + '_Portable.zip')
+    top = 'Allmiibo_Dateimanager_' + file_version + suffix
+    archive = output / (top + ('_Windows.zip' if transfer_test else '_Portable.zip'))
     with zipfile.ZipFile(archive, 'x', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zip_file:
         for name, data in sorted(files.items()):
             info = zipfile.ZipInfo(top + '/' + name, date_time=(1980, 1, 1, 0, 0, 0))
@@ -73,5 +80,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--verify', action='store_true', help='verify and start the actual extracted package on loopback')
+    parser.add_argument('--transfer-test', action='store_true', help='package the labelled Web 3.66.1 Transfer Test 1 root build')
     args = parser.parse_args()
-    package(args.output, args.verify)
+    package(args.output, args.verify, args.transfer_test)

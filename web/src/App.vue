@@ -603,9 +603,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.66.1" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.1' : '3.66.1 source code' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.66.1 (ZIP)' : 'Windows 3.66.1 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.1 (ZIP)' : '3.66.1 source code (ZIP)' }}</a>
+    <a :href="archiveLinks.sourceTree" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.1' : '3.66.1 source code' }}{{ archiveLinks.labelSuffix }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.66.1 (ZIP)' : 'Windows 3.66.1 (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.1 (ZIP)' : '3.66.1 source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
@@ -995,6 +995,12 @@ export default {
       const generation = this.sessionGeneration;
       this.assert_session(generation);
       return { assertSession: () => this.assert_session(generation),
+        maxRequestPayload: proto.get_transport_diagnostics?.()?.maxRequestPayload,
+        readFilesBatch: typeof proto.vfs_read_small_batch === 'function' ? async (files, {revision}) => {
+          this.assert_session(generation);
+          const result = await proto.vfs_read_small_batch(files, revision, this.firmwareVersion);
+          this.assert_session(generation); return result;
+        } : undefined,
         readRevision: async () => {
           this.assert_session(generation);
           const revision = await proto.vfs_small_create_revision(this.firmwareVersion);
@@ -2571,7 +2577,10 @@ export default {
         checkPreflight();
         const destination = drives.find(drive => drive.label === dir[0]);
         if (!destination || destination.status !== 0) throw new Error(this.$t('info.driveUnavailable'));
-        if (!uploadSpaceAvailable(destination, options.file.size, safe ? 0 : existing?.size || 0)) throw new Error(this.$t('info.notEnoughSpace'));
+        // Equal-sized replacements may already match. safeUpload checks the
+        // available workspace immediately before staging a changed file.
+        const canMatchExisting = safe && existing?.size === options.file.size;
+        if (!canMatchExisting && !uploadSpaceAvailable(destination, options.file.size, safe ? 0 : existing?.size || 0)) throw new Error(this.$t('info.notEnoughSpace'));
         if (safe) {
           const adapters = this.transfer_adapters(generation);
           const result = await safeUpload({path, file:options.file, replace:!!existing, ...adapters,
@@ -2580,8 +2589,9 @@ export default {
           });
           this.remember_recovery(result); this.assert_session(generation);
           if (result.cancelledAfterCommit) this.$message({type:'info',message:this.$t('info.cancelledAfterCommit')});
+          if (result.unchanged) this.$message({type:'info',message:this.$t('info.uploadUnchanged',{name:targetName})});
           options.onProgress?.({percent:100});
-          this.remember_transfer('upload','success',options.file.size,true);
+          this.remember_transfer('upload','success',result.unchanged ? 0 : options.file.size,true);
           return {};
         }
         // Hash source bytes before touching the destination so local read or
@@ -2962,7 +2972,7 @@ export default {
       this.language = locale;
       this.$i18n.locale = locale;
       document.documentElement.lang = locale.replace('_', '-');
-      document.title = 'Allmiibo ' + this.$t('workflow.appTitle') + ' ' + webVersion;
+      document.title = 'Allmiibo ' + this.$t('workflow.appTitle') + ' ' + webVersion + this.archiveLinks.labelSuffix;
       this.refresh_listing_language();
       this.connBtnText = this.$t(this.disconnecting ? 'info.disconnecting' : this.connected ? 'conn.disconnect' : this.connecting ? 'conn.connecting' : 'conn.connect');
       this.version = this.firmwareVersion ? this.$t('status.connected') + this.firmwareVersion : '';
