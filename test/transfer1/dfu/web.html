@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Allmiibo DFU 3.66.1 · Transfer Test 1</title>
+  <link rel="stylesheet" href="updater.css">
+</head>
+<body>
+<main>
+  <a data-en="← Back to the file manager" href="../" class="back-link">← Zurück zum Dateimanager</a>
+  <p><a data-en="OLED installation and test guide" id="oled-guide" href="../guide/index.html#oled">OLED-Anleitung für Installation und Prüfung</a></p>
+  <div id="lcd-updater">
+  <p class="eyebrow">Transfer Test 1 · ALLMIIBO · LCD / OLED · <span data-en="FILE MANAGER">DATEIMANAGER</span> 3.66.1 · LCD App678</p>
+  <h1 id="profile-title" data-en="Update LCD firmware">LCD-Firmware übertragen</h1>
+  <p><a data-en="Guide to firmware, the bootloader and LittleFS" id="guide-link" href="../guide/index.html" target="_blank" rel="noopener noreferrer">Anleitung für Firmware, Bootloader und LittleFS</a></p>
+  <p class="notice" id="profile-description" data-en="LCD · PFS1 · S112 7.3.0. Choose an application for your bootloader.">LCD · PFS1 · S112 7.3.0. Wähle eine App für deinen Bootloader.</p>
+  <section>
+    <h2 data-en="1. Choose an update">1. Update auswählen</h2>
+    <label data-en="Your device display" for="board-profile">Display deines Geräts</label>
+    <select id="board-profile"><option value="LCD">LCD</option><option value="OLED">OLED</option></select>
+    <p data-en="Choose the display on the device you are updating. The Bluetooth name “pixl dfu” and hardware field 52 are shared by both variants.">Wähle das Display des Geräts, das du aktualisierst. Der Bluetooth-Name „pixl dfu“ und das Hardwarefeld 52 werden von beiden Varianten verwendet.</p>
+    <label data-en="Bundled package" for="bundled">Mitgeliefertes Paket</label>
+    <select id="bundled" disabled><option data-en="No bundled package" value="">Kein mitgeliefertes Paket</option></select>
+    <button data-en="Load and check package" id="load-bundled" type="button" disabled>Paket laden und prüfen</button>
+    <button data-en="Cancel selection" id="cancel-bundled" type="button" hidden>Auswahl abbrechen</button>
+    <p id="android-handoff" hidden><a id="android-dfu-link" data-en="Open in nRF DFU (Android)" rel="noreferrer">In nRF DFU öffnen (Android)</a> <span data-en="Choose your device and start the transfer in the installed app.">In der installierten App wählst du dein Gerät und startest die Übertragung.</span></p>
+    <p data-en="Choose an application for an Allmiibo LCD with PFS1 and S112 7.3.0." id="bundled-info" role="status">Anwendung für Allmiibo LCD mit PFS1 und S112 7.3.0 wählen.</p>
+    <p id="lcd-candidate-status" data-en="LCD DE4.1 / App678: Normal firmware for LCD with Z21 and S112 7.3.0.">LCD DE4.1 / App678: Normale Firmware für LCD mit Z21 und S112 7.3.0.</p>
+    <p id="lcd-preview-download" hidden><button id="load-lcd-preview" type="button" disabled data-en="Load and check App678 directly">App678 direkt laden und prüfen</button> <a href="https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip" download data-en="Download LCD firmware DE4.1 / App678">LCD-Firmware DE4.1 / App678 herunterladen</a> · <span data-en="Application update for an LCD with existing Packed LittleFS; no new storage migration is required.">App-Update für LCD mit vorhandenem Packed LittleFS; keine erneute Speicherumstellung erforderlich.</span></p>
+    <p data-en="Load a bundled package or select a compatible application ZIP from your computer or phone.">Das mitgelieferte Paket laden oder eine passende Anwendungs-ZIP von deinem Computer oder Handy wählen.</p>
+    <label data-en="Your firmware ZIP" for="file">Eigene Firmware-ZIP</label>
+    <input id="file" type="file" accept=".zip,application/zip,application/x-zip-compressed,application/octet-stream" aria-describedby="firmware-file-help">
+    <p id="firmware-file-help" data-en="Choose the firmware ZIP, not the complete handover archive.">Wähle die Firmware-ZIP, nicht das große Übergabearchiv.</p>
+    <div id="oled-downloads" hidden>
+      <p><a data-en="Download OLED DE3.87 Test 6 / App86" href="https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip" download>OLED DE3.87 Test 6 / App86 herunterladen</a> · <span data-en="SH1106, S112 7.2.0, SPIFFS or native LittleFS.">SH1106, S112 7.2.0, SPIFFS oder natives LittleFS.</span></p>
+    </div>
+    <div id="lcd-downloads">
+    <p><a data-en="Archived DE3.89 / App662 for LCD (app only)" href="../firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip" download>Frühere LCD-App DE3.89 / App662 herunterladen (nur App)</a> · <span data-en="For an LCD with Packed LittleFS, Z21 and S112 7.3.0.">Für LCD mit Packed LittleFS, Z21 und S112 7.3.0.</span> <a data-en="Release notes and test results" href="https://github.com/bluecyber81/pixl.js/releases/tag/de3.89" target="_blank" rel="noopener noreferrer">Versionshinweise und Prüfstand</a></p>
+    <p><a data-en="Full LCD package with S112 7.3.0, Z21 and App662 (Android ZIP)" href="https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip">LCD-Komplettpaket mit S112 7.3.0, Z21 und App662 (Android-ZIP)</a> · <span data-en="For compatible LCD devices with a bootloader counter below 21. Follow the installation guide and use nRF Device Firmware Update on Android. Then install the normal App678 application above.">Für passende LCD mit Bootloader-Zähler unter 21. Beachte die Installationsanleitung und verwende nRF Device Firmware Update auf Android. Danach die normale App678-Anwendung oben installieren.</span></p>
+    <p><a data-en="Archived DE3.81 / App654 app for LCD" href="../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip" download>Frühere LCD-App DE3.81 / App654</a> · <a data-en="Archive and requirements" href="../guide/#android-de381">Archiv und Voraussetzungen</a></p>
+    <p><a data-en="LCD test release DE3.88 / App661 (app-only ZIP)" href="../firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip" download>LCD-Testversion DE3.88 / App661 (App-ZIP)</a> · <span data-en="For LCD with PFS1, Z21 and S112 7.3.0. Folder transfer and resumption have been tested on one LCD.">Für LCD mit PFS1, Z21 und S112 7.3.0. Ordnerübertragung und Wiederaufnahme wurden an einem LCD geprüft.</span> <a data-en="Installation and testing" href="../guide/#lcd-de388">Installation und Prüfung</a></p>
+    <p><a data-en="LCD test release DE3.87 / App660 (app-only ZIP)" href="../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip" download>LCD-Testversion DE3.87 / App660 (App-ZIP)</a> · <span data-en="For LCD with PFS1, Z21 and S112 7.3.0. Physical testing of this new build is still pending.">Für LCD mit PFS1, Z21 und S112 7.3.0. Der Praxistest für diesen neuen Build ist noch offen.</span> <a data-en="Installation and testing" href="../guide/#lcd-de387">Installation und Prüfung</a></p>
+    <details><summary data-en="Earlier LCD downloads">Frühere LCD-Downloads</summary><p><a data-en="DE3.75 / App648 (ZIP)" href="../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip" download>DE3.75 / App648 (ZIP)</a></p>
+    <p><a data-en="Download earlier stable DE3.65 (BL8/Z13/Z15/Z17/Z19)" href="../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip" download>Frühere stabile DE3.65 herunterladen (BL8/Z13/Z15/Z17/Z19)</a></p></details>
+    </div>
+    <p id="package-target" role="status" aria-live="polite"></p>
+    <details><summary data-en="Which packages can I use?">Welche Pakete passen?</summary><p data-en="Choose LCD for PFS1 and S112 7.3.0, or OLED for SH1106 and S112 7.2.0 with existing SPIFFS or native LittleFS. The OLED selection accepts the published OLED application ZIP after its complete SHA-256 check. The page handles application updates.">Wähle LCD für PFS1 und S112 7.3.0 oder OLED für SH1106 und S112 7.2.0 mit bestehendem SPIFFS oder nativem LittleFS. Die OLED-Auswahl akzeptiert die veröffentlichte OLED-App-ZIP nach vollständiger SHA-256-Prüfung. Diese Seite verarbeitet App-Updates.</p><p data-en="For each package, this page checks the application length and SHA-256 against the Nordic init packet. For a bundled package it also checks the entire ZIP. The bootloader verifies the signature during transfer. Z15, Z17 and Z19 can also install an older, correctly signed application. With a recent device reading, the browser blocks a bundled downgrade and warns if a manually chosen ZIP has a lower application counter. Transfer starts after you select a device in step 2.">Bei jedem Paket prüft die Seite die Länge und den SHA-256-Wert der Anwendung anhand der Angaben im Nordic-Startpaket. Beim mitgelieferten Paket prüft sie zusätzlich die gesamte ZIP. Der Bootloader prüft beim Übertragen die Signatur. Z15, Z17 und Z19 können auch eine ältere, gültig signierte Anwendung installieren. Bei einer aktuellen Gerätediagnose sperrt der Browser ältere Katalogpakete. Für eine selbst gewählte ZIP mit niedrigerem App-Zähler erscheint ein Hinweis. Die Übertragung beginnt erst nach deiner Geräteauswahl in Schritt 2.</p></details>
+  </section>
+  <p><a id="profile-source" data-en="Source code for LCD DE4.1 / App678" href="https://github.com/bluecyber81/pixl.js/tree/release/lcd-de41-app678" target="_blank" rel="noopener noreferrer">Quellcode LCD DE4.1 / App678</a></p>
+  <section>
+    <h2 data-en="2. Select a device and transfer">2. Gerät auswählen und übertragen</h2>
+    <p data-en="On your Allmiibo, open the firmware update option in Settings. Use the button below and select “pixl dfu”. The transfer then starts automatically.">Am Allmiibo unter „Einstellungen“ den Menüpunkt für das Firmware-Update öffnen. Dann unten „pixl dfu“ auswählen. Die Übertragung startet anschließend automatisch.</p>
+    <button data-en="Select DFU device and transfer" id="button" type="button" disabled>DFU-Gerät auswählen und übertragen</button>
+    <p id="capability"></p>
+    <a data-en="iPhone and iPad guide" id="apple-guide" href="../guide/index.html#iphone" hidden>Hilfe für iPhone und iPad</a>
+    <div id="awake-panel" hidden>
+      <label><input id="awake-choice" type="checkbox" checked> <span data-en="Keep the screen awake during the update">Display während des Updates wach halten</span></label>
+      <span id="awake-status" role="status"></span>
+    </div>
+    <div id="phases" hidden>
+      <ol class="phases" aria-label="DFU">
+        <li id="phase-transfer">Übertragen</li><li id="phase-verify">Prüfen</li>
+        <li id="phase-finalize">Abschließen</li><li id="phase-reconnect">Wiederverbinden</li>
+      </ol>
+      <p id="phase-detail" role="status"></p>
+      <a id="reconnect-link" href="../" hidden>Dateimanager öffnen</a>
+    </div>
+    <progress id="progress" max="100" value="0" aria-describedby="transfer" aria-label="DFU" hidden></progress>
+    <p id="transfer"></p>
+    <p data-en="No package selected yet." id="status" role="status" aria-live="polite">Noch kein Paket ausgewählt.</p>
+  </section>
+  <section>
+    <h2 data-en="3. Check the restart">3. Neustart prüfen</h2>
+    <p data-en="After the update, check the new version in the device menu. Then open Bluetooth file transfer to reconnect to the file manager.">Nach dem Update erscheint wieder das normale Menü. Dort die neue Version prüfen. Für den Dateimanager anschließend „Bluetooth-Dateiübertragung“ öffnen.</p>
+    <details><summary data-en="Transfer interrupted?">Übertragung unterbrochen?</summary><p data-en="Select the same firmware ZIP and DFU device again. The page reads the offset and checksum from the bootloader. Depending on what was saved, the transfer resumes there or starts again from the beginning.">Wähle dieselbe Firmware-ZIP und dasselbe DFU-Gerät erneut. Die Seite liest Position und Prüfsumme aus dem Bootloader. Je nach gespeichertem Stand beginnt die Übertragung dort oder wieder am Anfang.</p></details>
+  </section>
+  </div>
+  <footer><span data-en="Files stay local.">Lokale Dateien, keine Cloud-Übertragung.</span> <a data-en="Sources and licenses" href="../licenses/index.html">Quellen &amp; Lizenzen</a></footer>
+</main>
+<script src="vendor/crc32.js"></script>
+<script src="vendor/jszip-3.10.2.min.js"></script>
+<script src="secure-dfu.js?v=3.66.1"></script>
+<script src="validation-error.js?v=3.66.1"></script>
+<script src="package.js?v=3.66.1"></script>
+<script src="updater.js?v=3.66.1"></script>
+<script src="../firmware/releases.js?v=3.66.1"></script>
+<script src="bundled-packages.js?v=3.66.1"></script>
+<script src="../language-preference.js?v=3.66.1"></script>
+<script src="phase-labels.js?v=3.66.1"></script>
+<script type="module" src="page.js?v=3.66.1"></script>
+</body>
+</html>

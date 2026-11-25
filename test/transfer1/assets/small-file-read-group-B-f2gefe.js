@@ -1,0 +1,1 @@
+var e=new TextEncoder;function t(t,n,r,i){let a=Math.min(243,i??243),o=[],s=10;for(let i=n;i<t.length&&o.length<4;++i){let n=t[i],c=r(n);if(!c||n.size>572)continue;let l=4+e.encode(c).length;if(s+l>a)break;o.push(n),s+=l}return o}export{t};
