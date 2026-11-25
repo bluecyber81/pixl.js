@@ -222,7 +222,8 @@ function transferEstimate(state, now) {
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
     validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}, [lcdRelease, ...lcdPreviews]),
-    createDfu: () => new SecureDfu(CRC32.buf, undefined, 0, { extendCrc32: CRC32.buf, probeInitPacket: true }),
+    createDfu: () => new SecureDfu(CRC32.buf, undefined, 0, { extendCrc32: CRC32.buf, probeInitPacket: true,
+        windowedFirmwareWrites: boardSelect.value === 'LCD' }),
     onStatus: (de, en) => setText(statusText, de, en),
     onPhase: showPhase,
     onState: state => { latestState = state; document.getElementById('package-target').textContent = targetDescription(state.target); controls(); },

@@ -579,9 +579,9 @@
         <h3>{{ uploadHub.files }}</h3>
 <TransferStatus v-if="transfer" :transfer="transfer" :stats="transferStats" :format-size="format_size" :can-cancel="true" :cancelling="transferCancelling" @cancel="cancel_transfer" />
               <p>{{ $t('tools.uploadNotice') }}</p>
-        <el-checkbox v-model="safeUploads" :disabled="pendingUploads > 0" @change="value => { if (value) verifyUploads = true }">{{ $t('info.safeUploads') }}</el-checkbox>
-        <p v-if="safeUploads">{{ $t('info.safeUploadHint') }}</p><p v-else class="notice error">{{ $t('info.directUploadWarning') }}</p>
-        <el-checkbox v-model="verifyUploads" :disabled="safeUploads || pendingUploads > 0">{{ $t('tools.verify') }}</el-checkbox>
+        <el-checkbox v-model="safeUploads" :disabled="pendingUploads > 0">{{ $t('info.safeUploads') }}</el-checkbox>
+        <p v-if="safeUploads">{{ $t('info.safeUploadHint') }}</p><p v-else-if="replaceUploads">{{ $t('info.directUploadWarning') }}</p>
+        <el-checkbox :model-value="safeUploads || verifyUploads" :disabled="safeUploads || pendingUploads > 0" @update:model-value="verifyUploads = $event">{{ $t('tools.verify') }}</el-checkbox>
         <el-checkbox v-model="replaceUploads" :disabled="pendingUploads > 0">{{ $t('tools.replace') }}</el-checkbox>
         <el-upload ref="upload" class="upload-demo" drag action="#" multiple
           :http-request="on_upload_request" :on-error="on_upload_error" :disabled="!connected || enteringDfu || cancellingUploads || backingUp || dialogPending" :before-remove="before_upload_remove">
@@ -597,7 +597,7 @@
         </el-upload>
       </div>
       <template #footer>
-        <span role="status" aria-live="polite">{{ pendingUploads ? uploadHub.queued + ': ' + pendingUploads : uploadHub.idle }}</span>
+        <span role="status" aria-live="polite">{{ pendingUploads ? uploadHub.queued + ': ' + pendingUploads : fastUploadStatus || uploadHub.idle }}</span>
         <el-button @click="on_upload_diag_close(() => { upload_diag_visible = false })">{{ uploadHub.close }}</el-button>
       </template>
     </el-dialog>
@@ -684,14 +684,14 @@ export default {
       driveInfo: [], transportInfo: null, infoLoading: false,
       transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown', lastDfuReference: '',
       gameFolderOpened:false,
-      safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
+      safeUploads: false, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
       syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0, syncNames: null, syncNameSerial: 0,
       syncHistoryName: '', syncHistoryReady: null, syncResume: null,
       syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1, syncFilter: 'all', syncFolderName: '', syncFolderContents: false,
       collectionReport:null, collectionStale:false, collectionObservation:null, collectionRevision:0, collectionBusy:false, collectionWriting:false, collectionCatalogue:catalogueBaseline, collectionSelected:null, searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
       page: 1, pageSize: 100, sortKey: 'name', sortOrder: 'ascending',
       cancellingBackup: false, lastBackup: null, transfer: null, browserIssue: '',
-      verifyUploads: true, replaceUploads: false,
+      verifyUploads: false, replaceUploads: false, fastUploadStatus: '',
       connBtnType: "",
       connBtnText: `${this.$t("conn.connect")}`,
       version: "",
@@ -2462,6 +2462,7 @@ export default {
 
     on_btn_upload() {
       if (this.btn_disabled()) return;
+      this.fastUploadStatus = '';
       this.upload_diag_visible = true;
     },
 
@@ -2513,6 +2514,15 @@ export default {
       let controller;
       let targetName = options.file.name;
       if (!Number.isSafeInteger(options.file.size) || options.file.size < 0 || options.file.size > 2 * 1024 * 1024) return Promise.reject(new Error(this.$t('upload.fileSizeLimit')));
+      let batch;
+      if (!verify) {
+        if (this._fastUploadBatch?.generation !== generation || this._fastUploadBatch.dir !== dir) {
+          this._fastUploadBatch = { generation, dir, remaining: 0, written: 0, drive: null, sample: null };
+        }
+        batch = this._fastUploadBatch;
+        ++batch.remaining;
+      }
+      this.fastUploadStatus = '';
       ++this.pendingUploads;
       const checkPreflight = () => {
         this.assert_session(generation);
@@ -2577,14 +2587,18 @@ export default {
           await this.ask_dialog(() => this.$confirm(this.$t(safe ? 'info.safeReplaceWarning' : 'tools.replaceWarning', { name: targetName }), this.$t('upload.title'), this.confirm_options()));
           checkPreflight();
         }
-        const drives = await this.read_drive_info(generation);
-        checkPreflight();
-        const destination = drives.find(drive => drive.label === dir[0]);
+        const oldBytes = safe ? 0 : existing?.size || 0;
+        let destination = batch?.drive;
+        if (!destination || !uploadSpaceAvailable(destination, options.file.size, oldBytes)) {
+          const drives = await this.read_drive_info(generation);
+          checkPreflight();
+          destination = drives.find(drive => drive.label === dir[0]);
+        }
         if (!destination || destination.status !== 0) throw new Error(this.$t('info.driveUnavailable'));
         // Equal-sized replacements may already match. safeUpload checks the
         // available workspace immediately before staging a changed file.
         const canMatchExisting = safe && existing?.size === options.file.size;
-        if (!canMatchExisting && !uploadSpaceAvailable(destination, options.file.size, safe ? 0 : existing?.size || 0)) throw new Error(this.$t('info.notEnoughSpace'));
+        if (!canMatchExisting && !uploadSpaceAvailable(destination, options.file.size, oldBytes)) throw new Error(this.$t('info.notEnoughSpace'));
         if (safe) {
           const adapters = this.transfer_adapters(generation);
           const result = await safeUpload({path, file:options.file, replace:!!existing, ...adapters,
@@ -2626,13 +2640,34 @@ export default {
           if (bytes.byteLength !== options.file.size || await sha256(bytes) !== sourceHash) throw new Error(this.$t('tools.verificationFailed'));
           this.assert_session(generation);
         }
+        if (batch) {
+          ++batch.written;
+          batch.drive = {...destination, freeBytes: destination.freeBytes - Math.max(0, options.file.size - oldBytes)};
+          if (options.file.size > 0 && options.file.size <= 572) batch.sample = {path, file:options.file};
+        }
         options.onProgress?.({ percent: 100 });
         this.remember_transfer('upload', 'success', options.file.size, verify);
         return {};
       };
       // FileReader and overwrite prompts belong to the same ordered queue as
       // the transfer. A rejected entry must not strand the next queued upload.
-      const pending = (this._uploadTail || Promise.resolve()).then(run);
+      const pending = (this._uploadTail || Promise.resolve()).then(run).catch(error => {
+        if (batch) { batch.failed = true; batch.drive = null; }
+        throw error;
+      }).finally(async () => {
+        if (!batch || --batch.remaining > 0) return;
+        if (this._fastUploadBatch === batch) this._fastUploadBatch = null;
+        if (batch.failed || !this.session_current(generation)) return;
+        const sample = batch.sample;
+        const digest = sample && await proto.vfs_backup_digest(sample.path, sample.file.size, this.firmwareVersion);
+        this.assert_session(generation);
+        if (digest) {
+          const expected = await sha256(await sample.file.arrayBuffer());
+          this.assert_session(generation);
+          if (digest !== expected) throw new Error(this.$t('tools.uploadSampleFailed', {name:sample.file.name}));
+        }
+        this.fastUploadStatus = this.$t(digest ? 'tools.uploadSampleMatched' : 'tools.uploadBatchClosed', {count:batch.written});
+      });
       this._uploadTail = pending.catch(() => {});
       return pending.catch(error => {
         this.remember_recovery(error);

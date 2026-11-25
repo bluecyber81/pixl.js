@@ -113,9 +113,7 @@ function harness(overrides = {}) {
     $nextTick: async () => {}, $refs: { upload: { clearFiles() {} } }
   };
   Object.assign(instance, options.data.call(instance));
-  // Existing transfer regressions continue to exercise the explicitly available
-  // direct mode. New integration cases opt into the production default below.
-  instance.safeUploads = overrides.safeUploads ?? false;
+  if (overrides.safeUploads !== undefined) instance.safeUploads = overrides.safeUploads;
   for (const [key, value] of Object.entries(options.methods)) instance[key] = value.bind(instance);
   for (const [key, value] of Object.entries(options.computed)) Object.defineProperty(instance, key, { get: value.bind(instance) });
   return { instance, options, messages, notifications, stored, listeners, document, window, navigator, proto, pixl, timeouts,
@@ -1289,6 +1287,54 @@ test('3.15 invalid new portable names cannot reach upload, rename or create but 
   }
 });
 
+test('ordinary queued uploads share a capacity estimate and check a single small sample after the final close', async () => {
+  const events = [], writes = new Map();
+  let driveReads = 0;
+  const h = harness({
+    vfs_get_drive_list: async () => {
+      ++driveReads;
+      return {status:0, data:[{label:'E', name:'External', status:0, total_size:2097152, free_size:1048576}]};
+    },
+    vfs_helper_write_file(path, file, progress, done, fail) {
+      file.arrayBuffer().then(bytes => {
+        writes.set(path, Buffer.from(bytes));
+        events.push('close');
+        done();
+      }, fail);
+    },
+    vfs_backup_digest: async path => {
+      events.push('sample');
+      assert.equal(path, 'E:/b.bin');
+      return require('node:crypto').createHash('sha256').update(writes.get(path)).digest('hex');
+    },
+    vfs_helper_read_file() { assert.fail('Unexpected full file readback'); }
+  });
+  const app = connected(h);
+  assert.deepEqual([app.safeUploads, app.verifyUploads, app.replaceUploads], [false, false, false]);
+  const files = [['a.bin',2], ['b.bin',3], ['long.bin',600]].map(([name,size]) => ({
+    name, size, arrayBuffer:async () => Uint8Array.from({length:size}, (_,i) => i % 256).buffer
+  }));
+  await Promise.all(files.map(file => app.on_upload_request({file})));
+  assert.deepEqual(events, ['close','close','close','sample']);
+  assert.equal(driveReads, 1);
+  assert.equal(app.fastUploadStatus, 'tools.uploadSampleMatched');
+  assert.equal(app.lastTransfer.verified, false);
+});
+
+test('quick upload reports a mismatched sample and never retries a completed write', async () => {
+  let writes=0;
+  const h=harness({
+    vfs_helper_write_file(path, file, progress, done) { ++writes; done(); },
+    vfs_backup_digest:async () => '0'.repeat(64)
+  });
+  const app=connected(h);
+  await assert.rejects(app.on_upload_request({file:{name:'changed.bin',size:1,arrayBuffer:async () => Uint8Array.of(7).buffer}}),
+    /uploadSampleFailed/);
+  assert.equal(writes,1);
+  assert.equal(app.pendingUploads,0);
+  assert.equal(app.fastUploadStatus,'');
+});
+
 test('3.15 real safe upload adapter stages replacement, verifies bytes and retains metadata', async () => {
   const {safeUpload}=await import('../src/lib/safe-upload.js');
   const meta={valid:true,notes:'keep',flags:{raw:2,hide:false,readonly:false},amiibo:{head:1,tail:2}};
@@ -1302,7 +1348,6 @@ test('3.15 real safe upload adapter stages replacement, verifies bytes and retai
     vfs_update_meta:async(path,value)=>{files.get(path).meta=value;return{status:0}}
   }), app=connected(h), progress=[];
   app.replaceUploads=true; app.verifyUploads=false;
-  assert.equal(h.options.data.call(app).safeUploads,true);
   await app.on_upload_request({file:{name:'old.bin',size:3,arrayBuffer:async()=>new Uint8Array([3,4,5]).buffer},onProgress:value=>progress.push(value.percent)});
   assert.equal(files.size,1); assert.deepEqual([...files.get('E:/old.bin').bytes],[3,4,5]);
   assert.equal(files.get('E:/old.bin').meta.notes,'keep'); assert.equal(files.get('E:/old.bin').meta.flags.raw,2);
@@ -1913,7 +1958,7 @@ test('failed upload preflight, directory conflict and cancelled replace never tr
 
 test('source read errors occur before any device write, and later uploads still run', async () => {
   let writes = 0;
-  const h = harness({ vfs_helper_write_file(path, file, progress, yes) { ++writes; yes(); },
+  const h = harness({ vfs_helper_write_file(path, file, progress, yes, no) { file.arrayBuffer().then(() => { ++writes; yes(); }, no); },
     vfs_helper_read_file(path, yes) { yes(Uint8Array.from([1, 2, 3]).buffer); } }), app = connected(h);
   const bad = { ...uploadFile('bad'), arrayBuffer: async () => { throw new Error('local read failed'); } };
   const first = app.on_upload_request({ file: bad }), rejected = assert.rejects(first, /local read failed/);
@@ -1926,7 +1971,9 @@ test('verified upload reports 100 percent only after matching SHA256 readback', 
   let readSuccess, progressValues = [];
   const h = harness({ vfs_helper_write_file(path, file, progress, yes) { progress({ total_bytes: 3, written_bytes: 3 }); yes(); },
     vfs_helper_read_file(path, yes, no, done, options) { assert.equal(options.max_bytes, 3); readSuccess = yes; } });
-  const app = connected(h), pending = app.on_upload_request({ file: uploadFile('a'), onProgress: value => progressValues.push(value.percent) });
+  const app = connected(h);
+  app.verifyUploads = true;
+  const pending = app.on_upload_request({ file: uploadFile('a'), onProgress: value => progressValues.push(value.percent) });
   while (!readSuccess) await new Promise(setImmediate);
   assert.deepEqual(progressValues, [99]);
   readSuccess(Uint8Array.from([1, 2, 3]).buffer); await pending;
@@ -1937,6 +1984,7 @@ test('same-size corrupted readback is an error, never a verified success', async
   const percentages = [];
   const h = harness({ vfs_helper_write_file(path, file, progress, yes) { yes(); },
     vfs_helper_read_file(path, yes) { yes(Uint8Array.from([1, 2, 9]).buffer); } }), app = connected(h);
+  app.verifyUploads = true;
   await assert.rejects(app.on_upload_request({ file: uploadFile('a'), onProgress: value => percentages.push(value.percent) }), /verificationFailed/);
   assert.ok(!percentages.includes(100)); assert.equal(app.pendingUploads, 0);
 });
@@ -2255,6 +2303,7 @@ test('3.14 upload refreshes drive space before source hashing or any write', asy
     vfs_helper_write_file(path, source, progress, yes) { calls.push('write'); yes(); },
     vfs_helper_read_file(path, yes) { calls.push('readback'); yes(Uint8Array.from([1, 2, 3]).buffer); }
   }), app = connected(h);
+  app.verifyUploads = true;
   app.driveInfo = [{ label: 'E', status: 0, totalBytes: 4096, freeBytes: 0 }];
   await app.on_upload_request({ file: { name: 'new.bin', size: 3,
     async arrayBuffer() { calls.push('hash-source'); return Uint8Array.from([1, 2, 3]).buffer; } } });

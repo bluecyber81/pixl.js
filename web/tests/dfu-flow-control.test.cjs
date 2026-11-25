@@ -362,6 +362,68 @@ for(const length of [21,22,23,24,25,141,143,144,244,245,511])test('init of '+len
   assert.deepEqual(p.state.init,[...init]);assert.deepEqual(p.state.firmware,[...image]);
 });
 
+test('LCD windowed DFU verifies the signed App678 contents at each object boundary with fewer control writes',async t=>{
+  const Package=require('../public/dfu/package.js');
+  const file=path.resolve(__dirname,'../public/firmware/Allmiibo_LCD_DE4_1_678_NUR_APP.zip');
+  const pkg=await new Package(require('node:fs').readFileSync(file)).load();
+  assert.equal(pkg.archiveSha256,'beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0');
+  const {initData,imageData}=await pkg.getAppImage(),image=new Uint8Array(imageData);
+  const p=bootloader(image,{z21:true,maxWrite:244,capacity:8});
+  const d=client({probeInitPacket:true,windowedFirmwareWrites:true});
+  await d.update(p.device,initData,image);
+  const checks=p.state.commands.filter(command=>command[0]===3).length;
+  assert.equal(p.state.firmwarePacketCount,2657);
+  assert.equal(p.state.executes.filter(e=>e.type===2).length,89);
+  assert.equal(p.state.rejectedFlashWords,0);
+  assert.equal(p.state.dropped,0);
+  assert.equal(p.state.overlap,false);
+  assert.equal(p.state.maxBuffered,8);
+  assert.ok(checks<400);
+  assert.ok(p.state.packets.length+p.state.commands.length<3300);
+  for(let i=0;i<p.state.commands.length;i++){
+    if(p.state.commands[i][0]===4)assert.equal(p.state.commands[i-1][0],3);
+  }
+  t.diagnostic(JSON.stringify({firmwareDataWrites:p.state.firmwarePacketCount,checksums:checks,
+    totalGattWrites:p.state.packets.length+p.state.commands.length,peakBuffered:p.state.maxBuffered}));
+  assert.deepEqual(Buffer.from(p.state.firmware),Buffer.from(image));
+  assert.equal(d.lastResult.executeAcknowledged,true);
+  clean(p,d);
+});
+
+test('windowed transfer on a one-packet receiver resumes at its confirmed prefix and keeps the window small',async()=>{
+  const image=bytes(8192+64),p=bootloader(image,{z21:true,maxWrite:244,capacity:1});
+  const d=client({probeInitPacket:true,windowedFirmwareWrites:true});
+  await d.update(p.device,bytes(142),image);
+  assert.equal(p.state.dropped,1);
+  assert.equal(p.state.overlap,false);
+  assert.deepEqual(p.state.firmware,[...image]);
+  assert.equal(d.lastResult.executeAcknowledged,true);
+  clean(p,d);
+});
+
+test('bad data within a window can never be executed',async()=>{
+  const image=bytes(8192),p=bootloader(image,{z21:true,maxWrite:244,capacity:8,damageAt:4});
+  const d=client({probeInitPacket:true,windowedFirmwareWrites:true});
+  await assert.rejects(d.update(p.device,bytes(142),image),/CRC32 mismatch/);
+  assert.equal(p.state.executes.filter(e=>e.type===2).length,0);
+  assert.equal(d.lastResult,null);
+  clean(p,d);
+});
+
+test('a disconnect within a modeled window resumes from the receiver offset on the next session',async()=>{
+  const image=bytes(8192+84),init=bytes(142);
+  const p=bootloader(image,{z21:true,maxWrite:244,capacity:8,disconnectAt:6});
+  const options={probeInitPacket:true,windowedFirmwareWrites:true};
+  await assert.rejects(client(options).update(p.device,init,image),/disconnect|ended/);
+  assert.equal(p.state.executes.filter(e=>e.type===2).length,0);
+  const prefix=Uint8Array.from(p.state.firmware);
+  assert.equal(prefix.length,6*140);
+  assert.deepEqual(prefix,image.subarray(0,prefix.length));
+  await client(options).update(p.device,init,image);
+  assert.deepEqual(p.state.firmware,[...image]);
+  assert.equal(p.state.executes.filter(e=>e.type===2).at(-1).offset,image.length);
+});
+
 test('invalid firmware length, resume offset and intermediate object boundary cannot produce partial flash words',async()=>{
   const init=bytes(142);
   for(const length of [1,2,3,139,141,142,143]){

@@ -44,6 +44,7 @@
       this.crc32 = crc32;
       this.extendCrc32 = options.extendCrc32;
       this.probeInitPacket = options.probeInitPacket === true && typeof this.extendCrc32 === 'function';
+      this.windowedFirmwareWrites = options.windowedFirmwareWrites === true;
       this._prefix = null;
       this.bluetooth = bluetooth || globalThis.navigator?.bluetooth;
       this.delay = Math.max(0,Number(delay)||0);
@@ -93,6 +94,8 @@
       this._ownerToken={active:true};OWNERS.set(device,this._ownerToken);
       this._active=true;this._epoch++;this._device=device;this._disconnected=false;this._finalAck=false;this._finalExecute=false;
       this._packetBytes=20;
+      this._dataWindow=1;
+      this._dataWindowLimit=8;
       this._localDisconnectRequested=false;this._stopAfterAck=false;
       this._listen(device,'gattserverdisconnected',()=>{
         if(device.gatt.connected)return; // A deferred event from a previous connection.
@@ -226,7 +229,36 @@
       await this._create(1,bytes.length);
       return 0;
     }
+    async _streamFirmwareWindow(bytes,start,end){
+      let confirmed=start;
+      while(confirmed<end){
+        const planned=Math.min(end,confirmed+this._packetBytes*this._dataWindow);
+        for(let pos=confirmed;pos<planned;pos+=this._packetBytes){
+          await this._write(this.packetChar,bytes.subarray(pos,Math.min(planned,pos+this._packetBytes)));
+        }
+        if(planned===bytes.length)this.dispatchEvent('phase','verify');
+        const receipt=await this.sendControl([3]);
+        if(receipt.byteLength!==8)throw new Error('Invalid DFU checksum response length');
+        const offset=receipt.getUint32(0,true);
+        if(offset%4!==0)throw new Error('DFU firmware receipt is not word aligned');
+        if(offset<confirmed||offset>planned||(offset!==planned&&this._dataWindow===1)){
+          this._checkOffset(receipt,planned,'firmware');
+        }
+        if(receipt.getUint32(4,true)!==this._prefixCrc(bytes,offset))throw new Error('DFU CRC32 mismatch');
+        if(offset<planned){
+          // Only resend bytes beyond a verified prefix. A receiver with less
+          // room keeps single-packet flow control for this entire connection.
+          this._dataWindowLimit=1;
+        }
+        this._dataWindow=Math.min(this._dataWindow*2,this._dataWindowLimit);
+        confirmed=offset;
+        this.progress('firmware',bytes.length,confirmed);
+      }
+    }
     async _stream(bytes,start,end,type){
+      if(type==='firmware'&&this._packetBytes>20&&this.windowedFirmwareWrites){
+        return this._streamFirmwareWindow(bytes,start,end);
+      }
       if(this._packetBytes>20){
         for(let pos=start;pos<end;pos+=this._packetBytes){
           const next=Math.min(pos+this._packetBytes,end);
