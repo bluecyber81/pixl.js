@@ -1,0 +1,38 @@
+{
+  "version": "3.66.1",
+  "date": "2026-11-25",
+  "node": {
+    "total": 2306,
+    "passed": 2306,
+    "failed": 0,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "buildTests": {
+    "root": 58,
+    "pages": 58
+  },
+  "portable": {
+    "bytes": 13369998,
+    "sha256": "38efa6e199632c813cc14458e9d19159e74b93a487880a7bb9e7613b84cca883",
+    "extractedFilesVerified": 320,
+    "windowsLaunchReuseStop": true
+  },
+  "browsers": {
+    "normalUpdateChecks": 62,
+    "extendedDfuChecks": 68,
+    "dfuSyncChecks": 91,
+    "engines": [
+      "Chromium",
+      "WebKit"
+    ],
+    "coverage": [
+      "real LCD ZIP over HTTP and local package validation before device selection",
+      "historic LCD and OLED selection",
+      "English and German catalogue",
+      "scrolling preview, offline player export, simulated GATT"
+    ]
+  },
+  "firmwareEvidence": "DE4_1.json",
+  "deviceAccess": "Host and browser tests only. App677 had an owner-confirmed LCD readback. App678 physical readback is open."
+}

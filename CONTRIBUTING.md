@@ -79,8 +79,8 @@ outputs are checked against independent oracles, and LittleFS wear behavior is
 compared with the previous predicate under simulated NOR and interrupted writes.
 The old variant is made only in a temporary directory.
 
-The Linux/WSL helper `tools/run_firmware_tests.py` runs the current full
-158-suite firmware matrix from the hash-pinned SDK archive and sets both SDK
+The Linux/WSL helper `tools/run_firmware_tests.py` discovers and runs the full
+firmware test matrix (198 suites for DE4.1) from the hash-pinned SDK archive and sets both SDK
 path variables for its disposable test copy. Linked Cortex-M4 checks are
 separate runs described in the build guide. Each individual runner documents
 its dependencies. Publish hardware observations,

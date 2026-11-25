@@ -89,7 +89,7 @@
   },
   "status": "source-published-and-software-qualified",
   "device_readback_evidence": null,
-  "fresh_public_unsigned_rebuild_matches_signed_application": false,
+  "fresh_public_unsigned_rebuild_matches_signed_application": true,
   "firmware_downloads": {
     "application": {
       "file": "Allmiibo_LCD_DE4_1_678_NUR_APP.zip",
@@ -529,7 +529,7 @@
       "final_ci": "https://github.com/bluecyber81/pixl.js/actions/runs/45061302008"
     }
   ],
-  "public_rebuild_scope": "See independent GitHub build receipt attached to the de4.1 release.",
+  "public_rebuild_scope": "GitHub Actions independently rebuilt the normal release. Its application BIN, HEX and full production-input manifest match the locally qualified artifacts. Both LFS and actual linked ARM/DFU checks ran on the recorded commit.",
   "firmware_changes": {
     "stream_redraw": "Keep every negotiated chunk ACK immediate; request drawing for complete frames or changed validity, including asynchronous failure and session resets.",
     "player_loop": "Session-only optional loop, off by default. Reopen read-only with exact validated-header and frame-buffer-size checks; retain one frame buffer and one timer.",
@@ -671,7 +671,45 @@
   "firmware_qualification_source_commit": "2437a3a4cf15afbc108ae66b28cec03f29da8602",
   "local_production_commit": "2437a3a4cf15afbc108ae66b28cec03f29da8602",
   "firmware_qualification_passed": true,
-  "current_firmware_ci": null,
+  "current_firmware_ci": {
+    "run_id": 45568978799,
+    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45568978799",
+    "conclusion": "success",
+    "source_commit": "b16bf4bc63b85dc1b7bfde93e8221b5ff6754f4b",
+    "application_counter": 678,
+    "binarySha256": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
+    "hexSha256": "4b49516af1a7634fc03332aef18a0bd81a9e62bdd5a5617aa0e9bbab921d8fdf",
+    "productionManifestSha256": "cbbe5448e665a55c00cff8bb67bb8d8c1db1eba8d08b08bcbb38d7555ae058b6",
+    "sourceInputs": 720,
+    "sourceId": "e8b24c067a7ead279a12720b0ffe6ef4f4678e1f0c8b329859c883a53f007f6c",
+    "hostSuitesPassed": 198,
+    "jobResults": [
+      {
+        "name": "z17 source-bound build and ARM tests",
+        "result": "success"
+      },
+      {
+        "name": "z19 source-bound build and ARM tests",
+        "result": "success"
+      },
+      {
+        "name": "LCD application build",
+        "result": "success"
+      },
+      {
+        "name": "z21 source-bound build and DFU recovery tests",
+        "result": "success"
+      },
+      {
+        "name": "z20 source-bound build and DFU recovery tests",
+        "result": "success"
+      },
+      {
+        "name": "BL8 corresponding-source build",
+        "result": "skipped"
+      }
+    ]
+  },
   "firmware_source_scope": "App678 production inputs at the pinned commit. The source branch also contains release qualification and distribution metadata.",
   "combined_main_preparation": {
     "status": "final-snapshot-ready-for-publication-and-both-main-cis",
@@ -1332,11 +1370,17 @@
   "web_portable_url": "https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip",
   "web_downloads": {
     "portable": "https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip",
-    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip"
+    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip",
+    "portableBytes": 13369998,
+    "portableSha256": "38efa6e199632c813cc14458e9d19159e74b93a487880a7bb9e7613b84cca883"
   },
   "web_upload_evidence": "docs/validation/WEB3_65_1_UPLOAD.json",
   "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.1",
   "web_publication_date": "2026-11-25",
   "web_qualification_date": "2026-11-25",
-  "web_evidence": "docs/validation/WEB3_66_1.json"
+  "web_evidence": "docs/validation/WEB3_66_1.json",
+  "web_test_total": 2306,
+  "web_test_passed": 2306,
+  "web_test_failed": 0,
+  "web_test_skipped": 0
 }

@@ -1,0 +1,39 @@
+{
+  "run_id": 45568978799,
+  "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45568978799",
+  "conclusion": "success",
+  "source_commit": "b16bf4bc63b85dc1b7bfde93e8221b5ff6754f4b",
+  "application_counter": 678,
+  "binarySha256": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
+  "hexSha256": "4b49516af1a7634fc03332aef18a0bd81a9e62bdd5a5617aa0e9bbab921d8fdf",
+  "productionManifestSha256": "cbbe5448e665a55c00cff8bb67bb8d8c1db1eba8d08b08bcbb38d7555ae058b6",
+  "sourceInputs": 720,
+  "sourceId": "e8b24c067a7ead279a12720b0ffe6ef4f4678e1f0c8b329859c883a53f007f6c",
+  "hostSuitesPassed": 198,
+  "jobResults": [
+    {
+      "name": "z17 source-bound build and ARM tests",
+      "result": "success"
+    },
+    {
+      "name": "z19 source-bound build and ARM tests",
+      "result": "success"
+    },
+    {
+      "name": "LCD application build",
+      "result": "success"
+    },
+    {
+      "name": "z21 source-bound build and DFU recovery tests",
+      "result": "success"
+    },
+    {
+      "name": "z20 source-bound build and DFU recovery tests",
+      "result": "success"
+    },
+    {
+      "name": "BL8 corresponding-source build",
+      "result": "skipped"
+    }
+  ]
+}
