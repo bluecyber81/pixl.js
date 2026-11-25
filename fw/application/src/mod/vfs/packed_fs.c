@@ -189,14 +189,17 @@ static uint32_t path_hash(const char *path) {
     h = (h ^ (uint8_t)*path) * 16777619u;
   return h;
 }
-static void catalog_parent_add(catalog_t *cat, const char *path) {
+static unsigned catalog_parent_bit(const char *path) {
   const char *end = strrchr(path, '/');
   if (end == path)
     end++;
   uint32_t hash = 2166136261u;
   while (path < end)
     hash = (hash ^ (uint8_t)*path++) * 16777619u;
-  unsigned bit = hash & 63u;
+  return hash & 63u;
+}
+static void catalog_parent_add(catalog_t *cat, const char *path) {
+  unsigned bit = catalog_parent_bit(path);
   cat->parents[bit >> 5] |= 1u << (bit & 31);
 }
 static void index_add(index_t *index, unsigned count, uint32_t hash,
@@ -562,6 +565,7 @@ static bool manifest_has(const manifest_t *m, uint32_t id);
 static int lookup(pfs_t *fs, const manifest_t *m, const char *path,
                   pfs_info_t *info, location_t *loc) {
   uint32_t hash = path_hash(path);
+  unsigned parent_bit = catalog_parent_bit(path);
   for (unsigned slot = 0; slot < m->count; slot++) {
     catalog_t *cat = &fs->catalog[slot % CATALOG_SLOTS];
     if (cat->id != m->ids[slot]) {
@@ -574,6 +578,8 @@ static int lookup(pfs_t *fs, const manifest_t *m, const char *path,
       }
     }
     if (cat) {
+      if (!(cat->parents[parent_bit >> 5] & (1u << (parent_bit & 31))))
+        continue;
       unsigned bit = hash & 255u;
       if (!(cat->filter[bit >> 5] & (1u << (bit & 31))))
         continue;
@@ -682,8 +688,12 @@ static int manifest_load(pfs_t *fs, manifest_t *m) {
   return 0;
 }
 static int publish(pfs_t *fs, const manifest_t *m) {
-  uint8_t b[MH + PFS_MAX_SHARDS * 4 + 4];
-  memset(b, 0, sizeof(b));
+  union {
+    uint8_t bytes[MH + PFS_MAX_SHARDS * 4 + 4];
+    manifest_t observed;
+  } scratch;
+  uint8_t *b = scratch.bytes;
+  memset(b, 0, sizeof(scratch.bytes));
   put32(b, M_MAGIC);
   put32(b + 4, PFS_FORMAT_VERSION);
   put32(b + 8, m->generation);
@@ -699,16 +709,35 @@ static int publish(pfs_t *fs, const manifest_t *m) {
   put32(b + n, ~crc(~0u, b, n));
   io_t io;
   fs->gc_state = GC_PENDING;
-  int r = io_open(fs, &io, NEXT, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_EXCL);
+  /* Already-bound volumes have an existing manifest. Littlefs 2.8 truncates
+   * the open handle in RAM and publishes its replacement struct in rawsync.
+   * Preserve initial publication, formatting and incomplete import semantics. */
+  const bool replace = m->generation > 1 && m->bound && !m->pending &&
+                       fs->current.bound && !fs->current.pending;
+  int r = replace ? io_open(fs, &io, MANIFEST, LFS_O_WRONLY | LFS_O_TRUNC) :
+                    io_open(fs, &io, NEXT, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_EXCL);
   if (r)
     return io_error(fs, r);
   r = emit(fs, &io, b, n + 4, NULL, NULL);
   if (!r)
     r = lfs_file_sync(&fs->lfs, &io.f);
   r = io_close(fs, &io, r);
-  if (r)
+  if (replace && r == LFS_ERR_NOSPC) {
+    /* A full device may report failure before or after publication. Reuse the
+     * existing buffer to check the complete CRC-validated, active manifest. */
+    manifest_t *seen = &scratch.observed;
+    r = manifest_load(fs, seen);
+    if (!r) {
+      size_t active = offsetof(manifest_t, ids) + seen->count * sizeof(seen->ids[0]);
+      if (!memcmp(seen, &fs->current, active)) return LFS_ERR_NOSPC;
+      if (memcmp(seen, m, active)) r = LFS_ERR_CORRUPT;
+    }
+  }
+  if (r) {
+    if (replace) fs->poisoned = true;
     return io_error(fs, r);
-  r = lfs_rename(&fs->lfs, NEXT, MANIFEST);
+  }
+  if (!replace) r = lfs_rename(&fs->lfs, NEXT, MANIFEST);
   if (r) {
     fs->poisoned = true;
     return r;

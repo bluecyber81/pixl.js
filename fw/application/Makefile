@@ -811,7 +811,7 @@ $(OWN_C_OBJECTS): CFLAGS += -Werror=implicit-function-declaration -Werror=incomp
 
 
 ifeq ($(BOARD),LCD)
-LCD_BULK_SIZE_OBJECTS := lfs.c lfs_util.c packed_fs.c vfs_driver_packed.c vfs_packed_runtime.c vfs_persist.c vfs_meta.c df_small_create.c bulk_wire.c df_core.c df_proto_vfs.c
+LCD_BULK_SIZE_OBJECTS := lfs.c lfs_util.c packed_fs.c vfs_driver_packed.c vfs_packed_runtime.c vfs_persist.c vfs_meta.c vfs.c df_proto_info.c df_small_create.c bulk_wire.c df_core.c df_proto_vfs.c
 $(addprefix $(OUTPUT_DIRECTORY)/pixljs/,$(addsuffix .o,$(LCD_BULK_SIZE_OBJECTS))): CFLAGS += -Os -flto -ffat-lto-objects
 endif
 
