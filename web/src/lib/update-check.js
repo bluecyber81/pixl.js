@@ -1,4 +1,5 @@
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
+import { compareLcdVersions } from './lcd-version.js';
 import releases from '../data/firmware-releases.json' with { type: 'json' };
 
 import { UPDATE_TARGET } from './update-target.js';
@@ -40,9 +41,7 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
     compare('page', diagnostic?.pageBytes, target.hardware.page),
     flag('geometry', diagnostic?.geometryValid)
   ]);
-  const deVersion = value => value?.match(/^(\d+)\.(\d+)\.(\d+)-DE3\.(\d+)(-PREP)?(?:t[1-9]\d*)?$/);
-  const previousDe = deVersion(firmware), targetDe = deVersion(target.application.version);
-  const relation = previousDe && targetDe ? [1,2,3,4].map(i=>Number(previousDe[i])-Number(targetDe[i])).find(n=>n!==0)||0 : 0;
+  const relation = compareLcdVersions(firmware, target.application.version);
   const packageEntry = releases.packages.find(entry => entry.version === firmware);
   const preview = firmware !== target.application.version && Object.hasOwn(LCD_Z21_COUNTERS, firmware)
     ? {version:firmware, counter:LCD_Z21_COUNTERS[firmware], bootloader:'Z21'}
@@ -53,7 +52,7 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
   row('application', applicationChecks, ['applicationScope',
     ...(relation < 0 && !preview && Object.hasOwn(target.localApplications, firmware) && diagnostic?.settingsCrcValid &&
       diagnostic.applicationCounter === target.localApplications[firmware] ? ['knownLocalApplication'] : []),
-    ...(previousDe?.[5] ? ['preparationApplication'] : []),
+    ...(relation !== null && firmware.endsWith('-PREP') ? ['preparationApplication'] : []),
     ...(relation < 0 ? ['olderApplication'] : relation > 0 ? ['newerApplication'] : [])], preview ? 'preview' : 'match');
   const bootHash = diagnostic?.bootHashValid ? diagnostic.bootRegionSha256 : null;
   const bootCounter = diagnostic?.settingsCrcValid ? diagnostic.bootloaderCounter : null;
@@ -90,13 +89,18 @@ export function evaluateUpdateCheck({ session = {}, boot = null } = {}) {
 }
 
 export function updateCheckText(locale = 'de_DE', preview = null) {
-  const german = String(locale).startsWith('de'), copy = german ? COPY.de : COPY.en;
+  const german = String(locale).startsWith('de'), strings = german ? COPY.de : COPY.en;
+  const previousRelease = preview && releases.packages.some(entry => entry.board === 'LCD' &&
+    entry.version === preview.version && entry.counter === preview.counter && entry.channel !== 'prerelease');
+  const copy = previousRelease ? { ...strings, preview: strings.previousRelease, previewProfile: strings.previousRelease,
+    overall: { ...strings.overall, preview: strings.previousReleaseMatch },
+    fields: { ...strings.fields, previewBootCounter: strings.fields.targetBootCounter } } : strings;
   const version = UPDATE_TARGET.application.version, short = version.split('-').at(-1);
   const application = preview || UPDATE_TARGET.application;
   return { ...copy, target: `${german ? 'Aktuelle LCD-Ausgabe' : 'Current LCD release'} · ${short} / App${UPDATE_TARGET.application.counter} · Z21 · S112 7.3.0`,
     targets: { ...copy.targets, application: `${preview ? copy.previewProfile + ' · ' : ''}${application.version} · ${german ? 'Zähler' : 'counter'} ${application.counter}`,
       bootloader: preview ? `${copy.previewProfile} · ${preview.bootloader}` : `${german ? 'Bereichs-Hash und Zähler' : 'Region hash and counter'} · BL8 (${UPDATE_TARGET.bootloader.counter}) / Z13 (${UPDATE_TARGET.bootloaderZ13.counter}) / Z15 (${UPDATE_TARGET.bootloaderZ15.counter}) / Z16 (${german ? 'Rückkehr' : 'rollback'}) / Z17 (${UPDATE_TARGET.bootloaderZ17.counter}) / Z18 (${german ? 'Rückkehr zu Z15-Code' : 'rollback to Z15 code'}) / Z19 (${UPDATE_TARGET.bootloaderZ19.counter}) / Z20 (${UPDATE_TARGET.bootloaderZ20.counter}) / Z21 (${UPDATE_TARGET.bootloaderZ21.counter})` },
-    reasons: { ...copy.reasons, olderApplication: german ? `Die gelesene DE3-Version ist älter als das lokale Ziel ${short}.` : `The read DE3 version is older than the local ${short} target.` } };
+    reasons: { ...copy.reasons, olderApplication: german ? `Die installierte Firmware ist älter als ${short}.` : `The installed firmware is older than ${short}.` } };
 }
 
 // Only allowlisted values from evaluateUpdateCheck reach the overview. No device
@@ -116,6 +120,7 @@ export function formatUpdateValue(key, value, locale = 'de_DE') {
 
 const COPY = {
   de: {
+    previousRelease: 'Frühere stabile Ausgabe', previousReleaseMatch: 'Die ausgelesenen Werte passen zu dieser früheren stabilen LCD-Version.',
     title: 'Geräteübersicht und Versionsabgleich', target: '',
     subtitle: 'Vergleicht die gelesenen Angaben mit diesem Paket. Abweichung bedeutet nicht automatisch Fehler oder Inkompatibilität. Keine automatische Aktualisierung.',
     match: 'Stimmt überein', preview: 'Bekannte Vorschau', previewProfile: 'Vorschauprofil', different: 'Abweichung', unknown: 'Noch nicht bestätigt', unknownValue: 'Nicht bestätigt',
@@ -145,6 +150,7 @@ const COPY = {
     limits: 'Momentaufnahme dieser Verbindung. Displayverdrahtung, Signaturprüfung und Wiederherstellbarkeit sind damit nicht bestätigt. Dies ist keine Flash-Freigabe und keine Online-Prüfung auf die neueste Version.'
   },
   en: {
+    previousRelease: 'Previous stable release', previousReleaseMatch: 'The observed values match this previous stable LCD release.',
     title: 'Device overview and version check', target: '',
     subtitle: 'Compares the read values with this package. A difference does not automatically mean a fault or incompatibility. No automatic update.',
     match: 'Matches', preview: 'Known preview', previewProfile: 'Preview profile', different: 'Difference', unknown: 'Not yet confirmed', unknownValue: 'Not confirmed',

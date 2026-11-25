@@ -1,0 +1,12 @@
+{
+  "path": "web/public/sources/LCD_DE4_1_App678_Simulatorquellen.zip",
+  "bytes": 164070,
+  "sha256": "5a21ba8977ec49fab55d79a8df8e8e497c70baa6d21422bd306058c90a47251f",
+  "files": 28,
+  "productionCommit": "2437a3a4cf15afbc108ae66b28cec03f29da8602",
+  "productionTree": "125d9ad4d63a5f8cb8ef78ae4fa09127ec3c5bf7",
+  "sourceId": "e8b24c067a7ead279a12720b0ffe6ef4f4678e1f0c8b329859c883a53f007f6c",
+  "capacityProfile": "de41",
+  "simulatorProfile": "de399",
+  "wasmRebuilt": false
+}

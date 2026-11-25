@@ -173,6 +173,7 @@ def main():
                                      'build/lcd-release' if release.get('firmware_channel') == 'normal' else 'build/lcd-de389')
     result = json.loads((build / 'BUILD_RESULT.json').read_bytes())
     need(result['mode'] == mode and result['status'] == 'passed', 'Fresh matching firmware build required')
+    need(result['board'] == release['board'] == 'LCD', 'LCD build and release board must agree')
     need((result['version'], result['counter'], result['source_id_sha256']) ==
          (release['version'], release['counter'], release['production_source_id_sha256']),
          'Release metadata must identify the freshly compiled application source')
@@ -200,6 +201,8 @@ def main():
     key = ec.EllipticCurvePublicNumbers(int.from_bytes(public[:32], 'little'),
                                          int.from_bytes(public[32:], 'little'), ec.SECP256R1()).public_key()
     evidence = verify_zip(ota, binary, release, key)
+    need(evidence['bytes'] == release['ota_bytes'] and len(binary) == release['application_bytes'],
+         'Advertised release sizes must match the ZIP and its application')
     web_dir = root / 'web/public/firmware'
     offers = unique_json((web_dir / 'releases.json').read_bytes())['packages']
     current = [item for item in offers if item.get('sha256') == release['ota_sha256']]
@@ -208,6 +211,12 @@ def main():
     need(offer['version'] == release['version'] and offer['counter'] == release['counter']
          and offer['file'] == ota.name and offer['bytes'] == ota.stat().st_size and offer['applicationOnly'] is True,
          'Web DFU offer matches the signed LCD application identity')
+    need(offer['board'] == release['board'] and offer['bootloader'] == release['tested_bootloader']['name']
+         and offer['softDevice'] == release['softdevice']['name'] + ' ' + release['softdevice']['version']
+         and offer['storage'] == 'PFS1' and offer['migrationRequired'] is False,
+         'Web DFU offer must identify the correct LCD, system components and storage profile')
+    need(offer.get('channel') == ('prerelease' if args.preview else None),
+         'Web DFU channel must match the package being verified')
     need((web_dir / ota.name).read_bytes() == ota.read_bytes(), 'Web and release ZIP bytes differ')
     evidence['identicalWebPackage'] = 'web/public/firmware/' + ota.name
     evidence['publicKeySource'] = key_source.relative_to(root).as_posix()

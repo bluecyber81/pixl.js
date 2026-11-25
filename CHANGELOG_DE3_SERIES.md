@@ -1,5 +1,9 @@
 # Allmiibo LCD application and file manager history
 
+## LCD DE4.1 / App678 · Final · 25 November 2026
+
+The regular LCD release includes App677’s confirmed wake-profile removal and retryable settings saves. Image reception, the animation player and phone scrolling text are available. File manager 3.66.1 recognizes the new firmware series in diagnostics and file operations. The signed phone ZIP updates the application on an LCD with PFS1, Z21 and S112 7.3.0. The 24 November owner report applies to the previous App677. [Phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Release notes](docs/DE4_1_RELEASE.md) · [Verification kit](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_App678_Pruefpaket.zip)
+
 ## DE3.104 / App677 (LCD test) and Web 3.66.0 · 24 November 2026
 
 - Add confirmed removal of the local LCD wake profile, including button-start wake.

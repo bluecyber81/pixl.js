@@ -1,5 +1,9 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.66.1 · 25. November 2026
+
+Die Versionsprüfung erkennt DE4.1/App678 und frühere Firmwarestände. Die Standardauswahl lädt die signierte Finalversion für LCD. OLED und ältere Downloads bleiben separat erreichbar. [Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip)
+
 ## Dateimanager 3.66.0 · Lauftext und Minerus Konstrukt
 
 Im Bereich Bild & Video lässt sich ein eigener Lauftext am Handy eingeben, abspielen, auf ein kompatibles LCD senden oder als PIXV-Datei exportieren. Der zweisprachige Figurenkatalog ergänzt die von Nintendo beschriebenen Spielwirkungen von Minerus Konstrukt. Der OLED-Teststatus beschreibt die bestätigte Fernverbindung und das abgerufene Displayfoto.

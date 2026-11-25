@@ -1,32 +1,22 @@
 # Allmiibo LCD and Pixl.js OLED
 
-**Optional LCD test release DE3.104 / App677.** In Switch 2 wake, “Forget pairing” removes the locally saved profile after confirmation and turns off automatic wake. On-device testing is pending. [Phone ZIP](https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE3_104_677_NUR_APP.zip) · [Open in the web updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.104-lcd-app-test1#board=LCD) · [Test release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.104-lcd-test1).
+## LCD DE4.1 / App678 and file manager 3.66.1
 
-## Current: LCD DE3.102 / App675 and file manager 3.66.0
+DE4.1 is the regular firmware for the nRF52832 Allmiibo with an ST7567 LCD, existing Packed LittleFS (PFS1), Z21 bootloader and Nordic S112 7.3.0 (FWID 0x0126). A compatible LCD running App675, App676 or App677 can update directly. Back up your files and select the intact signed ZIP in **nRF Device Firmware Update** on your phone. After restart, **Device & diagnostics** should show **2.22.0-DE4.1** and application counter **678**.
 
-Web 3.66.0 adds scrolling text to the LCD image sender and bilingual game notes for Mineru’s Construct.
+[LCD phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Update in browser](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.1-lcd-app#board=LCD) · [Verification kit with BIN and HEX](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_App678_Pruefpaket.zip) · [GitHub release](https://github.com/bluecyber81/pixl.js/releases/tag/de4.1)
 
-Historical Web 3.65.0 verification: [delivery record](docs/validation/WEB3_65_0_FINAL_DELIVERY.json).
+- **Switch 2 wake:** A failed settings save can be retried. “Forget pairing” asks for confirmation with Cancel selected initially. Confirming removes the local wake profile and turns off automatic button-start wake.
+- **Images and video:** The receiver refreshes the display on complete frames and status changes. The animation player offers a session-only loop and frame counter. Preview scrolling text on your phone and send it to the LCD or save it for the player.
+- **File manager:** Version 3.66.1 recognizes the DE4 family for supported LCD features and verifies the matching update package. The catalogue includes the English and German game notes for Mineru’s Construct.
 
-[Open file manager](https://bluecyber81.github.io/pixl.js/) · [Images & video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 in updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signed App675 ZIP for phones](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows portable ZIP](https://bluecyber81.github.io/pixl.js/downloads/web3.66.0/Allmiibo_Dateimanager_3_66_0_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.0.zip).
+[Open file manager](https://bluecyber81.github.io/pixl.js/) · [Image & video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Windows portable ZIP](https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
 
-**Web 3.65.0** remembers image options and keeps one local file available across workspace changes for up to 30 minutes in the open page. Rotation by 90°, 180° or 270°, an optional photo dot pattern and drag & drop extend the preview. **Save for the animation player** exports a still image, the demo or a video clip as a player BIN. Start, end, frame rate and output size are shown before export; progress and cancellation are included. Processing stays local. [Instructions](https://bluecyber81.github.io/pixl.js/guide/en.html#bild-video).
-
-**LCD DE3.102 / App675** redraws image reception when a complete frame arrives or visible status changes. The animation player offers **Loop** and **Frame counter**; both start off and apply to the current player session. The menu icons added in App674 remain included. This firmware is for **LCD/ST7567, PFS1, Z21 and S112 7.3.0**. The application-only update preserves the PFS1 filesystem, bootloader and SoftDevice.
-
-The web image sender still works with **App673 or newer**. App675 provides the new player options and improved redraw scheduling. File selection and export do not start Bluetooth transmission. Copy the completed player BIN to **E:/player/** through **Files** afterwards. Leaving or hiding the sender stops transmission; it never resumes automatically.
-
-The catalogue aligns existing Ocarina and Fatal Fury game notes with figure details and adds source-backed game associations for Sword Kirby & Dragoon and Noir Dedede & Hydra. Entries identify their Nintendo sources. Backup, collection comparison, synchronization, remote control and diagnostics remain available.
-
-### Sources and qualification
-
-[LCD production branch](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [Web 3.66.0 tag](https://github.com/bluecyber81/pixl.js/tree/web3.66.0) · [Firmware qualification](docs/validation/DE3_102.json) · [ARM/PFS binding](docs/validation/DE3_102_PFS.json) · [Web 3.65.1 folder upload and resume tests](docs/validation/WEB3_65_1_UPLOAD.json) · [Operating notes](web/LIESMICH_3_66_0.txt) · [Deutsch](README.de.md).
-
-App675 was read back on one LCD. The owner confirmed images, animation, loop and frame counter. Physical Switch 2 wake and interrupted DFU remain open. [Device readback](docs/validation/DE3_102_LCD_READBACK.json).
+The 24 November device report covers the immediately preceding App677. Physical App678 readback and interrupted DFU on hardware were pending at publication. [DE4.1 qualification](docs/validation/DE4_1.json) · [App677 owner report](https://github.com/bluecyber81/pixl.js/releases/tag/de3.104-lcd-test1)
 
 ## Historical downloads and separate OLED releases
 
-The older Android combined package contains App662 and is a separate system route for compatible older LCDs; install normal App675 afterwards as an application update. App674, App673 and App672 remain earlier normal packages. OLED Test5/App85 and Test6/App86 retain their own packages and acceptance limits.
+The SH1106 OLED has its own update path. The historical two-stage Android package includes App662 for compatible older LCDs that need Z21 and S112 7.3.0. Install DE4.1 as a separate application after the system update. [Requirements and storage migration](docs/INSTALLATION.md) · [OLED test release](https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-oled-t6)
 
 ## Archive: LCD DE3.89 / App662
 

@@ -8,6 +8,7 @@ import { createRequire } from 'node:module'
 import { noticeFiles, webRoot } from '../../scripts/copy-license-notices.mjs'
 import { lcdPreview, lcdPreview669, lcdPreview668, lcdPreview667, lcdPreviewPackages } from '../../public/dfu/lcd-private-reference.mjs'
 import { lcdRelease } from '../../public/dfu/lcd-release-reference.mjs'
+import { lcdRelease as app675 } from '../../public/dfu/lcd-app675-reference.mjs';
 import { lcdRelease as app674 } from '../../public/dfu/lcd-app674-reference.mjs'
 import { lcdRelease as app673 } from '../../public/dfu/lcd-app673-reference.mjs'
 import { lcdRelease as app672 } from '../../public/dfu/lcd-app672-reference.mjs'
@@ -25,7 +26,7 @@ test(`${base}: both setup guides have working anchors and bundled destinations`,
     const here = new URL(base + 'guide/' + filename, origin)
     const guide = read('guide/' + filename)
     assert.ok(guide.includes('<html lang="' + lang + '"'))
-    for (const id of ['diagnose', 'programme', 'flash', 'lcd-de3102', 'lcd-de3101', 'lcd-de3100', 'bild-video', 'littlefs', 'bootloader', 'hilfe']) {
+    for (const id of ['diagnose', 'programme', 'flash', 'lcd-de41', 'lcd-de3102', 'lcd-de3101', 'lcd-de3100', 'bild-video', 'littlefs', 'bootloader', 'hilfe']) {
       assert.ok(guide.includes('id="' + id + '"'), id)
     }
     for (const [, href] of guide.matchAll(/\shref="([^"]+)"/g)) {
@@ -114,10 +115,10 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.deepEqual(fs.readFileSync(path.join(dist, 'licenses', file)), fs.readFileSync(path.join(webRoot, file)), file)
     assert.ok(index.includes(`href="${file}"`), file)
   }
-  assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.0.zip" download'))
-  assert.ok(index.includes('pixl.js/blob/web3.66.0/docs/VERSIONEN_WEB.md'))
-  assert.ok(index.includes('pixl.js/blob/web3.66.0/docs/VERSIONEN_FIRMWARE.md'))
-  assert.ok(!index.includes('releases/download/web3.66.0/'))
+  assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip" download'))
+  assert.ok(index.includes('pixl.js/blob/web3.66.1/docs/VERSIONEN_WEB.md'))
+  assert.ok(index.includes('pixl.js/blob/web3.66.1/docs/VERSIONEN_FIRMWARE.md'))
+  assert.ok(!index.includes('releases/download/web3.66.1/'))
   for (const releaseFile of [
     'de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip',
     'de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip',
@@ -134,7 +135,7 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
   assert.match(index, /historische/)
 })
 
-for (const [reference,profile,name] of [[lcdRelease,'de3102','LCD_DE3_102_App675_Simulatorquellen.zip'],[app674,'de3101','LCD_DE3_101_App674_Simulatorquellen.zip'],[app673,'de3100','LCD_DE3_100_App673_Simulatorquellen.zip'],[app672,'de399','LCD_DE3_99_App672_Simulatorquellen.zip'],[app671,'de398','LCD_DE3_98_App671_Simulatorquellen.zip'],[lcdPreview,'de397','LCD_DE3_97_App670_TEST1_Simulatorquellen.zip'],[lcdPreview669,'de396','LCD_DE3_96_App669_TEST1_Simulatorquellen.zip'],[lcdPreview668,'de395','LCD_DE3_95_App668_Simulatorquellen.zip'],[lcdPreview667,'de394','LCD_DE3_94_App667_Simulatorquellen.zip']])
+for (const [reference,profile,name] of [[lcdRelease,'de41','LCD_DE4_1_App678_Simulatorquellen.zip'],[app675,'de3102','LCD_DE3_102_App675_Simulatorquellen.zip'],[app674,'de3101','LCD_DE3_101_App674_Simulatorquellen.zip'],[app673,'de3100','LCD_DE3_100_App673_Simulatorquellen.zip'],[app672,'de399','LCD_DE3_99_App672_Simulatorquellen.zip'],[app671,'de398','LCD_DE3_98_App671_Simulatorquellen.zip'],[lcdPreview,'de397','LCD_DE3_97_App670_TEST1_Simulatorquellen.zip'],[lcdPreview669,'de396','LCD_DE3_96_App669_TEST1_Simulatorquellen.zip'],[lcdPreview668,'de395','LCD_DE3_95_App668_Simulatorquellen.zip'],[lcdPreview667,'de394','LCD_DE3_94_App667_Simulatorquellen.zip']])
 test(`${base}: the App${reference.applicationCounter} source download resolves to its complete archive and exact firmware binding`, async () => {
   const index = read('licenses/index.html')
   const links = [...index.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/g)].filter(match => match[1].endsWith(name))
@@ -143,7 +144,7 @@ test(`${base}: the App${reference.applicationCounter} source download resolves t
   const file = localFile(new URL(links[0][1], origin + base + 'licenses/index.html'))
   const bytes = fs.readFileSync(file)
   assert.deepEqual(bytes, fs.readFileSync(path.join(webRoot, 'public/sources', name)))
-  const referenceFile = reference === lcdRelease ? 'lcd-release-reference.mjs' : reference === app674 ? 'lcd-app674-reference.mjs' : reference === app673 ? 'lcd-app673-reference.mjs' : reference === app672 ? 'lcd-app672-reference.mjs' : reference === app671 ? 'lcd-app671-reference.mjs' : 'lcd-private-reference.mjs'
+  const referenceFile = reference === lcdRelease ? 'lcd-release-reference.mjs' : reference === app675 ? 'lcd-app675-reference.mjs' : reference === app674 ? 'lcd-app674-reference.mjs' : reference === app673 ? 'lcd-app673-reference.mjs' : reference === app672 ? 'lcd-app672-reference.mjs' : reference === app671 ? 'lcd-app671-reference.mjs' : 'lcd-private-reference.mjs'
   assert.deepEqual(fs.readFileSync(path.join(dist, 'dfu', referenceFile)),
     fs.readFileSync(path.join(webRoot, 'public/dfu', referenceFile)))
   const require = createRequire(import.meta.url)
@@ -154,11 +155,11 @@ test(`${base}: the App${reference.applicationCounter} source download resolves t
   assert.equal(binding.applicationCounter, reference.applicationCounter)
   assert.equal(binding.applicationBinSha256, reference.applicationBinSha256)
   assert.equal(binding.applicationBytes, reference.applicationBytes)
-  if ([lcdRelease, app674, app673, app672, app671].includes(reference)) {
+  if ([lcdRelease, app675, app674, app673, app672, app671].includes(reference)) {
     assert.equal(binding.firmwareChannel, 'normal')
-    assert.equal(binding.hardwareAcceptance, 'pending-for-this-build')
+    assert.equal(binding.hardwareAcceptance, reference === lcdRelease ? reference.hardwareAcceptance : 'pending-for-this-build')
     assert.equal(binding.productionCommit, reference.productionCommit)
-    assert.equal(binding.wasm.path, 'web/public/lfs-capacity-' + (['de3102', 'de3101', 'de3100'].includes(profile) ? 'de399' : profile) + '.wasm')
+    assert.equal(binding.wasm.path, 'web/public/lfs-capacity-' + (['de41', 'de3102', 'de3101', 'de3100'].includes(profile) ? 'de399' : profile) + '.wasm')
   } else assert.equal(binding.capacityProfile, profile)
   const qualification = await archive.file(binding.qualification.path).async('uint8array')
   assert.equal(sha(qualification), binding.qualification.sha256)

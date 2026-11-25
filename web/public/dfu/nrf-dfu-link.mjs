@@ -26,6 +26,7 @@ export function nrfDfuLink(entry) {
     // Normal releases use exact profiles at the normal Pages root. Retained
     // App671 links remain valid and cannot alias the newer application.
     const normal = [
+        {id:'de4.1-lcd-app',version:'2.22.0-DE4.1',counter:678,file:'Allmiibo_LCD_DE4_1_678_NUR_APP.zip'},
         {id:'de3.98-lcd-app',version:'2.22.0-DE3.98',counter:671,file:'Allmiibo_LCD_DE3_98_671_NUR_APP.zip'},
         {id:'de3.99-lcd-app',version:'2.22.0-DE3.99',counter:672,file:'Allmiibo_LCD_DE3_99_672_NUR_APP.zip'},
         {id:'de3.100-lcd-app',version:'2.22.0-DE3.100',counter:673,file:'Allmiibo_LCD_DE3_100_673_NUR_APP.zip'},

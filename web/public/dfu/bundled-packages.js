@@ -13,10 +13,15 @@
         const packages=input.packages.map(item=>{
             const fields = item?.channel === 'prerelease' ? [...keys, 'channel'] : keys;
             need(item&&Object.keys(item).sort().join(',')===[...fields].sort().join(','),'Unvollständiger Firmware-Eintrag.', 'Incomplete firmware entry.');
+            const de41 = item.version === '2.22.0-DE4.1';
+            if (de41) need(item.id === 'de4.1-lcd-app' && item.board === 'LCD' && item.counter === 678 &&
+                item.file === 'Allmiibo_LCD_DE4_1_678_NUR_APP.zip' && !item.channel && item.bootloader === 'Z21',
+                'Unpassendes LCD-App678-Profil.', 'Incorrect LCD App678 profile.');
             const oled = item.board === 'OLED';
             const version = oled
                 ? /^2\.22\.0-DE3\.([1-9][0-9]{0,3})-OLEDt([1-9][0-9]{0,2})$/.exec(item.version)
-                : /^2\.22\.0-DE3\.([1-9][0-9]{0,3}(?:t[1-9][0-9]{0,2})?)$/.exec(item.version);
+                : /^2\.22\.0-DE(?:3|4)\.([1-9][0-9]{0,3}(?:t[1-9][0-9]{0,2})?)$/.exec(item.version);
+            need(typeof item.version === 'string' && (oled || item.version.startsWith('2.22.0-DE3.') || de41), 'Unbekannte LCD-Firmware.', 'Unknown LCD firmware.');
             const previewCounters = {84:657,85:658,86:659,87:660,88:661};
             const lcdPreview = !oled && version && Object.hasOwn(previewCounters,version[1]) &&
                 item.channel === 'prerelease' && item.counter === previewCounters[version[1]] && item.bootloader === 'Z21';
@@ -28,13 +33,13 @@
             const publicLcdTest = !oled && version && Object.hasOwn(publicTestCounters, version[1]);
             if (publicLcdTest) need(item.channel === 'prerelease' && item.counter === publicTestCounters[version[1]] && item.bootloader === 'Z21' &&
                 item.file === 'Allmiibo_LCD_DE3_' + version[1] + '_' + item.counter + '_NUR_APP.zip', 'Unpassendes LCD-Testprofil.', 'Incorrect LCD test profile.');
-            const expectedId = oled ? version && `de3.${version[1]}-oled-t${version[2]}-app`
+            const expectedId = de41 ? 'de4.1-lcd-app' : oled ? version && `de3.${version[1]}-oled-t${version[2]}-app`
                 : publicLcdTest || lcdMeasurementTest ? `de3.${version[1]}-lcd-app-test1`
                 : lcdPreview ? `de3.${version[1]}-lcd-test1-app` : version && `de3.${version[1]}-lcd-app`;
             need(version&&item.id===expectedId&&!seen.has(item.id)&&Number.isSafeInteger(item.counter)&&item.counter>0&&item.counter<=0xffffffff,'Ungültige Firmware-Version.', 'Invalid firmware version.');
             if (!oled && version[1] === '89') need(!item.channel && item.counter === 662 && item.bootloader === 'Z21' && item.file === 'Allmiibo_LCD_DE3_89_662_NUR_APP.zip', 'Unpassendes LCD-App662-Profil.', 'Incorrect LCD App662 profile.');
             const testBuild = version[1].includes('t');
-            const names = oled ? [`Allmiibo_OLED_DE3_${version[1]}_Test${version[2]}_APP.zip`] : testBuild
+            const names = de41 ? ['Allmiibo_LCD_DE4_1_678_NUR_APP.zip'] : oled ? [`Allmiibo_OLED_DE3_${version[1]}_Test${version[2]}_APP.zip`] : testBuild
                 ? [`Allmiibo_DE3_${version[1]}_App${item.counter}_NUR_APP_SIGNIERT.zip`]
                 : [`Allmiibo_LCD_DE3_${version[1]}_${item.counter}.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_TESTSTAND.zip`,`Allmiibo_LCD_DE3_${version[1]}_${item.counter}_NUR_APP.zip`];
             if (!oled && item.channel === 'prerelease' && !testBuild) names.push(`Allmiibo_LCD_DE3_${version[1]}_App${item.counter}_TEST_DFU.zip`);

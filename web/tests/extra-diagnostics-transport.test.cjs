@@ -646,7 +646,7 @@ test(testVersion+' '+'Test 1 startup v5 falls back only on explicit unsupported 
 
 }
 
-for(const [normalCounter, normalVersion] of [[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100'],[674,'2.22.0-DE3.101'],[675,'2.22.0-DE3.102'],[676,'2.22.0-DE3.103'],[677,'2.22.0-DE3.104']]) {
+for(const [normalCounter, normalVersion] of [[671,'2.22.0-DE3.98'],[672,'2.22.0-DE3.99'],[673,'2.22.0-DE3.100'],[674,'2.22.0-DE3.101'],[675,'2.22.0-DE3.102'],[676,'2.22.0-DE3.103'],[677,'2.22.0-DE3.104'],[678,'2.22.0-DE4.1']]) {
 // App671 through App675 have normal observations, while App669/670 retain their experimental selectors.
 for(const [method,cmd,request,makePacket,schema] of [
  ['get_mtu_diagnostics',5,[1],mtuLinkPacket,2],

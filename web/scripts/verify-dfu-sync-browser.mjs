@@ -71,10 +71,10 @@ async function runChecks() {
   for (const {file, version, counter, channel} of releases) {
     const row = update.locator('.package').filter({ has: page.getByText(version, {exact:true}) });
     const pinned = knownDownloads.get(counter);
-    const href = pinned ? 'https://github.com/bluecyber81/pixl.js/raw/' + pinned + '/fw/releases/' + file : base + 'firmware/' + file;
+    const href = counter === 678 ? 'https://github.com/bluecyber81/pixl.js/releases/download/de4.1/' + file : pinned ? 'https://github.com/bluecyber81/pixl.js/raw/' + pinned + '/fw/releases/' + file : base + 'firmware/' + file;
     assert.equal(await row.locator('a[download]').getAttribute('href'), href);
     assert.ok((await row.innerText()).includes('Zähler ' + counter));
-    assert.match(await row.innerText(), channel === 'prerelease' ? /Testversion/ : counter === 675 ? /Stabile Ausgabe · Z21/ : /Frühere stabile Ausgabe/);
+    assert.match(await row.innerText(), channel === 'prerelease' ? /Testversion/ : counter === 678 ? /Stabile Ausgabe · Z21/ : /Frühere stabile Ausgabe/);
     checks.push({ feature:'listed application available from Update', version, counter });
   }
   const comboAsset = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip';
@@ -89,11 +89,11 @@ async function runChecks() {
       await guidePage.locator('.version-context').waitFor();
       const home = guidePage.locator('.lcd-downloads');
       await home.waitFor();
-      const appAsset = 'https://github.com/bluecyber81/pixl.js/raw/' + knownDownloads.get(675) + '/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip';
+      const appAsset = 'https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip';
       for (const width of [390, 1280]) {
         await guidePage.setViewportSize({width, height:840});
-        assert.ok(await home.getByRole('link', {name:/App675/}).isVisible());
-        assert.equal(await home.getByRole('link', {name:/App675/}).getAttribute('href'), appAsset);
+        assert.ok(await home.getByRole('link', {name:/App678/}).isVisible());
+        assert.equal(await home.getByRole('link', {name:/App678/}).getAttribute('href'), appAsset);
         assert.ok(await home.getByRole('link', {name:/Android/}).isVisible());
         assert.equal(await home.getByRole('link', {name:/Android/}).getAttribute('href'), comboAsset);
         assert.ok(await home.evaluate(el => el.scrollWidth <= el.clientWidth));

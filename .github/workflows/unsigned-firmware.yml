@@ -41,8 +41,11 @@ jobs:
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
       - name: Fetch pinned external SDK and ARM toolchain
         run: docker pull "$SDK_IMAGE"
-      - name: Exercise linker budget gates
-        run: python3 fw/tests/de3/test_application_budget.py
+      - name: Exercise release identity, storage identity and linker budget gates
+        run: |
+          python3 -B tools/test_normal_release_identity.py
+          python3 -B tools/test_build_preflight.py
+          python3 -B fw/tests/de3/test_application_budget.py
       - name: Compile unsigned LCD and inspect actual flash and RAM reserves
         env:
           BUILD_MODE: ${{ steps.application_mode.outputs.mode }}

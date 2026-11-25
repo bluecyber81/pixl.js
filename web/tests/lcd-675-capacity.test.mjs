@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import JSZip from '../public/dfu/vendor/jszip-3.10.2.min.js';
-import {lcdRelease} from '../public/dfu/lcd-release-reference.mjs';
+import {lcdRelease} from '../public/dfu/lcd-app675-reference.mjs';
 import {lcdRelease as app672} from '../public/dfu/lcd-app672-reference.mjs';
 import {getMigrationCapacityTarget} from '../src/lib/migration-capacity.js';
 import {supportsFolderPublication} from '../src/lib/hardware-profile.js';
@@ -74,7 +74,7 @@ test('App675 source archive preserves original engine sources and adds the separ
   const binding = JSON.parse(await zip.file('APP675_BINDING.json').async('string'));
   const {hardwareAcceptance, ...packageIdentity} = lcdRelease;
   assert.equal(binding.hardwareAcceptance, 'pending-for-this-build');
-  assert.equal(hardwareAcceptance, json('RELEASE_INFO.json').hardware_acceptance);
+  assert.equal(hardwareAcceptance, 'one-lcd-readback-and-owner-confirmed-images-player-loop-counter');
   for (const [key,value] of Object.entries(packageIdentity)) assert.deepEqual(binding[key], value, key);
   assert.equal(binding.capacityProfile, 'de3102');
   assert.equal(binding.simulatorProfile, 'de399');

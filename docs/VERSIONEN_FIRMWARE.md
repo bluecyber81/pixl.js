@@ -1,8 +1,12 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## LCD DE4.1 / App678 · Final · 25. November 2026
+
+Die reguläre LCD-Version übernimmt das Weckprofil aus App677 samt bestätigtem Löschen und erneutem Speichern nach Fehlern. Bildempfang, Player und der mobile Lauftext sind verfügbar. Dateimanager 3.66.1 unterstützt die neue Versionsnummer auch bei Diagnose und Dateizugriff. Die signierte Handy-ZIP aktualisiert die Anwendung auf einem LCD mit PFS1, Z21 und S112 7.3.0. Die Gerätebestätigung vom 24. November gilt für den Vorgänger App677. [Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Versionshinweise](DE4_1_RELEASE.md) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_App678_Pruefpaket.zip)
+
 ## LCD DE3.104 / App677 · Testversion
 
-Im Menü „Switch 2 wecken“ lässt sich das gespeicherte Profil über „Kopplung vergessen“ entfernen. Die Rückfrage beginnt mit „Abbrechen“. Nach erfolgreichem Entfernen ist auch das automatische Wecken beim Tastenstart aus. Die App-ZIP ist für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0. Der Praxistest für App677 steht aus.
+Im Menü „Switch 2 wecken“ lässt sich das gespeicherte Profil über „Kopplung vergessen“ entfernen. Die Rückfrage beginnt mit „Abbrechen“. Nach erfolgreichem Entfernen ist auch das automatische Wecken beim Tastenstart aus. Die App-ZIP ist für LCD/ST7567 mit PFS1, Z21 und S112 7.3.0. Der Besitzer bestätigte am 24. November den Flash und den allgemeinen Betrieb eines LCD. [Gerätenachweis](https://github.com/bluecyber81/pixl.js/releases/tag/de3.104-lcd-test1)
 
 ## LCD DE3.103 / App676 · Testversion
 

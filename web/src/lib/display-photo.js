@@ -1,14 +1,11 @@
-import { hasOledSystemDiagnostics } from './hardware-profile.js';
+import { hasOledSystemDiagnostics, supportsLegacyLcdFeature } from './hardware-profile.js';
 
 const width = 128;
 const height = 64;
 const pages = height / 8;
 
 export function supportsDisplayPhoto(firmwareVersion) {
-    if (hasOledSystemDiagnostics(firmwareVersion)) return true;
-    const known = firmwareVersion === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : firmwareVersion;
-    const match = /^2\.22\.0-DE3\.(\d+)$/.exec(known || '');
-    return !!match && Number(match[1]) >= 66;
+    return hasOledSystemDiagnostics(firmwareVersion) || supportsLegacyLcdFeature(firmwareVersion, 66);
 }
 
 export function parseDisplayPage(buffer, page) {

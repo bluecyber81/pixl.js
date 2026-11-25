@@ -9,9 +9,9 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| LCD application | [DE3.89 / App662 release sources](fw/application/src/) and [unsigned release builder](tools/build_lcd.py). The [DE3.75 tag](https://github.com/bluecyber81/pixl.js/tree/de3.75/fw/application/src) preserves the archived App648 sources. |
+| LCD application | [DE4.1 / App678 release sources](fw/application/src/) and [unsigned release builder](tools/build_lcd.py). The [DE3.75 tag](https://github.com/bluecyber81/pixl.js/tree/de3.75/fw/application/src) preserves the archived App648 sources. |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | [Web sources and build instructions](web/README.md). [Web 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2) provides portable and source packages. |
+| Browser file manager | [Web sources and build instructions](web/README.md). [Web 3.66.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.1) provides portable and source packages. |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Current Z21 bootloader | [Build and test instructions](bootloader-z21/README.md) and [Z21 and App654 production evidence](docs/validation/DE3_81.json). |
@@ -47,22 +47,22 @@ the finished bundles. The development server binds to `127.0.0.1:8010`. Normal
 tests use synthetic fixtures, mocked Bluetooth and local WASM, not a device.
 Windows-specific launcher tests are skipped on other operating systems.
 
-Publish the portable ZIP with the web version tag and the signed LCD application ZIP with its firmware tag. The current homepage keeps App675 as its standard LCD download and offers App677 separately as a prerelease. Publish the contents of the Pages build at the root of the gh-pages branch, preserving previous test sites and downloads. Fetch and verify the public phone ZIP both from Pages and from the GitHub Release.
+Publish the portable ZIP with the web version tag and the signed LCD application ZIP with its firmware tag. The current homepage offers DE4.1/App678 as the regular LCD download. Preserve the historic App677 test package. Publish the contents of the Pages build at the root of the gh-pages branch, preserving previous test sites and downloads. Fetch and verify the public phone ZIP both from Pages and from the GitHub Release.
 Do not publish a source checkout, `node_modules/`, server state or private files.
 The CI below tests builds; it does not deploy Pages or create releases.
 
 ## Firmware changes and tests
 
-The checked-in LCD sources build the preview declared in RELEASE_INFO.json. Use the pinned SDK image from the repository root to reproduce the application.
+The checked-in LCD sources build the normal release declared in RELEASE_INFO.json. Use the pinned SDK image from the repository root to reproduce the application.
 
 ```sh
 docker pull solosky/nrf52-sdk@sha256:ef337de9a0504dc3cf0f94a0a8d09f06193b318b3cc9b1bc5bd0b92a7bc1ea16
-python3 tools/build_lcd.py --mode preview --output build/lcd-preview
-python3 tools/check_release_ota.py --preview --build-dir build/lcd-preview
+python3 tools/build_lcd.py --mode release --output build/lcd-release
+python3 tools/check_release_ota.py --build-dir build/lcd-release
 python3 tools/verify_lcd_combo.py --profile de3.89
 ```
 
-Compare the application BIN and HEX digests with the published build evidence and the contents of the signed phone ZIP. For intentional firmware changes, use development mode with a distinct version and explicit counter. [App677 build evidence](docs/validation/DE3_104_LCD_TEST1.json) · [Stable App675 device readback](docs/validation/DE3_102_LCD_READBACK.json) · [Z21 build instructions](bootloader-z21/README.md)
+Compare the application BIN and HEX digests with the published build evidence and the contents of the signed phone ZIP. For intentional firmware changes, use development mode with a distinct version and explicit counter. [App678 build evidence](docs/validation/DE4_1.json) · [Stable App675 device readback](docs/validation/DE3_102_LCD_READBACK.json) · [Z21 build instructions](bootloader-z21/README.md)
 
 For two quick storage checks from the portable CI subset, install Python
 **3.10+** and GCC on the host and run from the repository root:

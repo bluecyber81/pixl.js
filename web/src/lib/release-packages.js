@@ -1,5 +1,8 @@
-import { lcdRelease, lcdReleasePackage } from '../../public/dfu/lcd-release-reference.mjs';
+import { lcdReleasePackage as package674 } from '../../public/dfu/lcd-app674-reference.mjs';
+import { lcdRelease as app675, lcdReleasePackage as package675 } from '../../public/dfu/lcd-app675-reference.mjs';
+import { lcdReleasePackage } from '../../public/dfu/lcd-release-reference.mjs';
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
+import { compareLcdVersions } from './lcd-version.js';
 import { UPDATE_TARGET } from './update-target.js';
 import { deploymentPath } from './deployment-path.js';
 import { firmwareBoard } from './hardware-profile.js';
@@ -23,10 +26,8 @@ export function dfuReference(boot, time = Date.now(), firmwareVersion) {
 export function packagePresentation(entry, session = {}, boot = null) {
   const active=session?.connected===true;
   const installed=active&&typeof session.firmwareVersion==='string'?session.firmwareVersion:null;
-  const match=installed?.match(/^(\d+)\.(\d+)\.(\d+)(?:-DE3\.(\d+)(?:-PREP|t[1-9]\d*)?)?$/);
-  const target=entry.version.match(/^(\d+)\.(\d+)\.(\d+)-DE3\.(\d+)(?:t[1-9]\d*)?$/);
   const diagnostic=active?normalizeBootDiagnostics(boot):null;
-  const relation=match&&target?[1,2,3,...(match[4]?[4]:[])].map(i=>Number(match[i])-Number(target[i])).find(n=>n!==0)||0:0;
+  const relation=compareLcdVersions(installed, entry.version);
   const newer=relation>0||(diagnostic?.settingsCrcValid&&diagnostic.applicationCounter>entry.counter);
   const supportedBootloaders = entry.bootloader?.split('/').map(name =>
     name === 'BL8' ? UPDATE_TARGET.bootloader : UPDATE_TARGET['bootloader' + name]);
@@ -42,14 +43,15 @@ export function packagePresentation(entry, session = {}, boot = null) {
   const specialTags = { 'de3.104-lcd-app-test1': 'de3.104-lcd-test1', 'de3.103-lcd-app-test1': 'de3.103-lcd-test1', 'de3.73-lcd-app': 'de3.73-test646', 'de3.84-lcd-test1-app': 'de3.84-lcd-test1', 'de3.85-lcd-test1-app': 'de3.85-lcd-test1', 'de3.87-lcd-test1-app': 'de3.87-lcd-test1', 'de3.88-lcd-test1-app': 'de3.88-lcd-test1', 'de3.89-lcd-test1-app': 'de3.89-lcd-test1' };
   const releaseTag = specialTags[entry.id] || entry.version.split('-')[1].toLowerCase();
   const localDownloadUrl = deploymentPath(`firmware/${entry.file}`); // Validate even a pinned download's filename.
-  const currentPhoneDownload = ['id','version','counter','file','board','bytes','sha256'].every(key => entry[key] === lcdReleasePackage[key]) &&
-    /^[a-f0-9]{40}$/.test(lcdRelease.downloadCommit || '');
-  const historicalPhoneDownload = entry.id === 'de3.101-lcd-app' && entry.version === '2.22.0-DE3.101' && entry.counter === 674 &&
-    entry.file === 'Allmiibo_LCD_DE3_101_674_NUR_APP.zip' && entry.board === 'LCD' && entry.bytes === 361953 &&
-    entry.sha256 === '76a8c23a954a96a244b59b185fd147aae30f03b59017baa40d1aeeedb952dbca';
-  return {newer:Boolean(newer),profileMismatch,installed,releaseNotesUrl:['de3.98-lcd-app', 'de3.99-lcd-app', 'de3.100-lcd-app', 'de3.101-lcd-app', 'de3.102-lcd-app'].includes(entry.id) ? deploymentPath('guide/index.html') + '#lcd-' + entry.id.split('-')[0].replace('.', '') : entry.id === 'de3.86-lcd-test1-app'
+  const samePackage = reference => ['id','version','counter','file','board','bytes','sha256']
+    .every(key => entry[key] === reference[key]);
+  const previous = [[package675, app675.downloadCommit], [package674, 'a39d43c7dea2681be1981695837b2cb8473db926']].find(([descriptor]) => samePackage(descriptor));
+  let downloadUrl = localDownloadUrl;
+  if (samePackage(lcdReleasePackage)) downloadUrl = 'https://github.com/bluecyber81/pixl.js/releases/download/de4.1/' + entry.file;
+  else if (previous) downloadUrl = 'https://github.com/bluecyber81/pixl.js/raw/' + previous[1] + '/fw/releases/' + entry.file;
+  return {newer:Boolean(newer),profileMismatch,installed,releaseNotesUrl:['de3.98-lcd-app', 'de3.99-lcd-app', 'de3.100-lcd-app', 'de3.101-lcd-app', 'de3.102-lcd-app', 'de4.1-lcd-app'].includes(entry.id) ? deploymentPath('guide/index.html') + '#lcd-' + entry.id.split('-')[0].replace('.', '') : entry.id === 'de3.86-lcd-test1-app'
     ? deploymentPath('guide/LCD-' + entry.version.split('-')[1] + '.txt') : 'https://github.com/bluecyber81/pixl.js/releases/tag/' + releaseTag,
-    downloadUrl:currentPhoneDownload ? `https://github.com/bluecyber81/pixl.js/raw/${lcdRelease.downloadCommit}/fw/releases/${entry.file}` : historicalPhoneDownload ? 'https://github.com/bluecyber81/pixl.js/raw/a39d43c7dea2681be1981695837b2cb8473db926/fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip' : localDownloadUrl,dfuUrl:deploymentPath('dfu/web.html') + '?' + new URLSearchParams({ package: entry.id }) + (session?.dfuReference || '')};
+    downloadUrl,dfuUrl:deploymentPath('dfu/web.html') + '?' + new URLSearchParams({ package: entry.id }) + (session?.dfuReference || '')};
 }
 
 export function currentLcdDownloads(entry, session, boot) {
@@ -79,8 +81,8 @@ export function currentLcdDownloads(entry, session, boot) {
 export function firmwarePackageText(locale='de_DE') {
   return String(locale).startsWith('de')?{
     systemGuide:'Android-Komplettpaket mit Z21 und Anleitung',
-    source:'Quellcode der LCD-Firmware DE3.102 / App675',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
-    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. Die normale DE3.102 / App675 setzt Z21 voraus. Ein bestehendes PFS1-Dateisystem benötigt dafür keine erneute Speicherumstellung.',
+    source:'Quellcode der LCD-Firmware DE4.1 / App678',title:'Mitgelieferte Firmware',empty:'Kein mitgeliefertes Paket in diesem Dateimanager.',
+    scope:'Anwendungsupdate für unser Allmiibo LCD mit Packed LittleFS (PFS1) und S112 7.3.0. Die normale DE4.1 / App678 setzt Z21 voraus. Ein bestehendes PFS1-Dateisystem benötigt dafür keine erneute Speicherumstellung.',
     unread:'Speicherprofil und Displayvariante werden hier nicht ausgelesen. Die Paketliste bestätigt keine Gerätekompatibilität.',
     limits:'Der Browser prüft die Paket-Prüfsumme und vergleicht den App-Zähler mit einer aktuellen Gerätediagnose. Z15, Z17 und Z19 prüfen die Signatur und können auch eine ältere, gültig signierte Anwendung installieren. Bootloader-Pakete haben einen eigenen Versionszähler.',
     download:'ZIP herunterladen',dfu:'Dieses Paket im Updater öffnen',
@@ -91,8 +93,8 @@ export function firmwarePackageText(locale='de_DE') {
     hash:'Paket-Prüfsumme',counter:'Zähler',details:'Paketdetails',local:'Lokale Paketliste – keine Online-Updatesuche.'
   }:{
     systemGuide:'Full Android package with Z21 and instructions',
-    source:'Source code for LCD firmware DE3.102 / App675',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
-    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. Normal DE3.102 / App675 requires Z21. An existing PFS1 filesystem does not need another storage migration for this update.',
+    source:'Source code for LCD firmware DE4.1 / App678',title:'Bundled firmware',empty:'This file manager contains no bundled package.',
+    scope:'Application update for our Allmiibo LCD with Packed LittleFS (PFS1) and S112 7.3.0. Normal DE4.1 / App678 requires Z21. An existing PFS1 filesystem does not need another storage migration for this update.',
     unread:'Storage profile and display variant are not read here. This package list does not confirm device compatibility.',
     limits:'The browser verifies the package checksum and compares the application counter when a recent device reading is available. Z15, Z17 and Z19 check the signature and can install an older, validly signed application. Bootloader packages have a separate version counter.',
     download:'Download ZIP',dfu:'Open this package in the updater',

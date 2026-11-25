@@ -4,12 +4,12 @@
 
 | Paket | Download und Verwendung |
 | --- | --- |
-| Aktuelle LCD-App DE3.89 / App662 für ST7567, PFS1, Z21 und S112 7.3.0 | [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip) · [Geräteprüfung am LCD](validation/DE3_89_LCD_READBACK.json) |
+| Aktuelle LCD-App DE4.1 / App678 für ST7567, PFS1, Z21 und S112 7.3.0 | [App-ZIP fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Prüfergebnisse](validation/DE4_1.json) |
 | Frühere LCD-Freigabe DE3.81 / App654 | [App654 im Archiv](https://github.com/bluecyber81/pixl.js/releases/tag/de3.81). Für PFS1, Z19/Z20/Z21 und S112 7.3.0. |
 | LCD-Komplettpaket mit DE3.89 / App662, Z21 und S112 7.3.0 | Für ein kompatibles LCD mit Bootloader-Zähler unter 21. Schlüssel, Layout und Ausgangs-FWID 0x0103/0x0126 vorab prüfen. [Komplettpaket für Android](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip) · [Voraussetzungen](INSTALLATION.md) |
 | OLED-Vorabversion DE3.87 Test 6 / App86 für das dreitastige nRF52832-Modell mit SH1106, kompatiblem DFU-Bootloader, S112 7.2.0 (`0x0103`) und vorhandenem SPIFFS oder nativem LittleFS | [OLED-App fürs Handy](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip) · [Deutsch](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/ANLEITUNG_OLED_Test6_DE.txt) · [English](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/GUIDE_OLED_Test6_EN.txt). Am 18. November 2026 bestätigte ein Nutzer die Verbindung zur Fernbedienung und den Abruf des Displayfotos auf einem OLED mit Test 6. |
-| Windows-Dateimanager und Quellcode | [Dateimanager 3.58.2](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2) |
-| Prüfpaket der regulären Firmware | [App662 einschließlich BIN und HEX](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip) · [Build-Prüfung](validation/DE3_89_LCD_TEST1.json) |
+| Windows-Dateimanager und Quellcode | [Dateimanager 3.66.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.1) |
+| Prüfpaket der regulären Firmware | [App678 einschließlich BIN und HEX](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_App678_Pruefpaket.zip) · [Build-Prüfung](validation/DE4_1.json) |
 | LCD auf PFS1 umstellen | [SPIFFS-Vorbereitung, geprüfte Sicherung und Wiederherstellung](https://bluecyber81.github.io/pixl.js/guide/index.html#littlefs) |
 
 ## Archiv · ältere LCD-Komponenten

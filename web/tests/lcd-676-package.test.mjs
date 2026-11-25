@@ -22,8 +22,8 @@ for (const ref of [lcdTest676, lcdTest677]) {
 
 
   test('signed App' + counter + ' is identified on manual and bundled LCD DFU', async () => {
-    assert.equal(UPDATE_TARGET.application.counter, 675);
-    assert.equal(catalog.packages[0].counter, 675);
+    assert.equal(UPDATE_TARGET.application.counter, 678);
+    assert.equal(catalog.packages[0].counter, 678);
     assert.equal(entry.channel, 'prerelease');
     assert.equal(entry.version, ref.firmwareVersion);
     const blob = file('../public/firmware/' + entry.file);
@@ -60,7 +60,7 @@ for (const ref of [lcdTest676, lcdTest677]) {
     const identity = diagnosticBuildIdentity({firmwareVersion:entry.version, boot:{settingsCrcValid:true, applicationCounter:counter},
       build:{schemaVersion:1, board:'LCD', sourceId:ref.sourceId, previousFault:null}});
     assert.equal(identity.packageReference, ref);
-    assert.equal(identity.packageReference.hardwareAcceptance, 'pending');
+    assert.equal(identity.packageReference.hardwareAcceptance, counter === 677 ? 'one-lcd-readback-and-owner-confirmed-general-operation' : 'pending');
     assert.equal(identity.firmwareReportedSourceRelation, 'matches-package');
     assert.equal(identity.referenceRelation, 'version-and-counter');
     assert.equal(identity.applicationHashVerified, false);

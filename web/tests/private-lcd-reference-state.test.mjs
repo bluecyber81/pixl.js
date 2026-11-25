@@ -75,18 +75,18 @@ test('App669 has its own WASM and engine while App667 keeps the identical histor
   for (const value of [target669,target669.layout,target669.geometry,target669.approvedApplications]) assert(Object.isFrozen(value));
 });
 
-test('historical private identities and packages remain separate from the new normal App675 release', () => {
+test('historical private identities and packages remain separate from the new normal App678 release', () => {
   assert.deepEqual(lcdPreviews.map(item=>item.applicationCounter),[670,669,668,667,665,664]);
   assert.equal(lcdPreview668.otaSha256,'ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b');
   assert.equal(lcdPreview667.otaSha256,'f00ddc2c86225d86e5c9ef50bad9d45b84250b287a4f3df4d2f169357a9688c4');
   assert.equal(lcdPreview667.sourceCommit,'22d5c92cc566fb7da9d43a538f2818d28bfb72a6');
   assert.equal(lcdPreview665.otaSha256,'65e9321309dc059b88adc490963c787fdbc01e35e201765b7cbb8d3ecd66e3a0');
   assert.equal(lcdPreviousPreview.otaSha256,'b3b0c8f967d3b3886680cfb5049635b5297591c16495dd74e1779654cfd0687e');
-  assert.equal(catalog.packages[0].counter,675);
+  assert.equal(catalog.packages[0].counter,678);
   assert.equal(catalog.packages.find(item=>item.id==='de3.89-lcd-app').counter,662);
   assert.equal(catalog.packages.find(item=>item.id==='de3.100-lcd-app').counter,673);
   assert.equal(buildDiagnosticBoard('2.22.0-DE3.100'),'LCD');
-  assert.equal(buildDiagnosticBoard('2.22.0-DE3.102'),'LCD');
+  assert.equal(buildDiagnosticBoard('2.22.0-DE4.1'),'LCD');
   assert.equal(catalog.packages.some(item=>[666,667,668,669,670].includes(item.counter)),false);
   const oldCandidate={archiveSha256:'b2a2f5f13659ef8ca5ebc7d53e320951a6cee3691fcb7054e7d513cde9caa81e',archiveBytes:358565,
     image:{target:{counter:666,hardware:52,softDevices:[0x0126]}}};
@@ -113,15 +113,15 @@ test('retained signed direct-load packages have complete distinct catalog identi
   }
 });
 
-test('mobile normal App675 download uses its own package while historical TEST1 references remain available', () => {
+test('mobile normal App678 download uses its own package while historical TEST1 references remain available', () => {
   const html=readFileSync(new URL('../public/dfu/web.html',import.meta.url),'utf8');
-  assert.match(html,/LCD App675/);
-  assert.match(html,/App675: Normale Firmware/);
-  assert.doesNotMatch(html,/App675 TEST|App675.*(?:am Gerät bestanden|physically verified)/);
-  assert.match(html,/DE3\.102 \/ App675/);
+  assert.match(html,/LCD App678/);
+  assert.match(html,/App678: Normale Firmware/);
+  assert.doesNotMatch(html,/App678 TEST|App678.*(?:am Gerät bestanden|physically verified)/);
+  assert.match(html,/DE4\.1 \/ App678/);
   assert.doesNotMatch(html,/DE3_93_666|App666/);
-  assert.ok(html.includes('href="https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip"'));
-  assert.match(readFileSync(new URL('../.env',import.meta.url),'utf8'),/LCD DE3\.102 \/ App675/);
+  assert.ok(html.includes('href="https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip"'));
+  assert.match(readFileSync(new URL('../.env',import.meta.url),'utf8'),/LCD DE4\.1 \/ App678/);
 });
 
 

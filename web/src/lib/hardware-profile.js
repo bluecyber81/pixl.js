@@ -1,5 +1,5 @@
 import { UPDATE_TARGET } from './update-target.js';
-import { DE3102_MIGRATION_CAPACITY_TARGET, DE3101_MIGRATION_CAPACITY_TARGET, DE3100_MIGRATION_CAPACITY_TARGET, DE399_MIGRATION_CAPACITY_TARGET, DE398_MIGRATION_CAPACITY_TARGET, DE397_MIGRATION_CAPACITY_TARGET, DE396_MIGRATION_CAPACITY_TARGET, DE395_MIGRATION_CAPACITY_TARGET, DE394_MIGRATION_CAPACITY_TARGET, DE393_MIGRATION_CAPACITY_TARGET, DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET, MIGRATION_CAPACITY_TARGET } from './migration-capacity.js';
+import { DE41_MIGRATION_CAPACITY_TARGET, DE3102_MIGRATION_CAPACITY_TARGET, DE3101_MIGRATION_CAPACITY_TARGET, DE3100_MIGRATION_CAPACITY_TARGET, DE399_MIGRATION_CAPACITY_TARGET, DE398_MIGRATION_CAPACITY_TARGET, DE397_MIGRATION_CAPACITY_TARGET, DE396_MIGRATION_CAPACITY_TARGET, DE395_MIGRATION_CAPACITY_TARGET, DE394_MIGRATION_CAPACITY_TARGET, DE393_MIGRATION_CAPACITY_TARGET, DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET, MIGRATION_CAPACITY_TARGET } from './migration-capacity.js';
 
 // A profile is opt-in. Only the browser's already hashed, per-device lookup key is used locally.
 const profileValue = 'lipo-551520-180mah-v1';
@@ -44,6 +44,7 @@ export const LCD_Z21_COUNTERS = Object.freeze({
   '2.22.0-DE3.102': 675,
   '2.22.0-DE3.103': 676,
   '2.22.0-DE3.104': 677,
+  '2.22.0-DE4.1': 678,
 });
 const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_Z21_COUNTERS)];
 export function supportsFolderPublication(version, engine) {
@@ -51,7 +52,7 @@ export function supportsFolderPublication(version, engine) {
   // The App676 and App677 test builds use the same PFS engine for directory publication as App675.
   // Storage migration has its own release-specific qualification.
   if (version === '2.22.0-DE3.103' || version === '2.22.0-DE3.104') return engine === DE3102_MIGRATION_CAPACITY_TARGET.layout.engineSha256;
-  const profile = [DE3102_MIGRATION_CAPACITY_TARGET, DE3101_MIGRATION_CAPACITY_TARGET, DE3100_MIGRATION_CAPACITY_TARGET, DE399_MIGRATION_CAPACITY_TARGET, DE398_MIGRATION_CAPACITY_TARGET, DE397_MIGRATION_CAPACITY_TARGET, DE396_MIGRATION_CAPACITY_TARGET, DE395_MIGRATION_CAPACITY_TARGET, DE394_MIGRATION_CAPACITY_TARGET, DE393_MIGRATION_CAPACITY_TARGET, DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET].find(target => target.firmwareVersion === version) ?? MIGRATION_CAPACITY_TARGET;
+  const profile = [DE41_MIGRATION_CAPACITY_TARGET, DE3102_MIGRATION_CAPACITY_TARGET, DE3101_MIGRATION_CAPACITY_TARGET, DE3100_MIGRATION_CAPACITY_TARGET, DE399_MIGRATION_CAPACITY_TARGET, DE398_MIGRATION_CAPACITY_TARGET, DE397_MIGRATION_CAPACITY_TARGET, DE396_MIGRATION_CAPACITY_TARGET, DE395_MIGRATION_CAPACITY_TARGET, DE394_MIGRATION_CAPACITY_TARGET, DE393_MIGRATION_CAPACITY_TARGET, DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET].find(target => target.firmwareVersion === version) ?? MIGRATION_CAPACITY_TARGET;
   return profile.approved === true && profile.layout.engineSha256 === engine;
 }
 export const OLED_PARITY_VERSION = '2.22.0-DE3.84-OLEDt4';
@@ -64,7 +65,7 @@ export function lacksOledSystemDiagnostics(version) {
   return version === '2.22.0-DE3.81-OLEDt1' || version === '2.22.0-DE3.81-OLEDt2';
 }
 export function firmwareBoard(version) {
-  if (typeof version === 'string' && /^\d+\.\d+\.\d+-DE3\.\d+-OLEDt[1-9]\d*$/.test(version)) return 'OLED';
+  if (typeof version === 'string' && /^\d+\.\d+\.\d+-DE[1-9]\d*\.\d+-OLEDt[1-9]\d*$/.test(version)) return 'OLED';
   if (version === UPDATE_TARGET.application.version || lcdDisplayBuilds.includes(version) ||
       Object.hasOwn(UPDATE_TARGET.localApplications, version)) return 'LCD';
   return null;
@@ -74,4 +75,12 @@ export function displayBuildReference(version) {
   if (lacksOledSystemDiagnostics(version) || hasOledSystemDiagnostics(version)) return {source:'oled-firmware-configuration', controllerDriver:'SH1106', width:128, height:64};
   if (!lcdDisplayBuilds.includes(version)) return null;
   return {source:'lcd-firmware-configuration', controllerDriver:'ST7567', width:128, height:64};
+}
+
+// Early DE3 firmware predates the Z21 table. Later series opt in by their
+// registered LCD identity; unknown model suffixes must never enable commands.
+export function supportsLegacyLcdFeature(version, minimumDe3Minor) {
+  const known = version === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : version;
+  const legacy = /^2\.22\.0-DE3\.(\d+)$/u.exec(known || '');
+  return legacy ? Number(legacy[1]) >= minimumDe3Minor : Object.hasOwn(LCD_Z21_COUNTERS, known);
 }

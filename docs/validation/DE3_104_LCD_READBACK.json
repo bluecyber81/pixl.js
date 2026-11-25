@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-24",
+  "firmware": "2.22.0-DE3.104",
+  "board": "LCD",
+  "applicationCounter": 677,
+  "deviceSourceId": "320ccc071c229611512e85893c80838a9731084dda435b0d9bf2f33726d64134",
+  "bootloaderCounter": 21,
+  "softDeviceFwid": 294,
+  "applicationHashVerified": false,
+  "matchingPackageSourceId": true,
+  "settingsCrcValid": true,
+  "runtimeCounts": {
+    "disconnects": 0,
+    "timeouts": 0,
+    "queueOverflows": 0,
+    "vfsErrors": 0,
+    "allocationFailures": 0
+  },
+  "scope": "Owner confirmed flashing and general operation of the preceding App677 on one LCD. Individual scrolling-text and wake-pair removal results were not recorded."
+}

@@ -257,6 +257,13 @@ const de3102 = {
   geometry: {...de3101.geometry},
   layout: {...de3101.layout},
 }
+// DE4.1's linked ARM layout and PFS engine are bound in DE4_1_PFS.json.
+const de41 = {
+  ...de3102,
+  firmwareVersion: '2.22.0-DE4.1',
+  applicationCounter: 678,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE4.1', applicationCounter: 678}],
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -281,8 +288,10 @@ export const DE398_MIGRATION_CAPACITY_TARGET=freezeTarget(de398)
 export const DE399_MIGRATION_CAPACITY_TARGET=freezeTarget(de399)
 export const DE3100_MIGRATION_CAPACITY_TARGET=freezeTarget(de3100)
 export const DE3101_MIGRATION_CAPACITY_TARGET=freezeTarget(de3101)
+export const DE41_MIGRATION_CAPACITY_TARGET=freezeTarget(de41)
 export const DE3102_MIGRATION_CAPACITY_TARGET=freezeTarget(de3102)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de41')return DE41_MIGRATION_CAPACITY_TARGET
   if(profile==='de3102')return DE3102_MIGRATION_CAPACITY_TARGET
   if(profile==='de3101')return DE3101_MIGRATION_CAPACITY_TARGET
   if(profile==='de3100')return DE3100_MIGRATION_CAPACITY_TARGET

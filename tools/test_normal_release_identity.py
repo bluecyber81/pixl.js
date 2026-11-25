@@ -28,6 +28,14 @@ class NormalReleaseIdentityTests(unittest.TestCase):
     def test_release_uses_bound_normal_identity(self):
         self.assertEqual(self.identity(), ('2.22.0-DE3.98', 671, self.info['version_header_sha256']))
 
+    def test_new_de_series_binds_the_new_header_and_counter(self):
+        self.header.write_text('#define VERSION "2.22.0-DE4.1"\n#define TARGET 0\n')
+        digest = hashlib.sha256(self.header.read_bytes()).hexdigest()
+        self.assertEqual(self.identity(version='2.22.0-DE4.1', counter=678, version_header_sha256=digest),
+                         ('2.22.0-DE4.1', 678, digest))
+        with self.assertRaisesRegex(ValueError, 'exact header'):
+            self.identity(version='2.22.0-DE3.104', counter=677, version_header_sha256=digest)
+
     def test_candidate_does_not_claim_unavailable_binary_qualification(self):
         self.assertEqual(self.identity('candidate', application_sha256=None,
                                       production_source_id_sha256=None)[:2], ('2.22.0-DE3.98', 671))

@@ -1,12 +1,10 @@
-import { hasOledSystemDiagnostics } from './hardware-profile.js';
+import { hasOledSystemDiagnostics, supportsLegacyLcdFeature } from './hardware-profile.js';
 
 const isByte = n => Number.isInteger(n) && n >= 0 && n <= 255;
 export function hexByte(n) { return n.toString(16).padStart(2, '0').toUpperCase(); }
 
 export function supportsFlashDiagnostics(version) {
-  if (hasOledSystemDiagnostics(version)) return true;
-  const match = /^2\.22\.0-DE3\.(\d+)$/.exec(version || '');
-  return !!match && Number(match[1]) >= 78;
+  return hasOledSystemDiagnostics(version) || supportsLegacyLcdFeature(version, 78);
 }
 
 export function normalizeFlashDiagnostics(value) {

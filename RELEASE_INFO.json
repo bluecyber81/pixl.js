@@ -1,13 +1,13 @@
 {
   "schema": 2,
-  "publication_date": "2026-11-23",
-  "version": "2.22.0-DE3.102",
-  "counter": 675,
+  "publication_date": "2026-11-25",
+  "version": "2.22.0-DE4.1",
+  "counter": 678,
   "board": "LCD",
   "application_only": true,
   "storage_engine": "Packed LittleFS PFS1",
-  "ota_sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
-  "application_sha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+  "ota_sha256": "beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0",
+  "application_sha256": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
   "hardware_version": 52,
   "softdevice_requirements": [
     "0x0126"
@@ -36,32 +36,32 @@
   "migration_required_for_existing_pfs1": false,
   "direct_upgrade_from_spiffs_or_upstream_littlefs_supported": false,
   "host_firmware_suites": 198,
-  "evidence": "docs/validation/DE3_102.json",
+  "evidence": "docs/validation/DE4_1.json",
   "privacy": {
     "private_keys_in_distribution": false,
     "user_backups_or_figure_dumps_in_distribution": false
   },
   "limits": [
     "Matching LCD/ST7567 with existing PFS1, Z21 and S112 7.3.0 only.",
-    "Software, signed-package and actual linked ARM checks do not establish physical App675 device acceptance.",
+    "The latest physical owner report covers App677. App678 physical readback and interrupted DFU on a device are pending.",
     "The inherited public signing key does not prove exclusive publisher identity.",
     "The historical App662 combined system package remains separate; no new bootloader or SoftDevice is shipped."
   ],
   "component_reference_release": "https://github.com/bluecyber81/pixl.js/releases/tag/bl8-s112-7.3.0",
   "device_validation_pending": true,
   "previous_web_device_readback_evidence": "docs/validation/DE3_81_LCD_READBACK.json",
-  "device_readback_passed": true,
-  "previous_device_readback_evidence": "docs/validation/DE3_81_LCD_READBACK.json",
-  "production_source_id_sha256": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+  "device_readback_passed": false,
+  "previous_device_readback_evidence": "docs/validation/DE3_104_LCD_READBACK.json",
+  "production_source_id_sha256": "e8b24c067a7ead279a12720b0ffe6ef4f4678e1f0c8b329859c883a53f007f6c",
   "tested_bootloader": {
     "name": "Z21",
     "counter": 21,
     "source": "bootloader-z21",
     "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
     "included_in_application_ota": false,
-    "installation_readback_observed": true,
-    "qualification": "Unchanged Z21 reproduced exactly. Current signed App675 passes seven actual linked ARM signature/hash/CRC cases, signed INIT with App674 present and an empty bank, and complete-BIN checkpoint/resume under local ASan/UBSan. Current independent CI 45169716170 LCD job 137675750476 also passed current-App675 resume under ASan/UBSan with a positive LSan control, 455 modeled checkpoint power cuts, five link cuts and eight admission/completion failures. Local LSan remains blocked by ptrace. Physical App675 identity was read separately on one LCD. Physical interrupted DFU remains open.",
-    "application_counter": 675
+    "installation_readback_observed": false,
+    "qualification": "App678 signature, hash and CRC on the linked Z21 ARM binary; signed init with App675, App677 and an empty bank; checkpoint/resume of the complete signed application payload. Physical DFU interruption remains open.",
+    "application_counter": 678
   },
   "previous_web_full_suite": {
     "version": "3.38.0",
@@ -77,7 +77,7 @@
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.1",
     "evidence": "docs/validation/WEB3_58_1.json"
   },
-  "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+  "application_ota_path": "fw/releases/Allmiibo_LCD_DE4_1_678_NUR_APP.zip",
   "historical_bootloader_bl8": {
     "code_version": "BL8",
     "source": "bootloader-bl8",
@@ -88,18 +88,18 @@
     "role": "Historical corresponding-source BL8 reference; not a current device observation."
   },
   "status": "source-published-and-software-qualified",
-  "device_readback_evidence": "docs/validation/DE3_102_LCD_READBACK.json",
-  "fresh_public_unsigned_rebuild_matches_signed_application": true,
+  "device_readback_evidence": null,
+  "fresh_public_unsigned_rebuild_matches_signed_application": false,
   "firmware_downloads": {
     "application": {
-      "file": "Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
-      "sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
-      "counter": 675,
-      "version": "2.22.0-DE3.102",
-      "url": "https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
-      "bytes": 362493,
-      "pages_url": null,
-      "pinned_source_commit": "658d43a7fe2777778d8efa8439f73aa48210e033"
+      "file": "Allmiibo_LCD_DE4_1_678_NUR_APP.zip",
+      "sha256": "beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0",
+      "counter": 678,
+      "version": "2.22.0-DE4.1",
+      "url": "https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip",
+      "bytes": 255266,
+      "pages_url": "https://bluecyber81.github.io/pixl.js/firmware/Allmiibo_LCD_DE4_1_678_NUR_APP.zip",
+      "production_source_commit": "2437a3a4cf15afbc108ae66b28cec03f29da8602"
     },
     "system_and_application": {
       "file": "Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip",
@@ -133,7 +133,7 @@
     "combined_zip_sha256": "4e0734788ead1192db8182eaea20a16fe070b480618f39da952c5bacb54f1b11",
     "stable_default_counter_at_publication": 637
   },
-  "device_validation_scope": "One LCD identified by compiled board, SourceID, App675 counter, S112 and Z21. Owner confirmed images, animation, player loop and frame counter. Physical Switch 2 wake, interrupted DFU and other devices remain open.",
+  "device_validation_scope": "Physical readback of the final App678 is pending. The owner report for the preceding App677 covers general operation on one LCD.",
   "app648_device_check": "docs/validation/DE3_75_LCD_CHECK.json",
   "previous_lcd_release": {
     "version": "2.22.0-DE3.81",
@@ -145,12 +145,12 @@
     "device_readback_evidence": "docs/validation/DE3_81_LCD_READBACK.json",
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.81"
   },
-  "release": "https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675",
+  "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de4.1",
   "oled_test_release": {
     "version": "2.22.0-DE3.87-OLEDt6",
     "counter": 86,
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.87-oled-t6",
-    "hardware_acceptance": "pending",
+    "hardware_acceptance": "owner-reported-remote-connection-and-display-capture-on-one-oled",
     "board": "OLED",
     "softdevice": "S112 7.2.0",
     "application_only": true,
@@ -178,9 +178,43 @@
     "host_firmware_suites": 169,
     "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.88-lcd-test1"
   },
-  "hardware_acceptance": "one-lcd-readback-and-owner-confirmed-images-player-loop-counter",
-  "previous_lcd_test_release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.89-lcd-test1",
+  "hardware_acceptance": "pending",
+  "previous_lcd_test_release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.104-lcd-test1",
   "firmware_preview_history": [
+    {
+      "version": "2.22.0-DE3.104",
+      "counter": 677,
+      "board": "LCD",
+      "application_only": true,
+      "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_104_677_NUR_APP.zip",
+      "ota_bytes": 255262,
+      "ota_sha256": "a82996e5c47152ce92e086f5969d8ad5f2f4d22f8192dcb9f6ce081cb0e690eb",
+      "application_bytes": 362724,
+      "application_sha256": "ea503da1a61d6bd8577e139f6440d21acd706f3c50cd9d5317463202a4c3aa2c",
+      "source_id": "320ccc071c229611512e85893c80838a9731084dda435b0d9bf2f33726d64134",
+      "source_commit": "1f37cacddbffe525f00147db9b5e1b40d3aaf8a2",
+      "hardware_acceptance": "owner-reported-operation-and-source-id-on-one-lcd",
+      "distribution": "signed-application-prerelease",
+      "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.104-lcd-test1",
+      "bootloader_profile": "Z21",
+      "softdevice_requirements": [
+        "0x0126"
+      ],
+      "host_firmware_suites": 198,
+      "tested_bootloader": {
+        "name": "Z21",
+        "counter": 21,
+        "source": "bootloader-z21",
+        "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+        "included_in_application_ota": false,
+        "installation_readback_observed": false,
+        "qualification": "Full App677 data-phase resume simulation with Z21. Physical interruption remains open.",
+        "application_counter": 677
+      },
+      "evidence": "docs/validation/DE3_104_LCD_TEST1.json",
+      "status": "experimental-signed-application",
+      "device_readback": "docs/validation/DE3_104_LCD_READBACK.json"
+    },
     {
       "version": "2.22.0-DE3.97",
       "counter": 670,
@@ -387,28 +421,28 @@
   ],
   "firmware_channel": "normal",
   "release_status": "source-published-and-software-qualified",
-  "version_header_sha256": "debbcb9e35ef035c9d4f9cb82be8a911dccf68c48851d893dabdb07499f98185",
-  "firmware_source_branch": "release/lcd-de3102-app675",
-  "application_bytes": 361892,
-  "ota_bytes": 362493,
-  "qualification_date": "2026-11-23",
+  "version_header_sha256": "f07dc293fd4ddc0d9f33aac7f802de65c90a0cc045a423c28fff718f5bef6bc8",
+  "firmware_source_branch": "release/lcd-de41-app678",
+  "application_bytes": 362724,
+  "ota_bytes": 255266,
+  "qualification_date": "2026-11-25",
   "signature_verified": true,
   "z21_application_acceptance_passed": true,
   "application_ota_signature": "ECDSA-P256",
-  "firmware_notes": "docs/DE3_102_RELEASE.md",
-  "firmware_evidence": "docs/validation/DE3_102.json",
-  "host_firmware_suite_method": "198/198 complete current DE2/DE3 host scripts, no omitted scripts; final source/test snapshot unchanged. 13 separate linked ARM groups; actual linked ARM Player/TLSF memory comparison; actual-code Stream/Player and Nordic timer ASan/UBSan checks.",
+  "firmware_notes": "docs/DE4_1_RELEASE.md",
+  "firmware_evidence": "docs/validation/DE4_1.json",
+  "host_firmware_suite_method": "198 of 198 available DE2/DE3 host scripts passed with the App678 source snapshot. The ARM, storage and update evidence is recorded in docs/validation/DE4_1.json.",
   "independent_local_unsigned_rebuilds_match_signed_application": true,
-  "unsigned_rebuild_scope": "Two isolated native LCD builds reproduce identical BIN and HEX from the frozen App675 production inputs. Both BINs equal the signed App675 payload. ELF/map debug metadata are not claimed byte-identical.",
+  "unsigned_rebuild_scope": "Two isolated builds of the final App678 production inputs reproduced the same application BIN and HEX, with the signed payload compared to that BIN.",
   "previous_normal_lcd_release": {
-    "version": "2.22.0-DE3.101",
-    "counter": 674,
-    "release": "https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3101-app674",
-    "application_sha256": "95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052",
-    "ota_sha256": "76a8c23a954a96a244b59b185fd147aae30f03b59017baa40d1aeeedb952dbca",
-    "production_source_id_sha256": "894ab79ff45ee5c342d4fed11b6970fa0a60f21697216d4e876f488b4ba320f6",
-    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip",
-    "evidence": "docs/validation/DE3_101.json",
+    "version": "2.22.0-DE3.102",
+    "counter": 675,
+    "release": "https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675",
+    "application_sha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+    "ota_sha256": "2d40717123741d58f357c2c146c29c1b29ea907e184346c9defa7a3c85e75746",
+    "production_source_id_sha256": "9f60aa974f975a552762605d68d0f0e32ad6676f392b12173856177535a5ba46",
+    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip",
+    "evidence": "docs/validation/DE3_102.json",
     "tested_bootloader": {
       "name": "Z21",
       "counter": 21,
@@ -416,18 +450,13 @@
       "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
       "included_in_application_ota": false,
       "installation_readback_observed": true,
-      "qualification": "Current App674: seven linked ARM signature/hash/CRC cases, signed INIT with App673 present and an empty bank, and complete-BIN checkpoint/resume model passed. Local ASan/UBSan passed; local LSan remains unavailable under ptrace. Independent current App674 CI 45060195633 passed ASan/UBSan/LSan with a positive leak control and 455 modeled checkpoint power cuts. No physical App674 acceptance is claimed.",
-      "application_counter": 674,
-      "independent_ci": {
-        "run": "https://github.com/bluecyber81/pixl.js/actions/runs/45060195633",
-        "qualifiedCommit": "a39d43c7dea2681be1981695837b2cb8473db926",
-        "counter": 674,
-        "lsanPositiveControlPassed": true
-      }
+      "qualification": "Unchanged Z21 reproduced exactly. Current signed App675 passes seven actual linked ARM signature/hash/CRC cases, signed INIT with App674 present and an empty bank, and complete-BIN checkpoint/resume under local ASan/UBSan. Current independent CI 45169716170 LCD job 137675750476 also passed current-App675 resume under ASan/UBSan with a positive LSan control, 455 modeled checkpoint power cuts, five link cuts and eight admission/completion failures. Local LSan remains blocked by ptrace. Physical App675 identity was read separately on one LCD. Physical interrupted DFU remains open.",
+      "application_counter": 675
     },
-    "source_commit": "79f36ec32f6574f6903f788dcf0c57a8563bf793",
-    "device_observation": "No physical App674 acceptance; App673 owner diagnostic and working remote-control confirmation are historical observations.",
-    "final_ci": "https://github.com/bluecyber81/pixl.js/actions/runs/45061302008"
+    "device_readback_evidence": "docs/validation/DE3_102_LCD_READBACK.json",
+    "source_commit": "658d43a7fe2777778d8efa8439f73aa48210e033",
+    "device_observation": "One LCD identified by compiled board, SourceID, App675 counter, S112 and Z21. Owner confirmed images, animation, player loop and frame counter. Physical Switch 2 wake, interrupted DFU and other devices remain open.",
+    "final_ci": "https://github.com/bluecyber81/pixl.js/actions/runs/45169716170"
   },
   "normal_lcd_release_history": [
     {
@@ -469,13 +498,44 @@
       "evidence": "docs/validation/DE3_100.json",
       "source_commit": "68b7d6e0cceadbc4c0801092ddc2e65947dd6e88",
       "device_observation": "Owner-supplied App673/Web3.63.0 diagnostic reports LCD, matching version/counter/SourceID and no recorded runtime errors; owner confirmed remote control works. This is not an on-device full-BIN hash measurement or full feature acceptance."
+    },
+    {
+      "version": "2.22.0-DE3.101",
+      "counter": 674,
+      "release": "https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3101-app674",
+      "application_sha256": "95161b30161e803275afe58b8f13193fe0421f6d2d34e5685840b15075a50052",
+      "ota_sha256": "76a8c23a954a96a244b59b185fd147aae30f03b59017baa40d1aeeedb952dbca",
+      "production_source_id_sha256": "894ab79ff45ee5c342d4fed11b6970fa0a60f21697216d4e876f488b4ba320f6",
+      "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_101_674_NUR_APP.zip",
+      "evidence": "docs/validation/DE3_101.json",
+      "tested_bootloader": {
+        "name": "Z21",
+        "counter": 21,
+        "source": "bootloader-z21",
+        "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+        "included_in_application_ota": false,
+        "installation_readback_observed": true,
+        "qualification": "Current App674: seven linked ARM signature/hash/CRC cases, signed INIT with App673 present and an empty bank, and complete-BIN checkpoint/resume model passed. Local ASan/UBSan passed; local LSan remains unavailable under ptrace. Independent current App674 CI 45060195633 passed ASan/UBSan/LSan with a positive leak control and 455 modeled checkpoint power cuts. No physical App674 acceptance is claimed.",
+        "application_counter": 674,
+        "independent_ci": {
+          "run": "https://github.com/bluecyber81/pixl.js/actions/runs/45060195633",
+          "qualifiedCommit": "a39d43c7dea2681be1981695837b2cb8473db926",
+          "counter": 674,
+          "lsanPositiveControlPassed": true
+        }
+      },
+      "source_commit": "79f36ec32f6574f6903f788dcf0c57a8563bf793",
+      "device_observation": "No physical App674 acceptance; App673 owner diagnostic and working remote-control confirmation are historical observations.",
+      "final_ci": "https://github.com/bluecyber81/pixl.js/actions/runs/45061302008"
     }
   ],
-  "public_rebuild_scope": "Current App675 source commit 658d43a7fe2777778d8efa8439f73aa48210e033 passed GitHub Actions run 45169716170. The retrieved LCD artifact has byte-identical BIN, HEX and 720-input manifest to both local builds; the signed payload matches. Its 198/198 full host groups, eight linked ARM groups and current-App675 Z21 resume with positive LSan control passed. No device acceptance is inferred.",
+  "public_rebuild_scope": "See independent GitHub build receipt attached to the de4.1 release.",
   "firmware_changes": {
     "stream_redraw": "Keep every negotiated chunk ACK immediate; request drawing for complete frames or changed validity, including asynchronous failure and session resets.",
     "player_loop": "Session-only optional loop, off by default. Reopen read-only with exact validated-header and frame-buffer-size checks; retain one frame buffer and one timer.",
-    "player_counter": "Session-only optional frame counter, off by default for an unobstructed image. Existing playback exit gestures remain unchanged."
+    "player_counter": "Session-only optional frame counter, off by default for an unobstructed image. Existing playback exit gestures remain unchanged.",
+    "wake_profile": "Inherits App676 retry and recovery on storage failure, plus App677 local profile removal with cancel selected by default and automatic wake disabled after successful removal.",
+    "final_identity": "Only the version header changed among firmware production inputs from App677 to App678."
   },
   "previous_web_3_63_0_delivery": {
     "web_version": "3.63.0",
@@ -606,23 +666,13 @@
     "web_live_browser_manual_check_passed": true,
     "web_live_http_verified_checks": 81
   },
-  "firmware_source_commit": "658d43a7fe2777778d8efa8439f73aa48210e033",
-  "production_tree_sha": "b5476cc3ee8c1b297f3648fe63b02aae8772e22b",
-  "firmware_qualification_source_commit": "658d43a7fe2777778d8efa8439f73aa48210e033",
-  "local_production_commit": "15b9c33744dc47cf80e606b42a883276a3f7a273",
+  "firmware_source_commit": "2437a3a4cf15afbc108ae66b28cec03f29da8602",
+  "production_tree_sha": "125d9ad4d63a5f8cb8ef78ae4fa09127ec3c5bf7",
+  "firmware_qualification_source_commit": "2437a3a4cf15afbc108ae66b28cec03f29da8602",
+  "local_production_commit": "2437a3a4cf15afbc108ae66b28cec03f29da8602",
   "firmware_qualification_passed": true,
-  "current_firmware_ci": {
-    "run_id": 45169716170,
-    "url": "https://github.com/bluecyber81/pixl.js/actions/runs/45169716170",
-    "conclusion": "success",
-    "source_commit": "658d43a7fe2777778d8efa8439f73aa48210e033",
-    "source_tree": "b5476cc3ee8c1b297f3648fe63b02aae8772e22b",
-    "lcd_job_id": 137675750476,
-    "lcd_artifact_id": 14816023938,
-    "evidence": "docs/validation/DE3_102_evidence/CI_SUMMARY.json",
-    "current_app675_lsan_positive_control_passed": true
-  },
-  "firmware_source_scope": "The stable App675 inputs are retained at commit 658d43a7fe2777778d8efa8439f73aa48210e033. The current source header and preview metadata build App676. Public 3.65.0 delivery evidence is recorded under qualified_web_3_65_0.",
+  "current_firmware_ci": null,
+  "firmware_source_scope": "App678 production inputs at the pinned commit. The source branch also contains release qualification and distribution metadata.",
   "combined_main_preparation": {
     "status": "final-snapshot-ready-for-publication-and-both-main-cis",
     "previousMainCommit": "b7e6964f5a198eba3f2a6427c0bfb2b54e1d43eb",
@@ -689,57 +739,14 @@
     }
   },
   "previous_normal_web_release": {
-    "version": "3.64.0",
-    "sourceCommit": "b364222005f493a7d898560592fe1bd1423fa510",
-    "sourceTree": "25c08949335d3d9307ef6f4a144300aeffbfea61",
-    "metadata": {
-      "web_version": "3.64.0",
-      "web_release_status": "local-software-qualified-ci-and-live-pending",
-      "web_release_notes": "web/LIESMICH_3_64_0.txt",
-      "web_source_branch": "web-app674",
-      "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web-app674",
-      "web_release": "https://github.com/bluecyber81/pixl.js/tree/web-app674",
-      "web_publication_date": "2026-11-22",
-      "web_device_readback_pending": true,
-      "web_device_readback_scope": "No App673/Web3.63 device observation is claimed. Earlier App672/Web3.62 observations remain historical.",
-      "web_evidence": "docs/validation/WEB3_64_0.json",
-      "web_qualification_evidence": "docs/validation/WEB3_64_0.json",
-      "web_downloads": {
-        "portable": "https://bluecyber81.github.io/pixl.js/downloads/web3.64.0/Allmiibo_Dateimanager_3_64_0_Portable.zip",
-        "source": "https://github.com/bluecyber81/pixl.js/archive/refs/heads/web-app674.zip",
-        "hosting": "Pages portable binary and GitHub source-branch archive; no web3.64.0 Release asset required.",
-        "deliveryEvidence": "docs/validation/WEB3_64_0.json"
-      },
-      "web_qualification_date": "2026-11-22",
-      "web_test_total": 2228,
-      "web_test_passed": 2225,
-      "web_test_skipped": 3,
-      "web_test_failed": 0,
-      "web_host_test_scope": "Local Linux Node 2225 passed / 0 failed / 3 named skips, Root and Pages builds 56/56 each, Python launcher 26/26. Native Windows and live website verification are recorded separately.",
-      "web_portable_sha256": "3acf1730950bd61a55c53912e17231a82d7a11eb56c8efae3b23202a48bb5fbf",
-      "web_portable_bytes": 12016746,
-      "web_portable_url": "https://bluecyber81.github.io/pixl.js/downloads/web3.64.0/Allmiibo_Dateimanager_3_64_0_Portable.zip",
-      "web_full_suite_binding": {
-        "localEvidence": "docs/validation/WEB3_64_0.json",
-        "total": 2228,
-        "passed": 2225,
-        "failed": 0,
-        "skipped": 3,
-        "firmwareProductionCommit": "c1aa53ed902e164a391e158b6cf45ba78f7bcab6",
-        "firmwareProductionTree": "a6f244f706888d07024e4d50a02ac31f4888c41f",
-        "protocolVectors": 129,
-        "actualCDecoderRuns": 387
-      },
-      "web_source_commit": "b364222005f493a7d898560592fe1bd1423fa510",
-      "web_qualification_source_commit": null,
-      "web_pages_commit": "92bfdd0d15d5893d227aa5fcc8fd66974c6750d0",
-      "web_native_windows_ci_passed": false,
-      "web_live_browser_manual_check_passed": false,
-      "web_live_http_verified_checks": null,
-      "web_source_tree": "25c08949335d3d9307ef6f4a144300aeffbfea61",
-      "scope": "Historical Web3.64.0 source snapshot and its local qualification. Subsequent public delivery evidence is retained separately; these counts are not App675/Web3.65 results."
-    },
-    "scope": "Previous normal Web3.64.0 release. The nested metadata preserves its historical source-snapshot qualification; subsequent public delivery evidence is recorded separately. No Web3.62 evidence is relabeled as Web3.64."
+    "version": "3.66.0",
+    "sourceCommit": "188cc2743a6fbd504f77c98e4f893c98cfa11366",
+    "sourceTree": "fe1350f57f45e5fa1d616859da3023b813b31ad1",
+    "evidence": "docs/validation/WEB3_66_0.json",
+    "portableBytes": 12951055,
+    "portableSha256": "9f89c69bcbf1a6dc6f2817aa48a09e9ac52e359e4915a4f20204e4a09b5ff40b",
+    "publicVerification": "https://github.com/bluecyber81/pixl.js/releases/download/web3.66.0/Allmiibo_Web_3_66_0_Downloadpruefung.json",
+    "scope": "Web 3.66.0 and optional LCD App677"
   },
   "previous_web_3_64_0_delivery": {
     "web_version": "3.64.0",
@@ -1317,58 +1324,19 @@
       "evidence": "docs/validation/WEB3_65_0_FINAL_DELIVERY.json"
     }
   },
-  "web_version": "3.66.0",
+  "web_version": "3.66.1",
   "web_release_status": "normal",
-  "web_release_notes": "web/LIESMICH_3_66_0.txt",
-  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web3.66.0",
-  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.0.zip",
-  "web_portable_url": "https://bluecyber81.github.io/pixl.js/downloads/web3.66.0/Allmiibo_Dateimanager_3_66_0_Portable.zip",
+  "web_release_notes": "web/LIESMICH_3_66_1.txt",
+  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web3.66.1",
+  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip",
+  "web_portable_url": "https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip",
   "web_downloads": {
-    "portable": "https://bluecyber81.github.io/pixl.js/downloads/web3.66.0/Allmiibo_Dateimanager_3_66_0_Portable.zip",
-    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.0.zip",
-    "portableBytes": 12951055,
-    "portableSha256": "9f89c69bcbf1a6dc6f2817aa48a09e9ac52e359e4915a4f20204e4a09b5ff40b"
-  },
-  "firmware_preview": {
-    "version": "2.22.0-DE3.104",
-    "counter": 677,
-    "board": "LCD",
-    "application_only": true,
-    "application_ota_path": "fw/releases/Allmiibo_LCD_DE3_104_677_NUR_APP.zip",
-    "ota_bytes": 255262,
-    "ota_sha256": "a82996e5c47152ce92e086f5969d8ad5f2f4d22f8192dcb9f6ce081cb0e690eb",
-    "application_bytes": 362724,
-    "application_sha256": "ea503da1a61d6bd8577e139f6440d21acd706f3c50cd9d5317463202a4c3aa2c",
-    "source_id": "320ccc071c229611512e85893c80838a9731084dda435b0d9bf2f33726d64134",
-    "source_commit": "1f37cacddbffe525f00147db9b5e1b40d3aaf8a2",
-    "hardware_acceptance": "pending",
-    "distribution": "signed-application-prerelease",
-    "release": "https://github.com/bluecyber81/pixl.js/releases/tag/de3.104-lcd-test1",
-    "bootloader_profile": "Z21",
-    "softdevice_requirements": [
-      "0x0126"
-    ],
-    "host_firmware_suites": 198,
-    "tested_bootloader": {
-      "name": "Z21",
-      "counter": 21,
-      "source": "bootloader-z21",
-      "padded_region_sha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
-      "included_in_application_ota": false,
-      "installation_readback_observed": false,
-      "qualification": "Full App677 data-phase resume simulation with Z21. Physical interruption remains open.",
-      "application_counter": 677
-    },
-    "evidence": "docs/validation/DE3_104_LCD_TEST1.json",
-    "status": "experimental-signed-application"
+    "portable": "https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip",
+    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip"
   },
   "web_upload_evidence": "docs/validation/WEB3_65_1_UPLOAD.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.0",
-  "web_publication_date": "2026-11-24",
-  "web_qualification_date": "2026-11-24",
-  "web_evidence": "docs/validation/WEB3_66_0.json",
-  "web_test_total": 2297,
-  "web_test_passed": 2297,
-  "web_test_failed": 0,
-  "web_test_skipped": 0
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.1",
+  "web_publication_date": "2026-11-25",
+  "web_qualification_date": "2026-11-25",
+  "web_evidence": "docs/validation/WEB3_66_1.json"
 }

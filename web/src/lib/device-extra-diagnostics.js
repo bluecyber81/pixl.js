@@ -1,4 +1,4 @@
-import { hasOledSystemDiagnostics } from './hardware-profile.js';
+import { hasOledSystemDiagnostics, LCD_Z21_COUNTERS, supportsLegacyLcdFeature } from './hardware-profile.js';
 
 // Read-only INFO 0x04 / 0x05 firmware snapshots.
 // These describe firmware observations, not physical key or radio measurements.
@@ -41,13 +41,13 @@ export function normalizeMtuDiagnostics(value) {
 // future release versions. A valid MTUD v3 capability is still required to act.
 export function supportsBleTestDiagnostics(version) { return ['2.22.0-DE3.96', '2.22.0-DE3.97'].includes(version); }
 
-// Read-only observations are also part of the normal App671 through App675 builds and the App676 test build. Keeping
+// Read-only observations are part of the registered LCD builds from App668 onward. Keeping
 // these gates separate must not enable the experimental EVT! setter.
 export function supportsLinkDiagnostics(version) {
-  return ['2.22.0-DE3.95', '2.22.0-DE3.96', '2.22.0-DE3.97', '2.22.0-DE3.98', '2.22.0-DE3.99', '2.22.0-DE3.100', '2.22.0-DE3.101', '2.22.0-DE3.102', '2.22.0-DE3.103', '2.22.0-DE3.104'].includes(version);
+  return LCD_Z21_COUNTERS[version] >= 668;
 }
 export function supportsStorageGcDiagnostics(version) {
-  return supportsBleTestDiagnostics(version) || ['2.22.0-DE3.98', '2.22.0-DE3.99', '2.22.0-DE3.100', '2.22.0-DE3.101', '2.22.0-DE3.102', '2.22.0-DE3.103', '2.22.0-DE3.104'].includes(version);
+  return LCD_Z21_COUNTERS[version] >= 669;
 }
 
 export function normalizeBleTestConfiguration(value) {
@@ -203,11 +203,7 @@ export function parseUiDiagnostics(buffer) {
 }
 
 export function supportsMenuDiagnostics(version) {
-  if (hasOledSystemDiagnostics(version)) return true;
-  // This exact candidate contains the reviewed read-only diagnostic handlers.
-  const known = version === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : version;
-  const match = /^2\.22\.0-DE3\.(\d+)$/.exec(known || '');
-  return !!match && Number(match[1]) >= 70;
+  return hasOledSystemDiagnostics(version) || supportsLegacyLcdFeature(version, 70);
 }
 
 function normalizeMenuReturn(value) {

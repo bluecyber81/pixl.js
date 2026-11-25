@@ -1,10 +1,10 @@
 # Allmiibo Dateimanager
 
-## Normale Ausgabe 3.66.0 und LCD DE3.102 / App675
+## Normale Ausgabe 3.66.1 und LCD DE4.1 / App678
 
-Web 3.66.0 bietet Lauftext vom Handy und zweisprachige Spielhinweise für Minerus Konstrukt. Zusätzlich zur normalen App675 ist die [LCD-Testversion App677](public/guide/index.html#lcd-de3104) mit „Kopplung vergessen“ verfügbar.
+Web 3.66.1 unterstützt LCD DE4.1/App678 beim Gerätevergleich, in der Diagnose, bei der Dateiübertragung und im Updater. Die bisherigen LCD-Testversionen und OLED Test 6 sind im Archiv verfügbar.
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App675 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de3.102-lcd-app#board=LCD) · [Signierte App-ZIP](https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.66.0/Allmiibo_Dateimanager_3_66_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.0.zip).
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App678 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.1-lcd-app#board=LCD) · [Signierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip).
 
 Der Bildsender merkt die Bildoptionen, behält eine ausgewählte Datei beim Bereichwechsel vorübergehend und ergänzt Drehung, Punktraster sowie Drag & Drop. Der lokale Playerexport erzeugt aus Bild, Demo oder Videoausschnitt eine PIXV-BIN mit Vorschau der Dateigröße, Fortschritt und Abbruch. Die fertige Datei wird ausdrücklich gespeichert und anschließend über den Dateibereich nach **E:/player/** übertragen. Eine Datei bis 128 MiB wird höchstens 30 Minuten in der geöffneten Seite gemerkt; ein Export ist auf 1 MiB begrenzt.
 
@@ -12,9 +12,9 @@ App675 ergänzt die optionalen Player-Einstellungen **Endlosschleife** und **Bil
 
 Der Katalog vereinheitlicht bereits vorhandene Ocarina-/Fatal-Fury-Hinweise in Filter, Spielübersicht und Figurendetails. Nintendo-belegte Kirby-Zuordnungen kommen hinzu. Bestehende Übersetzungen, Shadow-Link-Einschränkung, Yoshi-Webzuordnungen und die Unterscheidung von Switch und 3DS bleiben erhalten. Die Webdaten erfinden keine Firmwaregruppen oder Geräte-Spielordner.
 
-[Bedienung und Änderungen](LIESMICH_3_66_0.txt) · [Deutsche Anleitung](public/guide/index.html#bild-video) · [English guide](public/guide/en.html#bild-video) · [Ordnerupload-Prüfung 3.65.1](../docs/validation/WEB3_65_1_UPLOAD.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de3102-app675) · [App675-Simulatorquellen](public/sources/LCD_DE3_102_App675_Simulatorquellen.zip) · [ARM-/PFS-Qualifikation](../docs/validation/DE3_102_PFS.json).
+[Bedienung und Änderungen](LIESMICH_3_66_1.txt) · [Deutsche Anleitung](public/guide/index.html#bild-video) · [English guide](public/guide/en.html#bild-video) · [Ordnerupload-Prüfung 3.65.1](../docs/validation/WEB3_65_1_UPLOAD.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/release/lcd-de41-app678) · [App678-Simulatorquellen](public/sources/LCD_DE4_1_App678_Simulatorquellen.zip) · [ARM-/PFS-Qualifikation](../docs/validation/DE4_1_PFS.json).
 
-Die PFS1-Engine und die Simulator-WASM bleiben bytegleich zu App672. Die tatsächliche App675 besitzt eigene BIN-/HEX-/OTA-/SourceID-Bindungen und einen frischen ARM-Layoutnachweis. Frühere Crossmount-Prüfungen sind ausdrücklich als wiederverwendete Prüfung derselben Engine gekennzeichnet. Hardwareabnahme und native Windowsausführung werden getrennt von lokalen Softwaretests berichtet.
+Die PFS1-Engine und die Simulator-WASM bleiben bytegleich zu App672. Die tatsächliche App678 besitzt eigene BIN-/HEX-/OTA-/SourceID-Bindungen und einen frischen ARM-Layoutnachweis. Frühere Crossmount-Prüfungen sind ausdrücklich als wiederverwendete Prüfung derselben Engine gekennzeichnet. Hardwareabnahme und native Windowsausführung werden getrennt von lokalen Softwaretests berichtet.
 
 ## Archiv: normale Ausgabe 3.64.0 und LCD DE3.101 / App674
 

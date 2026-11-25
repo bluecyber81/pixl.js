@@ -7,7 +7,7 @@ import { parseBootDiagnostics } from "./boot-diagnostics.js"
 import { captureDisplayPhoto, parseDisplayPage, supportsDisplayPhoto } from "./display-photo.js"
 import { parsePowerDiagnostics } from "./power-diagnostics.js"
 import { buildDiagnosticBoard, parseBuildDiagnostics } from "./lcd-build-diagnostics.js"
-import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, LCD_Z21_COUNTERS } from "./hardware-profile.js"
+import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, LCD_Z21_COUNTERS, supportsLegacyLcdFeature } from "./hardware-profile.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
 import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, parseStorageGcDiagnostics, supportsMenuDiagnostics, supportsBleTestDiagnostics, supportsLinkDiagnostics, supportsStorageGcDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
@@ -431,7 +431,6 @@ export function get_startup_diagnostics(firmwareVersion) {
     if (lacksOledSystemDiagnostics(firmwareVersion)) return Promise.resolve(null);
     const generation = transport_generation;
     const known = firmwareVersion === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : firmwareVersion;
-    const series = /^2\.22\.0-DE3\.(\d+)$/.exec(known || '');
     function read(detail) {
         return op_queue_push(0x09, b => { if (detail) b.writeUint8(detail); }, b => {
             const data=parseStartupDiagnostics(b.readBytes(b.remaining()).toArrayBuffer());
@@ -448,8 +447,7 @@ export function get_startup_diagnostics(firmwareVersion) {
     if (hasOledSystemDiagnostics(known)) return read(1);
     if (supportsBleTestDiagnostics(known)) return read(4);
     if (Object.hasOwn(LCD_Z21_COUNTERS, known)) return read(3);
-    const revision = series === null ? 0 : Number(series[1]);
-    return read(revision >= 62 ? 2 : revision >= 61 ? 1 : 0);
+    return read(supportsLegacyLcdFeature(known, 62) ? 2 : supportsLegacyLcdFeature(known, 61) ? 1 : 0);
 }
 
 export function parse_runtime_diagnostics(buffer) {
@@ -604,10 +602,8 @@ export function vfs_import_state(drive, operation = 0, archiveSha256 = null) {
 export function vfs_backup_digest(path, size, firmwareVersion) {
     path_validation(path);
     if (!Number.isSafeInteger(size) || size < 0 || path.length <= 3) throw new Error('Invalid backup file.');
-    const known = firmwareVersion === '2.22.0-DE3.71t1' ? '2.22.0-DE3.71' : firmwareVersion;
     // OLED Test 6 supports SPIFFS and LittleFS; only PackedFS builds register 0x21.
-    const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(known);
-    if (file_digest_unsupported || !version || Number(version[1]) < 66 || size > 572 || !path.startsWith('E:/')) return Promise.resolve(null);
+    if (file_digest_unsupported || !supportsLegacyLcdFeature(firmwareVersion, 66) || size > 572 || !path.startsWith('E:/')) return Promise.resolve(null);
     // Both the UTF-8 path length and the expected file length are uint16.
     // A regular OPEN requires one less byte and may still fit this connection.
     if (get_utf8_byte_size(path) + 4 > (transport_capabilities?.maxRequestPayload ?? DF_MAX_DATA_SIZE)) return Promise.resolve(null);
@@ -629,8 +625,7 @@ function read_revision(b) {
 }
 
 export function vfs_small_create_revision(firmwareVersion) {
-    const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(firmwareVersion);
-    if (!version || Number(version[1]) < 88 || !Object.hasOwn(LCD_Z21_COUNTERS, firmwareVersion)) return Promise.resolve(null);
+    if (!(LCD_Z21_COUNTERS[firmwareVersion] >= 661)) return Promise.resolve(null);
     const generation = transport_generation;
     small_create_generation = -1;
     return op_queue_push(0x22, () => {}, b => {
@@ -672,8 +667,7 @@ export function vfs_probe_small_read(firmwareVersion) {
 // App670 and later known LCD builds advertise the bounded READ/DIGEST contract separately. Keep PXSC
 // unchanged so older file managers retain their strict existing parser.
 export function vfs_probe_small_batch(firmwareVersion) {
-    const version = /^2\.22\.0-DE3\.(\d+)$/u.exec(firmwareVersion);
-    if (!version || Number(version[1]) < 97 || !Object.hasOwn(LCD_Z21_COUNTERS, firmwareVersion)) return Promise.resolve(null);
+    if (!(LCD_Z21_COUNTERS[firmwareVersion] >= 670)) return Promise.resolve(null);
     if (small_batch_capability?.generation === transport_generation && small_batch_capability.version === firmwareVersion)
         return Promise.resolve(small_batch_capability.value);
     if (small_batch_probe?.generation === transport_generation && small_batch_probe.version === firmwareVersion)

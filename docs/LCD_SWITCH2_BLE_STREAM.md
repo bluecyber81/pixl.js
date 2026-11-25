@@ -17,7 +17,7 @@ Suche und Senden dürfen nicht gleichzeitig laufen. Ein Druck auf die jeweils an
 
 **Bei einem Speicherfehler** bleibt die Änderung im RAM erhalten. Beim Verlassen der App oder vor dem Einschlafen versucht das Gerät erneut zu speichern. Schlägt auch dies fehl, bleibt die App geöffnet. „Aenderung verwerfen“ stellt die im RAM gehaltene Kopie der zuletzt geladenen oder erfolgreich gespeicherten Einstellungen wieder her. Erst ein erfolgreicher App-Abschluss stoppt die laufende Funkaktion. Die gespeicherte Textdatei enthält Geräteadressen und gehört zum persönlichen Gerätebestand.
 
-Ab LCD DE3.104/App677 entfernt **Kopplung vergessen** das lokale Weckprofil. „Abbrechen“ erhält die Einstellungen. Nach dem bestätigten Löschen ist der Tastenstart zum Wecken deaktiviert.
+In LCD DE4.1/App678 und der vorherigen Testversion DE3.104/App677 entfernt **Kopplung vergessen** das lokale Weckprofil. „Abbrechen“ erhält die Einstellungen. Nach dem bestätigten Löschen ist der Tastenstart zum Wecken deaktiviert.
 
 ## BLE-Bildempfang
 

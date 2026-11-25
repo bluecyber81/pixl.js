@@ -2,10 +2,10 @@
 import { lcdTest676 } from './lcd-app676-reference.mjs';
 import { lcdTest677 } from './lcd-app677-reference.mjs';
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.66.0';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.66.1';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
-import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.66.0';
-import { lcdRelease, lcdReleasePackage } from './lcd-release-reference.mjs?v=3.66.0';
+import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.66.1';
+import { lcdRelease, lcdReleasePackage } from './lcd-release-reference.mjs?v=3.66.1';
 
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -91,10 +91,11 @@ function selectedProfileMismatch(entry) {
 }
 function showSource(board, selectedVersion) {
     const oled = board === 'OLED';
-    const preview = !oled && [lcdTest677, lcdTest676].find(item => item.firmwareVersion === selectedVersion);
-    const revision = oled ? 'de3.87-oled-t6' : preview ? preview.sourceCommit : 'release/lcd-de3102-app675';
+    const preview = !oled && [lcdTest677, lcdTest676, ...lcdPreviews].find(item => item.firmwareVersion === selectedVersion);
+    const previous = !oled && selectedVersion === '2.22.0-DE3.102';
+    const revision = oled ? 'de3.87-oled-t6' : preview ? preview.sourceCommit : previous ? 'release/lcd-de3102-app675' : 'release/lcd-de41-app678';
     const sourceLink = document.getElementById('profile-source');
-    const name = oled ? 'OLED DE3.87 Test 6' : preview ? 'LCD ' + preview.firmwareVersion.split('-')[1] + ' / App' + preview.applicationCounter : 'LCD DE3.102 / App675';
+    const name = oled ? 'OLED DE3.87 Test 6' : preview ? 'LCD ' + preview.firmwareVersion.split('-')[1] + ' / App' + preview.applicationCounter : previous ? 'LCD DE3.102 / App675' : 'LCD DE4.1 / App678';
     sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + revision);
     setText(sourceLink, 'Quellcode ' + name, name + ' source code');
 }
@@ -285,7 +286,7 @@ function populateCatalog(id) {
     }
 }
 try {
-    // App675 is already part of the stable catalogue. Append only the retained
+    // App678 is already part of the stable catalogue. Append only the retained
     // historical test choices, without adding a second release entry.
     const runtimeCatalog = {...AllmiiboFirmwareReleases,
         packages:[...AllmiiboFirmwareReleases.packages, ...lcdPreviewPackages]};

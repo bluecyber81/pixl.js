@@ -1,0 +1,105 @@
+{
+  "firmware": "2.22.0-DE4.1",
+  "counter": 678,
+  "capacityProfile": "de41",
+  "simulatorProfile": "de399",
+  "scope": "Fresh linked App678 ARM layout binding to the unchanged App672 engine and previously executed cross-mount evidence",
+  "engine": {
+    "manifest": {
+      "schema": 1,
+      "format": "PFS1",
+      "constants": {
+        "FORMAT_VERSION": 1,
+        "BLOCK_SIZE": 4096,
+        "BLOCK_COUNT": 512,
+        "CACHE_SIZE": 256,
+        "SHARD_TARGET": 32768,
+        "MAX_SHARDS": 64,
+        "MAX_HANDLES": 8,
+        "PATH_MAX": 64,
+        "NAME_MAX": 48,
+        "META_SIZE": 128
+      },
+      "defines": [
+        "LFS_NO_ASSERT",
+        "LFS_NO_DEBUG",
+        "LFS_NO_ERROR",
+        "LFS_NO_MALLOC",
+        "LFS_NO_WARN"
+      ],
+      "files": {
+        "packed_fs.c": "0abb17a98844514e85b0660d55d0dbd17ec86131b2ad21bfbda658fc63da9793",
+        "packed_fs.h": "5faf4a60c668e6188e23fe4a5b1b735e18c5dff8cfb8be32cd834248f38a82ef",
+        "lfs.c": "db2107a0d8f77ee977eaa77352b581f45637907fcae5ff3fa27af43f5d31f9d2",
+        "lfs.h": "d4cbf34cee1227c2e5bf0f476cd940486f9f880ace563c362b213b479f047296",
+        "lfs_util.c": "ff21c0bf88d685d7ceb117a950653932d4fd4ee82f18051a9a338b8c629500d8",
+        "lfs_util.h": "304ccf21ca2919edb3ab955561d5f6da6630a68e9f5ed630d04580e838b647c3"
+      }
+    },
+    "engineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f"
+  },
+  "wasmSha256": "068e6f033c6e3ee95c8be2c7c6ba633daa6821c67ca38ace68a66cd5fece604c",
+  "crossMountReportSha256": "b4a246a86f178fa00717f31a0130d4efcdf71992192ae950ed5689e81887ac3e",
+  "sourceId": "e8b24c067a7ead279a12720b0ffe6ef4f4678e1f0c8b329859c883a53f007f6c",
+  "sourceFiles": 720,
+  "buildArtifacts": {
+    "pixljs.bin": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
+    "pixljs.hex": "4b49516af1a7634fc03332aef18a0bd81a9e62bdd5a5617aa0e9bbab921d8fdf",
+    "pixljs.out": "c74dc34ffa30447e550f15464a9d30d135c5635a1e4c0373463f86d22ae5b898",
+    "pixljs.map": "c9cbf3c7be12c3eca6917c4c8d26ba6db12302f9b6c82e95779a52032483dfb7"
+  },
+  "adapterSha256": "d7825cc4280d583812e1fa16304ad5ba93ac979345460ccb47e2029bf2241131",
+  "elfLoadBytesCompared": 362724,
+  "intelHex": {
+    "dataRecords": 22674,
+    "flashBytesCompared": 362724,
+    "fromAddress": 102400,
+    "endAddressExclusive": 465124,
+    "entrypoint": 103177
+  },
+  "capacityCrossMount": {
+    "cases": 6,
+    "files": 1131,
+    "folders": 77,
+    "synthetic": true
+  },
+  "armLayoutCases": [
+    {
+      "drive": "E",
+      "geometry": true,
+      "mounted": true,
+      "result": 0,
+      "layout72Hex": "014503015046533100002000001000000002000000010001000180000080000040403008070000003ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f"
+    },
+    {
+      "drive": "E",
+      "geometry": true,
+      "mounted": false,
+      "result": 0,
+      "layout72Hex": "014503005046533100002000001000000002000000010001000180000080000040403008070000003ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f"
+    },
+    {
+      "drive": "I",
+      "geometry": true,
+      "mounted": true,
+      "result": 4294967290
+    },
+    {
+      "drive": "E",
+      "geometry": false,
+      "mounted": true,
+      "result": 4294967290
+    }
+  ],
+  "limits": [
+    "Mounted state and flash geometry are modeled in the linked ARM layout test.",
+    "Live settings CRC, exact version/counter and layout, archive identity and a fresh fit proof are required.",
+    "Host simulations do not measure physical free space or device acceptance.",
+    "BOARD_LCD/runtime GC diagnostics are omitted from the RAM-only simulator; no SDK timing or firmware RAM claim.",
+    "The six cross-mount cases were executed for App672; they were not rerun or relabeled as fresh App678 tests."
+  ],
+  "crossMountEvidenceMode": "reused-identical-engine",
+  "crossMountOriginFirmware": "2.22.0-DE3.99",
+  "previousQualificationPath": "docs/validation/DE3_99_PFS.json",
+  "previousQualificationSha256": "6a864f3ba6e52660debd9e1cec551f805b1f84d7bea1d21659f6042df3c73e68"
+}

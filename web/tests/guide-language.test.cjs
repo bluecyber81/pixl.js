@@ -64,7 +64,7 @@ test('both guide languages link to a dedicated OLED chapter with the published p
 
 test('both guides offer the current LCD app, full package and aligned storage target', () => {
     const release = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/';
-    const app = 'https://github.com/bluecyber81/pixl.js/raw/658d43a7fe2777778d8efa8439f73aa48210e033/fw/releases/Allmiibo_LCD_DE3_102_675_NUR_APP.zip';
+    const app = 'https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip';
     const combo = release + 'Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip';
     for (const file of ['index.html', 'en.html']) {
         const html = fs.readFileSync(path.join(__dirname, '../public/guide', file), 'utf8');
@@ -73,7 +73,7 @@ test('both guides offer the current LCD app, full package and aligned storage ta
         assert.match(section('flash'), /Z21/);
         assert.ok(section('bootloader').includes(combo));
         assert.match(section('bootloader'), /(?:unter|below) 21/);
-        assert.match(section('littlefs'), /DE3\.102 \/ 675/);
+        assert.match(section('littlefs'), /DE4\.1 \/ 678/);
         const lcdDownloads = [...section('programme').matchAll(/href="([^"]*Allmiibo_LCD_[^"]*\.zip)"/g)].map(match => match[1]);
         assert.deepEqual(lcdDownloads, [app, combo]);
     }
@@ -115,7 +115,7 @@ test('the App660 device guide links the signed LCD application and its published
 });
 
 
-test('current App675 guide keeps App674 and App673 packages addressable as history', () => {
+test('archived App675 guide keeps App674 and App673 packages addressable as history', () => {
     for (const file of ['index.html', 'en.html']) {
         const html = fs.readFileSync(path.join(__dirname, '../public/guide', file), 'utf8');
         const current = html.split('<h3 id="lcd-de3102">')[1].split('<h3 id="lcd-de3101">')[0];

@@ -1,0 +1,366 @@
+{
+  "version": "2.22.0-DE4.1",
+  "board": "LCD",
+  "counter": 678,
+  "qualificationDate": "2026-11-25",
+  "productionCommit": "2437a3a4cf15afbc108ae66b28cec03f29da8602",
+  "sourceID": "e8b24c067a7ead279a12720b0ffe6ef4f4678e1f0c8b329859c883a53f007f6c",
+  "sourceInputCount": 720,
+  "artifacts": {
+    "pixljs.bin": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
+    "pixljs.hex": "4b49516af1a7634fc03332aef18a0bd81a9e62bdd5a5617aa0e9bbab921d8fdf",
+    "pixljs.out": "095522dd4062b3a0d269018df0a8fc65370813e029154ad90ae76b8bf42fc231",
+    "pixljs.map": "d5cf9be1f471e133bb8ac8e0be619a131597a330551f5d25ca4e692d28da3994"
+  },
+  "linkerBudget": {
+    "binary_bytes": 362724,
+    "linker_flash_used_bytes": 362736,
+    "observed": {
+      "flash_reserve_bytes": 10000,
+      "heap_stack_gap_bytes": 1672,
+      "stack_reserved_bytes": 8192
+    },
+    "minimum": {
+      "flash_reserve_bytes": 8192,
+      "heap_stack_gap_bytes": 1536,
+      "stack_reserved_bytes": 8192
+    }
+  },
+  "signedPackage": {
+    "name": "Allmiibo_LCD_DE4_1_678_NUR_APP.zip",
+    "sha256": "beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0",
+    "bytes": 255266,
+    "images": [
+      {
+        "type": "application",
+        "firmware_type": 0,
+        "counter": 678,
+        "sd_req": [
+          294
+        ],
+        "bytes": 362724,
+        "sha256": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
+        "signature_verified": true,
+        "sd_size": 0,
+        "bl_size": 0,
+        "app_size": 362724,
+        "boot_validation": "GENERATED_CRC",
+        "negative_controls_passed": 3
+      }
+    ],
+    "identicalWebPackage": "web/public/firmware/Allmiibo_LCD_DE4_1_678_NUR_APP.zip",
+    "publicKeySource": "bootloader-z19/fw/bootloader/src/dfu_public_key.c",
+    "publicKeySourceSha256": "0fb84691d29063af5175f67b3ec730ad32f23c3929f6083bd9360766739da6e3"
+  },
+  "host": {
+    "executed": 198,
+    "passed": 198,
+    "available": 198,
+    "unchangedDuringTests": true
+  },
+  "independentLocalBinAndHex": true,
+  "previousFirmwareComparison": {
+    "reference": "LCD App677 signed application",
+    "candidate": "LCD App678 signed application",
+    "referenceSha256": "ea503da1a61d6bd8577e139f6440d21acd706f3c50cd9d5317463202a4c3aa2c",
+    "candidateSha256": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
+    "imageBytes": 362724,
+    "changedBytes": 118,
+    "identicalOtherBytes": 362606,
+    "changedOutsideExplainedLocations": 0,
+    "identityStringRange": {
+      "start": "0x5764e",
+      "endExclusive": "0x576c4",
+      "before": [
+        "320ccc071c229611512e85893c80838a9731084dda435b0d9bf2f33726d64134",
+        "test/lcd-de3104-app677",
+        "n/a",
+        "2026-11-24",
+        "2.22.0-DE3.104"
+      ],
+      "after": [
+        "e8b24c067a7ead279a12720b0ffe6ef4f4678e1f0c8b329859c883a53f007f6c",
+        "release/lcd-de41-app678",
+        "n/a",
+        "2026-11-25",
+        "2.22.0-DE4.1"
+      ]
+    },
+    "stringPointerChanges": [
+      {
+        "address": "0x224a0",
+        "oldTarget": "0x576aa",
+        "newTarget": "0x576ab",
+        "oldString": "2026-11-24",
+        "newString": "2026-11-25"
+      },
+      {
+        "address": "0x224b0",
+        "oldTarget": "0x576b5",
+        "newTarget": "0x576b6",
+        "oldString": "2.22.0-DE3.104",
+        "newString": "2.22.0-DE4.1"
+      },
+      {
+        "address": "0x452e8",
+        "oldTarget": "0x633f8",
+        "newTarget": "0x576c1",
+        "oldString": "1",
+        "newString": "1"
+      },
+      {
+        "address": "0x52c7c",
+        "oldTarget": "0x633f8",
+        "newTarget": "0x576c1",
+        "oldString": "1",
+        "newString": "1"
+      },
+      {
+        "address": "0x576cc",
+        "oldTarget": "0x576a6",
+        "newTarget": "0x576a7",
+        "oldString": "n/a",
+        "newString": "n/a"
+      },
+      {
+        "address": "0x576d0",
+        "oldTarget": "0x576aa",
+        "newTarget": "0x576ab",
+        "oldString": "2026-11-24",
+        "newString": "2026-11-25"
+      },
+      {
+        "address": "0x576d4",
+        "oldTarget": "0x576b5",
+        "newTarget": "0x576b6",
+        "oldString": "2.22.0-DE3.104",
+        "newString": "2.22.0-DE4.1"
+      }
+    ],
+    "verified": true
+  },
+  "packedFs": {
+    "profile": "DE4_1_PFS.json",
+    "freshRun": {
+      "passed": true,
+      "engines": {
+        "old": "a645c8556c6b2e7dd9c35af621822a4ab2cb45a4315f116fe07ed7c03898098d",
+        "new": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f"
+      },
+      "deviceAccess": false,
+      "filesInitially": 1131,
+      "directoriesInitially": 77,
+      "verification": "Every active path, kind, size, content byte, raw128 byte, import identity and complete namespace at each phase, including remount.",
+      "mutations": [
+        "replace existing content and raw128",
+        "rename existing file",
+        "remove existing file",
+        "add8193-byte file",
+        "add empty file",
+        "old-engine replacement after new-engine writes"
+      ],
+      "limits": [
+        "Host synthetic flash only. Not a device readback, timing benchmark or proof against every power interruption.",
+        "Read-only stages perform no flash programming/erase. Writable phases exercise normal APIs and GC, not injected flash failures."
+      ],
+      "sha256OfEachResultingImageMatchesEarlierRun": true,
+      "cases": [
+        {
+          "engine": "old",
+          "action": "create",
+          "phase": 0,
+          "exitCode": 0,
+          "imageAfterSha256": "b4751e19f5d6e00526668a82d21e78d44c272a78249bfed4eefc5ddbd72b7af6",
+          "result": {
+            "passed": true,
+            "phase": 0,
+            "expectedRows": 1208,
+            "reads": 3721660,
+            "programs": 97693,
+            "erases": 7876,
+            "readonly": false
+          }
+        },
+        {
+          "engine": "new",
+          "action": "verify",
+          "phase": 0,
+          "exitCode": 0,
+          "imageAfterSha256": "b4751e19f5d6e00526668a82d21e78d44c272a78249bfed4eefc5ddbd72b7af6",
+          "result": {
+            "passed": true,
+            "phase": 0,
+            "expectedRows": 1208,
+            "reads": 427304,
+            "programs": 0,
+            "erases": 0,
+            "readonly": true
+          }
+        },
+        {
+          "engine": "new",
+          "action": "modify",
+          "phase": 1,
+          "exitCode": 0,
+          "imageAfterSha256": "7649c7ea731324528999e76cb6d79eb9782b204fd3de63717f4bee7dd56932db",
+          "result": {
+            "passed": true,
+            "phase": 1,
+            "expectedRows": 1209,
+            "reads": 703363,
+            "programs": 455,
+            "erases": 33,
+            "readonly": false
+          }
+        },
+        {
+          "engine": "old",
+          "action": "verify",
+          "phase": 1,
+          "exitCode": 0,
+          "imageAfterSha256": "7649c7ea731324528999e76cb6d79eb9782b204fd3de63717f4bee7dd56932db",
+          "result": {
+            "passed": true,
+            "phase": 1,
+            "expectedRows": 1209,
+            "reads": 451819,
+            "programs": 0,
+            "erases": 0,
+            "readonly": true
+          }
+        },
+        {
+          "engine": "old",
+          "action": "modify",
+          "phase": 2,
+          "exitCode": 0,
+          "imageAfterSha256": "5802b215942d075491b03390d790e46c56e9348bae3e3150231bae101f333904",
+          "result": {
+            "passed": true,
+            "phase": 2,
+            "expectedRows": 1209,
+            "reads": 594076,
+            "programs": 70,
+            "erases": 5,
+            "readonly": false
+          }
+        },
+        {
+          "engine": "new",
+          "action": "verify",
+          "phase": 2,
+          "exitCode": 0,
+          "imageAfterSha256": "5802b215942d075491b03390d790e46c56e9348bae3e3150231bae101f333904",
+          "result": {
+            "passed": true,
+            "phase": 2,
+            "expectedRows": 1209,
+            "reads": 362482,
+            "programs": 0,
+            "erases": 0,
+            "readonly": true
+          }
+        }
+      ]
+    }
+  },
+  "z21": {
+    "signedInitialization": [
+      {
+        "passed": true,
+        "bootCounter": 21,
+        "appCounter": 678,
+        "previousAppCounter": 675,
+        "softDeviceFwid": 294,
+        "bootRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+        "applicationSha256": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
+        "previousApplicationSha256": "28050b4e64400586f1a9d9aff94266887291c7be07c65ba32c390fec60ea2c06",
+        "cases": [
+          {
+            "before": "App675 present",
+            "signedInitAccepted": true,
+            "code": 1,
+            "destination": 102400,
+            "dataBytes": 362724,
+            "bank0Code": 0
+          },
+          {
+            "before": "empty application bank",
+            "signedInitAccepted": true,
+            "code": 1,
+            "destination": 102400,
+            "dataBytes": 362724,
+            "bank0Code": 0
+          }
+        ],
+        "physicalDeviceAccess": false,
+        "limits": "Actual ELF init-execute and bank selection; flash, radio and handover simulated."
+      },
+      {
+        "passed": true,
+        "bootCounter": 21,
+        "appCounter": 678,
+        "previousAppCounter": 677,
+        "softDeviceFwid": 294,
+        "bootRegionSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb",
+        "applicationSha256": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
+        "previousApplicationSha256": "ea503da1a61d6bd8577e139f6440d21acd706f3c50cd9d5317463202a4c3aa2c",
+        "cases": [
+          {
+            "before": "App677 present",
+            "signedInitAccepted": true,
+            "code": 1,
+            "destination": 102400,
+            "dataBytes": 362724,
+            "bank0Code": 0
+          },
+          {
+            "before": "empty application bank",
+            "signedInitAccepted": true,
+            "code": 1,
+            "destination": 102400,
+            "dataBytes": 362724,
+            "bank0Code": 0
+          }
+        ],
+        "physicalDeviceAccess": false,
+        "limits": "Actual ELF init-execute and bank selection; flash, radio and handover simulated."
+      }
+    ],
+    "dataPhase": {
+      "payloadBytes": 362724,
+      "cutOffsets": [
+        40,
+        180264,
+        360488
+      ],
+      "resumeOffsets": [
+        0,
+        131072,
+        327680
+      ],
+      "checkpointCount": 5,
+      "additionalPageErases": 10,
+      "finalCrc32": 492010676,
+      "passed": true,
+      "sha256": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
+      "cutKinds": [
+        "link",
+        "link",
+        "cold-restart"
+      ],
+      "duplicateExecuteExtraErases": 0,
+      "modeledLinkCutsDuringCheckpoint": 5,
+      "modeledCheckpointPowerCuts": 455,
+      "modeledAdmissionOrCompletionFailures": 8,
+      "sanitizers": [
+        "ASan",
+        "UBSan",
+        "LSan-positive-control"
+      ],
+      "scope": "Data phase after accepted init; SDK settings reinit, host-modeled flash, BLE, reset and validator. No device access."
+    }
+  },
+  "deviceAcceptance": "Physical App678 readback pending. The preceding App677 owner report covers flashing and general operation on one LCD.",
+  "previousPhysicalEvidence": "DE3_104_LCD_READBACK.json"
+}
