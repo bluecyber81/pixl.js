@@ -699,3 +699,92 @@ test('capacity errors during atomic publication retain the private stage and ret
   await s.run(native)
   assert(!s.nodes.has(stage)); assert.equal(s.job.completed.length,2); assert.equal(native.actions.length,2)
 })
+
+test('quick fresh leaves trust consecutive durable CLOSE replies and keep only actual digests in the sync history', async () => {
+  const s = await mixedSetup()
+  const native = nativeApi(s)
+  const writeFile = async (...args) => { await s.api.writeFile(...args); native.bump() }
+  const result = await s.run({...native, quickPacked:true, writeFile})
+  assert.equal(s.actions.filter(e => e.kind === 'hash').length, 0)
+  assert.deepEqual(result.job.acknowledgedOnly, [target+'/f1',target+'/f3'])
+  const {createSyncHistory} = await import('../src/lib/sync-history.js')
+  const history = createSyncHistory(s.plan, '1'.repeat(64), null, result.job)
+  assert.deepEqual(history.files.map(row => row[0]), ['ManySmall/f0','ManySmall/f2','ManySmall/f4'])
+})
+
+test('quick leaf re-audits raw data when a foreign same-size write changes the revision', async () => {
+  const s = await mixedSetup()
+  const native = nativeApi(s)
+  const writeFile = async (p,data,options) => {
+    await s.api.writeFile(p,data,options); native.bump()
+    if (p.endsWith('/f1')) {
+      s.nodes.get(p).bytes[0] ^= 1
+      native.bump()
+    }
+  }
+  await assert.rejects(s.run({...native, quickPacked:true, writeFile}), {code:'SYNC_STALE'})
+  assert.equal(native.actions.length,0)
+  assert(!s.nodes.has(target))
+})
+
+test('quick sibling snapshot invalidates on a competing new folder, preserving its content', async () => {
+  const files = [local('Group/first/a.bin', 1), local('Group/next/z.bin', 2)]
+  const s = await setupExisting(files)
+  const foreign = root+'/Group/next'
+  let inserted = false
+  const native = nativeApi(s, (point, p, bump) => {
+    if (point==='published' && !inserted) {
+      inserted=true
+      s.nodes.set(foreign, directory())
+      s.nodes.set(foreign+'/keep', {type:0,meta:newMetadata(),bytes:Uint8Array.of(44)})
+      bump()
+    }
+  })
+  await assert.rejects(s.run({...native,quickPacked:true}), {code:'SYNC_STALE'})
+  assert.deepEqual(s.nodes.get(foreign+'/keep').bytes,Uint8Array.of(44))
+  assert(!s.nodes.has(foreign+'/z.bin'))
+})
+
+test('quick existing-folder upload falls back to per-file verification without revision support', async () => {
+  const s=await setupExisting([local('plain.bin',1)])
+  const r=await s.run({quickPacked:true,readCreateRevision:async()=>null})
+  assert.equal(r.completed,1)
+  assert.equal(s.actions.filter(e=>e.kind==='hash').length,1)
+  assert.equal(r.job.acknowledgedOnly,undefined)
+})
+
+test('quick existing-folder upload has one final status read and rejects a changed mount epoch', async () => {
+  for (const badEpoch of [false,true]) {
+    const s=await setupExisting([local('first.bin',1),local('second.bin',2)])
+    let revisionReads=0
+    const r=s.run({quickPacked:true,readCreateRevision:async()=>{
+      revisionReads++
+      return revisionReads===1 ? '0000000100000010' : badEpoch?'0000000200000012':'0000000100000012'
+    }})
+    if (badEpoch) await assert.rejects(r,{code:'SYNC_STALE'})
+    else assert.equal((await r).job.acknowledgedOnly.length,2)
+    assert.equal(revisionReads,2)
+    assert.equal(s.actions.filter(e=>e.kind==='hash').length,0)
+  }
+})
+
+
+test('default routing limits whole-tree publication while previously started jobs retain the full target', async () => {
+  const sample = Array.from({length:101}, (_,i)=>local('ManySmall/sub/f'+i+'.bin',i))
+  const s=await setup(sample.map((_,i)=>i),sample)
+  assert.equal(newFolderUploadRoot(s.plan,s.selectedPaths),target)
+  assert.equal(newFolderUploadRoot(s.plan,s.selectedPaths,true),null)
+  assert.equal(newFolderUploadRoot(s.plan,s.selectedPaths.slice(0,100),true),target)
+})
+
+test('quick large-only leaf publishes once, acknowledges stored data, and retains singleton direct writes', async () => {
+  const make = relativePath => ({relativePath,file:new File([new Uint8Array(2048)],relativePath.split('/').at(-1))})
+  const s=await setupExisting(['batch/f1','batch/f2','single/f1'].map(make))
+  const write=async (...args)=>{await s.api.writeFile(...args);s.native.bump()}
+  const result=await s.run({quickPacked:true,writeNewPackedFile:write,writeFile:write})
+  assert.equal(result.completed,3)
+  assert.equal(result.job.acknowledgedOnly.length,3)
+  assert.equal(s.actions.filter(a=>a.kind==='rename' && a.phase==='after').length,1)
+  assert.equal(s.actions.filter(a=>a.kind==='hash').length,0)
+  assert.equal(s.native.actions.length,0)
+})

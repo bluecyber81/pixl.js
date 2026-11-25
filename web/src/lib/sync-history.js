@@ -67,6 +67,7 @@ export function createSyncHistory(plan, binding, previous, job) {
   if (!digest(binding) || (previous && previous.binding !== binding) || (job && (job.state !== 'complete' ||
       job.deviceKey !== plan.deviceKey || job.planFingerprint !== plan.fingerprint))) invalid()
   const completed = new Set(job?.completed || [])
+  for (const path of job?.acknowledgedOnly || []) completed.delete(path)
   const equal = new Set(job?.equalPaths || [])
   const remaining = new Set(plan.deviceOnly.map(row => row.path.slice(prefixOf(plan.rootPath).length)))
   const files = new Map()

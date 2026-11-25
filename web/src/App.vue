@@ -1543,7 +1543,7 @@ export default {
       const controller = new AbortController(); this.workflowCancelling=false; this._syncController = controller; this.syncing = true;
       this.syncHistoryReady = null; this.syncStatus = ''; const adapters = this.folder_upload_adapters(generation);
       try {
-        const eligible = job.newFolderUpload || (!request.directFolder && !request.folderContents && plan.rootPath.startsWith('E:/') && newFolderUploadRoot(plan, selectedPaths));
+        const eligible = job.newFolderUpload || (!request.directFolder && !request.folderContents && plan.rootPath.startsWith('E:/') && newFolderUploadRoot(plan, selectedPaths, true));
         const selected = new Set(selectedPaths);
         const hasNewFiles = plan.rootPath.startsWith('E:/') && plan.entries.some(entry => entry.status === 'add' && selected.has(entry.targetPath));
         const packedWriter = (eligible || hasNewFiles) && await this.supports_folder_publish(generation);
@@ -1551,7 +1551,7 @@ export default {
         if (job.newFolderUpload && !publishFolder) throw new Error(this.$t('info.folderCapabilityChanged'));
         const execute = publishFolder ? executeNewFolderUpload : executeSyncJob;
         const result = await execute({job,plan,files,deviceKey:pixl.get_device_key?.(),selectedPaths,
-          ...adapters, signal:controller.signal, writeNewPackedFile:packedWriter ? adapters.writeFile : undefined,
+          ...adapters, signal:controller.signal, quickPacked:packedWriter, writeNewPackedFile:packedWriter ? adapters.writeFile : undefined,
           prepareLeafUploads:packedWriter && !request.directFolder ? prepareLeafUploads : undefined,
           uploadFile: async options => {
             interruptedReplacement = null;
@@ -1572,8 +1572,10 @@ export default {
         });
         this.assert_session(generation);
         if (binding && !controller.signal.aborted) this.syncHistoryReady = createSyncHistory(plan, binding, history, result.job);
-        this.syncStatus = result.skipped ? this.$t('info.syncContinued', result) : this.$t('info.syncDone');
-        this.remember_transfer('sync','success',result.uploadedBytes,true); return result;
+        const storedOnly = result.job?.acknowledgedOnly?.length || 0;
+        this.syncStatus = storedOnly ? this.$t('info.syncStoredQuick', {count:storedOnly}) :
+          result.skipped ? this.$t('info.syncContinued', result) : this.$t('info.syncDone');
+        this.remember_transfer('sync','success',result.uploadedBytes,!storedOnly); return result;
       } catch(error) {
         if (this._activeFolderUpload === request && (pendingFolderUpload(job)?.stagePath || !this.session_current(generation) || error.code === 'DISCONNECTED')) {
           this.syncResume = Object.freeze({...request, interruptedReplacement});

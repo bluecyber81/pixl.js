@@ -13,8 +13,10 @@ const validRevision = value => typeof value === 'string' && /^[0-9a-f]{16}$/.tes
 const fitsSmallCreate = entry => entry.size <= 572
 // Keep each leaf rename within the 100-file subtree exercised on the 2 MiB model.
 const maxLeafFiles = 100
-const singleCommit = (before, after) => before.slice(0,8) === after.slice(0,8) &&
-  parseInt(before.slice(8),16) + 1 === parseInt(after.slice(8),16)
+const consecutiveCommits = (before, after, count = 1) => before.slice(0,8) === after.slice(0,8) &&
+  parseInt(before.slice(8),16) + count === parseInt(after.slice(8),16)
+const siblingSnapshot = Symbol('validated sibling directory')
+const leafSpace = Symbol('leaf space sample')
 
 // The random sibling replaces the first component. Allow enough room for every
 // selected descendant, including when the user's top directory is a single letter.
@@ -23,8 +25,8 @@ function tokenLength(root, entries) {
   return Math.min(12, ...entries.map(entry => nameBytes + devicePathSpace(entry.targetPath).pathRemaining - 2))
 }
 
-export function newFolderUploadRoot(plan, selectedPaths) {
-  if (plan?.schema !== 1 || !plan.rootPath?.startsWith('E:/') || !Array.isArray(selectedPaths) || !selectedPaths.length) return null
+export function newFolderUploadRoot(plan, selectedPaths, bounded = false) {
+  if (plan?.schema !== 1 || !plan.rootPath?.startsWith('E:/') || !Array.isArray(selectedPaths) || !selectedPaths.length || (bounded && selectedPaths.length > maxLeafFiles)) return null
   const selected = new Set(selectedPaths)
   const wanted = plan.entries.filter(entry => selected.has(entry.targetPath))
   if (selected.size !== selectedPaths.length || selected.size !== wanted.length || wanted.some(entry => entry.status !== 'add' || entry.expected)) return null
@@ -39,6 +41,7 @@ export async function prepareLeafUploads({ options, fresh, wanted, sources, chec
   const { plan, job } = options
   const groups = new Map()
   const pending = job.leafUpload
+  const parentSample = {} // Shared only by sibling groups in this invocation.
   if (!plan.rootPath.startsWith('E:/') || !['createSmall','publishSmallFolder','readCreateRevision','writeFile','getFreeBytes'].every(key => typeof options[key] === 'function')) return groups
   const branches = new Set(plan.directories.map(dir => splitDevicePath(dir.path).parent))
   const current = new Map(fresh.directories.map(dir => [dir.path, dir.status]))
@@ -56,7 +59,8 @@ export async function prepareLeafUploads({ options, fresh, wanted, sources, chec
     const child = {schema:1, deviceKey:plan.deviceKey, rootPath:parent, deviceOnly:[],
       directories:[{...group.directory, relativePath:name}],
       entries:entries.map(entry => ({...entry, relativePath:relativePath(entry)}))}
-    if (entries.length > maxLeafFiles || !entries.some(fitsSmallCreate) || newFolderUploadRoot(child, paths) !== path) {
+    const batchable = entries.some(fitsSmallCreate) || (options.quickPacked && entries.length > 1)
+    if (!batchable || entries.length > maxLeafFiles || newFolderUploadRoot(child, paths) !== path) {
       groups.delete(path)
       continue
     }
@@ -66,10 +70,13 @@ export async function prepareLeafUploads({ options, fresh, wanted, sources, chec
     const block = 4096, payload = entries.reduce((sum, entry) => sum + entry.size, 0)
     const recordBytes = payload + (entries.length + 1) * (16 + 64 + 128 + 4 + 12)
     const headroom = 2 * Math.ceil(recordBytes / (block - 32)) * block + 8 * block + 32768
+    let boundSpace
     group.canStart = async () => {
+      const revision = options.quickPacked ? await options.readCreateRevision() : null
       const free = await options.getFreeBytes(plan.rootPath)
       check()
       if (!Number.isSafeInteger(free) || free < payload) throw new SyncError('UPLOAD_SPACE', 'Insufficient space for the selected files.')
+      boundSpace = validRevision(revision) ? {revision, free} : null
       return free >= headroom
     }
     group.run = async onProgress => {
@@ -78,7 +85,7 @@ export async function prepareLeafUploads({ options, fresh, wanted, sources, chec
       if (!job.leafUpload) job.leafUpload = {targetPath:path, job:createSyncJob(child)}
       if (job.leafUpload.targetPath !== path) stale()
       const files = entries.map(entry => ({relativePath:relativePath(entry), file:sources.files.get(entry.targetPath).file}))
-      return executeNewFolderUpload({...options, plan:child, job:job.leafUpload.job, files, selectedPaths:paths, requireSmallCreate:true, onProgress})
+      return executeNewFolderUpload({...options, plan:child, job:job.leafUpload.job, files, selectedPaths:paths, requireSmallCreate:true, [siblingSnapshot]:parentSample, [leafSpace]:boundSpace, onProgress})
     }
   }
   if (groups.size) {
@@ -99,7 +106,7 @@ export function pendingFolderUpload(job) {
  * job.completed tracks acknowledged writes. Publication requires full hashes. */
 export async function executeNewFolderUpload({ plan, job, files, selectedPaths, deviceKey, assertSession, signal, onProgress,
   createDirectory, writeFile, readDirectory, readFile, readFileDigest, readCreateRevision, createSmall, publishSmallFolder,
-  rename, getFreeBytes, requireSmallCreate = false, randomToken = randomHex }) {
+  rename, getFreeBytes, requireSmallCreate = false, quickPacked = false, [siblingSnapshot]:parentSample, [leafSpace]:boundSpace, randomToken = randomHex }) {
   const check = () => {
     assertSession()
     if (signal?.aborted) throw new SyncError('SYNC_CANCELLED', 'Folder upload cancelled.')
@@ -195,9 +202,12 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
     }
     let fromCheckpoint = 0
     let uploadedBytes = 0
+    const acknowledgedOnly = new Set()
     const finish = () => {
       job.completed = [...ordered]; job.equalPaths = plan.entries.filter(entry => entry.comparison === 'same').map(entry => entry.targetPath)
       state.phase = 'complete'; job.state = 'complete'
+      if (acknowledgedOnly.size) job.acknowledgedOnly = [...acknowledgedOnly]
+      else delete job.acknowledgedOnly
       return {completed:wanted.length - fromCheckpoint, skipped:fromCheckpoint, total:wanted.length, uploadedBytes, job}
     }
     function isPublished(entries) {
@@ -225,11 +235,11 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
     let proof = null
     // Only observations made during this call are eligible for the final CAS.
     // A resumed checkpoint must earn its proof again from names, metadata and SHA.
-    let verifiedPaths = new Set()
+    let coveredPaths = new Set()
     let continuousReceipts = true
     const candidate = !/^~u[a-f0-9]{8,12}$/.test(targetName) &&
       typeof createSmall === 'function' && typeof readCreateRevision === 'function' && typeof publishSmallFolder === 'function' &&
-      wanted.some(fitsSmallCreate) ? await readCreateRevision() : null
+      (wanted.some(fitsSmallCreate) || (quickPacked && !dirs.length && wanted.length > 1)) ? await readCreateRevision() : null
     check()
     if (candidate !== null && !validRevision(candidate) || (requireSmallCreate || state?.nativeReceipts) && !candidate) stale()
     async function published(entries) {
@@ -239,7 +249,12 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       return true
     }
     job.state = 'running'
-    const initial = await ownerListing()
+    // A previous guarded rename proves this exact sibling listing. Discard it
+    // on a new revision, a different parent or any checkpoint reconciliation.
+    const quick = Boolean(quickPacked && candidate)
+    const initial = quick && !state && parentSample?.parent === parent && parentSample.revision === candidate
+      ? parentSample.entries : await ownerListing()
+    let freshLeaf = false
     // A lost MKDIR acknowledgement does not prove ownership of an entry. If
     // the candidate never appeared, a fresh reservation is safe.
     if (state?.phase === 'reserving' && !state.owned && !targetEntry(initial, stageName())) {
@@ -255,7 +270,7 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       const checkedStage = candidate ? await audit(state.stagePath, true) : null
       const found = checkedStage ? checkedStage.found : await inventory(state.stagePath, true)
       proof = checkedStage?.revision ?? null
-      if (checkedStage) verifiedPaths = checkedStage.found
+      if (checkedStage) coveredPaths = checkedStage.found
       if (state.inFlight && found.has(state.inFlight) && !completed.has(state.inFlight)) {
         completed.add(state.inFlight); job.completed.push(state.inFlight)
       }
@@ -263,7 +278,9 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       fromCheckpoint = completed.size
     }
     const remainingBytes = wanted.reduce((sum, entry) => sum + (completed.has(entry.targetPath) ? 0 : entry.size), 0)
-    const free = await getFreeBytes(parent)
+    // The outer leaf-suitability check already read free space. The same live
+    // revision proves that no intervening allocation changed that observation.
+    const free = quick && boundSpace?.revision === candidate ? boundSpace.free : await getFreeBytes(parent)
     check()
     if (!Number.isSafeInteger(free) || free < remainingBytes) throw new SyncError('UPLOAD_SPACE', 'Insufficient space for the selected files.')
     if (!state) {
@@ -282,7 +299,14 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       await createDirectory(state.stagePath)
       state.owned = true
       check()
-      checkWorkingFolder(await ownerListing())
+      // A single generation increment across this exclusive MKDIR proves the
+      // random folder is empty and the parent listing did not change otherwise.
+      if (quick && !dirs.length) {
+        const after = await revision()
+        freshLeaf = consecutiveCommits(candidate, after)
+        if (freshLeaf) proof = after
+      }
+      if (!freshLeaf) checkWorkingFolder(await ownerListing())
     }
     state.phase = 'staging'
     if (candidate) state.nativeReceipts = true
@@ -293,18 +317,40 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       await createDirectory(stageDir); state.dirs.push(dir); check()
       proof = null
     }
-    // Ordinary writes cannot return a storage revision. Do them first, then
-    // hash their stored bytes in one audit before chaining small-file receipts.
+    // Keep ordinary CLOSE acknowledgements together. A fresh quick leaf binds
+    // them to one revision check. Other leaves audit their stored bytes.
     const writeOrder = candidate ? [...wanted.filter(entry => !fitsSmallCreate(entry)), ...wanted.filter(fitsSmallCreate)] : wanted
+    let ordinaryStart = null
+    const ordinaryReceipts = []
+    async function confirmOrdinaryWrites() {
+      if (!ordinaryReceipts.length) return
+      const after = await revision()
+      if (consecutiveCommits(ordinaryStart, after, ordinaryReceipts.length)) {
+        for (const path of ordinaryReceipts) {
+          coveredPaths.add(path)
+          acknowledgedOnly.add(path)
+        }
+        proof = after
+      } else {
+        // An outside mutation invalidates the namespace proof. Re-read bytes,
+        // names and metadata before including an ordinary CLOSE in publication.
+        freshLeaf = false
+        const checked = await audit(state.stagePath, true)
+        coveredPaths = checked.found; proof = checked.revision
+        acknowledgedOnly.clear()
+      }
+      ordinaryReceipts.length = 0
+    }
     for (const entry of writeOrder) {
       if (completed.has(entry.targetPath)) continue
       const path = staged(state.stagePath, entry.targetPath), parts = splitDevicePath(path)
       let consecutive = true
       if (candidate && fitsSmallCreate(entry)) {
+        await confirmOrdinaryWrites()
         if (!proof) {
           const anchor = await audit(state.stagePath, true)
           proof = anchor.revision
-          verifiedPaths = anchor.found
+          coveredPaths = anchor.found
         }
         state.inFlight = entry.targetPath
         let next
@@ -318,8 +364,8 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
           throw error
         }
         if (!validRevision(next) || next === proof) stale()
-        consecutive = singleCommit(proof,next)
-        if (consecutive) verifiedPaths.add(entry.targetPath)
+        consecutive = consecutiveCommits(proof,next)
+        if (consecutive) coveredPaths.add(entry.targetPath)
         proof = next
       } else {
         await writeFile(path, payloads.get(entry.targetPath), {
@@ -329,25 +375,34 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
             state.inFlight = entry.targetPath
           }
         })
+        if (freshLeaf) {
+          if (!ordinaryReceipts.length) ordinaryStart = proof
+          ordinaryReceipts.push(entry.targetPath)
+        }
         proof = null
       }
       completed.add(entry.targetPath); job.completed.push(entry.targetPath); state.inFlight = null
       if (!consecutive) {
         continuousReceipts = false
+        freshLeaf = false
+        acknowledgedOnly.clear()
         proof = (await audit(state.stagePath, true)).revision
       }
       uploadedBytes += entry.size
       check(); progress('syncing', completed.size)
     }
+    await confirmOrdinaryWrites()
     state.phase = 'verifying'
     progress('checking', completed.size)
     if (candidate) {
       // The anchor included every selected directory and ruled out foreign
-      // entries. Each single-commit receipt validates the stored file's SHA.
+      // entries. A small-create receipt proves the digest. A raw CLOSE proves
+      // a completed write and is tracked separately for later comparison.
       // The firmware checks this exact revision and the no-clobber rename
       // under the same writer lock. Any intervening mutation rejects publication.
-      if (!proof || !continuousReceipts || !ordered.every(path => verifiedPaths.has(path))) {
+      if (!proof || !continuousReceipts || !ordered.every(path => coveredPaths.has(path))) {
         proof = (await audit(state.stagePath, false)).revision
+        acknowledgedOnly.clear()
       }
     } else {
       await inventory(state.stagePath)
@@ -369,11 +424,19 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
         throw error
       }
       if (!await published(await ownerListing())) throw error
+      acknowledgedOnly.clear()
       return finish()
     }
     // Rename itself advances the revision. An interleaved mutation invalidates
     // every receipt, including changes of the same byte length.
-    if (candidate && (!validRevision(publishedRevision) || !singleCommit(proof, publishedRevision))) await audit(targetPath, false)
+    if (candidate && (!validRevision(publishedRevision) || !consecutiveCommits(proof, publishedRevision))) {
+      await audit(targetPath, false)
+      acknowledgedOnly.clear()
+    } else if (parentSample && freshLeaf) {
+      parentSample.parent = parent
+      parentSample.revision = publishedRevision
+      parentSample.entries = [...initial, {name:targetName, type:1, size:0, meta:decodeRawMetadata(emptyMetadata)}]
+    }
     return finish()
   } catch (error) {
     job.state = signal?.aborted ? 'paused' : 'failed'

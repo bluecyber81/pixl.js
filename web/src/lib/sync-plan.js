@@ -220,6 +220,12 @@ export async function executeSyncJob(options) {
     // Every local target and ancestor is rechecked. Device-only subtrees were
     // reported in the preview and cannot be read or changed by this upload.
     const fresh = await createSyncPlan({ rootPath: plan.rootPath, deviceKey, files: localSelection, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress, includeDeviceOnly:false })
+    // A mounted PackedFS revision belongs to this connection. A raw CLOSE on
+    // this engine acknowledges the complete write and 128-byte metadata.
+    const revision = () => options.readCreateRevision?.()
+    const startRevision = options.quickPacked && typeof writeNewPackedFile === 'function' ? await revision() : null
+    const quick = typeof startRevision === 'string' && /^[0-9a-f]{16}$/.test(startRevision) && startRevision !== '0000000000000000'
+    const acknowledgedOnly = new Set()
     const currentByPath = new Map(fresh.entries.map(entry => [entry.targetPath, entry]))
     for (const entry of plan.entries) {
       const current = currentByPath.get(entry.targetPath)
@@ -279,6 +285,7 @@ export async function executeSyncJob(options) {
         // Child checkpoints refer to private staging. Only a verified publication
         // authorizes these final path names in the outer checkpoint.
         for (const item of leaf.entries) if (!job.completed.includes(item.targetPath)) job.completed.push(item.targetPath)
+        for (const path of result.job.acknowledgedOnly || []) acknowledgedOnly.add(path)
         job.leafUpload = null
         publishedDirectories.add(leafPath)
         job.publishedLeaves = [...publishedDirectories]
@@ -315,8 +322,11 @@ export async function executeSyncJob(options) {
             onProgress: value => progress({phase:'uploading', path:entry.targetPath, done:value.written_bytes, total:entry.size})
           })
           check()
-          const sha = await deviceFileSha256(entry.targetPath, entry.size, {readFile, readFileDigest, check, sizeError:'SYNC_VERIFY'})
-          if (sha !== entry.sha256) fail('SYNC_VERIFY', 'The new file failed device SHA-256 verification.')
+          if (quick) acknowledgedOnly.add(entry.targetPath)
+          else {
+            const sha = await deviceFileSha256(entry.targetPath, entry.size, {readFile, readFileDigest, check, sizeError:'SYNC_VERIFY'})
+            if (sha !== entry.sha256) fail('SYNC_VERIFY', 'The new file failed device SHA-256 verification.')
+          }
         } else {
           await requireWritableParent()
           const result = await uploadFile({ path: entry.targetPath, file: new Blob([uploadBytes]), replace: !!entry.expected,
@@ -332,6 +342,14 @@ export async function executeSyncJob(options) {
       ++completed; uploadedBytes += entry.size; check()
       observe(onProgress, { phase: 'syncing', path: entry.targetPath, done: completed + skipped, total: wanted.length, filesDone: completed + skipped, filesTotal: wanted.length })
     }
+    if (quick) {
+      const endRevision = await revision()
+      check()
+      if (typeof endRevision !== 'string' || !/^[0-9a-f]{16}$/.test(endRevision) || endRevision.slice(0,8) !== startRevision.slice(0,8) ||
+          Number.parseInt(endRevision.slice(8),16) < Number.parseInt(startRevision.slice(8),16)) fail('SYNC_STALE', 'The storage generation changed during upload.')
+    }
+    if (acknowledgedOnly.size) job.acknowledgedOnly = [...acknowledgedOnly]
+    else delete job.acknowledgedOnly
     job.equalPaths = fresh.entries.filter(entry => entry.comparison === 'same').map(entry => entry.targetPath)
     job.state = 'complete'
     return { completed, skipped, uploadedBytes, total: wanted.length, job }
