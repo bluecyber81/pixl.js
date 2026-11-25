@@ -72,7 +72,7 @@ function harness(overrides = {}) {
   Object.defineProperty(context, 'showSaveFilePicker', { get: () => window.showSaveFilePicker });
   context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
   context.lcdTest676 = require('../public/dfu/lcd-app676-reference.mjs').lcdTest676;
-  Object.assign(context, require('../public/dfu/lcd-app679-reference.mjs'));
+  Object.assign(context, require('../public/dfu/lcd-app679-reference.mjs'), require('../public/dfu/lcd-app680-reference.mjs'));
   context.lcdTest677 = require('../public/dfu/lcd-app677-reference.mjs').lcdTest677;
   context.lcdRelease = require('../public/dfu/lcd-release-reference.mjs').lcdRelease;
   context.app675 = require('../public/dfu/lcd-app675-reference.mjs').lcdRelease;

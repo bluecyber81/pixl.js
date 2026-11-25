@@ -842,3 +842,94 @@ test('grouped completion cannot reuse another device checkpoint; absence of capa
   const done=await f.run({...single,canGroupCreate:async()=>false})
   assert.equal(done.total,9);assert.equal(single.calls.length,0);assert.equal(single.actions.length,9)
 })
+
+test('a fresh small leaf validates MKDIR in the first group instead of querying its revision again', async () => {
+  const s = await groupFixture(), api = groupedApi(s)
+  let revisionReads = 0, readsAfterMkdir, readsAtFirstGroup
+  const result = await s.run({
+    ...api,
+    readCreateRevision:async () => { ++revisionReads; return api.readCreateRevision() },
+    createDirectory:async path => {
+      await api.createDirectory(path)
+      readsAfterMkdir = revisionReads
+    },
+    createGroup:async (...args) => {
+      readsAtFirstGroup ??= revisionReads
+      return api.createGroup(...args)
+    }
+  })
+  assert.equal(result.completed,9)
+  assert.equal(readsAtFirstGroup,readsAfterMkdir)
+  assert.deepEqual(api.calls.map(members=>members.length),[4,4,1])
+})
+
+test('a rejected first group rechecks the stage and retries only a changed revision of the same mount', async t => {
+  for (const race of ['unrelated','foreign-file','occupied-target','remounted','same-revision','twice-rejected']) {
+    await t.test(race,async () => {
+      const s = await groupFixture(), api = groupedApi(s)
+      let attempts = 0, remounted = false, stage
+      const revision = async () => {
+        const value = await api.readCreateRevision()
+        return remounted ? '00000002' + value.slice(8) : value
+      }
+      const run = () => s.run({
+        ...api, readCreateRevision:revision,
+        createDirectory:async path => {
+          stage = path
+          await api.createDirectory(path)
+          if (race !== 'same-revision') api.bump()
+          if (race === 'foreign-file') s.nodes.set(path+'/foreign.bin',{type:0,bytes:Uint8Array.of(42),meta:newMetadata()})
+          if (race === 'occupied-target') s.nodes.set(target,directory())
+          if (race === 'remounted') remounted = true
+        },
+        createGroup:async (folder,members,expected) => {
+          ++attempts
+          if (race === 'same-revision' || race === 'twice-rejected' || await revision() !== expected)
+            throw Object.assign(Error('Group rejected'),{cmd:0x28,status:1})
+          return api.createGroup(folder,members,expected)
+        }
+      })
+      if (race === 'unrelated') {
+        assert.equal((await run()).completed,9)
+        assert.equal(attempts,4)
+        assert.equal(api.calls.flat().length,9)
+      } else {
+        await assert.rejects(run(),['same-revision','twice-rejected'].includes(race) ? {status:1} : {code:'SYNC_STALE'})
+        assert.equal(attempts,race==='twice-rejected'?2:1)
+        assert.equal(api.calls.length,0)
+        assert.equal(s.job.newFolderUpload.inFlightGroup,undefined)
+        assert.equal(s.nodes.has(target),race==='occupied-target')
+        assert(![...s.nodes.keys()].some(path=>path.startsWith(target+'/')))
+        if (race==='foreign-file') assert.equal(s.nodes.get(stage+'/foreign.bin').bytes[0],42)
+      }
+    })
+  }
+})
+
+test('after a first-group revision conflict, the next leaf observes independently created siblings',async()=>{
+  const s = await setupExisting([local('Group/first/a.bin',1),local('Group/next/z.bin',2)])
+  const api = groupedApi(s), other = root+'/Group/next'
+  let stagesCreated = 0
+  const run = () => s.run({
+    ...api,
+    createDirectory:async path => {
+      await api.createDirectory(path)
+      if (!path.split('/').at(-1).startsWith('~u')) return
+      if (++stagesCreated === 1) {
+        s.nodes.set(other,directory())
+        s.nodes.set(other+'/keep',{type:0,meta:newMetadata(),bytes:Uint8Array.of(71)})
+        api.bump()
+      }
+    },
+    createGroup:async (path,entries,expected) => {
+      if (expected !== await api.readCreateRevision()) throw Object.assign(Error('Revision changed'),{cmd:0x28,status:1})
+      return api.createGroup(path,entries,expected)
+    }
+  })
+  await assert.rejects(run(),{code:'SYNC_STALE'})
+  assert.equal(stagesCreated,1)
+  assert.equal(api.calls.length,1)
+  assert(s.nodes.has(root+'/Group/first/a.bin'))
+  assert.deepEqual(s.nodes.get(other+'/keep').bytes,Uint8Array.of(71))
+  assert(!s.nodes.has(other+'/z.bin'))
+})

@@ -46,10 +46,12 @@ export const LCD_Z21_COUNTERS = Object.freeze({
   '2.22.0-DE3.104': 677,
   '2.22.0-DE4.1': 678,
   '2.22.0-DE4.2-b1': 679,
+  '2.22.0-DE4.2-b2': 680,
 });
 const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_Z21_COUNTERS)];
 export function supportsFolderPublication(version, engine) {
   if (firmwareBoard(version) !== 'LCD') return false;
+  if (version === '2.22.0-DE4.2-b2') return engine === '15db90c7d572bfc3043664a90ed077125a9645bca46055ae2fe0dafe0cb055c0';
   if (version === '2.22.0-DE4.2-b1') return engine === '4b779ad5f10e12d881e0c96c4495c6db3290cbac3c015b50d11dd73dc8189758';
   // The App676 and App677 test builds use the same PFS engine for directory publication as App675.
   // Storage migration has its own release-specific qualification.

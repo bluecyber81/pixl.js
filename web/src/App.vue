@@ -312,9 +312,12 @@
       <FirmwareBoardChoice v-if="visitedWorkspaces.has('update')" :connected="connected" :version="firmwareVersion" :boot="bootInfo" :locale="language">
       <template #lcd>
       <div v-if="archiveLinks.transferBeta" class="tool-section">
+        <h3>LCD DE4.2-b2 / App680 · Beta</h3>
+        <p>{{ language.startsWith('de') ? 'App680 speichert beim Schreiben häufig gelesene Verzeichnisdaten zwischen. Die App-ZIP setzt Z21 und S112 7.3.0 voraus.' : 'App680 caches frequently read directory data during writes. The app ZIP requires Z21 and S112 7.3.0.' }}</p>
+        <p><a :href="archiveLinks.transferBeta680" download>{{ language.startsWith('de') ? 'App680 fürs Handy herunterladen (ZIP)' : 'Download App680 for your phone (ZIP)' }}</a> · <a :href="'dfu/web.html?package=de4.2-b2-lcd-app-test' + (connected ? lastDfuReference || '' : '')">{{ language.startsWith('de') ? 'App680 im Web-DFU öffnen' : 'Open App680 in Web DFU' }}</a></p>
         <h3>LCD DE4.2-b1 / App679 · Beta</h3>
-        <p>{{ language.startsWith('de') ? 'Die Testfirmware bündelt kleine Dateien. Der Bluetooth-Test am LCD steht aus. Das App-Update setzt Z21 und S112 7.3.0 voraus.' : 'This test firmware groups small files. Bluetooth testing on an LCD is pending. The app update requires Z21 and S112 7.3.0.' }}</p>
-        <p><a :href="archiveLinks.transferBeta" download>{{ language.startsWith('de') ? 'App679 fürs Handy herunterladen (ZIP)' : 'Download App679 for your phone (ZIP)' }}</a> · <a href="dfu/web.html?package=de4.2-b1-lcd-app-test">{{ language.startsWith('de') ? 'App679 im Web-DFU öffnen' : 'Open App679 in Web DFU' }}</a></p>
+        <p>{{ language.startsWith('de') ? 'App679 unterstützt den Gruppen-Upload kleiner Dateien ebenfalls. Das App-Update setzt Z21 und S112 7.3.0 voraus.' : 'App679 also supports grouped small-file uploads. The app update requires Z21 and S112 7.3.0.' }}</p>
+        <p><a :href="archiveLinks.transferBeta" download>{{ language.startsWith('de') ? 'App679 fürs Handy herunterladen (ZIP)' : 'Download App679 for your phone (ZIP)' }}</a> · <a :href="'dfu/web.html?package=de4.2-b1-lcd-app-test' + (connected ? lastDfuReference || '' : '')">{{ language.startsWith('de') ? 'App679 im Web-DFU öffnen' : 'Open App679 in Web DFU' }}</a></p>
       </div>
       <CurrentLcdDownloads :connected="connected" :version="firmwareVersion" :boot="bootInfo" :locale="language" />
       <p class="workspace-description">{{ $t('workflow.updateScope') }}</p>
@@ -608,9 +611,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a :href="archiveLinks.sourceTree" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.1' : '3.66.1 source code' }}{{ archiveLinks.labelSuffix }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.66.1 (ZIP)' : 'Windows 3.66.1 (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.1 (ZIP)' : '3.66.1 source code (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
+    <a :href="archiveLinks.sourceTree" target="_blank" rel="noopener noreferrer">{{ archiveLinks.localTest ? (language.startsWith('de') ? 'Öffentliche Quellbasis · Transfer Test 5' : 'Public source base · Transfer Test 5') : (language.startsWith('de') ? 'Quellcode 3.66.1' : '3.66.1 source code') + archiveLinks.labelSuffix }}</a>
+    <a v-if="archiveLinks.portable" :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.66.1 (ZIP)' : 'Windows 3.66.1 (ZIP)' }}{{ archiveLinks.labelSuffix }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ archiveLinks.localTest ? (language.startsWith('de') ? 'Öffentliche Quellbasis (ZIP)' : 'Public source base (ZIP)') : (language.startsWith('de') ? 'Quellcode 3.66.1 (ZIP)' : '3.66.1 source code (ZIP)') + archiveLinks.labelSuffix }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
@@ -1499,7 +1502,7 @@ export default {
       return {...this.transfer_adapters(generation),
         readFileDigest:(path,size) => current(() => proto.vfs_backup_digest(path,size,this.firmwareVersion)),
         readCreateRevision:() => current(() => proto.vfs_small_create_revision(this.firmwareVersion)),
-        canGroupCreate:() => this.firmwareVersion === '2.22.0-DE4.2-b1' && current(() => proto.vfs_probe_group_create(this.firmwareVersion)),
+        canGroupCreate:() => ['2.22.0-DE4.2-b1', '2.22.0-DE4.2-b2'].includes(this.firmwareVersion) && current(() => proto.vfs_probe_group_create(this.firmwareVersion)),
         readRawMetadata:path => current(async () => this.checked(await proto.vfs_read_raw_meta(path))),
         createGroup:(parent,entries,revision) => current(() => proto.vfs_group_create(parent,entries,revision)),
         createSmall:(path,bytes,sha,revision) => current(() => proto.vfs_small_create(path,bytes,sha,revision)),

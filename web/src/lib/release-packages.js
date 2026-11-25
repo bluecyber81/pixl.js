@@ -1,12 +1,13 @@
 import { lcdReleasePackage as package674 } from '../../public/dfu/lcd-app674-reference.mjs';
 import { lcdRelease as app675, lcdReleasePackage as package675 } from '../../public/dfu/lcd-app675-reference.mjs';
+import { lcdTest680Package } from '../../public/dfu/lcd-app680-reference.mjs';
 import { lcdTest679, lcdTest679Package } from '../../public/dfu/lcd-app679-reference.mjs';
 import { lcdReleasePackage } from '../../public/dfu/lcd-release-reference.mjs';
 import { normalizeBootDiagnostics } from './boot-diagnostics.js';
 import { compareLcdVersions } from './lcd-version.js';
 import { UPDATE_TARGET } from './update-target.js';
 import { deploymentPath } from './deployment-path.js';
-import { firmwareBoard } from './hardware-profile.js';
+import { firmwareBoard, LCD_Z21_COUNTERS } from './hardware-profile.js';
 
 // Carry only firmware counters and FWID across the transition into DFU.
 // The URL fragment isn't sent to the server and contains no device identity.
@@ -29,7 +30,9 @@ export function packagePresentation(entry, session = {}, boot = null) {
   const installed=active&&typeof session.firmwareVersion==='string'?session.firmwareVersion:null;
   const diagnostic=active?normalizeBootDiagnostics(boot):null;
   const relation=compareLcdVersions(installed, entry.version);
-  const newer=relation>0||(diagnostic?.settingsCrcValid&&diagnostic.applicationCounter>entry.counter);
+  const transferBuild = installed === '2.22.0-DE4.2-b1' || installed === '2.22.0-DE4.2-b2';
+  const newer=relation>0 || (entry.board==='LCD' && transferBuild && LCD_Z21_COUNTERS[installed]>entry.counter) ||
+    (diagnostic?.settingsCrcValid && diagnostic.applicationCounter>entry.counter);
   const supportedBootloaders = entry.bootloader?.split('/').map(name =>
     name === 'BL8' ? UPDATE_TARGET.bootloader : UPDATE_TARGET['bootloader' + name]);
   const matchesBootloader = profile => profile &&
@@ -52,7 +55,7 @@ export function packagePresentation(entry, session = {}, boot = null) {
   else if (samePackage(lcdTest679Package)) downloadUrl = 'https://github.com/bluecyber81/pixl.js/releases/download/' + lcdTest679.releaseTag + '/' + entry.file;
   else if (previous) downloadUrl = 'https://github.com/bluecyber81/pixl.js/raw/' + previous[1] + '/fw/releases/' + entry.file;
   return {newer:Boolean(newer),profileMismatch,installed,releaseNotesUrl:['de3.98-lcd-app', 'de3.99-lcd-app', 'de3.100-lcd-app', 'de3.101-lcd-app', 'de3.102-lcd-app', 'de4.1-lcd-app'].includes(entry.id) ? deploymentPath('guide/index.html') + '#lcd-' + entry.id.split('-')[0].replace('.', '') : entry.id === 'de3.86-lcd-test1-app'
-    ? deploymentPath('guide/LCD-' + entry.version.split('-')[1] + '.txt') : 'https://github.com/bluecyber81/pixl.js/releases/tag/' + releaseTag,
+    ? deploymentPath('guide/LCD-' + entry.version.split('-')[1] + '.txt') : samePackage(lcdTest680Package) ? deploymentPath('guide/LCD-DE4.2-b2.txt') : 'https://github.com/bluecyber81/pixl.js/releases/tag/' + releaseTag,
     downloadUrl,dfuUrl:deploymentPath('dfu/web.html') + '?' + new URLSearchParams({ package: entry.id }) + (session?.dfuReference || '')};
 }
 

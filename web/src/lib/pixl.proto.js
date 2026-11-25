@@ -665,7 +665,7 @@ export function vfs_small_create_revision(firmwareVersion) {
 // Version and connection capabilities gate the probe. The folder publisher also
 // verifies the mounted engine before granting access to private staging writes.
 export function vfs_probe_group_create(firmwareVersion) {
-    if (firmwareVersion !== '2.22.0-DE4.2-b1' || !transport_capabilities?.chunkedRequests ||
+    if (!['2.22.0-DE4.2-b1', '2.22.0-DE4.2-b2'].includes(firmwareVersion) || !transport_capabilities?.chunkedRequests ||
         transport_capabilities.gattValueCapacity - DF_HEADER_SIZE < 196) return Promise.resolve(false);
     const generation = transport_generation;
     if (group_create_probe?.generation === generation) return group_create_probe.promise;
@@ -694,8 +694,8 @@ export async function vfs_group_create(parent, entries, revision) {
     const limit = Math.min(transport_capabilities.maxRequestPayload, transport_capabilities.gattValueCapacity - DF_HEADER_SIZE, DF_MAX_DATA_SIZE);
     const frames = await groupCreateFrames(parent,entries,revision,id,limit);
     if (transport_generation !== generation) throw new Error('Bluetooth session changed');
-    // Entire multi-frame request owns the regular queue. Every frame uses an
-    // awaited write with ATT response. Only COMMIT has an application success reply.
+    // The queue owns the group until both the final write and its application receipt
+    // finish. BEGIN and DATA use individual ATT responses for backpressure.
     const reply = await op_queue_push(0x28, () => {}, b => {
         if (b.remaining() !== 14 || b.readUint8() !== 1 || b.readUint8() !== count || b.readUint32() !== id)
             throw new Error('Unrelated grouped create receipt.');
@@ -1460,6 +1460,9 @@ async function tx_data_frame(cmd, status, chunk, data) {
     // The queue still waits for both the browser write and the firmware reply.
     const useProtocolReply = chunked && payload.length <= capacity && (
         readQueriesWithReply.has(cmd) || (cmd === 0x05 && payload.length <= 1) ||
+        // COMMIT carries only the transaction ID and has a correlated durable receipt.
+        (cmd === 0x28 && payload.length === 5 && payload[0] === 2 &&
+            group_create_probe?.generation === generation && group_create_probe.available) ||
         ((cmd === 0x22 || cmd === 0x25) && payload.length === 0) ||
         cmd === 0x15 || (cmd === 0x23 && payload[0] <= 1) ||
         (cmd === 0x24 && vfs_small_read_capable()) ||

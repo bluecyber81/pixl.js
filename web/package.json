@@ -17,8 +17,8 @@
     "build:test1": "vite build --base=/pixl.js/test/app670/ --outDir=dist-test-app670",
     "test:dist:test1": "node scripts/test-production-build.mjs test-app670",
     "postbuild:test1": "node scripts/write-build-manifest.mjs test-app670 && node scripts/copy-license-notices.mjs test-app670 && npm run test:dist:test1",
-    "build:transfer-test5": "vite build --mode transfer-test5 --base=/pixl.js/test/transfer5/ --outDir=dist-test-transfer5",
-    "postbuild:transfer-test5": "node scripts/write-build-manifest.mjs test-transfer5 && node scripts/copy-license-notices.mjs test-transfer5 && node scripts/test-production-build.mjs test-transfer5",
+    "build:transfer-test6": "vite build --mode transfer-test6 --base=/pixl.js/test/transfer6/ --outDir=dist-test-transfer6",
+    "postbuild:transfer-test6": "node scripts/write-build-manifest.mjs test-transfer6 && node scripts/copy-license-notices.mjs test-transfer6 && node scripts/test-production-build.mjs test-transfer6",
     "test:launcher": "python -B tests/test_windows_launcher_r2.py",
     "test:release": "npm test && npm run test:launcher && npm run build && npm run build:pages",
     "package:portable": "python -B scripts/package-portable.py"

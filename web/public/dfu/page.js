@@ -1,6 +1,7 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { lcdTest676 } from './lcd-app676-reference.mjs';
 import { lcdTest677 } from './lcd-app677-reference.mjs';
+import { lcdTest680, lcdTest680Package } from './lcd-app680-reference.mjs';
 import { lcdTest679, lcdTest679Package } from './lcd-app679-reference.mjs';
 import { createScreenAwake } from './screen-awake.mjs';
 import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.66.1';
@@ -74,8 +75,8 @@ function targetDescription(target) {
         const {app, bl, sd} = ref;
         lines.push(choose(`Zuletzt im Dateimanager gelesen · App-Zähler ${app} · Bootloader-Zähler ${bl} · SoftDevice ${hexId(sd)}.`,
             `Last read in the file manager · application counter ${app} · bootloader counter ${bl} · SoftDevice ${hexId(sd)}.`));
-        if (target.counter === 679 && (bl !== 21 || sd !== 0x0126 || app > 679)) {
-            lines.push(choose('App679 erfordert ein LCD mit Z21, S112 7.3.0 und App-Zähler bis 679.', 'App679 requires an LCD with Z21, S112 7.3.0 and an application counter of 679 or lower.'));
+        if ([679, 680].includes(target.counter) && (bl !== 21 || sd !== 0x0126 || app > target.counter)) {
+            lines.push(choose(`App${target.counter} erfordert ein LCD mit Z21, S112 7.3.0 und App-Zähler bis ${target.counter}.`, `App${target.counter} requires an LCD with Z21, S112 7.3.0 and an application counter of ${target.counter} or lower.`));
         } else if (app > target.counter) lines.push(boardSelect.value === 'OLED'
             ? choose('Die ausgewählte OLED-Anwendung ist älter als der ausgelesene Stand. Wähle ein aktuelleres OLED-Paket.', 'The selected OLED application is older than the version read from the device. Choose a newer OLED package.')
             : choose('Die ausgewählte Anwendung ist älter als der ausgelesene Stand. Z15, Z17 und Z19 können sie bei gültiger Signatur installieren. Prüfe vor dem Übertragen, ob du zu dieser Version zurückkehren möchtest.', 'The selected application is older than the version read from the device. Z15, Z17 and Z19 can install it if the signature is valid. Check that you intend to return to this version before transferring.'));
@@ -94,13 +95,18 @@ function selectedProfileMismatch(entry) {
 }
 function showSource(board, selectedVersion) {
     const oled = board === 'OLED';
-    const preview = !oled && [lcdTest679, lcdTest677, lcdTest676, ...lcdPreviews].find(item => item.firmwareVersion === selectedVersion);
+    const preview = !oled && [lcdTest680, lcdTest679, lcdTest677, lcdTest676, ...lcdPreviews].find(item => item.firmwareVersion === selectedVersion);
     const previous = !oled && selectedVersion === '2.22.0-DE3.102';
     const revision = oled ? 'de3.87-oled-t6' : preview === lcdTest679 ? lcdTest679.releaseTag : preview ? preview.sourceCommit : previous ? 'release/lcd-de3102-app675' : 'release/lcd-de41-app678';
     const sourceLink = document.getElementById('profile-source');
     const name = oled ? 'OLED DE3.87 Test 6' : preview ? 'LCD ' + preview.firmwareVersion.replace('2.22.0-', '') + ' / App' + preview.applicationCounter : previous ? 'LCD DE3.102 / App675' : 'LCD DE4.1 / App678';
-    sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + revision);
-    setText(sourceLink, 'Quellcode ' + name, name + ' source code');
+    if (preview === lcdTest680) {
+        sourceLink.setAttribute('href', '../guide/LCD-DE4.2-b2.txt');
+        setText(sourceLink, 'Buildkennung und Prüfstand ' + name, name + ' build identity and test notes');
+    } else {
+        sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + revision);
+        setText(sourceLink, 'Quellcode ' + name, name + ' source code');
+    }
 }
 function controls() {
     const previewDownload = document.getElementById('lcd-preview-download');
@@ -111,8 +117,9 @@ function controls() {
     const boardConflict = boardHints.length > 1 || handoffBoard && handoffBoard !== boardSelect.value;
     const ref = recentBootReference();
     const target = latestState.target;
-    const app679Conflict = target?.counter === 679 && ref && (selectedProfileMismatch(lcdTest679Package) || ref.app > target.counter);
-    const targetConflict = app679Conflict || target && ref && (!target.softDevices.includes(ref.sd) ||
+    const transferCandidate = [lcdTest679Package, lcdTest680Package].find(entry => target?.counter === entry.counter);
+    const candidateConflict = transferCandidate && ref && (selectedProfileMismatch(transferCandidate) || ref.app > target.counter);
+    const targetConflict = candidateConflict || target && ref && (!target.softDevices.includes(ref.sd) ||
         boardSelect.value === 'OLED' && ref.app > target.counter);
     boardSelect.disabled = latestState.busy || latestState.loading || loading;
     fileInput.disabled = boardConflict || latestState.busy || latestState.loading || loading;
@@ -225,7 +232,7 @@ function transferEstimate(state, now) {
 }
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
-    validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}, [lcdRelease, lcdTest679, ...lcdPreviews]),
+    validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}, [lcdRelease, lcdTest679, lcdTest680, ...lcdPreviews]),
     createDfu: () => new SecureDfu(CRC32.buf, undefined, 0, { extendCrc32: CRC32.buf, probeInitPacket: true,
         windowedFirmwareWrites: boardSelect.value === 'LCD' }),
     onStatus: (de, en) => setText(statusText, de, en),

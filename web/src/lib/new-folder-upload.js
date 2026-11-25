@@ -268,6 +268,9 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
     const quick = Boolean(quickPacked && candidate)
     const initial = quick && !state && parentSample?.parent === parent && parentSample.revision === candidate
       ? parentSample.entries : await ownerListing()
+    const grouped = quick && typeof createGroup === 'function' && typeof canGroupCreate === 'function' &&
+      typeof readRawMetadata === 'function' && wanted.some(fitsSmallCreate) && await canGroupCreate()
+    let firstGroupChecksMkdir = false
     let freshLeaf = false
     // A lost MKDIR acknowledgement does not prove ownership of an entry. If
     // the candidate never appeared, a fresh reservation is safe.
@@ -322,9 +325,18 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       // A single generation increment across this exclusive MKDIR proves the
       // random folder is empty and the parent listing did not change otherwise.
       if (quick && !dirs.length) {
-        const after = await revision()
-        freshLeaf = consecutiveCommits(candidate, after)
-        if (freshLeaf) proof = after
+        const beforeMkdir = parseInt(candidate.slice(8), 16)
+        if (grouped && wanted.every(fitsSmallCreate) && beforeMkdir < 0xffffffff) {
+          // The first group's conditional create checks this expectation on the device.
+          // No other write or publication may rely on it before the matching receipt.
+          proof = candidate.slice(0, 8) + (beforeMkdir + 1).toString(16).padStart(8, '0')
+          firstGroupChecksMkdir = true
+          freshLeaf = true
+        } else {
+          const after = await revision()
+          freshLeaf = consecutiveCommits(candidate, after)
+          if (freshLeaf) proof = after
+        }
       }
       if (!freshLeaf) checkWorkingFolder(await ownerListing())
     }
@@ -361,8 +373,6 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       }
       ordinaryReceipts.length = 0
     }
-    const grouped = quick && typeof createGroup === 'function' && typeof canGroupCreate === 'function' &&
-      typeof readRawMetadata === 'function' && wanted.some(fitsSmallCreate) && await canGroupCreate()
     check()
     for (let index = 0; index < writeOrder.length; ++index) {
       const entry = writeOrder[index]
@@ -384,18 +394,39 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
             members.push(next); ++index
           }
           state.groupReceipts = true
-          state.inFlightGroup = members.map(member => member.targetPath)
+          const pendingPaths = members.map(member => member.targetPath)
+          const entries = members.map(member => ({
+            name: splitDevicePath(member.targetPath).name,
+            bytes: payloads.get(member.targetPath)
+          }))
+          async function storeGroup(expectedRevision) {
+            state.inFlightGroup = pendingPaths
+            try {
+              return await createGroup(parts.parent, entries, expectedRevision)
+            } catch (error) {
+              // Only an explicit rejection proves that none of the names were created.
+              // Keep the checkpoint when the COMMIT reply may have been lost.
+              if (error.cmd === 0x28 && error.status === 1) delete state.inFlightGroup
+              throw error
+            }
+          }
           let after
           try {
-            after = await createGroup(parts.parent, members.map(member => ({name:splitDevicePath(member.targetPath).name,
-              bytes:payloads.get(member.targetPath)})), proof)
+            after = await storeGroup(proof)
           } catch (error) {
-            // An explicit device rejection means none was created. Leave an
-            // uncertain group in the checkpoint if the reply could have been lost.
-            if (error.cmd === 0x28 && error.status === 1) delete state.inFlightGroup
-            throw error
+            if (!firstGroupChecksMkdir || error.cmd !== 0x28 || error.status !== 1) throw error
+            const checked = await audit(state.stagePath, true)
+            if (checked.revision.slice(0, 8) !== candidate.slice(0, 8)) stale()
+            if (checked.revision === proof) throw error
+            // An unrelated mutation may have advanced this mount. Retry once only
+            // after checking both the still-empty stage and its writable parent.
+            freshLeaf = false // The parent listing from before the external mutation is stale.
+            coveredPaths = checked.found
+            proof = checked.revision
+            after = await storeGroup(proof)
           }
           if (!validRevision(after) || !consecutiveCommits(proof,after)) stale()
+          firstGroupChecksMkdir = false
           proof = after
           for (const member of members) {
             completed.add(member.targetPath); job.completed.push(member.targetPath)

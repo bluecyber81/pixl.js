@@ -13,7 +13,7 @@ function harness(supported=true,extra={}){
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/language-preference.js'),'utf8'),context);
     context.lcdTest676 = require('../public/dfu/lcd-app676-reference.mjs').lcdTest676;
     context.lcdTest677 = require('../public/dfu/lcd-app677-reference.mjs').lcdTest677;
-    Object.assign(context, require('../public/dfu/lcd-app679-reference.mjs'));
+    Object.assign(context, require('../public/dfu/lcd-app679-reference.mjs'), require('../public/dfu/lcd-app680-reference.mjs'));
     context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
     context.lcdRelease = require('../public/dfu/lcd-release-reference.mjs').lcdRelease;
     context.lcdReleasePackage = require('../public/dfu/lcd-release-reference.mjs').lcdReleasePackage;
@@ -31,12 +31,12 @@ test('page binds one click to device selection and one file event to package loa
     assert.deepEqual(h.calls,[['package',null],['package','selected'],['select']]);
 });
 
-test('Transfer Test 5 keeps App678 as default and binds the optional App679 package and Android handoff', async () => {
+test('Transfer Test 6 keeps App678 as default and binds the optional App679 package and Android handoff', async () => {
     const {lcdTest679, lcdTest679Package} = require('../public/dfu/lcd-app679-reference.mjs');
     const catalog = require('../src/data/firmware-releases.json');
     const checked = Bundled.validateCatalog(catalog);
     assert.deepEqual(checked.packages.find(item => item.counter === 679), lcdTest679Package);
-    const pages = 'https://bluecyber81.github.io/pixl.js/test/transfer5/dfu/web.html';
+    const pages = 'https://bluecyber81.github.io/pixl.js/test/transfer6/dfu/web.html';
     assert.equal(harness(true,{location:new URL(pages)}).nodes.get('bundled').value,'de4.1-lcd-app');
     const ctx = (app, bl, sd, board='LCD') => harness(true, {
         location:new URL(pages + '?package=' + lcdTest679Package.id + '#board=' + board +
@@ -615,4 +615,36 @@ test('public App676 deep link, manual ZIP and changes back to App678 show the re
         target:{counter:676,hardware:52,softDevices:[0x0126]}});
     assert.match(h.nodes.get('package-target').textContent, /LCD-Testversion.*DE3\.103/);
     assert.equal(source.href, 'https://github.com/bluecyber81/pixl.js/tree/' + current.sourceCommit);
+});
+
+test('local LCD App680 binds the original signed ZIP, keeps App679 and requires Z21/S112', async () => {
+    const {lcdTest680, lcdTest680Package:entry} = require('../public/dfu/lcd-app680-reference.mjs');
+    const catalog = require('../src/data/firmware-releases.json');
+    assert.deepEqual(Bundled.validateCatalog(catalog).packages.slice(0,3).map(item=>item.counter),[678,680,679]);
+    const bytes = fs.readFileSync(path.join(__dirname,'../public/firmware',entry.file));
+    const candidate = await new (require('../public/dfu/package.js'))(bytes).load();
+    assert.equal(candidate.archiveSha256,lcdTest680.otaSha256);
+    assert.equal(candidate.archiveBytes,entry.bytes);
+    assert.equal(crypto.createHash('sha256').update(new Uint8Array(candidate.image.imageData)).digest('hex'),lcdTest680.applicationBinSha256);
+    const url = 'http://127.0.0.1/pixl.js/test/transfer6/dfu/web.html';
+    assert.equal(harness(true,{location:new URL(url)}).nodes.get('bundled').value,'de4.1-lcd-app');
+    const page = (app=679, bl=21, sd=294, board='LCD') => harness(true, {location:new URL(url+'?package='+entry.id+'#'+
+        new URLSearchParams({app,bl,sd,board,read:Date.now()}))});
+    const good = page();
+    assert.equal(good.nodes.get('bundled').value,entry.id);
+    assert.equal(good.nodes.get('load-bundled').disabled,false);
+    assert.equal(good.options.validatePackage(candidate).counter,680);
+    assert.equal(good.nodes.get('profile-source').href,'../guide/LCD-DE4.2-b2.txt');
+    assert.equal(require('../public/dfu/nrf-dfu-link.mjs').nrfDfuLink(entry),null);
+    for (const args of [[681,21,294],[679,20,294],[679,21,259]]) {
+        const h=page(...args);
+        assert.equal(h.nodes.get('load-bundled').disabled,true);
+        h.options.onState({busy:false,loading:false,ready:true,target:candidate.image.target});
+        assert.equal(h.nodes.get('button').disabled,true);
+    }
+    assert.throws(()=>page(679,21,294,'OLED').options.validatePackage(candidate));
+    assert.throws(()=>good.options.validatePackage({...candidate,archiveSha256:'0'.repeat(64)}),/App680/);
+    assert.throws(()=>good.options.validatePackage({...candidate,image:{target:{...candidate.image.target,softDevices:[294,259]}}}),/App680/);
+    for (const delta of [{counter:679},{sha256:'f'.repeat(64)},{bytes:entry.bytes+1},{applicationOnly:false},{storage:'SPIFFS'}])
+        assert.throws(()=>Bundled.validateCatalog({schema:1,packages:[{...entry,...delta}]}));
 });
