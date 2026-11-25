@@ -28,7 +28,9 @@ typedef enum {
     DF_PROTO_CMD_VFS_SMALL_CREATE = 0x23,
     DF_PROTO_CMD_VFS_SMALL_READ = 0x24,
     DF_PROTO_CMD_VFS_BATCH_CAP = 0x25,
-    DF_PROTO_CMD_VFS_BATCH_READ = 0x26
+    DF_PROTO_CMD_VFS_BATCH_READ = 0x26,
+    DF_PROTO_CMD_VFS_GROUP_CAP = 0x27,
+    DF_PROTO_CMD_VFS_GROUP_CREATE = 0x28
 } df_proto_cmd_vfs_t;
 
 #define DF_VFS_BATCH_MAX_FILES 4u
@@ -36,6 +38,9 @@ typedef enum {
 extern const df_cmd_entry_t df_proto_handler_vfs_entries[];
 void df_proto_vfs_cleanup(void);
 void df_proto_vfs_cancel_restart(void);
+#ifdef PIXL_GROUP_CREATE_ENABLE
+void df_proto_vfs_cancel_group(void);
+#endif
 #if defined(PIXL_SMALL_CREATE_ENABLE) && defined(VFS_PACKED_LFS_ENABLE)
 void df_proto_vfs_cancel_small_read(void);
 #endif

@@ -2,9 +2,9 @@
 
 Check the display model, current storage format and SoftDevice before choosing a package. Back up the device's files first.
 
-## Current LCD firmware DE4.1 / App678
+## Current LCD firmware DE4.2 / App680
 
-For an ST7567 LCD with existing PFS1, Z21 and S112 7.3.0 (FWID 0x0126), select the intact signed application ZIP in nRF Device Firmware Update on your phone. After restarting, **Device & diagnostics** should report DE4.1, application counter 678, Z21 and S112 7.3.0. [Phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Web updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.1-lcd-app#board=LCD) · [Qualification](validation/DE4_1.json)
+For an ST7567 LCD with existing PFS1, Z21 and S112 7.3.0 (FWID 0x0126), select the intact signed application ZIP in nRF Device Firmware Update on your phone. The owner confirmed this build on an LCD. After restarting, **Device & diagnostics** should show **2.22.0-DE4.2-b2 / App680**, Z21 and S112 7.3.0. If the device already shows that version and application counter, it already runs the exact signed release. [Phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Web updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.2-lcd-app#board=LCD) · [Qualification](validation/DE4_2.json)
 
 Read the illustrated file manager's step-by-step guide for the required apps, backup, device update and storage migration. [English](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](https://bluecyber81.github.io/pixl.js/guide/index.html)
 
@@ -20,8 +20,8 @@ Use the signed application on a compatible three-button nRF52832 OLED with SH110
 
 | Starting device | Package and procedure |
 | --- | --- |
-| Compatible nRF52832 LCD with mounted PFS1, Z21 and S112 7.3.0 (FWID 0x0126) | Back up E: and select the [signed DE4.1 / App678 ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) in the web updater or nRF Device Firmware Update. |
-| Compatible 512 KiB flash / 64 KiB RAM nRF52832 LCD with bootloader at 0x77000, MBR parameters at 0x7E000, DFU settings at 0x7F000, verified existing PFS1, application counter at most 662, bootloader counter below 21, S112 FWID 0x0103 or 0x0126 and a working Secure DFU bootloader that trusts the project key | Use nRF Device Firmware Update on Android. Complete both stages in order, S112 7.3.0 plus Z21, then App662. After both stages, verify App662, Z21 and FWID 0x0126. Apply the separate DE4.1 application to complete the upgrade. [Full Android package](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip) · [Z21 region hash](../bootloader-z21/SOURCE_BINDING.json) |
+| Compatible nRF52832 LCD with mounted PFS1, Z21 and S112 7.3.0 (FWID 0x0126) | Back up E: and select the [signed DE4.2 / App680 ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) in the web updater or nRF Device Firmware Update. |
+| Compatible 512 KiB flash / 64 KiB RAM nRF52832 LCD with bootloader at 0x77000, MBR parameters at 0x7E000, DFU settings at 0x7F000, verified existing PFS1, application counter at most 662, bootloader counter below 21, S112 FWID 0x0103 or 0x0126 and a working Secure DFU bootloader that trusts the project key | Use nRF Device Firmware Update on Android. Complete both stages in order, S112 7.3.0 plus Z21, then App662. After both stages, verify App662, Z21 and FWID 0x0126. Apply the separate DE4.2 / App680 application to complete the upgrade. [Full Android package](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip) · [Z21 region hash](../bootloader-z21/SOURCE_BINDING.json) |
 | Confirmed SPIFFS, compatible LCD/key, S112 FWID 0x0103 or 0x0126 and an installed application counter below 600 (or PREP600 already running) | [DE3.30-PREP / 600](https://github.com/bluecyber81/pixl.js/releases/download/de3.72/Allmiibo_LCD_SPIFFS_DE3_30_PREP_600.zip) exposes all 128 metadata bytes. First back up the readable collection outside the device. Follow the [migration procedure](MIGRATION_PFS1.md) before installing either target package. |
 
 Check the starting LCD firmware and bootloader before using a package from this table. An unknown signing key or a newer application counter requires a separate compatibility check. An open PFS1 import resumes with its original ZIP and browser receipt.
@@ -32,7 +32,8 @@ Keep a current backup. Choose the application for the release you intend to run.
 
 | LCD application | Release and intended use |
 | --- | --- |
-| **DE4.1 / 678** | Current ST7567 LCD release with PFS1, Z21 and S112 7.3.0. [Signed phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Qualification](validation/DE4_1.json) |
+| **DE4.2 / 680** | Current ST7567 LCD release. The device reports DE4.2-b2. [Signed phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Qualification](validation/DE4_2.json) |
+| **DE4.1 / 678** | Previous regular LCD release for PFS1, Z21 and S112 7.3.0. [Archived phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Qualification](validation/DE4_1.json) |
 | **DE3.89 / 662** | Archived ST7567 LCD release with PFS1, Z21 and S112 7.3.0. [Application](https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_DE3_89_662_NUR_APP.zip) · [Device readback](validation/DE3_89_LCD_READBACK.json) |
 | **DE3.87 / 660** | [LCD prerelease](https://github.com/bluecyber81/pixl.js/releases/download/de3.87-lcd-test1/Allmiibo_LCD_DE3_87_660_NUR_APP.zip). App-only update for ST7567, PFS1, Z21 and S112 7.3.0. Physical acceptance is pending. |
 | **DE3.81 / 654** | [Archived App654](https://github.com/bluecyber81/pixl.js/releases/download/de3.81/Allmiibo_LCD_DE3_81_654_NUR_APP.zip) · [Observed App654, Z21 and S112 7.3.0](validation/DE3_81_LCD_READBACK.json). |

@@ -9,9 +9,9 @@ host-test contribution; say clearly which checks were performed on a real device
 
 | Area | Source and entry point |
 | --- | --- |
-| LCD application | [DE4.1 / App678 release sources](fw/application/src/) and [unsigned release builder](tools/build_lcd.py). The [DE3.75 tag](https://github.com/bluecyber81/pixl.js/tree/de3.75/fw/application/src) preserves the archived App648 sources. |
+| LCD application | [DE4.2 / App680 release sources](fw/application/src/) and [unsigned release builder](tools/build_lcd.py). The [DE3.75 tag](https://github.com/bluecyber81/pixl.js/tree/de3.75/fw/application/src) preserves the archived App648 sources. |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | [Web sources and build instructions](web/README.md). [Web 3.66.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.1) provides portable and source packages. |
+| Browser file manager | [Web sources and build instructions](web/README.md). [Web 3.66.3](https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.3) provides portable and source packages. |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Current Z21 bootloader | [Build and test instructions](bootloader-z21/README.md) and [Z21 and App654 production evidence](docs/validation/DE3_81.json). |
@@ -47,7 +47,7 @@ the finished bundles. The development server binds to `127.0.0.1:8010`. Normal
 tests use synthetic fixtures, mocked Bluetooth and local WASM, not a device.
 Windows-specific launcher tests are skipped on other operating systems.
 
-Publish the portable ZIP with the web version tag and the signed LCD application ZIP with its firmware tag. The current homepage offers DE4.1/App678 as the regular LCD download. Preserve the historic App677 test package. Publish the contents of the Pages build at the root of the gh-pages branch, preserving previous test sites and downloads. Fetch and verify the public phone ZIP both from Pages and from the GitHub Release.
+Publish the portable ZIP with the web version tag and the signed LCD application ZIP with its firmware tag. The current homepage offers DE4.2/App680 as the regular LCD download. The same signed bytes are also available under the historical DE4.2-b2 test tag. Publish the contents of the Pages build at the root of the gh-pages branch, preserving previous test sites and downloads. Fetch and verify the public phone ZIP both from Pages and from the GitHub Release.
 Do not publish a source checkout, `node_modules/`, server state or private files.
 The CI below tests builds; it does not deploy Pages or create releases.
 
@@ -62,7 +62,7 @@ python3 tools/check_release_ota.py --build-dir build/lcd-release
 python3 tools/verify_lcd_combo.py --profile de3.89
 ```
 
-Compare the application BIN and HEX digests with the published build evidence and the contents of the signed phone ZIP. For intentional firmware changes, use development mode with a distinct version and explicit counter. [App678 build evidence](docs/validation/DE4_1.json) · [Stable App675 device readback](docs/validation/DE3_102_LCD_READBACK.json) · [Z21 build instructions](bootloader-z21/README.md)
+Compare the application BIN and HEX digests with the published build evidence and the contents of the signed phone ZIP. For intentional firmware changes, use development mode with a distinct version and explicit counter. [App680 release evidence](docs/validation/DE4_2.json) · [Stable App675 device readback](docs/validation/DE3_102_LCD_READBACK.json) · [Z21 build instructions](bootloader-z21/README.md)
 
 For two quick storage checks from the portable CI subset, install Python
 **3.10+** and GCC on the host and run from the repository root:
@@ -80,7 +80,7 @@ compared with the previous predicate under simulated NOR and interrupted writes.
 The old variant is made only in a temporary directory.
 
 The Linux/WSL helper `tools/run_firmware_tests.py` discovers and runs the full
-firmware test matrix (198 suites for DE4.1) from the hash-pinned SDK archive and sets both SDK
+firmware test matrix (199 suites for DE4.2) from the hash-pinned SDK archive and sets both SDK
 path variables for its disposable test copy. Linked Cortex-M4 checks are
 separate runs described in the build guide. Each individual runner documents
 its dependencies. Publish hardware observations,

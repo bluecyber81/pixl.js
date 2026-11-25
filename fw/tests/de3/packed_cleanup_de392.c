@@ -4,10 +4,14 @@ static int watched_rename(lfs_t *, const char *, const char *);
 static int watched_remove(lfs_t *, const char *);
 static int watched_dir_open(lfs_t *, lfs_dir_t *, const char *);
 static int watched_sync(lfs_t *, lfs_file_t *);
+static int watched_open(lfs_t *, lfs_file_t *, const char *, int, const struct lfs_file_config *);
+static int watched_close(lfs_t *, lfs_file_t *);
 #define lfs_rename watched_rename
 #define lfs_remove watched_remove
 #define lfs_dir_open watched_dir_open
 #define lfs_file_sync watched_sync
+#define lfs_file_opencfg watched_open
+#define lfs_file_close watched_close
 #define main original_contract_main
 #include CONTRACT
 #undef main
@@ -15,6 +19,8 @@ static int watched_sync(lfs_t *, lfs_file_t *);
 #undef lfs_remove
 #undef lfs_dir_open
 #undef lfs_file_sync
+#undef lfs_file_opencfg
+#undef lfs_file_close
 
 static unsigned root_scans, published, cleanup_removes, successful_cleanup_faults;
 static unsigned lifecycle_cases, crash_cases, cleanup_crashes, readonly_cases;
@@ -22,13 +28,28 @@ static unsigned publish_event, publish_read, injected_cleanup, injected_sync;
 static int cleanup_error;
 static uint8_t other_meta[PFS_META_SIZE], snapshot_disk[NOR_BYTES];
 
+/* Observe the durable namespace change on both littlefs publication paths:
+ * an ordinary manifest COW sync or an initial/staged rename. */
+static lfs_file_t *direct_manifest;
+static void note_publication(void) {
+    ++published;
+    publish_event = media.stats.event_count;
+    publish_read = read_calls;
+}
+static int watched_open(lfs_t *lfs, lfs_file_t *file, const char *path, int flags,
+                        const struct lfs_file_config *cfg) {
+    int r = lfs_file_opencfg(lfs, file, path, flags, cfg);
+    if (!r && (flags & LFS_O_TRUNC) && !strcmp(path, MANIFEST))
+        direct_manifest = file;
+    return r;
+}
+static int watched_close(lfs_t *lfs, lfs_file_t *file) {
+    if (direct_manifest == file) direct_manifest = NULL;
+    return lfs_file_close(lfs, file);
+}
 static int watched_rename(lfs_t *lfs, const char *from, const char *to) {
     int r = lfs_rename(lfs, from, to);
-    if (!r && !strcmp(to, MANIFEST)) {
-        ++published;
-        publish_event = media.stats.event_count;
-        publish_read = read_calls;
-    }
+    if (!r && !strcmp(to, MANIFEST)) note_publication();
     return r;
 }
 static int watched_remove(lfs_t *lfs, const char *path) {
@@ -47,9 +68,12 @@ static int watched_dir_open(lfs_t *lfs, lfs_dir_t *dir, const char *path) {
 static int watched_sync(lfs_t *lfs, lfs_file_t *file) {
     if (injected_sync && !--injected_sync)
         return LFS_ERR_NOSPC;
-    return lfs_file_sync(lfs, file);
+    int r = lfs_file_sync(lfs, file);
+    if (!r && file == direct_manifest) note_publication();
+    return r;
 }
 static void watch_reset(void) {
+    direct_manifest = NULL;
     root_scans = published = cleanup_removes = publish_event = publish_read = 0;
     injected_cleanup = injected_sync = 0;
     cleanup_error = 0;

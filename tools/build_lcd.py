@@ -54,7 +54,7 @@ def build_identity(root, mode, version, counter):
         if version is not None or counter is not None:
             raise ValueError("Preview identity comes from RELEASE_INFO.json.")
         version, counter = preview["version"], preview["counter"]
-        if (not isinstance(version, str) or not re.fullmatch(r"2\.22\.0-DE[0-9]+\.[0-9]+", version)
+        if (not isinstance(version, str) or not re.fullmatch(r"2\.22\.0-DE[0-9]+\.[0-9]+(?:-b[1-9][0-9]*)?", version)
                 or type(counter) is not int or not RELEASE_COUNTER < counter <= 0xffffffff
                 or values.get("VERSION") != json.dumps(version)):
             raise ValueError("Preview metadata must match the newer checked-in firmware header.")
@@ -65,7 +65,7 @@ def build_identity(root, mode, version, counter):
         if release.get("firmware_channel") == "normal":
             version, counter = release.get("version"), release.get("counter")
             if (release.get("board") != "LCD" or not isinstance(version, str)
-                    or not re.fullmatch(r"2\.22\.0-DE[0-9]+\.[0-9]+", version)
+                    or not re.fullmatch(r"2\.22\.0-DE[0-9]+\.[0-9]+(?:-b[1-9][0-9]*)?", version)
                     or type(counter) is not int or not RELEASE_COUNTER < counter <= 0xffffffff
                     or values.get("VERSION") != json.dumps(version)
                     or release.get("version_header_sha256") != sha256(header)):

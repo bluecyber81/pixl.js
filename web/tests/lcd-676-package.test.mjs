@@ -22,8 +22,8 @@ for (const ref of [lcdTest676, lcdTest677]) {
 
 
   test('signed App' + counter + ' is identified on manual and bundled LCD DFU', async () => {
-    assert.equal(UPDATE_TARGET.application.counter, 678);
-    assert.equal(catalog.packages[0].counter, 678);
+    assert.equal(UPDATE_TARGET.application.counter, 680);
+    assert.equal(catalog.packages[0].counter, 680);
     assert.equal(entry.channel, 'prerelease');
     assert.equal(entry.version, ref.firmwareVersion);
     const blob = file('../public/firmware/' + entry.file);

@@ -30,3 +30,12 @@ export const lcdTest680Package = Object.freeze({
   "migrationRequired": false,
   "channel": "prerelease"
 });
+
+// DE4.2 promotes the byte-identical signed b2 application. The device reports its compiled version.
+export const lcdFinal680 = Object.freeze({...lcdTest680,
+  releaseTag:'de4.2', firmwareChannel:'normal', artifactStatus:'stable-signed-application'
+});
+const {channel: previousChannel, ...packageFields} = lcdTest680Package;
+export const lcdFinal680Package = Object.freeze({...packageFields,
+  id:'de4.2-lcd-app', file:'Allmiibo_LCD_DE4_2_App680_NUR_APP.zip'
+});

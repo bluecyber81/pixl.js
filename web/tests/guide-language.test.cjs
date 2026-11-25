@@ -64,16 +64,20 @@ test('both guide languages link to a dedicated OLED chapter with the published p
 
 test('both guides offer the current LCD app, full package and aligned storage target', () => {
     const release = 'https://github.com/bluecyber81/pixl.js/releases/download/de3.89/';
-    const app = 'https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip';
+    const app = 'https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip';
     const combo = release + 'Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip';
     for (const file of ['index.html', 'en.html']) {
         const html = fs.readFileSync(path.join(__dirname, '../public/guide', file), 'utf8');
         const section = id => html.split('<section id="' + id + '">')[1].split('</section>')[0];
         assert.ok(section('flash').includes(app));
+        assert.ok(section('flash').includes('2.22.0-DE4.2-b2'));
+        assert.ok(section('flash').includes('package=de4.1-lcd-app#board=LCD'));
         assert.match(section('flash'), /Z21/);
         assert.ok(section('bootloader').includes(combo));
         assert.match(section('bootloader'), /(?:unter|below) 21/);
         assert.match(section('littlefs'), /DE4\.1 \/ 678/);
+        assert.ok(section('littlefs').includes('package=de4.1-lcd-app#board=LCD'));
+        assert.doesNotMatch(section('littlefs'), /<b>DE4\.2 \/ 680<\/b>/);
         const lcdDownloads = [...section('programme').matchAll(/href="([^"]*Allmiibo_LCD_[^"]*\.zip)"/g)].map(match => match[1]);
         assert.deepEqual(lcdDownloads, [app, combo]);
     }

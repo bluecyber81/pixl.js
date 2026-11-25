@@ -1,5 +1,13 @@
 # Veröffentlichungen für Allmiibo LCD und Pixl.js OLED
 
+## LCD DE4.2 / App680 · Final · 25. November 2026
+
+Der Besitzer hat App680 auf seinem LCD getestet und als final bestätigt. Das Paket enthält dieselbe signierte App wie DE4.2-b2. Unter **Gerät & Diagnose** erscheint daher **2.22.0-DE4.2-b2**, App-Zähler **680**. Wer diesen Stand bereits nutzt, braucht kein weiteres Update. Die App ist für ST7567-LCD mit PFS1, Z21 und S112 7.3.0 vorgesehen. PFS1 grenzt die Dateisuche nach dem übergeordneten Ordner ein. Eine vorhandene Manifestdatei wird in einer LittleFS-Transaktion aktualisiert. Bei Platzmangel prüft die Firmware vor einem neuen Versuch, welche Fassung bereits gespeichert wurde. [Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_Pruefpaket.zip)
+
+## Dateimanager 3.66.3 · 25. November 2026
+
+Die normale Homepage und die Windows-Ausgabe bieten DE4.2 / App680 als reguläres LCD-Update an. Die getrennte OLED-Auswahl führt zu DE3.87 Test 6 / App86. Auf unterstützten LCDs liest der Dateimanager kleine Dateien gruppenweise. Die Auswahl **Schnellübersicht** im Figurenkatalog liest nur die Verzeichnisse, **Dateiinhalte prüfen** liest die passenden BIN-Dateien. [Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.3/Allmiibo_Dateimanager_3_66_3_Portable.zip) · [Web-Release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.3)
+
 ## Dateimanager 3.66.2 · 25. November 2026
 
 Die normale Homepage und die Windows-Ausgabe bündeln kleine Dateien beim Lesen auf unterstützten LCDs. Beim Hochladen können neue Unterordner in bestehende Verzeichnisse eingefügt und unterbrochene Aufträge fortgesetzt werden. Das LCD-Web-DFU verwendet ausgehandelte Schreibgrößen und prüft die Bestätigungen des Bootloaders. DE4.1/App678 bleibt vorausgewählt. Die getrennte OLED-Auswahl behält ihre Übertragungseinstellungen. [Bedienung und Änderungen](web/LIESMICH_3_66_2.txt) · [optionale LCD-Beta App680](https://github.com/bluecyber81/pixl.js/releases/tag/de4.2-b2-lcd-transfer-test)

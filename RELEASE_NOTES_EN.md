@@ -1,5 +1,13 @@
 # Allmiibo LCD and Pixl.js OLED release notes
 
+## LCD DE4.2 / App680 · Final · 25 November 2026
+
+The owner tested App680 on their LCD and confirmed it as final. This release contains the same signed application as DE4.2-b2. **Device & diagnostics** therefore reports **2.22.0-DE4.2-b2**, application counter **680**. Devices already running this build need no further update. The application targets the ST7567 LCD with PFS1, Z21 and S112 7.3.0. PFS1 narrows file lookups by parent directory and updates an existing manifest in one LittleFS commit. If storage runs out, the firmware checks which generation was saved before retrying. [Phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Verification kit](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_Pruefpaket.zip)
+
+## File manager 3.66.3 · 25 November 2026
+
+The main site and Windows download now offer DE4.2 / App680 as the regular LCD update. The separate OLED selection offers DE3.87 Test 6 / App86. On supported LCDs, the file manager reads small files in groups. In the figure catalogue, **Quick overview** lists directories and **Check file contents** reads the supported BIN files. [File manager](https://bluecyber81.github.io/pixl.js/) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.3/Allmiibo_Dateimanager_3_66_3_Portable.zip) · [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.3)
+
 ## File manager 3.66.2 · 25 November 2026
 
 The main site and Windows download can now read small files in groups on supported LCDs. Folder uploads can publish new subfolders into existing directories and resume after interruption. LCD Web DFU negotiates write sizes and checks bootloader acknowledgments. DE4.1/App678 remains the default. The separate OLED profile retains its existing transfer settings. [Instructions and changes](web/LIESMICH_3_66_2.txt) · [optional App680 LCD beta](https://github.com/bluecyber81/pixl.js/releases/tag/de4.2-b2-lcd-transfer-test)

@@ -1,5 +1,13 @@
 # Allmiibo LCD application and file manager history
 
+## LCD DE4.2 / App680 · Final · 25 November 2026
+
+The owner tested App680 on their LCD and confirmed it as final. This release contains the same signed application as DE4.2-b2. **Device & diagnostics** therefore reports **2.22.0-DE4.2-b2**, application counter **680**. Devices already running this build need no further update. The application targets the ST7567 LCD with PFS1, Z21 and S112 7.3.0. PFS1 narrows file lookups by parent directory and updates an existing manifest in one LittleFS commit. If storage runs out, the firmware checks which generation was saved before retrying. [Phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Verification kit](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_Pruefpaket.zip)
+
+## File manager 3.66.3 · 25 November 2026
+
+The main site and Windows download now offer DE4.2 / App680 as the regular LCD update. The separate OLED selection offers DE3.87 Test 6 / App86. On supported LCDs, the file manager reads small files in groups. In the figure catalogue, **Quick overview** lists directories and **Check file contents** reads the supported BIN files. [File manager](https://bluecyber81.github.io/pixl.js/) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.3/Allmiibo_Dateimanager_3_66_3_Portable.zip) · [Web release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.3)
+
 ## LCD DE4.1 / App678 · Final · 25 November 2026
 
 The regular LCD release includes App677’s confirmed wake-profile removal and retryable settings saves. Image reception, the animation player and phone scrolling text are available. File manager 3.66.1 recognizes the new firmware series in diagnostics and file operations. The signed phone ZIP updates the application on an LCD with PFS1, Z21 and S112 7.3.0. The 24 November owner report applies to the previous App677. [Phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Release notes](docs/DE4_1_RELEASE.md) · [Verification kit](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_App678_Pruefpaket.zip)

@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import DfuPackage from '../public/dfu/package.js';
 import Bundled from '../public/dfu/bundled-packages.js';
 import { nrfDfuLink } from '../public/dfu/nrf-dfu-link.mjs';
+import { lcdFinal680, lcdFinal680Package, lcdTest680Package } from '../public/dfu/lcd-app680-reference.mjs';
 import { lcdRelease, lcdReleasePackage } from '../public/dfu/lcd-release-reference.mjs';
 import { packagePresentation } from '../src/lib/release-packages.js';
 import { diagnosticBuildIdentity } from '../src/lib/firmware-build-reference.js';
@@ -14,9 +15,9 @@ import { displayBuildReference, firmwareBoard, hasOledSystemDiagnostics, support
 const read = path => readFileSync(new URL(path, import.meta.url));
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const catalogue = Bundled.validateCatalog(JSON.parse(read('../src/data/firmware-releases.json')));
-const entry = catalogue.packages[0];
+const entry = catalogue.packages.find(item => item.id === lcdReleasePackage.id);
 
-test('DE4.1 normal package binds its phone, local, parser and device reference to the real signed App678', async () => {
+test('Historical DE4.1 package binds its phone, local, parser and device reference to the real signed App678', async () => {
   assert.deepEqual(entry, lcdReleasePackage);
   assert.equal(entry.id, 'de4.1-lcd-app');
   const unknownOled = '2.22.0-DE4.1-OLEDt1';
@@ -69,4 +70,28 @@ test('DE4.1 capacity approval uses the linked ARM evidence for App678 and its ha
   assert.equal(identity.firmwareReportedSourceRelation, 'matches-package');
   assert.equal(identity.applicationHashVerified, false);
   assert.equal(displayBuildReference(entry.version).controllerDriver, 'ST7567');
+});
+
+test('final App680 keeps the original signed b2 bytes and a single normal diagnostic identity', async () => {
+  const current = catalogue.packages[0];
+  assert.deepEqual(current, lcdFinal680Package);
+  assert.equal(catalogue.packages.filter(item => item.sha256 === current.sha256).length, 1);
+  const archive = read('../public/firmware/' + current.file);
+  assert.deepEqual(archive, read('../public/firmware/' + lcdTest680Package.file));
+  assert.deepEqual(archive, read('../../fw/releases/' + current.file));
+  assert.equal(hash(archive), lcdFinal680.otaSha256);
+  const app = await new DfuPackage(archive).load();
+  assert.equal(hash(Buffer.from(app.image.imageData)), lcdFinal680.applicationBinSha256);
+  const identity = diagnosticBuildIdentity({firmwareVersion:'2.22.0-DE4.2-b2',
+    boot:{settingsCrcValid:true,applicationCounter:680},
+    build:{schemaVersion:1,board:'LCD',sourceId:lcdFinal680.sourceId,previousFault:null}});
+  assert.equal(identity.packageReference, lcdFinal680);
+  assert.equal(identity.firmwareReportedSourceRelation, 'matches-package');
+  assert.equal(identity.packageReference.releaseTag, 'de4.2');
+  assert.equal(identity.applicationHashVerified, false);
+  for (const [entry, tag] of [[current, 'de4.2'], [lcdTest680Package, 'de4.2-b2-lcd-transfer-test']]) {
+    assert.equal(new URL(nrfDfuLink(entry)).searchParams.get('file'),
+      'https://github.com/bluecyber81/pixl.js/releases/download/' + tag + '/' + entry.file);
+  }
+  assert.equal(nrfDfuLink({...current, channel:'prerelease'}), null);
 });

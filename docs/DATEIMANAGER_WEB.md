@@ -1,5 +1,9 @@
 # Allmiibo-Dateimanager im Browser
 
+## Dateimanager 3.66.3 · 25. November 2026
+
+Die normale Homepage und die Windows-Ausgabe bieten DE4.2 / App680 als reguläres LCD-Update an. Die getrennte OLED-Auswahl führt zu DE3.87 Test 6 / App86. Auf unterstützten LCDs liest der Dateimanager kleine Dateien gruppenweise. Die Auswahl **Schnellübersicht** im Figurenkatalog liest nur die Verzeichnisse, **Dateiinhalte prüfen** liest die passenden BIN-Dateien. [Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.3/Allmiibo_Dateimanager_3_66_3_Portable.zip) · [Web-Release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.3)
+
 ## Dateimanager 3.58.2 · kleine Dateien sichern und Ordner fortsetzen
 
 Unter **Dateien** kannst du einen lokalen Ordner vergleichen und die gewählten Dateien übertragen. Bei einem Bluetooth-Abbruch den Tab offen lassen, dasselbe Gerät erneut verbinden und den angehaltenen Auftrag fortsetzen. App662 überprüft geschriebene Daten durch Zurücklesen. Für eine Sicherung kann der Dateimanager kleine Dateien in einer Leseanfrage abrufen. [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Web-Downloads](https://github.com/bluecyber81/pixl.js/releases/tag/web3.58.2) · [LCD-Geräteprüfung](validation/DE3_89_LCD_READBACK.json)

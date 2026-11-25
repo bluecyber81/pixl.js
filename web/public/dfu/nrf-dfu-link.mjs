@@ -1,13 +1,13 @@
 // Hand off the published application ZIP. Local files and device references stay in the browser.
 import { lcdTest679, lcdTest679Package } from './lcd-app679-reference.mjs';
-import { lcdTest680, lcdTest680Package } from './lcd-app680-reference.mjs';
+import { lcdTest680, lcdTest680Package, lcdFinal680, lcdFinal680Package } from './lcd-app680-reference.mjs?v=3.66.3';
 
 export function nrfDfuLink(entry) {
-    const beta = [[lcdTest679Package, lcdTest679], [lcdTest680Package, lcdTest680]]
-        .find(([item]) => entry?.id === item.id || entry?.version === item.version);
-    if (beta) {
-        const [item, reference] = beta;
-        if (!Object.entries(item).every(([key, value]) => entry[key] === value)) return null;
+    const transferPackage = [[lcdTest679Package, lcdTest679], [lcdFinal680Package, lcdFinal680], [lcdTest680Package, lcdTest680]]
+        .find(([item]) => entry?.id === item.id);
+    if (transferPackage) {
+        const [item, reference] = transferPackage;
+        if (entry.channel !== item.channel || !Object.entries(item).every(([key, value]) => entry[key] === value)) return null;
         const file = 'https://github.com/bluecyber81/pixl.js/releases/download/' + reference.releaseTag + '/' + item.file;
         return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({file});
     }

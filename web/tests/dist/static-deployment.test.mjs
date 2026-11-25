@@ -26,7 +26,7 @@ test(`${base}: both setup guides have working anchors and bundled destinations`,
     const here = new URL(base + 'guide/' + filename, origin)
     const guide = read('guide/' + filename)
     assert.ok(guide.includes('<html lang="' + lang + '"'))
-    for (const id of ['diagnose', 'programme', 'flash', 'lcd-de41', 'lcd-de3102', 'lcd-de3101', 'lcd-de3100', 'bild-video', 'littlefs', 'bootloader', 'hilfe']) {
+    for (const id of ['diagnose', 'programme', 'flash', 'lcd-de42', 'lcd-de41', 'lcd-de3102', 'lcd-de3101', 'lcd-de3100', 'bild-video', 'littlefs', 'bootloader', 'hilfe']) {
       assert.ok(guide.includes('id="' + id + '"'), id)
     }
     for (const [, href] of guide.matchAll(/\shref="([^"]+)"/g)) {
@@ -115,10 +115,10 @@ test(`${base}: public notices preserve all selected license bytes and explicit m
     assert.deepEqual(fs.readFileSync(path.join(dist, 'licenses', file)), fs.readFileSync(path.join(webRoot, file)), file)
     assert.ok(index.includes(`href="${file}"`), file)
   }
-  assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.2.zip" download'))
-  assert.ok(index.includes('pixl.js/blob/web3.66.2/docs/VERSIONEN_WEB.md'))
-  assert.ok(index.includes('pixl.js/blob/web3.66.2/docs/VERSIONEN_FIRMWARE.md'))
-  for (const tag of ['de4.2-b1-lcd-transfer-test','de4.2-b2-lcd-transfer-test']) assert.ok(index.includes('pixl.js/tree/' + tag))
+  assert.ok(index.includes('href="https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.3.zip" download'))
+  assert.ok(index.includes('pixl.js/blob/web3.66.3/docs/VERSIONEN_WEB.md'))
+  assert.ok(index.includes('pixl.js/blob/web3.66.3/docs/VERSIONEN_FIRMWARE.md'))
+  for (const tag of ['de4.2-b1-lcd-transfer-test','de4.2']) assert.ok(index.includes('pixl.js/tree/' + tag))
   for (const releaseFile of [
     'de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip',
     'de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip',

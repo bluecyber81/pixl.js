@@ -1,8 +1,8 @@
 LCD DE4.2-b2 / App680
 
-DE: Optionale LCD-Testfirmware für Packed LittleFS, Bootloader Z21 und S112 7.3.0. Beim Schreiben nutzt sie Ordnerfilter und aktualisiert das Dateisystem-Manifest atomar. Das Update im Windows-Browser dauerte auf einem LCD 50,2 Sekunden bis zum letzten DFU-Execute. Die SHA-Prüfung nach einem kurzen Ordnerupload war erfolgreich. Die ZIP aktualisiert die Anwendung. DE4.1/App678 ist die stabile Vorauswahl.
+DE: Finale LCD-Firmware DE4.2 für Packed LittleFS, Bootloader Z21 und S112 7.3.0. Beim Schreiben nutzt sie Ordnerfilter und aktualisiert das Dateisystem-Manifest atomar. Das Update im Windows-Browser dauerte auf einem LCD 50,2 Sekunden bis zum letzten DFU-Execute. Die SHA-Prüfung nach einem kurzen Ordnerupload war erfolgreich. Die ZIP aktualisiert die Anwendung. Das Gerät meldet 2.22.0-DE4.2-b2. Beide App680-Downloads sind bytegleich.
 
-EN: Optional LCD test firmware for Packed LittleFS, bootloader Z21 and S112 7.3.0. Writes use directory filters and update the filesystem manifest atomically. On one LCD, browser DFU on Windows reached the last Execute in 50.2 seconds. A short folder upload passed its SHA readback check. The ZIP updates the application. DE4.1/App678 is the stable default.
+EN: Final LCD firmware DE4.2 for Packed LittleFS, bootloader Z21 and S112 7.3.0. Writes use directory filters and update the filesystem manifest atomically. On one LCD, browser DFU on Windows reached the last Execute in 50.2 seconds. A short folder upload passed its SHA readback check. The ZIP updates the application. The device reports 2.22.0-DE4.2-b2. Both App680 downloads contain identical bytes.
 
 Source commit  e6dc031f206ce0d545111ad9f952bc3da4aaaee9
 SourceID       16425b76fc84dc65bd9893d1d8337741abbf0fa8e4fc1aa3545183fb57fe600e

@@ -24,6 +24,12 @@ def verify(folder, expected_counter=670):
     metadata, s, image, _ = firmware(folder)
     assert isinstance(expected_counter, int) and 0 < expected_counter <= 0xffffffff
     assert metadata["counter"] == expected_counter, (metadata["counter"], expected_counter)
+    # LTO may give a unique local object a linker-private suffix.
+    for name in ("store", "packed_read_file_data"):
+        if name not in s:
+            matches = [addr for key, addr in s.items() if key.startswith(name + ".lto_priv.")]
+            if len(matches) == 1:
+                s[name] = matches[0]
     sizes = {r[3]: int(r[1], 16) for line in check_output(
         [tool("nm"), "-S", folder / "pixljs.out"], text=True).splitlines()
         if len(r := line.split()) == 4}
@@ -73,11 +79,45 @@ def verify(folder, expected_counter=670):
             callback()
         return cpu.hook_add(UC_HOOK_CODE, run, begin=s[name], end=s[name])
 
-    hook("pfs_mounted", lambda: respond(mounted))
-    hook("pfs_poisoned", lambda: respond(poisoned))
-    hook("pfs_import_pending", lambda: respond(imported))
-    hook("pfs_idle", lambda: respond(handles_idle))
-    hook("pfs_generation", lambda: respond(generation))
+    indirect = not all(name in s for name in ("pfs_poisoned", "pfs_generation", "pfs_import_pending"))
+    if indirect:
+        # Compute the layout using the same target ABI and verified storage
+        # sources. Exercise the *real* optimized readiness/generation logic.
+        from tempfile import TemporaryDirectory
+        from subprocess import run
+        fw = Path(__file__).resolve().parents[2]
+        core = fw / "application/src/mod/vfs"
+        lfs = fw / "components/littlefs"
+        from sys import path as modules
+        modules.insert(0, str(fw / "scripts"))
+        from packed_identity import identity
+        assert identity(core, lfs)[1] == metadata["packed_engine_identity"]["engine_sha256"]
+        with TemporaryDirectory() as temp:
+            d = Path(temp)
+            f = d / "abi.c"
+            f.write_text('#include <stddef.h>\n#include "packed_fs.c"\n'
+              'const unsigned shape[] = {sizeof(pfs_t),offsetof(pfs_t,mounted),offsetof(pfs_t,poisoned),'
+              'offsetof(pfs_t,current.pending),offsetof(pfs_t,handles),offsetof(pfs_t,current.generation)};\n')
+            run([tool("gcc"), "-std=c99", "-Os", "-mcpu=cortex-m4", "-mthumb", "-fdata-sections",
+                 "-DBOARD_LCD", "-DPIXL_RUNTIME_DIAGNOSTICS", "-DLFS_NO_MALLOC", "-DLFS_NO_DEBUG",
+                 "-DLFS_NO_ERROR", "-DLFS_NO_ASSERT", "-DLFS_NO_WARN", "-I"+str(core), "-I"+str(lfs),
+                 "-c", str(f), "-o", str(d/"abi.o")], check=True)
+            run([tool("objcopy"), "-O", "binary", "--only-section=.rodata.shape", str(d/"abi.o"), str(d/"abi.bin")], check=True)
+            shape = struct.unpack("<6I", (d/"abi.bin").read_bytes())
+        def refresh_model():
+            cpu.mem_write(store+shape[1], bytes([mounted]))
+            cpu.mem_write(store+shape[2], bytes([poisoned]))
+            cpu.mem_write(store+shape[3], struct.pack("<I", int(imported)))
+            cpu.mem_write(store+shape[4], struct.pack("<I", 0 if handles_idle else store))
+            cpu.mem_write(store+shape[5], struct.pack("<I", generation))
+    else:
+        hook("pfs_mounted", lambda: respond(mounted))
+        hook("pfs_poisoned", lambda: respond(poisoned))
+        hook("pfs_import_pending", lambda: respond(imported))
+        hook("pfs_idle", lambda: respond(handles_idle))
+        hook("pfs_generation", lambda: respond(generation))
+        def refresh_model():
+            pass
 
     def read_file():
         nonlocal generation
@@ -97,6 +137,7 @@ def verify(folder, expected_counter=670):
         cpu.mem_write(target, data)
         if len(reads) == mutate_after:
             generation += 1
+            refresh_model()
         respond(len(data))
 
     hook("packed_read_file_data", read_file)
@@ -137,10 +178,17 @@ def verify(folder, expected_counter=670):
         return struct.unpack("<7I", cpu.mem_read(monitor, 28))[2:4]
 
     call("mui_mem_init")
+    if indirect:
+        store = call("mui_mem_malloc", shape[0])
+        assert store and 0x20000000 <= store < 0x20010000 - shape[0]
+        cpu.mem_write(store, bytes(shape[0]))
+        cpu.mem_write(s["store"], struct.pack("<I", store))
+        refresh_model()
     initial_free, initial_largest = free_space()
 
     def request(command, payload=b"", status=0, chunk=0, event_type=2, reset=True):
         nonlocal peak_tlsf_delta
+        refresh_model()
         if reset:
             replies.clear()
             reads.clear()

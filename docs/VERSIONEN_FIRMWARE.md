@@ -1,5 +1,9 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## LCD DE4.2 / App680 · Final · 25. November 2026
+
+Der Besitzer hat App680 auf seinem LCD getestet und als final bestätigt. Das Paket enthält dieselbe signierte App wie DE4.2-b2. Unter **Gerät & Diagnose** erscheint daher **2.22.0-DE4.2-b2**, App-Zähler **680**. Wer diesen Stand bereits nutzt, braucht kein weiteres Update. Die App ist für ST7567-LCD mit PFS1, Z21 und S112 7.3.0 vorgesehen. PFS1 grenzt die Dateisuche nach dem übergeordneten Ordner ein. Eine vorhandene Manifestdatei wird in einer LittleFS-Transaktion aktualisiert. Bei Platzmangel prüft die Firmware vor einem neuen Versuch, welche Fassung bereits gespeichert wurde. [Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_Pruefpaket.zip)
+
 ## LCD DE4.1 / App678 · Final · 25. November 2026
 
 Die reguläre LCD-Version übernimmt das Weckprofil aus App677 samt bestätigtem Löschen und erneutem Speichern nach Fehlern. Bildempfang, Player und der mobile Lauftext sind verfügbar. Dateimanager 3.66.1 unterstützt die neue Versionsnummer auch bei Diagnose und Dateizugriff. Die signierte Handy-ZIP aktualisiert die Anwendung auf einem LCD mit PFS1, Z21 und S112 7.3.0. Die Gerätebestätigung vom 24. November gilt für den Vorgänger App677. [Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Versionshinweise](DE4_1_RELEASE.md) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_App678_Pruefpaket.zip)
