@@ -27,10 +27,10 @@ def package(output, verify=False, transfer_test=False):
             release.get('base') != '/' or release.get('channel') != channel or \
             release.get('packageManifestSha256') != sha(package_bytes):
         raise ValueError('The requested root build does not match its release channel or package.json.')
-    if transfer_test and (version != '3.66.1' or release.get('label') != 'Transfer Test 2'
-                          or release.get('sourceTag') != 'web3.66.1-transfer-test2'):
-        raise ValueError('The root build is missing the expected Transfer Test 2 identity.')
-    suffix = '_Transfer_Test2' if transfer_test else ''
+    if transfer_test and (version != '3.66.1' or release.get('label') != 'Transfer Test 3'
+                          or release.get('sourceTag') != 'web3.66.1-transfer-test3'):
+        raise ValueError('The root build is missing the expected Transfer Test 3 identity.')
+    suffix = '_Transfer_Test3' if transfer_test else ''
     names = ['LICENSE', 'package.json', 'release_version.py', 'dateimanager_launcher.py', 'serve_local.py',
              'Start-Dateimanager.cmd', 'Start-Dateimanager-Direkt.cmd', 'Stop-Dateimanager.cmd',
              'Start-Dateimanager.ps1', 'Stop-Dateimanager.ps1', 'LIESMICH_' + file_version + suffix + '.txt']
@@ -80,6 +80,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--verify', action='store_true', help='verify and start the actual extracted package on loopback')
-    parser.add_argument('--transfer-test', action='store_true', help='package the labelled Web 3.66.1 Transfer Test 2 root build')
+    parser.add_argument('--transfer-test', action='store_true', help='package the labelled Web 3.66.1 Transfer Test 3 root build')
     args = parser.parse_args()
     package(args.output, args.verify, args.transfer_test)

@@ -1,7 +1,7 @@
 import release from '../../package.json' with { type: 'json' };
 
-export const transferTestLabel = 'Transfer Test 2';
-export const transferTestTag = 'web3.66.1-transfer-test2';
+export const transferTestLabel = 'Transfer Test 3';
+export const transferTestTag = 'web3.66.1-transfer-test3';
 
 export function projectDownloads(buildVersion, label = import.meta.env?.VITE_BUILD_LABEL) {
   const version = release.version;
@@ -12,7 +12,7 @@ export function projectDownloads(buildVersion, label = import.meta.env?.VITE_BUI
   return {
     version,
     labelSuffix: transferTest ? ' · ' + transferTestLabel : version === buildVersion ? '' : ' · ' + version,
-    portable: transferTest ? 'https://github.com/bluecyber81/pixl.js/releases/download/' + transferTestTag + '/Allmiibo_Dateimanager_3_66_1_Transfer_Test2_Windows.zip'
+    portable: transferTest ? 'https://github.com/bluecyber81/pixl.js/releases/download/' + transferTestTag + '/Allmiibo_Dateimanager_3_66_1_Transfer_Test3_Windows.zip'
       : directory + 'Allmiibo_Dateimanager_' + fileVersion + '_Portable.zip',
     source: 'https://github.com/bluecyber81/pixl.js/archive/refs/tags/' + tag + '.zip',
     sourceTree: 'https://github.com/bluecyber81/pixl.js/tree/' + tag,

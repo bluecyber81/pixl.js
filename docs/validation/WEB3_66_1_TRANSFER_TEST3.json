@@ -1,0 +1,68 @@
+{
+  "web": "3.66.1 Transfer Test 3",
+  "sourceBase": "web3.66.1-transfer-test2",
+  "firmware": "LCD DE4.1 App678",
+  "bootloader": "Z21",
+  "upload": {
+    "scope": "Existing destination; previously absent bounded leaf directories inside it. Known PackedFS engine, storage revision, guarded publication and SHA-256 receipts required. Other targets and low initial reserve retain the ordinary upload path.",
+    "fixture": {
+      "files": 1081,
+      "bytes": 658806
+    },
+    "simulatedBrowserAdapter": {
+      "directoryListings": {
+        "ordinary": 6232,
+        "test3": 795
+      },
+      "explicitFileHashes": {
+        "ordinary": 1081,
+        "test3": 32
+      },
+      "guardedSmallFileCreates": 1049,
+      "leafDirectoriesPublished": 45,
+      "allDigestsMatched": true,
+      "unexpectedFiles": 0
+    },
+    "nativeStorageModel": {
+      "engineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
+      "flashBytes": 2097152,
+      "initialOccupiedBlocks": 230,
+      "lostReplyAfterGuardedCreate": 33,
+      "resumeTotalSmallCreates": 1049,
+      "remountedFilesWithMatchingSha256AndRaw128": 1081
+    },
+    "physicalUploadTiming": "Pending for Transfer Test 3."
+  },
+  "readComparison": {
+    "source": "WEB3_66_1_TRANSFER_TEST2.json",
+    "scope": "Unchanged grouped read path measured previously on one LCD over Windows Chrome Web Bluetooth, complete files; independent SHA-256 checks excluded from both timings.",
+    "files": 24,
+    "bytes": 12960,
+    "mochiSeconds": [
+      15.509,
+      19.05
+    ],
+    "allmiiboSeconds": [
+      9.075,
+      9.079
+    ],
+    "allDigestsMatched": true,
+    "elapsedTimeReductionPercent": 47.47
+  },
+  "dfu": {
+    "source": "WEB3_66_1_TRANSFER_TEST2.json",
+    "status": "Same secure-dfu.js as Transfer Test 2. Four-byte aligned data writes, at most 140 bytes after a confirmed 142-byte Z21 init packet."
+  },
+  "localPackageVerification": {
+    "windowsArchive": "Allmiibo_Dateimanager_3_66_1_Transfer_Test3_Windows.zip",
+    "bytes": 13381996,
+    "sha256": "51cd32679acba72394e286ac781be0f93d00b92a19ace3af1080694d48860628",
+    "reproducibleArchive": true,
+    "zipEntries": 323,
+    "sourceMatchedDistFiles": 310,
+    "normalAndDirectWindowsLaunchers": true,
+    "pagesBuildChecks": 58,
+    "rootBuildChecks": 58,
+    "headlessChromeVerifiedBothOrdinaryUploadEntryPoints": true
+  }
+}
