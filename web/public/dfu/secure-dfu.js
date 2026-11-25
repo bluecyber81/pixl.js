@@ -214,7 +214,10 @@
       const offset=state.getUint32(0,true);
       if(offset>size||state.getUint32(4,true)!==this._prefixCrc(bytes,offset))throw new Error('DFU init packet offset or CRC32 mismatch');
       if(acceptedByHost&&offset===size){
-        this._packetBytes=size;
+        // Nordic command objects accept byte lengths. Z21 data objects only
+        // accept whole 32-bit flash words, including the last write in each
+        // object. A confirmed 142-byte init therefore permits 140 data bytes.
+        this._packetBytes=size-(size%4);
         return size;
       }
       // The OS may reject, drop or truncate a long Write Without Response.
@@ -267,7 +270,7 @@
       if(offset>bytes.length)this.log('Ein längeres Init-Paket eines früheren DFU-Versuchs wird neu angelegt. Die Firmwaredaten werden anschließend weiter mit CRC geprüft.', 'Replacing the longer init packet from an earlier update. The firmware transfer will continue with CRC verification.');
       if(!offset||offset>bytes.length||state.crc!==this._prefixCrc(bytes,offset)){
         await this._create(1,bytes.length);offset=0;
-        if(this.probeInitPacket&&bytes.length>20&&this.packetChar.properties?.writeWithoutResponse){
+        if(this.probeInitPacket&&bytes.length>=24&&this.packetChar.properties?.writeWithoutResponse){
           offset=await this._measureInitWrite(bytes);
         }
       }
@@ -279,6 +282,9 @@
     }
     async transferFirmware(input){
       const bytes=asBytes(input),state=await this._select(2,bytes.length);let offset=state.offset;
+      if(this.probeInitPacket&&(offset%4!==0||(bytes.length>state.maxSize&&state.maxSize%4!==0))){
+        throw new Error('DFU firmware resume offset or object boundary is not flash-word aligned');
+      }
       if(offset===bytes.length)this.dispatchEvent('phase','verify');
       if(offset&&state.crc!==this._prefixCrc(bytes,offset))throw new Error('Resume CRC32 differs; existing partial data does not match this package. No firmware data was overwritten. A previous interrupted transfer may be the cause.');
       this.progress('firmware',bytes.length,offset);
@@ -301,6 +307,7 @@
       if(!device?.gatt)throw new Error('A Bluetooth DFU device is required');
       const initBytes=asBytes(init),firmwareBytes=asBytes(firmware);
       if(!initBytes.length||!firmwareBytes.length)throw new Error('Empty init/firmware rejected');
+      if(this.probeInitPacket&&firmwareBytes.length%4!==0)throw new Error('DFU firmware length is not flash-word aligned');
       this._busy=true;this.lastResult=null;
       try{
         this._start(device);

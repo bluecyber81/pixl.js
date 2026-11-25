@@ -9,7 +9,7 @@ import {createHash} from 'node:crypto'
 // tests/dist -> web/dist: production artifacts, not source-module substitutes.
 const actualDist=path.resolve(process.env.ALLMIIBO_DIST_DIR||fileURLToPath(new URL('../../dist',import.meta.url)))
 const base=process.env.ALLMIIBO_TEST_BASE_PATH||'/'
-assert.ok(['/', '/pixl.js/', '/pixl.js/test/app669/', '/pixl.js/test/app670/', '/pixl.js/test/transfer1/'].includes(base))
+assert.ok(['/', '/pixl.js/', '/pixl.js/test/app669/', '/pixl.js/test/app670/', '/pixl.js/test/transfer2/'].includes(base))
 const deployed=url=>base+url.slice(1)
 const sha=data=>createHash('sha256').update(data).digest('hex')
 const profiles={

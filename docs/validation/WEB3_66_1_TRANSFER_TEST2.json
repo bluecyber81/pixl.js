@@ -1,0 +1,109 @@
+{
+  "web": "3.66.1 Transfer Test 2",
+  "previousTest": "web3.66.1-transfer-test1",
+  "firmware": "LCD DE4.1 App678",
+  "bootloader": "Z21",
+  "correction": {
+    "affected": "First transfer preview only. Fresh long-write DFU with a signed command whose length is not divisible by four. The file manager is unaffected.",
+    "protocol": "Z21 permits arbitrary byte counts for the command object, but each firmware data write must fit the active object and contain integral 32-bit words. A successful 142-byte command probe therefore establishes at most 140 bytes per data write.",
+    "reference": "bootloader-z21/SOURCE_BINDING.json",
+    "handler": "bootloader-z20/fw/bootloader/src/sdk/nrf_dfu_req_handler.c",
+    "paddedBootSha256": "d3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb"
+  },
+  "hardwareReadComparison": {
+    "environment": "Windows Chrome 158.0.8127.88, native Web Bluetooth. One connected owner LCD, same directory and stable storage generation. Each run reads all 24 files and checks their SHA-256 afterwards. Times exclude device selection and independent hash checks.",
+    "mochiCommit": "be992a3dae9fc05fab57ab5534d5e0ee5fb825d8",
+    "files": 24,
+    "bytesPerFile": 540,
+    "bytes": 12960,
+    "allSha256Matched": true,
+    "orderAndElapsedSeconds": [
+      {
+        "client": "Mochi",
+        "seconds": 15.509
+      },
+      {
+        "client": "Allmiibo Transfer Test 1",
+        "seconds": 9.075
+      },
+      {
+        "client": "Allmiibo Transfer Test 1",
+        "seconds": 9.079
+      },
+      {
+        "client": "Mochi",
+        "seconds": 19.05
+      }
+    ],
+    "comparison": "Mochi original readFileData open/read/close; Allmiibo six groups of four files with generation checks. Both clients delivered complete matching file contents. The file-reading implementation is shared unchanged with Transfer Test 2."
+  },
+  "hardwareVerification": {
+    "browserDataPath": "native Web Bluetooth",
+    "firmware": "2.22.0-DE4.1",
+    "files": 24,
+    "bytes": 12960,
+    "hashesMatched": true,
+    "verifyRuns": [
+      {
+        "method": "full",
+        "seconds": 8.863,
+        "rxBytes": 13248,
+        "rxFrames": 72
+      },
+      {
+        "method": "digest",
+        "seconds": 3.825,
+        "rxBytes": 864,
+        "rxFrames": 24
+      },
+      {
+        "method": "digest",
+        "seconds": 3.749,
+        "rxBytes": 864,
+        "rxFrames": 24
+      },
+      {
+        "method": "full",
+        "seconds": 11.25,
+        "rxBytes": 13248,
+        "rxFrames": 72
+      }
+    ]
+  },
+  "folderUploadModel": {
+    "mode": "New mixed directory, sufficient workspace, 1081 files on simulated storage, interruption after the 33rd stored file, resume and SHA-256 verification of every final file. Existing-directory mode is a different workflow.",
+    "files": 1081,
+    "payloadBytes": 658806,
+    "verified": 1081,
+    "extraFiles": 0,
+    "old": {
+      "directoryQueries": 1306,
+      "regularFileOpens": 1081,
+      "individualDigestQueries": 1114
+    },
+    "test": {
+      "directoryQueries": 201,
+      "regularFileOpens": 28,
+      "compactCreates": 1053,
+      "individualDigestQueries": 61
+    }
+  },
+  "signedAppDfuModel": {
+    "conditions": "Same signed public DE4.1 App678 ZIP. Word-aligned Z21 data writes enforced in model. Counts are host GATT writes. No hardware flash time is inferred.",
+    "otaSha256": "beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0",
+    "initBytes": 142,
+    "dataPacketBytes": 140,
+    "imageBytes": 362724,
+    "imageSha256": "2cc4a74619996d8c569223085b858515681c99810e623196519338fcdcb6f888",
+    "legacyTotalWrites": 18435,
+    "correctedTotalWrites": 5500,
+    "correctedFirmwareDataWrites": 2657,
+    "dataObjects": 89,
+    "rejectedDataWrites": 0,
+    "imageMatched": true
+  },
+  "pending": [
+    "Timed full Windows browser DFU and comparison to the phone app using the same signed package.",
+    "End-to-end write and interrupt/resume benchmark against Mochi for the complete 1081-file fixture. See any later dated release evidence."
+  ]
+}
