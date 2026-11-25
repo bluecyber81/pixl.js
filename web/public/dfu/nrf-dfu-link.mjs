@@ -1,5 +1,12 @@
 // Hand off the published application ZIP. Local files and device references stay in the browser.
+import { lcdTest679, lcdTest679Package } from './lcd-app679-reference.mjs';
+
 export function nrfDfuLink(entry) {
+    if (entry?.id === lcdTest679Package.id || entry?.version === lcdTest679.firmwareVersion) {
+        if (!Object.entries(lcdTest679Package).every(([key, value]) => entry[key] === value)) return null;
+        const file = 'https://github.com/bluecyber81/pixl.js/releases/download/' + lcdTest679.releaseTag + '/' + lcdTest679Package.file;
+        return 'https://www.nordicsemi.com/dfu/?' + new URLSearchParams({file});
+    }
     if (entry?.board === 'OLED') {
         const oled = /^2\.22\.0-DE3\.([1-9]\d{0,3})-OLEDt([1-9]\d{0,2})$/.exec(entry.version);
         if (!oled || entry.applicationOnly !== true || entry.channel !== 'prerelease' ||

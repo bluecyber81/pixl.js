@@ -2,7 +2,7 @@ export const buildTargets = {
   root: ['dist', '/'],
   pages: ['dist-pages', '/pixl.js/'],
   'test-app670': ['dist-test-app670', '/pixl.js/test/app670/'],
-  'test-transfer4': ['dist-test-transfer4', '/pixl.js/test/transfer4/']
+  'test-transfer5': ['dist-test-transfer5', '/pixl.js/test/transfer5/']
 }
 
 export function buildTarget(mode) {

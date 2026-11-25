@@ -788,3 +788,57 @@ test('quick large-only leaf publishes once, acknowledges stored data, and retain
   assert.equal(s.actions.filter(a=>a.kind==='hash').length,0)
   assert.equal(s.native.actions.length,0)
 })
+
+function groupedApi(s,stopAt) {
+  const native=nativeApi(s), calls=[], rawReads=[]
+  let stopped=false
+  return {...native, calls, rawReads, quickPacked:true, canGroupCreate:async()=>true,
+    async createGroup(folder,members,expected) {
+      assert.equal(await native.readCreateRevision(),expected)
+      const paths=members.map(member=>folder+'/'+member.name)
+      if (paths.some(path=>s.nodes.has(path))) throw Object.assign(Error('Create collision'),{cmd:0x28,status:1})
+      if(!stopped&&stopAt==='data'){stopped=true;throw Error('Uncertain DATA')}
+      for(let i=0;i<members.length;++i)s.nodes.set(paths[i],{type:0,bytes:members[i].bytes.slice(),meta:newMetadata(),raw:new Uint8Array(128).fill(255)})
+      native.bump();calls.push(paths)
+      if(!stopped&&stopAt==='commit'){stopped=true;throw Error('Lost COMMIT reply')}
+      return native.readCreateRevision()
+    },
+    async readRawMetadata(p){rawReads.push(p);return s.nodes.get(p).raw}
+  }
+}
+async function groupFixture() {
+  const files=Array.from({length:9},(_,n)=>local('ManySmall/file'+n+'.bin',n))
+  return setup(files.map((_,n)=>n),files)
+}
+test('grouped leaf sends four siblings per transaction, confirms final publication and marks no per-file SHA',async()=>{
+  const s=await groupFixture(), a=groupedApi(s)
+  const result=await s.run(a)
+  assert.deepEqual(a.calls.map(row=>row.length),[4,4,1]);assert.equal(result.completed,9)
+  assert.equal(result.job.acknowledgedOnly.length,9);assert.equal(a.rawReads.length,0)
+  assert.equal(s.actions.filter(action=>action.kind==='hash').length,0)
+})
+test('grouped leaf only adopts an uncertain COMMIT after individual SHA and exact opaque metadata match',async()=>{
+  for(const failure of ['data','commit','content','metadata','partial']){
+    const s=await groupFixture(),a=groupedApi(s,failure==='data'?'data':'commit')
+    await assert.rejects(s.run(a));const state=s.job.newFolderUpload
+    assert.equal(state.inFlightGroup.length,4);const paths=state.inFlightGroup.map(p=>state.stagePath+p.slice(target.length))
+    if(failure==='content')s.nodes.get(paths[0]).bytes[1]^=255
+    if(failure==='metadata')s.nodes.get(paths[0]).raw[127]=0
+    if(failure==='partial')s.nodes.delete(paths[0])
+    if(['data','commit'].includes(failure)){
+      const result=await s.run(a);assert.equal(result.total,9);assert.equal(a.calls.flat().length,9)
+      for(const p of paths)assert.equal(a.rawReads.includes(p),failure==='commit')
+    }else{
+      await assert.rejects(s.run(a),{code:'SYNC_STALE'});assert(!s.nodes.has(target))
+      assert.equal(a.calls.length,1)
+    }
+  }
+})
+test('grouped completion cannot reuse another device checkpoint; absence of capability uses single guarded creates',async()=>{
+  const s=await groupFixture(),a=groupedApi(s,'commit')
+  await assert.rejects(s.run(a))
+  await assert.rejects(s.run({...a,deviceKey:'other-lcd'}),{code:'SYNC_STALE'})
+  const f=await groupFixture(),single=groupedApi(f)
+  const done=await f.run({...single,canGroupCreate:async()=>false})
+  assert.equal(done.total,9);assert.equal(single.calls.length,0);assert.equal(single.actions.length,9)
+})

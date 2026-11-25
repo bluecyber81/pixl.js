@@ -13,6 +13,7 @@ function harness(supported=true,extra={}){
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/language-preference.js'),'utf8'),context);
     context.lcdTest676 = require('../public/dfu/lcd-app676-reference.mjs').lcdTest676;
     context.lcdTest677 = require('../public/dfu/lcd-app677-reference.mjs').lcdTest677;
+    Object.assign(context, require('../public/dfu/lcd-app679-reference.mjs'));
     context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
     context.lcdRelease = require('../public/dfu/lcd-release-reference.mjs').lcdRelease;
     context.lcdReleasePackage = require('../public/dfu/lcd-release-reference.mjs').lcdReleasePackage;
@@ -28,6 +29,53 @@ function harness(supported=true,extra={}){
 test('page binds one click to device selection and one file event to package load',()=>{
     const h=harness();h.nodes.get('file').files=['selected'];h.nodes.get('file').events.change();h.nodes.get('button').events.click();
     assert.deepEqual(h.calls,[['package',null],['package','selected'],['select']]);
+});
+
+test('Transfer Test 5 keeps App678 as default and binds the optional App679 package and Android handoff', async () => {
+    const {lcdTest679, lcdTest679Package} = require('../public/dfu/lcd-app679-reference.mjs');
+    const catalog = require('../src/data/firmware-releases.json');
+    const checked = Bundled.validateCatalog(catalog);
+    assert.deepEqual(checked.packages.find(item => item.counter === 679), lcdTest679Package);
+    const pages = 'https://bluecyber81.github.io/pixl.js/test/transfer5/dfu/web.html';
+    assert.equal(harness(true,{location:new URL(pages)}).nodes.get('bundled').value,'de4.1-lcd-app');
+    const ctx = (app, bl, sd, board='LCD') => harness(true, {
+        location:new URL(pages + '?package=' + lcdTest679Package.id + '#board=' + board +
+            '&read=' + Date.now() + '&app=' + app + '&bl=' + bl + '&sd=' + sd)
+    });
+    const good = ctx(678, 21, 294);
+    assert.deepEqual(good.calls, []);
+    assert.equal(good.nodes.get('load-bundled').disabled, false);
+    assert.equal(good.nodes.get('bundled').value, lcdTest679Package.id);
+    assert.match(good.nodes.get('profile-source').textContent, /DE4\.2-b1 \/ App679/);
+    assert.equal(good.nodes.get('profile-source').href, 'https://github.com/bluecyber81/pixl.js/tree/' + lcdTest679.releaseTag);
+    assert.equal(new URL(good.nodes.get('android-dfu-link').href).searchParams.get('file'),
+        'https://github.com/bluecyber81/pixl.js/releases/download/' + lcdTest679.releaseTag + '/' + lcdTest679Package.file);
+    const bytes = fs.readFileSync(path.join(__dirname, '../public/firmware', lcdTest679Package.file));
+    const candidate = await new (require('../public/dfu/package.js'))(bytes).load();
+    assert.deepEqual(candidate.image.target.softDevices, [294]);
+    assert.equal(candidate.archiveSha256, lcdTest679.otaSha256);
+    assert.equal(candidate.archiveBytes, lcdTest679.otaBytes);
+    assert.equal(crypto.createHash('sha256').update(new Uint8Array(candidate.image.imageData)).digest('hex'), lcdTest679.applicationBinSha256);
+    assert.equal(good.options.validatePackage(candidate).counter, 679);
+    const oled = ctx(678, 21, 294, 'OLED');
+    assert.equal(oled.nodes.get('bundled').value, '');
+    assert.throws(() => oled.options.validatePackage(candidate), /anderen Display/);
+    for (const [app, bl, sd] of [[680,21,294], [678,20,294], [678,21,259]]) {
+        const h = ctx(app,bl,sd);
+        assert.equal(h.nodes.get('load-bundled').disabled,true);
+        assert.equal(h.nodes.get('android-handoff').hidden,true);
+        h.options.onState({ready:true,target:candidate.image.target});
+        h.nodes.get('button').events.click();
+        assert.equal(h.nodes.get('button').disabled,true);
+        assert.deepEqual(h.calls,[]);
+    }
+    for (const delta of [{sha256:'f'.repeat(64)}, {bytes:257001}, {counter:680}, {channel:undefined}]) {
+        const wrong = {...lcdTest679Package,...delta};
+        assert.throws(() => Bundled.validateCatalog({schema:1,packages:[wrong]}));
+        assert.equal(require('../public/dfu/nrf-dfu-link.mjs').nrfDfuLink(wrong),null);
+    }
+    assert.throws(() => good.options.validatePackage({...candidate, archiveSha256:'f'.repeat(64)}), /App679/);
+    assert.throws(() => good.options.validatePackage({...candidate, image:{target:{...candidate.image.target,softDevices:[294,259]}}}), /App679/);
 });
 test('an OLED handoff offers only OLED packages and never preselects a bookmarked LCD package',async()=>{
     const catalog = JSON.parse(fs.readFileSync(path.join(__dirname,'../src/data/firmware-releases.json'),'utf8'));
@@ -516,7 +564,7 @@ test('App670 deep link selects only its signed isolated package and never implic
     assert.equal(native.searchParams.get('file'),'https://bluecyber81.github.io/pixl.js/test/app670/firmware/'+preview.file);
     assert.equal(h.nodes.get('button').disabled,true);
     assert.deepEqual(h.calls,[]);
-    assert.match(html,/App678: Normale Firmware/);
+    assert.match(html,/App678 ist die stabile Vorauswahl/);
     assert.ok(html.includes('href="https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip"'));
     assert.match(html,/App678 direkt laden und prüfen/);
 });
@@ -533,7 +581,7 @@ test('normal App678 is selected exactly once by default without loading a packag
     assert.equal(h.nodes.get('button').disabled, true);
     assert.equal(h.nodes.get('profile-source').href, 'https://github.com/bluecyber81/pixl.js/tree/release/lcd-de41-app678');
     assert.deepEqual(h.calls, []);
-    assert.match(html, /App678: Normale Firmware/);
+    assert.match(html, /App678 ist die stabile Vorauswahl/);
     assert.doesNotMatch(html, /App670 TEST1 direkt|App678 TEST/);
 });
 

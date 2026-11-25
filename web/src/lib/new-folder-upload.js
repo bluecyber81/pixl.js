@@ -105,7 +105,7 @@ export function pendingFolderUpload(job) {
  * PackedFS writer may supply RAW128 writes with disconnect-abort semantics.
  * job.completed tracks acknowledged writes. Short checks record ordinary CLOSE separately from a digest. */
 export async function executeNewFolderUpload({ plan, job, files, selectedPaths, deviceKey, assertSession, signal, onProgress,
-  createDirectory, writeFile, readDirectory, readFile, readFileDigest, readCreateRevision, createSmall, publishSmallFolder,
+  createDirectory, writeFile, readDirectory, readFile, readFileDigest, readRawMetadata, readCreateRevision, createSmall, canGroupCreate, createGroup, publishSmallFolder,
   rename, getFreeBytes, requireSmallCreate = false, quickPacked = false, [siblingSnapshot]:parentSample, [leafSpace]:boundSpace, randomToken = randomHex }) {
   const check = () => {
     assertSession()
@@ -147,6 +147,12 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       if (state.targetPath !== targetPath || !Array.isArray(state.selection) || state.selection.length !== ordered.length ||
           state.selection.some((value, index) => value !== ordered[index]) || !Array.isArray(state.dirs) ||
           state.dirs.some(dir => !dirs.includes(dir)) || state.inFlight && !selected.has(state.inFlight)) stale()
+      if (state.inFlightGroup) {
+        const pending = state.inFlightGroup
+        if (state.inFlight || !state.groupReceipts || !Array.isArray(pending) || !pending.length || pending.length > 4 ||
+            new Set(pending).size !== pending.length || pending.some(path => !selected.has(path) || completed.has(path) ||
+              splitDevicePath(path).parent !== splitDevicePath(pending[0]).parent || !fitsSmallCreate(wanted.find(entry => entry.targetPath === path)))) stale()
+      }
       const parts = splitDevicePath(state.stagePath)
       if (parts.parent !== parent || !/^~u[a-f0-9]{8,12}$/.test(parts.name) || parts.name.length !== tokenLength(targetPath, wanted) + 2 ||
           portableNameKey(parts.name) === portableNameKey(targetName)) stale()
@@ -190,8 +196,15 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
             seenDirs.add(item.path)
             await visit(item.path)
           } else {
-            if (actual.size !== item.entry.size || partial && !completed.has(item.path) && state.inFlight !== item.path) stale()
-            if (verify) await digest(staged(base, item.path), item.entry)
+            if (actual.size !== item.entry.size || partial && !completed.has(item.path) && state.inFlight !== item.path && !state.inFlightGroup?.includes(item.path)) stale()
+            if (verify) {
+              const actualPath = staged(base,item.path)
+              await digest(actualPath, item.entry)
+              if (state.groupReceipts) {
+                const meta = await readRawMetadata(actualPath)
+                if (!(meta instanceof Uint8Array) || meta.length !== 128 || !meta.every(byte => byte === 255)) stale()
+              }
+            }
             found.add(item.path)
           }
         }
@@ -242,6 +255,7 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       (wanted.some(fitsSmallCreate) || (quickPacked && !dirs.length && wanted.length > 1)) ? await readCreateRevision() : null
     check()
     if (candidate !== null && !validRevision(candidate) || (requireSmallCreate || state?.nativeReceipts) && !candidate) stale()
+    if (state?.groupReceipts && typeof readRawMetadata !== 'function') stale()
     async function published(entries) {
       if (!isPublished(entries)) return false
       if (candidate) await audit(targetPath, false)
@@ -273,6 +287,12 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       if (checkedStage) coveredPaths = checkedStage.found
       if (state.inFlight && found.has(state.inFlight) && !completed.has(state.inFlight)) {
         completed.add(state.inFlight); job.completed.push(state.inFlight)
+      }
+      if (state.inFlightGroup) {
+        const present = state.inFlightGroup.filter(path => found.has(path))
+        if (present.length && present.length !== state.inFlightGroup.length) stale()
+        for (const path of present) { completed.add(path); job.completed.push(path) }
+        delete state.inFlightGroup
       }
       state.inFlight = null
       fromCheckpoint = completed.size
@@ -341,7 +361,11 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       }
       ordinaryReceipts.length = 0
     }
-    for (const entry of writeOrder) {
+    const grouped = quick && typeof createGroup === 'function' && typeof canGroupCreate === 'function' &&
+      typeof readRawMetadata === 'function' && wanted.some(fitsSmallCreate) && await canGroupCreate()
+    check()
+    for (let index = 0; index < writeOrder.length; ++index) {
+      const entry = writeOrder[index]
       if (completed.has(entry.targetPath)) continue
       const path = staged(state.stagePath, entry.targetPath), parts = splitDevicePath(path)
       let consecutive = true
@@ -351,6 +375,36 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
           const anchor = await audit(state.stagePath, true)
           proof = anchor.revision
           coveredPaths = anchor.found
+        }
+        if (grouped) {
+          const members = [entry]
+          while (members.length < 4 && index+1 < writeOrder.length) {
+            const next = writeOrder[index+1]
+            if (!fitsSmallCreate(next) || completed.has(next.targetPath) || splitDevicePath(next.targetPath).parent !== splitDevicePath(entry.targetPath).parent) break
+            members.push(next); ++index
+          }
+          state.groupReceipts = true
+          state.inFlightGroup = members.map(member => member.targetPath)
+          let after
+          try {
+            after = await createGroup(parts.parent, members.map(member => ({name:splitDevicePath(member.targetPath).name,
+              bytes:payloads.get(member.targetPath)})), proof)
+          } catch (error) {
+            // An explicit device rejection means none was created. Leave an
+            // uncertain group in the checkpoint if the reply could have been lost.
+            if (error.cmd === 0x28 && error.status === 1) delete state.inFlightGroup
+            throw error
+          }
+          if (!validRevision(after) || !consecutiveCommits(proof,after)) stale()
+          proof = after
+          for (const member of members) {
+            completed.add(member.targetPath); job.completed.push(member.targetPath)
+            coveredPaths.add(member.targetPath); acknowledgedOnly.add(member.targetPath)
+            uploadedBytes += member.size
+          }
+          delete state.inFlightGroup
+          check(); progress('syncing', completed.size)
+          continue
         }
         state.inFlight = entry.targetPath
         let next

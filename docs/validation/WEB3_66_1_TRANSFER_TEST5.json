@@ -1,0 +1,70 @@
+{
+  "build": "Web 3.66.1 Transfer Test 5",
+  "supportedHardware": [
+    "LCD DE4.2-b1 App679 with PXBG v1",
+    "existing DE4.1 single-file receipt and direct paths"
+  ],
+  "scope": "Benchmarks use Windows Node, the actual Web transfer modules, a simulated BLE link, the compiled C group parser and PackedFS/LittleFS over 2 MiB RAM flash. File payloads match the 1081-file radio fixture. No App679 radio timing is available.",
+  "protocol": {
+    "capability": "0x27 PXBG v1, 4 files, 572 bytes per file",
+    "write": "0x28 BEGIN, DATA, COMMIT with one app reply; serial ATT write requests",
+    "semantics": "One revision-bound transaction in an exclusively owned private staging folder, CREATE_NEW, neutral RAW128, an explicit successful COMMIT is not an individual file readback"
+  },
+  "complete": {
+    "scope": "actual C PackedFS and LittleFS on 2 MiB RAM flash, reconstructed baseline, physical comparison dataset; no Bluetooth duration",
+    "baselineBlocks": 230,
+    "usedBlocks": 452,
+    "groups": 280,
+    "groupFiles": 1049,
+    "gattWrites": 3184,
+    "files": 1081,
+    "bytes": 658806,
+    "remountedAndConfirmedByShaAndRaw128": 1081,
+    "raw": 32,
+    "small": 0,
+    "leaves": 46,
+    "hashes": 0,
+    "spaceCalls": 51,
+    "revisionCalls": 143,
+    "listings": 104
+  },
+  "disconnectAtDataIncludingFile33": {
+    "scope": "actual C PackedFS and LittleFS on 2 MiB RAM flash, reconstructed baseline, physical comparison dataset; no Bluetooth duration",
+    "baselineBlocks": 230,
+    "usedBlocks": 452,
+    "groups": 280,
+    "groupFiles": 1049,
+    "gattWrites": 3186,
+    "files": 1081,
+    "bytes": 658806,
+    "remountedAndConfirmedByShaAndRaw128": 1081,
+    "raw": 32,
+    "small": 0,
+    "leaves": 46,
+    "hashes": 30,
+    "spaceCalls": 52,
+    "revisionCalls": 148,
+    "listings": 126
+  },
+  "lostCommitReceiptIncludingFile33": {
+    "scope": "actual C PackedFS and LittleFS on 2 MiB RAM flash, reconstructed baseline, physical comparison dataset; no Bluetooth duration",
+    "baselineBlocks": 230,
+    "usedBlocks": 452,
+    "groups": 280,
+    "groupFiles": 1049,
+    "gattWrites": 3184,
+    "files": 1081,
+    "bytes": 658806,
+    "remountedAndConfirmedByShaAndRaw128": 1081,
+    "raw": 32,
+    "small": 0,
+    "leaves": 46,
+    "hashes": 34,
+    "spaceCalls": 52,
+    "revisionCalls": 148,
+    "listings": 126
+  },
+  "optionalVerification": "After each of these three runs, remounted the C engine and checked each file SHA-256 and all 128 metadata bytes; the normal upload performs no standalone file SHA. After interruption, only uncertain and completed work in the recovered leaf, plus previously published direct paths as necessary, is compared again.",
+  "hardwareAcceptance": "pending",
+  "referenceTest4": "WEB3_66_1_TRANSFER_TEST4.json"
+}

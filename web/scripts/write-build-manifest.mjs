@@ -3,6 +3,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {lcdRelease, lcdReleasePackage} from '../public/dfu/lcd-release-reference.mjs';
+import {lcdTest679,lcdTest679Package} from '../public/dfu/lcd-app679-reference.mjs';
 import {buildTarget} from './build-targets.mjs';
 import {transferTestLabel, transferTestTag} from '../src/lib/project-downloads.js';
 
@@ -10,7 +11,7 @@ const web = fileURLToPath(new URL('../', import.meta.url));
 const mode = process.argv[2];
 if (process.argv.length !== 3) throw new Error('Expected one build target');
 const [folder, base] = buildTarget(mode), output = path.join(web, folder);
-const transferTest = mode === 'test-transfer4' || process.env.VITE_BUILD_LABEL === transferTestLabel;
+const transferTest = mode === 'test-transfer5' || process.env.VITE_BUILD_LABEL === transferTestLabel;
 const packageBytes = fs.readFileSync(path.join(web, 'package.json'));
 const release = JSON.parse(packageBytes);
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -49,5 +50,13 @@ const manifest = {schema:1, application:'allmiibo-dateimanager', version:release
   packageManifestSha256:digest(packageBytes), firmware:{id:lcdReleasePackage.id,
     version:lcdReleasePackage.version, counter:lcdReleasePackage.counter,
     path:firmwarePath, bytes:firmware.length, sha256:digest(firmware)}};
+if (transferTest) {
+  const file = 'firmware/' + lcdTest679Package.file;
+  const candidate = fs.readFileSync(path.join(output,file));
+  if (candidate.length !== lcdTest679Package.bytes || digest(candidate) !== lcdTest679Package.sha256 ||
+      lcdTest679.otaSha256 !== lcdTest679Package.sha256) throw new Error('Bundled test firmware differs from its signed reference');
+  manifest.testFirmware = {id:lcdTest679Package.id, version:lcdTest679Package.version, counter:lcdTest679Package.counter,
+    path:file, bytes:candidate.length, sha256:digest(candidate), board:'LCD', applicationOnly:true, hardwareAcceptance:lcdTest679.hardwareAcceptance};
+}
 fs.writeFileSync(path.join(output, 'release.json'), JSON.stringify(manifest, null, 2) + '\n');
 console.log(JSON.stringify({mode, version:release.version, firmware:lcdReleasePackage.id, manifest:'release.json'}));

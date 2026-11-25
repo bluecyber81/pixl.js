@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { diagnosticBuildIdentity } from '../src/lib/firmware-build-reference.js';
 
 const releases = [
+  {version:'2.22.0-DE4.2-b1', counter:679,
+    sourceId:'4765a2b88d7a9e4af396ab1d83318f1124423df69d13fd3e3ca2326b93d774c6',
+    binSha256:'320863d4a3d140cc6082ec827cee2ddbfd1ec55ec37509305d195ecb9183a93e'},
   {version:'2.22.0-DE3.100', counter:673,
     sourceId:'33d41ccf675ff8b359cd616fbc66376de9df76d73f0896a61ab9ea0ce7a50778',
     binSha256:'ef1f80f943a07aabd5770ad1f5eb09f93d16051dcc6238368e6c4719d69ef52e'},

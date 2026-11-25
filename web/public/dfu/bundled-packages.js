@@ -17,6 +17,18 @@
             if (de41) need(item.id === 'de4.1-lcd-app' && item.board === 'LCD' && item.counter === 678 &&
                 item.file === 'Allmiibo_LCD_DE4_1_678_NUR_APP.zip' && !item.channel && item.bootloader === 'Z21',
                 'Unpassendes LCD-App678-Profil.', 'Incorrect LCD App678 profile.');
+            const app679 = item.version === '2.22.0-DE4.2-b1' || item.id === 'de4.2-b1-lcd-app-test';
+            if (app679) {
+                need(item.version === '2.22.0-DE4.2-b1' && item.id === 'de4.2-b1-lcd-app-test' &&
+                    !seen.has(item.id) && item.board === 'LCD' && item.counter === 679 &&
+                    item.file === 'Allmiibo_LCD_DE4_2_b1_App679_NUR_APP_TEST.zip' && item.bytes === 257000 &&
+                    item.sha256 === '1e508061e86d75addb1345d5d8c9b0eac94ebf02081c519517461e952a7f5f17' &&
+                    item.storage === 'PFS1' && item.bootloader === 'Z21' && item.softDevice === 'S112 7.3.0' &&
+                    item.channel === 'prerelease' && item.applicationOnly === true && item.migrationRequired === false,
+                    'Das Paket passt nicht zum signierten LCD-Test App679.', 'The package does not match the signed LCD App679 test.');
+                seen.add(item.id);
+                return Object.freeze({...item});
+            }
             const oled = item.board === 'OLED';
             const version = oled
                 ? /^2\.22\.0-DE3\.([1-9][0-9]{0,3})-OLEDt([1-9][0-9]{0,2})$/.exec(item.version)
@@ -62,6 +74,10 @@
         const entry = reference ? {board: reference.board, counter: reference.applicationCounter, version: reference.firmwareVersion,
             privatePreview: reference.artifactStatus !== 'stable-signed-application'}
             : catalog.packages.find(item => item.sha256 === candidate.archiveSha256 && item.bytes === candidate.archiveBytes);
+        if (candidate.image?.target?.counter === 679 && board === 'LCD') {
+            need(entry?.version === '2.22.0-DE4.2-b1' && candidate.image.target.softDevices.length === 1,
+                'Wähle für App679 die veröffentlichte, signierte LCD-Test-ZIP.', 'For App679 select the published, signed LCD test ZIP.');
+        }
         need(!entry || entry.board === board, 'Diese ZIP gehört zum anderen Display. Wähle das passende Gerät und Paket.',
             'This ZIP targets the other display. Select the matching device and package.');
         need(board !== 'OLED' || entry, 'Für OLED bitte die veröffentlichte OLED-App-ZIP wählen.',

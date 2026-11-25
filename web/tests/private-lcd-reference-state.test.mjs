@@ -115,8 +115,8 @@ test('retained signed direct-load packages have complete distinct catalog identi
 
 test('mobile normal App678 download uses its own package while historical TEST1 references remain available', () => {
   const html=readFileSync(new URL('../public/dfu/web.html',import.meta.url),'utf8');
-  assert.match(html,/LCD App678/);
-  assert.match(html,/App678: Normale Firmware/);
+  assert.match(html,/LCD DE4\.1 \/ App678/);
+  assert.match(html,/App678 ist die stabile Vorauswahl/);
   assert.doesNotMatch(html,/App678 TEST|App678.*(?:am Gerät bestanden|physically verified)/);
   assert.match(html,/DE4\.1 \/ App678/);
   assert.doesNotMatch(html,/DE3_93_666|App666/);

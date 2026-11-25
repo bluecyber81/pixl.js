@@ -12,6 +12,7 @@ import { parseStartupDiagnostics } from "./startup-diagnostics.js"
 import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, parseStorageGcDiagnostics, supportsMenuDiagnostics, supportsBleTestDiagnostics, supportsLinkDiagnostics, supportsStorageGcDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
 
+import { groupCreateFrames } from "./group-create-wire.js"
 import i18n from '../i18n'
 
 
@@ -38,6 +39,8 @@ var small_read_probe = null
 var small_batch_capability = null
 var small_batch_probe = null
 var small_create_tx = 0
+var group_create_probe = null
+const groupFramesOption = Symbol('grouped file create')
 var storage_info_cache = new Map()
 var storage_info_queries = new Map()
 var transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0, completedCommands: 0 }
@@ -106,7 +109,8 @@ export function op_queue_push(cmd, tx_data_cb, rx_data_cb, options = {}) {
             p_reject: reject,
             max_response_bytes,
             progress_cb: options.progress_cb,
-            optional_probe: options.optional_probe === true
+            optional_probe: options.optional_probe === true,
+            group_frames: options[groupFramesOption]
         }
         op_queue.push(op);
         process_op_queue();
@@ -119,6 +123,20 @@ function process_op_queue() {
     if (!op_ongoing && op_queue.length > 0) {
         var op = op_queue.shift();
         proocess_op(op);
+    }
+}
+
+async function send_group_frames(op) {
+    for (const bytes of op.group_frames) {
+        if (active_op !== op) throw new Error('Bluetooth session changed');
+        if (op.rx_done) {
+            // Only COMMIT may succeed. An early negative response ends this transaction.
+            if (op.response?.status) return;
+            throw new Error('Unexpected grouped create receipt before COMMIT');
+        }
+        const data = new ByteBuffer();
+        data.append(bytes);
+        await tx_data_frame(op.cmd,0,0,data);
     }
 }
 
@@ -138,7 +156,7 @@ function proocess_op(op) {
     }
     arm_response_timeout(op);
     try {
-        Promise.resolve(tx_data_frame(op.cmd, 0, 0, bb)).then(() => {
+        Promise.resolve(op.group_frames ? send_group_frames(op) : tx_data_frame(op.cmd, 0, 0, bb)).then(() => {
             if (active_op !== op) return;
             op.tx_done = true;
             finish_when_ready(op);
@@ -642,6 +660,52 @@ export function vfs_small_create_revision(firmwareVersion) {
         small_create_generation = generation;
         return revision;
     });
+}
+
+// Version and connection capabilities gate the probe. The folder publisher also
+// verifies the mounted engine before granting access to private staging writes.
+export function vfs_probe_group_create(firmwareVersion) {
+    if (firmwareVersion !== '2.22.0-DE4.2-b1' || !transport_capabilities?.chunkedRequests ||
+        transport_capabilities.gattValueCapacity - DF_HEADER_SIZE < 196) return Promise.resolve(false);
+    const generation = transport_generation;
+    if (group_create_probe?.generation === generation) return group_create_probe.promise;
+    const probe = {generation, available:false};
+    probe.promise = op_queue_push(0x27, () => {}, b => {
+        if (b.remaining() !== 16 || b.readUint32() !== 0x47425850 || b.readUint8() !== 1 ||
+            b.readUint8() !== 4 || b.readUint16() !== 572) throw new Error('Invalid group capability.');
+        return read_revision(b);
+    }, {max_bytes:16}).then(reply => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        if (reply.status === 255) return false;
+        checked_response(reply);
+        return probe.available = true;
+    }).catch(error => {
+        if (group_create_probe === probe) group_create_probe = null;
+        throw error;
+    });
+    group_create_probe = probe;
+    return probe.promise;
+}
+
+export async function vfs_group_create(parent, entries, revision) {
+    const generation = transport_generation;
+    if (group_create_probe?.generation !== generation || !group_create_probe.available) throw new Error('Group create unavailable.');
+    const count = entries.length, id = small_create_tx = (small_create_tx + 1) >>> 0 || 1;
+    const limit = Math.min(transport_capabilities.maxRequestPayload, transport_capabilities.gattValueCapacity - DF_HEADER_SIZE, DF_MAX_DATA_SIZE);
+    const frames = await groupCreateFrames(parent,entries,revision,id,limit);
+    if (transport_generation !== generation) throw new Error('Bluetooth session changed');
+    // Entire multi-frame request owns the regular queue. Every frame uses an
+    // awaited write with ATT response. Only COMMIT has an application success reply.
+    const reply = await op_queue_push(0x28, () => {}, b => {
+        if (b.remaining() !== 14 || b.readUint8() !== 1 || b.readUint8() !== count || b.readUint32() !== id)
+            throw new Error('Unrelated grouped create receipt.');
+        const next = read_revision(b);
+        if (next.slice(0,8) !== revision.slice(0,8) || parseInt(next.slice(8),16) !== parseInt(revision.slice(8),16) + 1)
+            throw new Error('Unexpected grouped create revision.');
+        return next;
+    }, {max_bytes:14, [groupFramesOption]:frames});
+    if (transport_generation !== generation) throw new Error('Bluetooth session changed');
+    return checked_response(reply);
 }
 
 export function vfs_small_read_capable() {
@@ -1486,7 +1550,7 @@ function on_rx_data(data) {
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
         const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04 || h.cmd===0x05 || h.cmd===0x0a || h.cmd===0x0b || h.cmd===0x0c) && op.optional_probe && (h.status===1 || h.status===255);
-        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21 || h.cmd === 0x22 || h.cmd === 0x25) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
+        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21 || h.cmd === 0x22 || h.cmd === 0x25 || h.cmd === 0x27) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';
         op.rx_error = error;

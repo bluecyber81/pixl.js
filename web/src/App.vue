@@ -311,6 +311,11 @@
       <p v-if="connected && deviceNickname" class="device-nickname-context"><strong>{{ $t('info.nicknameDevice', {name:deviceNickname}) }}</strong> {{ $t('info.nicknameDfu') }}</p>
       <FirmwareBoardChoice v-if="visitedWorkspaces.has('update')" :connected="connected" :version="firmwareVersion" :boot="bootInfo" :locale="language">
       <template #lcd>
+      <div v-if="archiveLinks.transferBeta" class="tool-section">
+        <h3>LCD DE4.2-b1 / App679 · Beta</h3>
+        <p>{{ language.startsWith('de') ? 'Die Testfirmware bündelt kleine Dateien. Der Bluetooth-Test am LCD steht aus. Das App-Update setzt Z21 und S112 7.3.0 voraus.' : 'This test firmware groups small files. Bluetooth testing on an LCD is pending. The app update requires Z21 and S112 7.3.0.' }}</p>
+        <p><a :href="archiveLinks.transferBeta" download>{{ language.startsWith('de') ? 'App679 fürs Handy herunterladen (ZIP)' : 'Download App679 for your phone (ZIP)' }}</a> · <a href="dfu/web.html?package=de4.2-b1-lcd-app-test">{{ language.startsWith('de') ? 'App679 im Web-DFU öffnen' : 'Open App679 in Web DFU' }}</a></p>
+      </div>
       <CurrentLcdDownloads :connected="connected" :version="firmwareVersion" :boot="bootInfo" :locale="language" />
       <p class="workspace-description">{{ $t('workflow.updateScope') }}</p>
       <a class="guide-link" :href="guideUrl + '#flash'" target="_blank" rel="noopener noreferrer">{{ $t('workflow.flashGuide') }}</a>
@@ -1494,6 +1499,9 @@ export default {
       return {...this.transfer_adapters(generation),
         readFileDigest:(path,size) => current(() => proto.vfs_backup_digest(path,size,this.firmwareVersion)),
         readCreateRevision:() => current(() => proto.vfs_small_create_revision(this.firmwareVersion)),
+        canGroupCreate:() => this.firmwareVersion === '2.22.0-DE4.2-b1' && current(() => proto.vfs_probe_group_create(this.firmwareVersion)),
+        readRawMetadata:path => current(async () => this.checked(await proto.vfs_read_raw_meta(path))),
+        createGroup:(parent,entries,revision) => current(() => proto.vfs_group_create(parent,entries,revision)),
         createSmall:(path,bytes,sha,revision) => current(() => proto.vfs_small_create(path,bytes,sha,revision)),
         publishSmallFolder:(stage,target,revision) => current(() => proto.vfs_publish_staged_folder(stage,target,revision))
       };
