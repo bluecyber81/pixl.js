@@ -1200,7 +1200,8 @@ static int write_record(pfs_t *fs, io_t *output, const pfs_info_t *info,
 /* Keep the two IO caches local to rebuilding, never to planning/publication. */
 __attribute__((noinline))
 static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
-                   uint32_t count, uint32_t body, bool add) {
+                   uint32_t count, uint32_t body, bool add,
+                   const pfs_small_item_t *items, unsigned item_count) {
   if (count > MAX_RECORDS)
     return LFS_ERR_NOSPC;
   index_t *index = fs->alloc(count * sizeof(*index));
@@ -1260,6 +1261,14 @@ static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
   if (!r && add)
     r = write_record(fs, &output, &c->info, c->stage ? &c->stage->io : NULL, 0,
                      c->memory, &sum);
+  for (unsigned i = 0; !r && i < item_count; i++) {
+    pfs_info_t info = {.type = PFS_FILE, .size = items[i].size};
+    strcpy(info.path, items[i].path);
+    memset(info.meta, 0xff, sizeof(info.meta));
+    index_add(index, indexed++, path_hash(info.path), output_offset);
+    output_offset += record_size(&info);
+    r = write_record(fs, &output, &info, NULL, 0, items[i].bytes, &sum);
+  }
   r = io_close(fs, &input, r);
   if (!r && (indexed != count || output_offset != SH + body))
     r = LFS_ERR_CORRUPT;
@@ -1441,7 +1450,7 @@ static int build_transaction(pfs_t *fs, const change_t *c, manifest_t *m,
     }
     uint32_t id = m->next_id++;
     r = rebuild(fs, c, i < fs->current.count ? fs->current.ids[i] : 0, id,
-                plan.counts[i], plan.bodies[i], (int)i == plan.addslot);
+                plan.counts[i], plan.bodies[i], (int)i == plan.addslot, NULL, 0);
     if (!r)
       m->ids[m->count++] = id;
   }
@@ -1926,3 +1935,100 @@ int pfs_closedir(pfs_dir_t *dir) {
   detach(&dir->h, !r);
   return r;
 }
+
+/* Prototype for already authorized siblings in a private upload leaf. No replacement
+ * permitted. Caller owns the received bytes until this foreground call returns. */
+typedef struct {
+    uint32_t old_id, count, body, first, added;
+} bulk_shard_t;
+
+static int bulk_validate(pfs_t *fs, const pfs_small_item_t *items, unsigned count) {
+    if (!items || !count || count > PFS_BULK_LIMIT) return LFS_ERR_INVAL;
+    const char *parent = NULL;
+    size_t parent_length = 0;
+    pfs_info_t info;
+    location_t loc;
+    for (unsigned i = 0; i < count; i++) {
+        const pfs_small_item_t *item = &items[i];
+        int r = valid_path(item->path, false);
+        if (r) return r;
+        if (!item->bytes || item->size > 572) return LFS_ERR_INVAL;
+        size_t length = (size_t)(strrchr(item->path, '/') - item->path);
+        if (!i) {
+            parent = item->path;
+            parent_length = length;
+            r = parent_exists(fs, item->path);
+            if (r) return r;
+        } else if (parent_length != length || memcmp(parent, item->path, length)) {
+            return LFS_ERR_INVAL;
+        }
+        for (unsigned j = 0; j < i; j++)
+            if (!strcmp(items[j].path, item->path)) return LFS_ERR_EXIST;
+        r = lookup(fs, &fs->current, item->path, &info, &loc);
+        if (r != LFS_ERR_NOENT) return r ? r : LFS_ERR_EXIST;
+    }
+    return 0;
+}
+
+int pfs_create_small_group(pfs_t *fs, uint32_t expected, const pfs_small_item_t *items, unsigned count) {
+    int r = ready(fs, true);
+    if (r) return r;
+    if (!pfs_idle(fs) || fs->current.pending || expected == 0 ||
+        fs->current.generation != expected) return BUSY;
+    r = bulk_validate(fs, items, count);
+    if (r) return io_error(fs, r);
+    if (fs->current.generation == UINT32_MAX) return LFS_ERR_NOSPC;
+    if (needs_collection(fs) && (r = collect(fs))) return r;
+    /* Four files <=572 bytes can cross at most one shard boundary. Preserve
+     * release layout, including filling the old tail and all 64 slots. */
+    bulk_shard_t shards[2] = {{0}};
+    uint32_t old_slots = fs->current.count;
+    if (old_slots) {
+        r = shard_dimensions(fs, old_slots - 1, &shards[0].count, &shards[0].body);
+        if (r) return io_error(fs, r);
+        shards[0].old_id = fs->current.ids[old_slots - 1];
+    }
+    unsigned slot = 0;
+    for (unsigned i = 0; i < count; i++) {
+        uint32_t size = RH + (uint32_t)strlen(items[i].path) + PFS_META_SIZE + items[i].size + 4;
+        bulk_shard_t *s = &shards[slot];
+        if (s->count == MAX_RECORDS || SH + s->body + size + (s->count + 1) * IX + 4 > PFS_SHARD_TARGET) {
+            if (slot || !old_slots || old_slots == PFS_MAX_SHARDS) return LFS_ERR_NOSPC;
+            s = &shards[++slot];
+            s->first = i;
+        }
+        s->count++;
+        s->body += size;
+        s->added++;
+    }
+    unsigned first = shards[0].added ? 0 : 1;
+    uint32_t outputs = slot - first + 1, needed = 8;
+    if (UINT32_MAX - fs->current.next_id < outputs) return LFS_ERR_NOSPC;
+    for (unsigned i = first; i <= slot; i++) {
+        const bulk_shard_t *s = &shards[i];
+        needed += blocks_for(SH + s->body + s->count * IX + 4);
+    }
+    if ((r = reserve(fs, needed))) return r;
+    manifest_t m = fs->current;
+    m.generation++;
+    m.objects += count;
+    fs->transaction = true;
+    fs->gc_state = GC_PENDING;
+    const change_t no_replacement = {.op = PUT, .path = ""};
+    for (unsigned i = first; !r && i <= slot; i++) {
+        const bulk_shard_t *s = &shards[i];
+        const uint32_t id = m.next_id++;
+        r = rebuild(fs, &no_replacement, s->old_id, id, s->count, s->body, false,
+                    items + s->first, s->added);
+        if (!r) {
+            if (s->old_id) m.ids[old_slots - 1] = id;
+            else m.ids[m.count++] = id;
+        }
+    }
+    if (!r) r = publish(fs, &m);
+    fs->transaction = false;
+    r = io_error(fs, r);
+    maintain(fs);
+    return r;
+}
+

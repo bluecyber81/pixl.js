@@ -70,6 +70,13 @@ typedef struct {
 } pfs_gc_diagnostic_t;
 bool pfs_gc_diagnostic(const pfs_t *fs, pfs_gc_diagnostic_t *out);
 #endif
+#define PFS_BULK_LIMIT 4u
+typedef struct {
+    const char *path;
+    const uint8_t *bytes;
+    uint16_t size;
+} pfs_small_item_t;
+int pfs_create_small_group(pfs_t *fs, uint32_t expected, const pfs_small_item_t *items, unsigned count);
 int pfs_stat(pfs_t *fs, const char *path, pfs_info_t *info);
 int pfs_create_small(pfs_t *fs, const char *path, const uint8_t *data, size_t size);
 int pfs_mkdir(pfs_t *fs, const char *path);

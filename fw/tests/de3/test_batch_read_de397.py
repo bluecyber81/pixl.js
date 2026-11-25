@@ -90,6 +90,8 @@ uint32_t hal_spi_flash_erase(uint32_t);
             command += [str(p) for p in [HERE / "batch_read_de397.c", HERE / "packed_vfs_nor_de344.c",
                                          df / "df_small_create.c", vfs / "vfs_meta.c", vendor / "sha256.c",
                                          vfs / "vfs_persist.c", lfs / "lfs.c", lfs / "lfs_util.c"]]
+            if os.environ.get('PIXL_GROUP_CREATE_TEST') == '1':
+                command += ['-DPIXL_GROUP_CREATE_ENABLE=1', str(df / 'bulk_wire.c')]
             command += ["-o", str(exe)]
             if arm:
                 command += ["-static"]

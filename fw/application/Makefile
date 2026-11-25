@@ -686,7 +686,8 @@ CFLAGS += -DBOARD_$(BOARD)
 ifeq ($(BOARD),LCD)
 # Mount and file buffers are explicitly owned by the bounded application pool.
 CFLAGS += -DLFS_NO_MALLOC
-CFLAGS += -DPIXL_SMALL_CREATE_ENABLE=1
+CFLAGS += -DPIXL_SMALL_CREATE_ENABLE=1 -DPIXL_GROUP_CREATE_ENABLE=1
+SRC_FILES += $(PROJ_DIR)/mod/df/bulk_wire.c
 CFLAGS += -DLFS_NO_ASSERT -DLFS_NO_DEBUG -DLFS_NO_WARN -DLFS_NO_ERROR
 ifeq ($(FILESYSTEM),SPIFFS_PREP)
 CFLAGS += -DPIXL_FS_SPIFFS_PREP
@@ -807,6 +808,12 @@ $(foreach target, $(TARGETS), $(call define_target, $(target)))
 OWN_C_SOURCES := $(sort $(filter $(PROJ_DIR)/%.c,$(SRC_FILES)))
 OWN_C_OBJECTS := $(addprefix $(OUTPUT_DIRECTORY)/pixljs/,$(addsuffix .o,$(notdir $(OWN_C_SOURCES))))
 $(OWN_C_OBJECTS): CFLAGS += -Werror=implicit-function-declaration -Werror=incompatible-pointer-types -Werror=int-conversion
+
+
+ifeq ($(BOARD),LCD)
+LCD_BULK_SIZE_OBJECTS := lfs.c lfs_util.c packed_fs.c vfs_driver_packed.c vfs_packed_runtime.c vfs_persist.c vfs_meta.c df_small_create.c bulk_wire.c df_core.c df_proto_vfs.c
+$(addprefix $(OUTPUT_DIRECTORY)/pixljs/,$(addsuffix .o,$(LCD_BULK_SIZE_OBJECTS))): CFLAGS += -Os -flto -ffat-lto-objects
+endif
 
 .PHONY: flash flash_softdevice erase
 .PHONY: size_report size_report_files
