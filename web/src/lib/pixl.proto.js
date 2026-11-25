@@ -1396,6 +1396,7 @@ async function tx_data_frame(cmd, status, chunk, data) {
     // The queue still waits for both the browser write and the firmware reply.
     const useProtocolReply = chunked && payload.length <= capacity && (
         readQueriesWithReply.has(cmd) || (cmd === 0x05 && payload.length <= 1) ||
+        ((cmd === 0x22 || cmd === 0x25) && payload.length === 0) ||
         cmd === 0x15 || (cmd === 0x23 && payload[0] <= 1) ||
         (cmd === 0x24 && vfs_small_read_capable()) ||
         (cmd === 0x26 && small_batch_capability?.generation === generation && !!small_batch_capability.value)

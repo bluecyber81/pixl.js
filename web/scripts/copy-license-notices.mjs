@@ -32,7 +32,7 @@ export function copyNotices(mode) {
   const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;')
   const version = JSON.parse(fs.readFileSync(path.join(webRoot, 'package.json'), 'utf8')).version
   const sourceUrl = 'https://github.com/bluecyber81/pixl.js/archive/3a5ea8a3662a942cb4ed9ea56a9a68939c07b5a9.zip'
-  const transferTest = mode === 'test-transfer3' || process.env.VITE_BUILD_LABEL === transferTestLabel
+  const transferTest = mode === 'test-transfer4' || process.env.VITE_BUILD_LABEL === transferTestLabel
   const archives = projectDownloads(version, transferTest ? transferTestLabel : '')
   const sourceTag = transferTest ? transferTestTag : 'web' + version
   const displayVersion = transferTest ? version + ' · ' + transferTestLabel : version

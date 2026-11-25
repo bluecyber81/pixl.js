@@ -10,7 +10,7 @@ const web = fileURLToPath(new URL('../', import.meta.url));
 const mode = process.argv[2];
 if (process.argv.length !== 3) throw new Error('Expected one build target');
 const [folder, base] = buildTarget(mode), output = path.join(web, folder);
-const transferTest = mode === 'test-transfer3' || process.env.VITE_BUILD_LABEL === transferTestLabel;
+const transferTest = mode === 'test-transfer4' || process.env.VITE_BUILD_LABEL === transferTestLabel;
 const packageBytes = fs.readFileSync(path.join(web, 'package.json'));
 const release = JSON.parse(packageBytes);
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');

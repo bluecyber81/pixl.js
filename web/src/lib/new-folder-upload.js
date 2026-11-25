@@ -103,7 +103,7 @@ export function pendingFolderUpload(job) {
 
 /** Publish a wholly new PackedFS subtree. Only the caller's capability-checked
  * PackedFS writer may supply RAW128 writes with disconnect-abort semantics.
- * job.completed tracks acknowledged writes. Publication requires full hashes. */
+ * job.completed tracks acknowledged writes. Short checks record ordinary CLOSE separately from a digest. */
 export async function executeNewFolderUpload({ plan, job, files, selectedPaths, deviceKey, assertSession, signal, onProgress,
   createDirectory, writeFile, readDirectory, readFile, readFileDigest, readCreateRevision, createSmall, publishSmallFolder,
   rename, getFreeBytes, requireSmallCreate = false, quickPacked = false, [siblingSnapshot]:parentSample, [leafSpace]:boundSpace, randomToken = randomHex }) {

@@ -1,0 +1,80 @@
+{
+  "web": "3.66.1 Transfer Test 4",
+  "baselineSource": "150edaf3c9b9a51adec65a92d0d9a7f2c1ea6d19",
+  "lcdFirmware": "DE4.1 App678",
+  "folderUpload": {
+    "files": 1081,
+    "bytes": 658806,
+    "model": "Actual DE4.1 C PackedFS and LittleFS on 2 MiB RAM-backed NOR with 230/512 blocks occupied initially; no radio timing. Logical operation counts cover the upload after preview.",
+    "existingEmptyDestination": {
+      "test3": {
+        "directoryListings": 795,
+        "freeSpaceQueries": 90,
+        "standaloneSha256Queries": 32
+      },
+      "test4": {
+        "scope": "actual C PackedFS and LittleFS on 2 MiB RAM flash, reconstructed baseline, physical comparison dataset; no Bluetooth duration",
+        "baselineBlocks": 230,
+        "usedBlocks": 452,
+        "peakBlocks": 452,
+        "engineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
+        "files": 1081,
+        "bytes": 658806,
+        "remountedAndConfirmedByShaAndRaw128": 1081,
+        "raw": 32,
+        "small": 1049,
+        "leaves": 46,
+        "hashes": 0,
+        "spaceCalls": 51,
+        "revisionCalls": 143,
+        "listings": 104
+      }
+    },
+    "newTopFolder": {
+      "scope": "actual C PackedFS and LittleFS on 2 MiB RAM flash, reconstructed baseline, physical comparison dataset; no Bluetooth duration",
+      "baselineBlocks": 230,
+      "usedBlocks": 452,
+      "peakBlocks": 452,
+      "engineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
+      "files": 1081,
+      "bytes": 658806,
+      "remountedAndConfirmedByShaAndRaw128": 1081,
+      "raw": 32,
+      "small": 1049,
+      "leaves": 46,
+      "hashes": 0,
+      "spaceCalls": 51,
+      "revisionCalls": 143,
+      "listings": 105
+    },
+    "lostSmallCreateReply33": {
+      "scope": "actual C PackedFS and LittleFS on 2 MiB RAM flash, reconstructed baseline, physical comparison dataset; no Bluetooth duration",
+      "baselineBlocks": 230,
+      "usedBlocks": 452,
+      "peakBlocks": 452,
+      "engineSha256": "3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f",
+      "physicalWritesOfSmallThroughWholeRun": 1049,
+      "disconnectedAfterNativeCommit": 33,
+      "checkpointedFinalPathsAtDrop": 2,
+      "acceptedOnResume": 33,
+      "files": 1081,
+      "bytes": 658806,
+      "remountedAndConfirmedByShaAndRaw128": 1081,
+      "raw": 32,
+      "small": 1049,
+      "leaves": 46,
+      "hashes": 33
+    },
+    "storageReadOperations": {
+      "scope": "Callback operations in the same instrumented host NOR workload. These are not measured transfer seconds.",
+      "test3": 10206034,
+      "test4": 8010813,
+      "elapsedHardwareUpload": "pending"
+    },
+    "receipts": "Guarded small creates return on-device stored SHA; ordinary RAW128 CLOSE acknowledgements remain distinguishable from a digest. The optional read-only folder comparison verifies file contents. A changed generation forces reconciliation."
+  },
+  "includedFirmware": {
+    "application": "DE4.1 App678",
+    "sha256": "beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0"
+  }
+}

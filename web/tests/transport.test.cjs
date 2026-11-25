@@ -1548,6 +1548,7 @@ test('read optimisation preserves legacy writes, fragment flow control and modif
         [0x05, [1], true], [0x05, [69, 86, 84, 33, 1], false],
         [0x02, [], false], [0x11, [69], false], [0x18, [0, 0], false],
         [0x0a, [76, 67, 68, 49, 0], true], [0x21, [1, 0, 69, 0, 0], true],
+        [0x22, [], true], [0x22, [1], false], [0x25, [], true], [0x25, [1], false],
         [0x16, Array(25).fill(1), false],
     ]) {
         const start = f.writeModes.length;
