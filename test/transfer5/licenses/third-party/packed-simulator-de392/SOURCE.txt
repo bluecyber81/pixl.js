@@ -1,0 +1,38 @@
+Exact App665 / LCD DE3.92 simulator source binding
+=================================================
+Firmware production commit: 73df4e3d16f0e51b3bbd3e9bf10387010ed32934
+Firmware final validation commit: 05028b679591e3d228f2b43c6057e3905f5cca88
+Firmware SourceID: 49ed45a809f197c9d3b072bf1cb243fd8cf0b62fa55826d2cfeda841afe767b9
+Engine SHA256: 605356ff74646392adcfb26adf5c7d39fe7138272e84b4e4a0f167b94e34c2c1
+WASM SHA256: 08428602391b6d9f8ee1bfb28abf683a5a774b97d75242da70d8d0f2f6314d16
+
+Only this new profile uses WASI SDK 34.0 for Linux x86_64, with Clang
+23.1.0-wasi-sdk (LLVM commit 895aa2c896ada719451be2e3673c83da8ddf1141).
+The previous profiles retain their original Clang 23.1.4 compiler/output gates.
+The SDK is obtained from the official WebAssembly/wasi-sdk project:
+https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-34
+https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-34/wasi-sdk-34.0-x86_64-linux.tar.gz
+Archive SHA256: b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4
+Compiler and linker binary hashes and exact versions: SOURCE_BINDING.json.
+The compiler is not included. Verify the archive hash before extracting it.
+
+Reproduce from the root of the extracted source archive:
+  python3 web/scripts/build-capacity-de392.py --sdk /path/to/wasi-sdk-34.0-x86_64-linux --output /path/to/new-evidence-directory
+The dedicated builder checks compiler/linker binary hashes and versions,
+all source hashes, the engine identity, and exact output bytes. It disables
+SDK default config explicitly and compares against the shipped WASM.
+No old profile or historical compiler check is changed by this new builder.
+
+The six core/LittleFS files are byte-identical to the frozen App665 firmware.
+The RAM-only simulation harness and freestanding helpers are retained from
+the private App664 profile. Source hashes cover the full 12-file source set.
+The same pinned engine passed a 1,208-entry synthetic import/readback and
+six cross-mount phases with App664, including read-only NOR-write checks.
+Qualification also executes the linked ARM layout routine from the actual
+App665 ELF. See docs/validation/DE3_92_PFS.json in the full source package.
+
+The simulator executes no device operations. Its capacity estimate does
+not establish physical free space, power-cut safety or hardware acceptance.
+Application transfers still require the separate signed OTA package.
+
+License notices are included as GPL-2.0-LICENSE and LITTLEFS-LICENSE.md.

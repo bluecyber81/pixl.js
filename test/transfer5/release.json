@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "application": "allmiibo-dateimanager",
+  "version": "3.66.1",
+  "base": "/pixl.js/test/transfer5/",
+  "channel": "isolated-test-path",
+  "label": "Transfer Test 5",
+  "sourceTag": "de4.2-b1-lcd-transfer-test",
+  "packageManifestSha256": "2e2ee468d3c1fe5e5bd5ecee91d35efe5d4e5cb52b47db8dade4c613152023de",
+  "firmware": {
+    "id": "de4.1-lcd-app",
+    "version": "2.22.0-DE4.1",
+    "counter": 678,
+    "path": "firmware/Allmiibo_LCD_DE4_1_678_NUR_APP.zip",
+    "bytes": 255266,
+    "sha256": "beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0"
+  },
+  "testFirmware": {
+    "id": "de4.2-b1-lcd-app-test",
+    "version": "2.22.0-DE4.2-b1",
+    "counter": 679,
+    "path": "firmware/Allmiibo_LCD_DE4_2_b1_App679_NUR_APP_TEST.zip",
+    "bytes": 257000,
+    "sha256": "1e508061e86d75addb1345d5d8c9b0eac94ebf02081c519517461e952a7f5f17",
+    "board": "LCD",
+    "applicationOnly": true,
+    "hardwareAcceptance": "pending"
+  }
+}

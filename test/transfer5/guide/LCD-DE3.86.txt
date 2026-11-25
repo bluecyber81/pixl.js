@@ -1,0 +1,22 @@
+LCD DE3.86 / App659 · Dateimanager 3.57.0
+18.11.2026 – Lokale Testversion / local test build
+
+DE
+Für Allmiibo LCD (ST7567), PFS1, Z21 und S112 7.3.0.
+Die ZIP enthält die Anwendung. Speicherstand vor dem Update sichern.
+Die Firmware erkennt belegte Slots ohne Katalogkennung. Beim Ersetzen fragt
+sie nach. Ein schreibgeschützter Slot wird beim Speichern übersprungen.
+Auch große Favoritenordner lassen sich der Reihe nach durchblättern.
+Importierte Favoriten mit anderer Schreibweise werden erkannt.
+Der Start kann abhängig vom freien Speicher mehr Leseseiten verwenden.
+Die reale Startzeit muss auf dem LCD mit derselben Sammlung gemessen werden.
+Der erste Hardwaretest für App659 steht aus.
+
+EN
+For Allmiibo LCD (ST7567), PFS1, Z21 and S112 7.3.0.
+This ZIP updates the application. Back up your collection before updating.
+Occupied slots are recognized even without a catalogue ID. Replacement
+requires confirmation, and read-only slots are protected. Large favorites
+folders remain navigable and imported case variants are recognized.
+Startup can use more cache pages when enough memory is available.
+Physical startup timing and first hardware acceptance for App659 are pending.
