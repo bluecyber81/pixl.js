@@ -63,6 +63,8 @@ function harness(overrides = {}) {
     writableDirectoryPath: (...args) => import('../src/lib/safe-upload.js').then(module => module.writableDirectoryPath(...args)),
     createSyncPlan: options => overrides.createSyncPlan(options), createSyncJob: plan => overrides.createSyncJob(plan),
     newFolderUploadRoot: (...args) => require('../src/lib/new-folder-upload.js').newFolderUploadRoot(...args),
+    prepareLeafUploads: require('../src/lib/new-folder-upload.js').prepareLeafUploads,
+    pendingFolderUpload: require('../src/lib/new-folder-upload.js').pendingFolderUpload,
     executeNewFolderUpload: options => overrides.executeNewFolderUpload(options),
     executeSyncJob: options => overrides.executeSyncJob(options) });
   // In browsers the Window picker is also a global. Keep that real contract
@@ -608,6 +610,24 @@ test('a new LCD folder can be filled file by file without publishing the whole t
     assert.deepEqual(routes, [direct ? 'files' : 'tree']);
   }
 });
+
+test('existing folder upload enables guarded leaves only after the PackedFS capability check', async () => {
+  for (const packed of [false,true]) {
+    let options
+    const app = connected(harness({createSyncJob:()=>({completed:[]}),
+      executeSyncJob:async request=>{options=request;return {completed:1,skipped:0,job:request.job}}}))
+    readyCurrentSync(app)
+    app.firmwareVersion='2.22.0-DE4.1'
+    app.supports_folder_publish=async()=>packed
+    app.syncFolderContents=true
+    app.syncPlan = {...app.syncPlan, schema:1, directories:[{path:'E:/New',status:'create'}],
+      entries:[{targetPath:'E:/New/a.bin',status:'add',expected:null}]}
+    app.syncSelected=['E:/New/a.bin']
+    await app.run_sync(false)
+    assert.equal(typeof options.prepareLeafUploads, packed ? 'function' : 'undefined')
+    assert.equal(typeof options.writeNewPackedFile, packed ? 'function' : 'undefined')
+  }
+})
 
 test('file-by-file choice is not offered for an existing target or a folder comparison', async () => {
   const app = connected(harness());

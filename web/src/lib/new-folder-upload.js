@@ -1,7 +1,7 @@
 import { assertWritableDevicePath, devicePathSpace, joinDevicePath, portableNameKey, splitDevicePath } from './portable-names.js'
 import { checkedDirectory, deviceFileSha256, metadataKey, sha256Bytes, snapshotFile, targetEntry, writableDirectoryPath } from './safe-upload.js'
 import { decodeRawMetadata } from './raw-metadata.js'
-import { SyncError, syncPlanFingerprint, syncSourcesOf } from './sync-plan.js'
+import { createSyncJob, SyncError, syncPlanFingerprint, syncSourcesOf } from './sync-plan.js'
 
 const emptyMetadata = new Uint8Array(128).fill(255)
 const emptyKey = metadataKey(decodeRawMetadata(emptyMetadata))
@@ -11,6 +11,8 @@ const randomHex = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), n 
 const isNeutral = entry => metadataKey(entry.meta) === emptyKey
 const validRevision = value => typeof value === 'string' && /^[0-9a-f]{16}$/.test(value) && value !== '0000000000000000'
 const fitsSmallCreate = entry => entry.size <= 572
+// Keep each leaf rename within the 100-file subtree exercised on the 2 MiB model.
+const maxLeafFiles = 100
 const singleCommit = (before, after) => before.slice(0,8) === after.slice(0,8) &&
   parseInt(before.slice(8),16) + 1 === parseInt(after.slice(8),16)
 
@@ -31,12 +33,73 @@ export function newFolderUploadRoot(plan, selectedPaths) {
   return root && tokenLength(root, wanted) >= 8 ? root : null
 }
 
+// Group only physically absent leaf directories. Each group uses the same
+// audited, no-clobber publication as a newly uploaded top-level folder.
+export async function prepareLeafUploads({ options, fresh, wanted, sources, check }) {
+  const { plan, job } = options
+  const groups = new Map()
+  const pending = job.leafUpload
+  if (!plan.rootPath.startsWith('E:/') || !['createSmall','publishSmallFolder','readCreateRevision','writeFile','getFreeBytes'].every(key => typeof options[key] === 'function')) return groups
+  const branches = new Set(plan.directories.map(dir => splitDevicePath(dir.path).parent))
+  const current = new Map(fresh.directories.map(dir => [dir.path, dir.status]))
+  for (const dir of plan.directories) {
+    if (dir.status !== 'create' || branches.has(dir.path) || dir.path.split('/').some(name => /^~u[a-f0-9]{8,12}$/.test(name))) continue
+    if (current.get(dir.path) !== 'create' && pending?.targetPath !== dir.path) continue
+    groups.set(dir.path, {path:dir.path, directory:dir, entries:[]})
+  }
+  for (const entry of wanted) groups.get(splitDevicePath(entry.targetPath).parent)?.entries.push(entry)
+  for (const [path, group] of groups) {
+    const {parent, name} = splitDevicePath(path)
+    const entries = group.entries
+    const paths = entries.map(entry => entry.targetPath)
+    const relativePath = entry => name + '/' + splitDevicePath(entry.targetPath).name
+    const child = {schema:1, deviceKey:plan.deviceKey, rootPath:parent, deviceOnly:[],
+      directories:[{...group.directory, relativePath:name}],
+      entries:entries.map(entry => ({...entry, relativePath:relativePath(entry)}))}
+    if (entries.length > maxLeafFiles || !entries.some(fitsSmallCreate) || newFolderUploadRoot(child, paths) !== path) {
+      groups.delete(path)
+      continue
+    }
+    // PackedFS rewrites the affected shards on rename. Account for both record
+    // copies, the engine's eight reserve blocks, and one shared 32 KiB shard.
+    // The engine remains authoritative if the free-space snapshot becomes stale.
+    const block = 4096, payload = entries.reduce((sum, entry) => sum + entry.size, 0)
+    const recordBytes = payload + (entries.length + 1) * (16 + 64 + 128 + 4 + 12)
+    const headroom = 2 * Math.ceil(recordBytes / (block - 32)) * block + 8 * block + 32768
+    group.canStart = async () => {
+      const free = await options.getFreeBytes(plan.rootPath)
+      check()
+      if (!Number.isSafeInteger(free) || free < payload) throw new SyncError('UPLOAD_SPACE', 'Insufficient space for the selected files.')
+      return free >= headroom
+    }
+    group.run = async onProgress => {
+      child.fingerprint = await syncPlanFingerprint(child)
+      check()
+      if (!job.leafUpload) job.leafUpload = {targetPath:path, job:createSyncJob(child)}
+      if (job.leafUpload.targetPath !== path) stale()
+      const files = entries.map(entry => ({relativePath:relativePath(entry), file:sources.files.get(entry.targetPath).file}))
+      return executeNewFolderUpload({...options, plan:child, job:job.leafUpload.job, files, selectedPaths:paths, requireSmallCreate:true, onProgress})
+    }
+  }
+  if (groups.size) {
+    const revision = await options.readCreateRevision()
+    check()
+    if (revision === null) groups.clear()
+    else if (!validRevision(revision)) stale()
+  }
+  return groups
+}
+
+export function pendingFolderUpload(job) {
+  return job?.newFolderUpload || job?.leafUpload?.job?.newFolderUpload
+}
+
 /** Publish a wholly new PackedFS subtree. Only the caller's capability-checked
  * PackedFS writer may supply RAW128 writes with disconnect-abort semantics.
  * job.completed tracks acknowledged writes. Publication requires full hashes. */
 export async function executeNewFolderUpload({ plan, job, files, selectedPaths, deviceKey, assertSession, signal, onProgress,
   createDirectory, writeFile, readDirectory, readFile, readFileDigest, readCreateRevision, createSmall, publishSmallFolder,
-  rename, getFreeBytes, randomToken = randomHex }) {
+  rename, getFreeBytes, requireSmallCreate = false, randomToken = randomHex }) {
   const check = () => {
     assertSession()
     if (signal?.aborted) throw new SyncError('SYNC_CANCELLED', 'Folder upload cancelled.')
@@ -168,7 +231,7 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       typeof createSmall === 'function' && typeof readCreateRevision === 'function' && typeof publishSmallFolder === 'function' &&
       wanted.some(fitsSmallCreate) ? await readCreateRevision() : null
     check()
-    if (candidate !== null && !validRevision(candidate) || state?.nativeReceipts && !candidate) stale()
+    if (candidate !== null && !validRevision(candidate) || (requireSmallCreate || state?.nativeReceipts) && !candidate) stale()
     async function published(entries) {
       if (!isPublished(entries)) return false
       if (candidate) await audit(targetPath, false)

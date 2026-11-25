@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { newFolderUploadRoot, executeNewFolderUpload } from '../src/lib/new-folder-upload.js'
-import { createSyncPlan, createSyncJob } from '../src/lib/sync-plan.js'
+import { newFolderUploadRoot, executeNewFolderUpload, prepareLeafUploads, pendingFolderUpload } from '../src/lib/new-folder-upload.js'
+import { createSyncPlan, createSyncJob, executeSyncJob } from '../src/lib/sync-plan.js'
 import { sha256Bytes } from '../src/lib/safe-upload.js'
 import { decodeRawMetadata } from '../src/lib/raw-metadata.js'
 
@@ -459,4 +459,243 @@ test('native reconnect rechecks every retained byte, including a lost create or 
       assert(s.actions.filter(e=>e.kind==='hash').length>=done.skipped)
     }
   }
+})
+
+async function setupExisting(files) {
+  const vfs = packedVfs()
+  const native = nativeApi(vfs)
+  const plan = await createSyncPlan({...vfs.api,rootPath:root,deviceKey:identity,files})
+  const job = createSyncJob(plan)
+  const options = {...vfs.api,...native,files,plan,job,deviceKey:identity,prepareLeafUploads,
+    writeNewPackedFile:vfs.api.writeFile,uploadFile:async () => assert.fail('Unexpected replacement')}
+  return {...vfs, native, plan, job, run:(overrides={}) => executeSyncJob({...options,...overrides})}
+}
+
+function smallFileWorkload() {
+  // Anonymous directory topology and size counts. Contents are generated locally.
+  const layout = [
+    ["",[[238,2],[160,1],[26,1]]],
+    ["d0/d0",[[540,2]]],
+    ["d0/d1/d0",[[540,100]]],
+    ["d0/d1/d1",[[540,100]]],
+    ["d0/d1/d2",[[540,100]]],
+    ["d0/d1/d3",[[540,100]]],
+    ["d0/d1/d4",[[540,96]]],
+    ["d0/d1/d5",[[540,3]]],
+    ["d0/d1/d6",[[540,16]]],
+    ["d0/d1/d7",[[540,6]]],
+    ["d0/d1/d8",[[540,2]]],
+    ["d0/d1/d9",[[540,50]]],
+    ["d0/d2",[[540,1]]],
+    ["d0/d3",[[540,1]]],
+    ["d0/d4",[[540,1]]],
+    ["d0/d5",[[540,1]]],
+    ["d0/d6",[[540,3],[532,1]]],
+    ["d0/d7",[[540,4]]],
+    ["d0/d8",[[2048,25]]],
+    ["d0/d9",[[540,90]]],
+    ["d0/d10",[[540,1]]],
+    ["d0/d11",[[540,7]]],
+    ["d0/d12",[[540,6]]],
+    ["d0/d13",[[540,12]]],
+    ["d0/d14",[[540,6]]],
+    ["d0/d15",[[540,2]]],
+    ["d0/d16",[[540,1]]],
+    ["d0/d17",[[540,2]]],
+    ["d0/d18",[[540,12]]],
+    ["d0/d19",[[540,1]]],
+    ["d0/d20",[[540,2]]],
+    ["d0/d21",[[540,5]]],
+    ["d0/d22",[[540,4]]],
+    ["d0/d23",[[540,30]]],
+    ["d0/d24/d0",[[540,3]]],
+    ["d0/d24/d1",[[540,60]]],
+    ["d0/d25",[[540,35]]],
+    ["d0/d26",[[572,6],[540,3]]],
+    ["d0/d27",[[540,92],[572,4]]],
+    ["d0/d28",[[540,2]]],
+    ["d0/d29",[[540,5]]],
+    ["d0/d30",[[540,7]]],
+    ["d0/d31",[[540,33]]],
+    ["d1/d0/d0",[[160,1],[80,2]]],
+    ["d2",[[540,26]]],
+    ["d3/d0",[[320,1]]],
+    ["d3/d1",[[594,2],[68,1]]],
+    ["d4",[[40976,1]]]
+  ]
+  const files = []
+  for (const [directory, counts] of layout) {
+    let index = 0
+    for (const [size,count] of counts) for (let i=0; i<count; ++i) {
+      const name = 'file' + index++ + '.bin'
+      const contents = Uint8Array.from({length:size}, (_, pos) => (pos + files.length) % 251)
+      files.push({relativePath:directory ? directory + '/' + name : name,file:new File([contents],name)})
+    }
+  }
+  return files
+}
+
+test('same existing root, 1081 files: guarded leaf publication and direct writes give identical verified output', async t => {
+  const files = smallFileWorkload()
+  assert.equal(files.length,1081)
+  assert.equal(files.reduce((n,f)=>n+f.file.size,0),658806)
+  const stats = []
+  for (const fast of [false,true]) {
+    const s = await setupExisting(files)
+    s.actions.length = 0
+    const result = await s.run({prepareLeafUploads:fast ? prepareLeafUploads : undefined})
+    assert.equal(result.completed,1081); assert.equal(result.uploadedBytes,658806)
+    assert.equal(result.job.completed.length,1081); assert.equal(result.job.state,'complete')
+    assert(![...s.nodes.keys()].some(p=>p.includes('/~u')))
+    assert.equal([...s.nodes.values()].filter(node=>node.type===0).length,1081)
+    for (const {relativePath,file} of files) {
+      const node = s.nodes.get(root + '/' + relativePath)
+      assert.deepEqual(node.bytes, new Uint8Array(await file.arrayBuffer()))
+      assert.deepEqual(node.meta,newMetadata())
+    }
+    stats.push({lists:s.actions.filter(x=>x.kind==='list').length,hash:s.actions.filter(x=>x.kind==='hash').length,
+      opens:s.actions.filter(x=>x.kind==='open').length,
+      published:s.actions.filter(x=>x.kind==='rename' && x.phase==='after').length,small:s.native.actions.length})
+  }
+  t.diagnostic(JSON.stringify({ordinary:stats[0],leaf:stats[1]}))
+  assert.equal(stats[1].small,1049)
+  assert.equal(stats[1].published,45)
+  assert(stats[1].lists < stats[0].lists/2)
+})
+
+for (const phase of ['start','commit','publish','published']) {
+  test('existing root recovers a leaf after link loss at '+phase, async () => {
+    const files = [local('group/leaf/a.bin',1),local('group/leaf/b.bin',2),local('next/c.bin',3),local('loose.bin',4)]
+    const s = await setupExisting(files)
+    let cut = false
+    const native = nativeApi(s, async event => {
+      if (!cut && event === phase) {cut=true;s.disconnect();s.api.assertSession()}
+    })
+    await assert.rejects(s.run(native),{code:'DISCONNECTED'})
+    assert.equal(s.job.completed.length,0)
+    assert(pendingFolderUpload(s.job)?.stagePath)
+    s.reconnect()
+    await assert.rejects(s.run({...native,readCreateRevision:async()=>null}),{code:'SYNC_STALE'})
+    const result=await s.run(native)
+    assert.equal(result.job.state,'complete'); assert.equal(result.completed + result.skipped,files.length)
+    assert.equal(pendingFolderUpload(s.job),undefined)
+    assert.equal(native.actions.length,3)
+    assert.equal([...s.nodes.values()].filter(node=>node.type===0).length,4)
+    assert(![...s.nodes.keys()].some(p=>p.includes('/~u')))
+    for (const [i,file] of files.entries()) assert.deepEqual(s.nodes.get(root+'/'+file.relativePath).bytes,bytesOf(i+1))
+  })
+}
+
+test('unknown firmware and older supported PackedFS keep ordinary checked writes', async () => {
+  const files = [local('leaf/a.bin',1),local('leaf/b.bin',2)]
+  const s = await setupExisting(files)
+  const result = await s.run({readCreateRevision:async()=>null})
+  assert.equal(result.completed,2); assert.equal(s.native.actions.length,0)
+  assert.equal(s.actions.filter(x=>x.kind==='hash').length,2)
+  assert(!pendingFolderUpload(s.job))
+})
+
+test('existing folders and their metadata are preserved, only missing selected leaves are published', async () => {
+  const files = [local('old/a.bin',1),local('nested/new/b.bin',2),local('nested/new/c.bin',3)]
+  const s = await setupExisting(files)
+  const old = directory(); old.meta.notes = 'existing note'
+  s.nodes.set(root+'/old',old)
+  s.nodes.set(root+'/old/keep.bin',{type:0,bytes:bytesOf(9),meta:newMetadata()})
+  const selectedPaths = files.slice(0,2).map(f=>root+'/'+f.relativePath)
+  const result = await s.run({selectedPaths})
+  assert.equal(result.completed,2); assert.equal(s.native.actions.length,1)
+  assert.equal(s.nodes.get(root+'/old').meta.notes,'existing note')
+  assert.deepEqual(s.nodes.get(root+'/old/keep.bin').bytes,bytesOf(9))
+  assert(!s.nodes.has(root+'/nested/new/c.bin'))
+})
+
+test('ambiguous reservation or foreign data prevents resumed publication', async () => {
+  for(const loseReservation of [true,false]) {
+    const s = await setupExisting([local('leaf/a.bin',1),local('leaf/b.bin',2)])
+    if(loseReservation) s.setHook(({kind,path,phase})=>{
+      if(kind==='mkdir' && path.includes('/~u') && phase==='after') s.disconnect()
+    })
+    const native = nativeApi(s, async event=>{if(!loseReservation && event==='commit') s.disconnect()})
+    await assert.rejects(s.run(native),{code:'DISCONNECTED'})
+    const stage = pendingFolderUpload(s.job).stagePath
+    s.setHook(()=>{}); s.reconnect()
+    s.nodes.set(stage+'/unexpected',{type:0,meta:newMetadata(),bytes:bytesOf(10)})
+    await assert.rejects(s.run(native),{code:'SYNC_STALE'})
+    assert.equal(s.job.completed.length,0); assert(s.nodes.has(stage+'/unexpected'))
+    assert(!s.nodes.has(root+'/leaf'))
+  }
+})
+
+test('tight space chooses direct verified writes before allocating a stage; insufficient payload space refuses the leaf', async () => {
+  const files=[local('Small/a.bin',1),local('Small/b.bin',2)]
+  for(const [space, expected] of [[32768,'direct'],[539,'refuse'],[NaN,'refuse']]) {
+    const s=await setupExisting(files)
+    if(expected==='direct') {
+      const result=await s.run({getFreeBytes:async()=>space})
+      assert.equal(result.completed,2); assert.equal(s.actions.filter(x=>x.kind==='hash').length,2)
+    } else {
+      await assert.rejects(s.run({getFreeBytes:async()=>space}),{code:'UPLOAD_SPACE'})
+      assert.equal(s.job.completed.length,0); assert(!s.nodes.has(root+'/Small'))
+    }
+    assert(!pendingFolderUpload(s.job)); assert.equal(s.native.actions.length,0)
+  }
+})
+
+test('a completed outer job cannot import another active stage or silently accept changed bytes', async () => {
+  const files=[local('Small/a.bin',1),local('Small/b.bin',2)]
+  const s=await setupExisting(files)
+  await s.run()
+  s.job.leafUpload={targetPath:root+'/Small',job:{completed:[]}}
+  await assert.rejects(s.run(),{code:'SYNC_JOB'})
+  delete s.job.leafUpload
+  s.nodes.get(root+'/Small/a.bin').meta.notes='external edit'
+  await assert.rejects(s.run(),{code:'SYNC_STALE'})
+  assert.equal(s.nodes.get(root+'/Small/a.bin').meta.notes,'external edit')
+  s.nodes.get(root+'/Small/a.bin').meta=newMetadata()
+  s.nodes.get(root+'/Small/a.bin').bytes=bytesOf(8)
+  await assert.rejects(s.run(),{code:'SYNC_STALE'})
+  assert.deepEqual(s.nodes.get(root+'/Small/a.bin').bytes,bytesOf(8))
+  assert.equal(s.native.actions.length,2)
+})
+
+test('a parent removed after a staged interruption cannot be recreated on resume', async () => {
+  const s=await setupExisting([local('ancestor/leaf/a.bin',1),local('ancestor/leaf/b.bin',2)])
+  const native=nativeApi(s,async phase=>{if(phase==='commit') s.disconnect()})
+  await assert.rejects(s.run(native),{code:'DISCONNECTED'})
+  s.reconnect()
+  for (const path of [...s.nodes.keys()]) if(path.startsWith(root+'/ancestor')) s.nodes.delete(path)
+  const actions=s.actions.length
+  await assert.rejects(s.run(native),{code:'SYNC_STALE'})
+  assert(!s.nodes.has(root+'/ancestor'))
+  assert(!s.actions.slice(actions).some(action=>mutation(action)))
+})
+
+test('long staged path, oversized leaf, or reserved temporary component uses the ordinary path', async () => {
+  const component='x'.repeat(40)
+  const groups=[
+    [local('prefix/l/'+component+'.bin',1),local('prefix/l/'+component+'.dat',2)],
+    Array.from({length:101},(_,i)=>local('many/f'+i+'.bin',i)),
+    [local('~uabaabbcc/p/a.bin',1)]
+  ]
+  for (const group of groups) {
+    const s=await setupExisting(group)
+    const result=await s.run()
+    assert.equal(result.completed,group.length); assert.equal(s.native.actions.length,0)
+  }
+})
+
+test('capacity errors during atomic publication retain the private stage and retry the guarded rename', async () => {
+  const files = [local('leaf/a.bin',1),local('leaf/b.bin',2)]
+  const s=await setupExisting(files)
+  let low=true
+  const native=nativeApi(s,async phase=>{
+    if (phase==='publish' && low) throw Object.assign(new Error('Insufficient transaction workspace'),{cmd:0x23,status:1})
+  })
+  await assert.rejects(s.run(native))
+  assert.equal(s.job.completed.length,0); assert(!s.nodes.has(root+'/leaf'))
+  const stage = pendingFolderUpload(s.job).stagePath
+  assert(s.nodes.has(stage+'/a.bin'))
+  low=false
+  await s.run(native)
+  assert(!s.nodes.has(stage)); assert.equal(s.job.completed.length,2); assert.equal(native.actions.length,2)
 })

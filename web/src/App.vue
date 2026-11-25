@@ -122,7 +122,7 @@
       <strong>{{ $t('info.uploadPaused') }}</strong>
       <p><template v-if="syncResume.folderName">{{ syncResume.folderName }} · </template>{{ syncResume.plan.rootPath }} · {{ $t('info.uploadCheckpoint', { done: syncResume.job.completed.length, total: syncResume.selectedPaths.length }) }}</p>
       <p>{{ $t('info.uploadResumeHint') }}</p>
-      <p v-if="syncResume.job.newFolderUpload?.stagePath">{{ $t('info.folderStage', {path:syncResume.job.newFolderUpload.stagePath}) }}</p>
+      <p v-if="syncWorkingFolder?.stagePath">{{ $t('info.folderStage', {path:syncWorkingFolder.stagePath}) }}</p>
       <button type="button" class="sync-resume-continue" @click="resume_sync" :disabled="!syncResumeMatches || busy || disconnecting || upload_diag_visible || syncDialog || zipDialog">{{ $t('info.uploadContinue') }}</button>
       <button type="button" :disabled="busy" @click="forget_sync">{{ $t('info.uploadForget') }}</button>
     </section>
@@ -641,7 +641,7 @@ import { editMetadataFlags } from "./lib/raw-metadata.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
 import { uploadNameTree, reviewUploadNames } from "./lib/upload-names.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
-import { newFolderUploadRoot, executeNewFolderUpload } from "./lib/new-folder-upload.js"
+import { newFolderUploadRoot, executeNewFolderUpload, prepareLeafUploads, pendingFolderUpload } from "./lib/new-folder-upload.js"
 import { HISTORY_FILENAME, folderBinding, readSyncHistory, createSyncHistory } from "./lib/sync-history.js"
 import { captureTransferLink, createBackupTransferObservation, normalizeTransferObservation } from "./lib/transfer-observation.js"
 import { createTransferMeter } from "./lib/transfer-meter.js"
@@ -775,6 +775,7 @@ export default {
       }));
       return [...entries, ...remoteRows].sort((a,b) => a.relativePath.localeCompare(b.relativePath));
     },
+    syncWorkingFolder() { return pendingFolderUpload(this.syncResume?.job); },
     syncNewFolderTarget() {
       return !this.syncFolderContents && firmwareBoard(this.firmwareVersion) === 'LCD' &&
         newFolderUploadRoot(this.syncPlan, this.syncSelected);
@@ -1514,9 +1515,9 @@ export default {
       return layout.mounted && supportsFolderPublication(this.firmwareVersion, layout.engineSha256);
     },
     forget_sync() {
-      const stage = this.syncResume?.job.newFolderUpload?.stagePath;
+      const stage = this.syncWorkingFolder?.stagePath;
       if (stage) {
-        this.remember_recovery({recovery:{targetPath:this.syncResume.plan.rootPath, committed:null, phase:'folder-upload',
+        this.remember_recovery({recovery:{targetPath:this.syncWorkingFolder.targetPath, committed:null, phase:'folder-upload',
           recoveryFiles:[{path:stage,role:'stage',state:'possible'}]}});
       }
       this.syncResume = null;
@@ -1551,6 +1552,7 @@ export default {
         const execute = publishFolder ? executeNewFolderUpload : executeSyncJob;
         const result = await execute({job,plan,files,deviceKey:pixl.get_device_key?.(),selectedPaths,
           ...adapters, signal:controller.signal, writeNewPackedFile:packedWriter ? adapters.writeFile : undefined,
+          prepareLeafUploads:packedWriter && !request.directFolder ? prepareLeafUploads : undefined,
           uploadFile: async options => {
             interruptedReplacement = null;
             try {
@@ -1573,7 +1575,7 @@ export default {
         this.syncStatus = result.skipped ? this.$t('info.syncContinued', result) : this.$t('info.syncDone');
         this.remember_transfer('sync','success',result.uploadedBytes,true); return result;
       } catch(error) {
-        if (this._activeFolderUpload === request && (job.newFolderUpload?.stagePath || !this.session_current(generation) || error.code === 'DISCONNECTED')) {
+        if (this._activeFolderUpload === request && (pendingFolderUpload(job)?.stagePath || !this.session_current(generation) || error.code === 'DISCONNECTED')) {
           this.syncResume = Object.freeze({...request, interruptedReplacement});
         }
         if (this.session_current(generation)) {
