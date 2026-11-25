@@ -1,5 +1,9 @@
 # Veröffentlichungen für Allmiibo LCD und Pixl.js OLED
 
+## Dateimanager 3.66.2 · 25. November 2026
+
+Die normale Homepage und die Windows-Ausgabe bündeln kleine Dateien beim Lesen auf unterstützten LCDs. Beim Hochladen können neue Unterordner in bestehende Verzeichnisse eingefügt und unterbrochene Aufträge fortgesetzt werden. Das LCD-Web-DFU verwendet ausgehandelte Schreibgrößen und prüft die Bestätigungen des Bootloaders. DE4.1/App678 bleibt vorausgewählt. Die getrennte OLED-Auswahl behält ihre Übertragungseinstellungen. [Bedienung und Änderungen](web/LIESMICH_3_66_2.txt) · [optionale LCD-Beta App680](https://github.com/bluecyber81/pixl.js/releases/tag/de4.2-b2-lcd-transfer-test)
+
 ## LCD DE4.1 / App678 · Final · 25. November 2026
 
 Die reguläre LCD-Version übernimmt das Weckprofil aus App677 samt bestätigtem Löschen und erneutem Speichern nach Fehlern. Bildempfang, Player und der mobile Lauftext sind verfügbar. Dateimanager 3.66.1 unterstützt die neue Versionsnummer auch bei Diagnose und Dateizugriff. Die signierte Handy-ZIP aktualisiert die Anwendung auf einem LCD mit PFS1, Z21 und S112 7.3.0. Die Gerätebestätigung vom 24. November gilt für den Vorgänger App677. [Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip) · [Versionshinweise](docs/DE4_1_RELEASE.md) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_App678_Pruefpaket.zip)

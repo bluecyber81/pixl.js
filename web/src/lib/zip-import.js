@@ -1,5 +1,5 @@
 import { assertDeviceEntryName, assertDevicePath, portableNameKey } from './portable-names.js'
-import { safeUpload, checkedDirectory, copyMetadata, metadataKey, sha256Bytes, asBytes, writableDirectoryPath, UPLOAD_LIMITS } from './safe-upload.js'
+import { safeUpload, checkedDirectory, copyMetadata, metadataKey, sha256Bytes, asBytes, deviceFileSha256, writableDirectoryPath, UPLOAD_LIMITS } from './safe-upload.js'
 import { rawMetadataHex, decodeRawMetadata } from './raw-metadata.js'
 import { parseUniqueJson } from './unique-json.js'
 import { updateZipCrc32 } from './zip-crc32.js'
@@ -226,7 +226,7 @@ export const isVerifiedBackupArchive = archive => archives.has(archive)
 export const isVerifiedBackupReference = archive => backupReferences.has(archive) || archives.has(archive)
 
 /** Explicit target-root remap. Original spelling and metadata are never normalized. */
-export async function previewZipImport({ archive, rootPath, deviceKey, readDirectory, readFile, assertSession, signal, onProgress }) {
+export async function previewZipImport({ archive, rootPath, deviceKey, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress }) {
   requireThat(archives.has(archive), 'ZIP_ARCHIVE', 'Load and verify the backup ZIP first.')
   requireThat(archive.version === 1, 'ZIP_METADATA', 'Use the migration assistant for exact raw-metadata schema2 restores.')
   requireThat(typeof deviceKey === 'string' && deviceKey && typeof assertSession === 'function' && typeof readDirectory === 'function' && typeof readFile === 'function', 'ZIP_API', 'A live session and bounded file readers are required.')
@@ -265,9 +265,8 @@ export async function previewZipImport({ archive, rootPath, deviceKey, readDirec
           if (record.type === 'file') {
             if (existing.size > UPLOAD_LIMITS.maxExistingBytes) { entry.status = 'blocked'; entry.reason = 'EXISTING_SIZE_LIMIT' }
             else {
-              const bytes = asBytes(await readFile(record.targetPath, { maxBytes: existing.size, exactBytes: existing.size })); checkpoint()
-              requireThat(bytes.length === existing.size, 'ZIP_CHANGED', 'A destination changed while being read.')
-              entry.expected = { size: existing.size, sha256: await sha256Bytes(bytes), metadata }; checkpoint()
+              const hash = await deviceFileSha256(record.targetPath, existing.size, {readFile, readFileDigest, check:checkpoint, sizeError:'ZIP_CHANGED'})
+              entry.expected = { size: existing.size, sha256: hash, metadata }
               entry.status = existing.size === record.size && entry.expected.sha256 === record.sha256 && metadataKey(metadata) === metadataKey(record.metadata) ? 'same' : 'change'
             }
           } else { entry.expected = { type: 1, metadata }; entry.status = metadataKey(metadata) === metadataKey(record.metadata) ? 'same' : 'change' }
@@ -291,7 +290,7 @@ export async function previewZipImport({ archive, rootPath, deviceKey, readDirec
 const expectedKey = expected => expected ? JSON.stringify([expected.type || 0, expected.size ?? null, expected.sha256 ?? null, metadataKey(expected.metadata)]) : 'absent'
 
 /** Only explicitly selected additions/changes; full fresh preview precedes writes. */
-export async function executeZipImport({ plan, deviceKey, selectedPaths = [], readDirectory, readFile, createDirectory, writeFile,
+export async function executeZipImport({ plan, deviceKey, selectedPaths = [], readDirectory, readFile, readFileDigest, createDirectory, writeFile,
   rename, remove, updateMetadata, getFreeBytes, assertSession, signal, onProgress, randomToken }) {
   requireThat(plans.has(plan) && deviceKey === plan.deviceKey && !activePlans.has(plan), 'ZIP_STALE', 'The ZIP plan or device identity is no longer current.')
   requireThat(Array.isArray(selectedPaths) && selectedPaths.every(path => typeof path === 'string') && new Set(selectedPaths).size === selectedPaths.length, 'ZIP_SELECTION', 'Invalid ZIP import selection.')
@@ -313,22 +312,28 @@ export async function executeZipImport({ plan, deviceKey, selectedPaths = [], re
     return metadataKey(meta)
   }
   try {
-    const fresh = await previewZipImport({ archive, rootPath: plan.rootPath, deviceKey, readDirectory, readFile, assertSession, signal, onProgress })
+    const fresh = await previewZipImport({ archive, rootPath: plan.rootPath, deviceKey, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress })
     const current = new Map(fresh.entries.map(entry => [entry.targetPath, entry]))
     const requiredDirs = plan.entries.filter(entry => entry.type === 'directory' && (wanted.has(entry.targetPath) || selected.some(item => item.targetPath.startsWith(entry.targetPath + '/'))))
     for (const entry of [...selected, ...requiredDirs]) {
       const now = current.get(entry.targetPath)
       requireThat(now && now.status !== 'blocked' && expectedKey(now.expected) === expectedKey(entry.expected), 'ZIP_STALE', 'A destination changed after the ZIP preview; preview again.')
     }
-    // Hash comparisons can take time. Re-read the transaction namespace after
-    // that work, before the first mutating adapter (including mkdir) can run.
-    checkpoint(); const driveRoot = plan.rootPath.slice(0, 3)
-    const rootEntries = checkedDirectory(await readDirectory(driveRoot)); checkpoint()
-    requireThat(!pendingTransactions(rootEntries, driveRoot), 'ZIP_STALE', 'A destination transaction appeared after the ZIP preview; resolve it before restoring.')
+    // After the fresh preview, every directory check starts at the drive root.
+    // Check pending transactions on that same fresh listing before any mkdir.
+    const driveRoot = plan.rootPath.slice(0, 3)
+    async function listForDirectoryCheck(path) {
+      checkpoint()
+      const entries = checkedDirectory(await readDirectory(path)); checkpoint()
+      if (path === driveRoot) requireThat(!pendingTransactions(entries, driveRoot), 'ZIP_STALE', 'A destination transaction appeared after the ZIP preview; resolve it before restoring.')
+      return entries
+    }
+    if (!requiredDirs.length) await listForDirectoryCheck(driveRoot)
     for (const entry of requiredDirs) {
       checkpoint()
-      requireThat(await writableDirectoryPath(deviceParent(entry.targetPath), readDirectory, checkpoint), 'ZIP_STALE', 'The destination folder or an ancestor is no longer writable.')
-      const listing = checkedDirectory(await readDirectory(deviceParent(entry.targetPath))); checkpoint()
+      const parent = deviceParent(entry.targetPath)
+      requireThat(await writableDirectoryPath(parent, listForDirectoryCheck, checkpoint), 'ZIP_STALE', 'The destination folder or an ancestor is no longer writable.')
+      const listing = await listForDirectoryCheck(parent); checkpoint()
       const aliases = listing.filter(item => portableNameKey(item.name) === portableNameKey(nameOf(entry.targetPath)))
       if (entry.expected) {
         requireThat(aliases.length === 1 && aliases[0].name === nameOf(entry.targetPath) && aliases[0].type === 1 && metadataKey(aliases[0].meta) === metadataKey(entry.expected.metadata), 'ZIP_STALE', 'A destination folder changed.')
@@ -351,7 +356,7 @@ export async function executeZipImport({ plan, deviceKey, selectedPaths = [], re
       checkpoint()
       const bytes = archives.get(archive).get(entry.sourcePath)
       const result = await safeUpload({ path: entry.targetPath, file: bytes, replace: !!entry.expected, expected: entry.expected,
-        metadata: entry.metadata, allowLegacyNames: true, readDirectory, readFile, writeFile, rename, remove, updateMetadata,
+        metadata: entry.metadata, allowLegacyNames: true, readDirectory, readFile, readFileDigest, writeFile, rename, remove, updateMetadata,
         getFreeBytes: () => getFreeBytes(entry.targetPath), assertSession, signal, randomToken,
         onProgress: progress => observe(onProgress, { ...progress, unit: 'bytes',
           filesDone: completedPaths.length + (progress.phase === 'complete' ? 1 : 0), filesTotal: selectedFiles.length }) })
@@ -361,10 +366,14 @@ export async function executeZipImport({ plan, deviceKey, selectedPaths = [], re
     const changedDirs = requiredDirs.filter(entry => createdFolders.includes(entry.targetPath) || wanted.has(entry.targetPath)).reverse()
     for (const entry of changedDirs) {
       requireThat(await writableDirectoryPath(deviceParent(entry.targetPath), readDirectory, checkpoint), 'ZIP_STALE', 'The destination folder or an ancestor is no longer writable.')
-      requireThat(await directorySnapshot(entry.targetPath) === directorySnapshots.get(entry.targetPath), 'ZIP_STALE', 'A destination folder changed during the import; preview again.')
-      checkpoint(); await updateMetadata(entry.targetPath, copyMetadata(entry.metadata)); checkpoint()
-      const actual = checkedDirectory(await readDirectory(deviceParent(entry.targetPath))).find(item => item.name === nameOf(entry.targetPath)); checkpoint()
-      requireThat(actual?.type === 1 && metadataKey(actual.meta) === metadataKey(entry.metadata), 'ZIP_METADATA', 'Imported directory metadata was not confirmed.')
+      const observed = await directorySnapshot(entry.targetPath); checkpoint()
+      requireThat(observed === directorySnapshots.get(entry.targetPath), 'ZIP_STALE', 'A destination folder changed during the import; preview again.')
+      const desired = metadataKey(entry.metadata)
+      if (observed !== desired) {
+        await updateMetadata(entry.targetPath, copyMetadata(entry.metadata)); checkpoint()
+        const actual = checkedDirectory(await readDirectory(deviceParent(entry.targetPath))).find(item => item.name === nameOf(entry.targetPath)); checkpoint()
+        requireThat(actual?.type === 1 && metadataKey(actual.meta) === desired, 'ZIP_METADATA', 'Imported directory metadata was not confirmed.')
+      }
       completedPaths.push(entry.targetPath)
     }
     return { completed: completedPaths.length, filesCompleted: selectedFiles.length, directoriesCompleted: changedDirs.length, completedPaths, recoveryFiles }

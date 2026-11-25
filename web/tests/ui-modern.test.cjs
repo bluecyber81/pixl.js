@@ -39,6 +39,7 @@ function harness(overrides = {}) {
     ...require('../src/lib/transfer-observation.js'),
     ...require('../src/lib/rename-confirmation.js'),
     ...require('../src/lib/build-version.js'),
+    projectDownloads: require('../src/lib/project-downloads.js').projectDownloads,
     dfuReference: require('../src/lib/release-packages.js').dfuReference,
     sharedEventDispatcher: () => dispatcher, getElementLocale: language => ({ name: language }), webVersion: require('../package.json').version, console,
     defineAsyncComponent: loader => ({ loader }), DeviceStorageCard: {},
@@ -62,6 +63,8 @@ function harness(overrides = {}) {
     writableDirectoryPath: (...args) => import('../src/lib/safe-upload.js').then(module => module.writableDirectoryPath(...args)),
     createSyncPlan: options => overrides.createSyncPlan(options), createSyncJob: plan => overrides.createSyncJob(plan),
     newFolderUploadRoot: (...args) => require('../src/lib/new-folder-upload.js').newFolderUploadRoot(...args),
+    prepareLeafUploads: require('../src/lib/new-folder-upload.js').prepareLeafUploads,
+    pendingFolderUpload: require('../src/lib/new-folder-upload.js').pendingFolderUpload,
     executeNewFolderUpload: options => overrides.executeNewFolderUpload(options),
     executeSyncJob: options => overrides.executeSyncJob(options) });
   // In browsers the Window picker is also a global. Keep that real contract
@@ -69,6 +72,7 @@ function harness(overrides = {}) {
   Object.defineProperty(context, 'showSaveFilePicker', { get: () => window.showSaveFilePicker });
   context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
   context.lcdTest676 = require('../public/dfu/lcd-app676-reference.mjs').lcdTest676;
+  Object.assign(context, require('../public/dfu/lcd-app679-reference.mjs'), require('../public/dfu/lcd-app680-reference.mjs'));
   context.lcdTest677 = require('../public/dfu/lcd-app677-reference.mjs').lcdTest677;
   context.lcdRelease = require('../public/dfu/lcd-release-reference.mjs').lcdRelease;
   context.app675 = require('../public/dfu/lcd-app675-reference.mjs').lcdRelease;
@@ -110,9 +114,7 @@ function harness(overrides = {}) {
     $nextTick: async () => {}, $refs: { upload: { clearFiles() {} } }
   };
   Object.assign(instance, options.data.call(instance));
-  // Existing transfer regressions continue to exercise the explicitly available
-  // direct mode. New integration cases opt into the production default below.
-  instance.safeUploads = overrides.safeUploads ?? false;
+  if (overrides.safeUploads !== undefined) instance.safeUploads = overrides.safeUploads;
   for (const [key, value] of Object.entries(options.methods)) instance[key] = value.bind(instance);
   for (const [key, value] of Object.entries(options.computed)) Object.defineProperty(instance, key, { get: value.bind(instance) });
   return { instance, options, messages, notifications, stored, listeners, document, window, navigator, proto, pixl, timeouts,
@@ -199,6 +201,16 @@ function verificationNotifications(fixture) {
   return { frames: packets.length, payloadBytes: packets.reduce((sum, frame) => sum + frame.length - 4, 0),
     wireBytes: packets.reduce((sum, frame) => sum + frame.length, 0) };
 }
+
+test('safe upload of an identical file on a full drive verifies the target and reports zero uploaded bytes', async () => {
+  const f = await digestUploadHarness({replace:true})
+  f.vfs.put(f.target,f.source,f.oldMetadata)
+  f.app.read_drive_info = async () => [{label:'E',status:0,freeBytes:0,totalBytes:2097152}]
+  await f.run()
+  assert.deepEqual(f.digestCalls.map(c => c.path), [f.target, f.target])
+  assert.equal(f.app.lastTransfer.bytes,0); assert.equal(f.app.lastTransfer.verified,true)
+  assert(!f.vfs.log.some(e => ['write','rename','remove','meta'].includes(e.op)))
+})
 const digestMutations = fixture => fixture.vfs.log.filter(entry => ['write', 'rename', 'remove', 'meta'].includes(entry.op));
 
 test('small upload digest uses the real App665 SHA path for both stage and target with fewer verification notifications', async t => {
@@ -598,6 +610,24 @@ test('a new LCD folder can be filled file by file without publishing the whole t
   }
 });
 
+test('existing folder upload enables guarded leaves only after the PackedFS capability check', async () => {
+  for (const packed of [false,true]) {
+    let options
+    const app = connected(harness({createSyncJob:()=>({completed:[]}),
+      executeSyncJob:async request=>{options=request;return {completed:1,skipped:0,job:request.job}}}))
+    readyCurrentSync(app)
+    app.firmwareVersion='2.22.0-DE4.1'
+    app.supports_folder_publish=async()=>packed
+    app.syncFolderContents=true
+    app.syncPlan = {...app.syncPlan, schema:1, directories:[{path:'E:/New',status:'create'}],
+      entries:[{targetPath:'E:/New/a.bin',status:'add',expected:null}]}
+    app.syncSelected=['E:/New/a.bin']
+    await app.run_sync(false)
+    assert.equal(typeof options.prepareLeafUploads, packed ? 'function' : 'undefined')
+    assert.equal(typeof options.writeNewPackedFile, packed ? 'function' : 'undefined')
+  }
+})
+
 test('file-by-file choice is not offered for an existing target or a folder comparison', async () => {
   const app = connected(harness());
   readyCurrentSync(app);
@@ -757,7 +787,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.66.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.66.2'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -769,7 +799,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.66.1.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.66.2.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -856,7 +886,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.66.1.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.66.2.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -1258,6 +1288,54 @@ test('3.15 invalid new portable names cannot reach upload, rename or create but 
   }
 });
 
+test('ordinary queued uploads share a capacity estimate and check a single small sample after the final close', async () => {
+  const events = [], writes = new Map();
+  let driveReads = 0;
+  const h = harness({
+    vfs_get_drive_list: async () => {
+      ++driveReads;
+      return {status:0, data:[{label:'E', name:'External', status:0, total_size:2097152, free_size:1048576}]};
+    },
+    vfs_helper_write_file(path, file, progress, done, fail) {
+      file.arrayBuffer().then(bytes => {
+        writes.set(path, Buffer.from(bytes));
+        events.push('close');
+        done();
+      }, fail);
+    },
+    vfs_backup_digest: async path => {
+      events.push('sample');
+      assert.equal(path, 'E:/b.bin');
+      return require('node:crypto').createHash('sha256').update(writes.get(path)).digest('hex');
+    },
+    vfs_helper_read_file() { assert.fail('Unexpected full file readback'); }
+  });
+  const app = connected(h);
+  assert.deepEqual([app.safeUploads, app.verifyUploads, app.replaceUploads], [false, false, false]);
+  const files = [['a.bin',2], ['b.bin',3], ['long.bin',600]].map(([name,size]) => ({
+    name, size, arrayBuffer:async () => Uint8Array.from({length:size}, (_,i) => i % 256).buffer
+  }));
+  await Promise.all(files.map(file => app.on_upload_request({file})));
+  assert.deepEqual(events, ['close','close','close','sample']);
+  assert.equal(driveReads, 1);
+  assert.equal(app.fastUploadStatus, 'tools.uploadSampleMatched');
+  assert.equal(app.lastTransfer.verified, false);
+});
+
+test('quick upload reports a mismatched sample and never retries a completed write', async () => {
+  let writes=0;
+  const h=harness({
+    vfs_helper_write_file(path, file, progress, done) { ++writes; done(); },
+    vfs_backup_digest:async () => '0'.repeat(64)
+  });
+  const app=connected(h);
+  await assert.rejects(app.on_upload_request({file:{name:'changed.bin',size:1,arrayBuffer:async () => Uint8Array.of(7).buffer}}),
+    /uploadSampleFailed/);
+  assert.equal(writes,1);
+  assert.equal(app.pendingUploads,0);
+  assert.equal(app.fastUploadStatus,'');
+});
+
 test('3.15 real safe upload adapter stages replacement, verifies bytes and retains metadata', async () => {
   const {safeUpload}=await import('../src/lib/safe-upload.js');
   const meta={valid:true,notes:'keep',flags:{raw:2,hide:false,readonly:false},amiibo:{head:1,tail:2}};
@@ -1271,7 +1349,6 @@ test('3.15 real safe upload adapter stages replacement, verifies bytes and retai
     vfs_update_meta:async(path,value)=>{files.get(path).meta=value;return{status:0}}
   }), app=connected(h), progress=[];
   app.replaceUploads=true; app.verifyUploads=false;
-  assert.equal(h.options.data.call(app).safeUploads,true);
   await app.on_upload_request({file:{name:'old.bin',size:3,arrayBuffer:async()=>new Uint8Array([3,4,5]).buffer},onProgress:value=>progress.push(value.percent)});
   assert.equal(files.size,1); assert.deepEqual([...files.get('E:/old.bin').bytes],[3,4,5]);
   assert.equal(files.get('E:/old.bin').meta.notes,'keep'); assert.equal(files.get('E:/old.bin').meta.flags.raw,2);
@@ -1882,7 +1959,7 @@ test('failed upload preflight, directory conflict and cancelled replace never tr
 
 test('source read errors occur before any device write, and later uploads still run', async () => {
   let writes = 0;
-  const h = harness({ vfs_helper_write_file(path, file, progress, yes) { ++writes; yes(); },
+  const h = harness({ vfs_helper_write_file(path, file, progress, yes, no) { file.arrayBuffer().then(() => { ++writes; yes(); }, no); },
     vfs_helper_read_file(path, yes) { yes(Uint8Array.from([1, 2, 3]).buffer); } }), app = connected(h);
   const bad = { ...uploadFile('bad'), arrayBuffer: async () => { throw new Error('local read failed'); } };
   const first = app.on_upload_request({ file: bad }), rejected = assert.rejects(first, /local read failed/);
@@ -1895,7 +1972,9 @@ test('verified upload reports 100 percent only after matching SHA256 readback', 
   let readSuccess, progressValues = [];
   const h = harness({ vfs_helper_write_file(path, file, progress, yes) { progress({ total_bytes: 3, written_bytes: 3 }); yes(); },
     vfs_helper_read_file(path, yes, no, done, options) { assert.equal(options.max_bytes, 3); readSuccess = yes; } });
-  const app = connected(h), pending = app.on_upload_request({ file: uploadFile('a'), onProgress: value => progressValues.push(value.percent) });
+  const app = connected(h);
+  app.verifyUploads = true;
+  const pending = app.on_upload_request({ file: uploadFile('a'), onProgress: value => progressValues.push(value.percent) });
   while (!readSuccess) await new Promise(setImmediate);
   assert.deepEqual(progressValues, [99]);
   readSuccess(Uint8Array.from([1, 2, 3]).buffer); await pending;
@@ -1906,6 +1985,7 @@ test('same-size corrupted readback is an error, never a verified success', async
   const percentages = [];
   const h = harness({ vfs_helper_write_file(path, file, progress, yes) { yes(); },
     vfs_helper_read_file(path, yes) { yes(Uint8Array.from([1, 2, 9]).buffer); } }), app = connected(h);
+  app.verifyUploads = true;
   await assert.rejects(app.on_upload_request({ file: uploadFile('a'), onProgress: value => percentages.push(value.percent) }), /verificationFailed/);
   assert.ok(!percentages.includes(100)); assert.equal(app.pendingUploads, 0);
 });
@@ -2038,10 +2118,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.66.1.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.66.2.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.66.1.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.66.2.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -2224,6 +2304,7 @@ test('3.14 upload refreshes drive space before source hashing or any write', asy
     vfs_helper_write_file(path, source, progress, yes) { calls.push('write'); yes(); },
     vfs_helper_read_file(path, yes) { calls.push('readback'); yes(Uint8Array.from([1, 2, 3]).buffer); }
   }), app = connected(h);
+  app.verifyUploads = true;
   app.driveInfo = [{ label: 'E', status: 0, totalBytes: 4096, freeBytes: 0 }];
   await app.on_upload_request({ file: { name: 'new.bin', size: 3,
     async arrayBuffer() { calls.push('hash-source'); return Uint8Array.from([1, 2, 3]).buffer; } } });
@@ -2956,7 +3037,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.66.1');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.66.2');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

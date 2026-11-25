@@ -1362,25 +1362,25 @@
       "evidence": "docs/validation/WEB3_65_0_FINAL_DELIVERY.json"
     }
   },
-  "web_version": "3.66.1",
+  "web_version": "3.66.2",
   "web_release_status": "normal",
-  "web_release_notes": "web/LIESMICH_3_66_1.txt",
-  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web3.66.1",
-  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip",
-  "web_portable_url": "https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip",
+  "web_release_notes": "web/LIESMICH_3_66_2.txt",
+  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web3.66.2",
+  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.2.zip",
+  "web_portable_url": "https://github.com/bluecyber81/pixl.js/releases/download/web3.66.2/Allmiibo_Dateimanager_3_66_2_Portable.zip",
   "web_downloads": {
-    "portable": "https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip",
-    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip",
-    "portableBytes": 13369998,
-    "portableSha256": "38efa6e199632c813cc14458e9d19159e74b93a487880a7bb9e7613b84cca883"
+    "portable": "https://github.com/bluecyber81/pixl.js/releases/download/web3.66.2/Allmiibo_Dateimanager_3_66_2_Portable.zip",
+    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.2.zip",
+    "portableBytes": 13899047,
+    "portableSha256": "a99f282df8ec97838b98deb56d87fb134a31cd401995ec31dc933bca5f777f94"
   },
   "web_upload_evidence": "docs/validation/WEB3_65_1_UPLOAD.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.1",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.2",
   "web_publication_date": "2026-11-25",
   "web_qualification_date": "2026-11-25",
-  "web_evidence": "docs/validation/WEB3_66_1.json",
-  "web_test_total": 2306,
-  "web_test_passed": 2306,
+  "web_evidence": "docs/validation/WEB3_66_2.json",
+  "web_test_total": 2397,
+  "web_test_passed": 2397,
   "web_test_failed": 0,
   "web_test_skipped": 0
 }

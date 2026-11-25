@@ -67,7 +67,15 @@ test('atomic capability restores exact raw128 including readonly and opaque tail
  assert.deepEqual(f.vfs.log.filter(x=>['write','meta','rename','remove'].includes(x.op)).map(x=>x.op),['write','write'])
  assert.deepEqual(f.raw.get('E:/tags/first'),raw);assert.equal(f.vfs.nodes.get('E:/tags/first').meta.flags.readonly,true)
  assert.equal(f.events.filter(x=>x==='raw').length,2,'only two directory attributes need separate raw writes')
- const done=await f.api.finishMigrationImport(f.o());assert.equal(done.verification.filesVerified,2);assert.equal(done.finished,true)
+ const checked = []
+ const opts = f.o(), originalRead = opts.readFile
+ opts.readFile = async (path, options) => {
+   assert.equal(options.exactBytes, options.maxBytes)
+   checked.push(path)
+   return originalRead(path, options)
+ }
+ const done=await f.api.finishMigrationImport(opts);assert.equal(done.verification.filesVerified,2);assert.equal(done.finished,true)
+ assert.equal(checked.length, 2)
 });
 test('atomic replacement uses the real target without a public stage or rename and checks final bytes',async()=>{
  const f=await fixture();await prepared(f);await f.options.createDirectory('E:/tags');f.vfs.put('E:/tags/first',[0,1]);f.vfs.log.length=0

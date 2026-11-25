@@ -3,6 +3,7 @@ import { sha256Bytes } from './safe-upload.js';
 import bundledCatalogue from '../data/catalogue.json' with { type: 'json' };
 import { assertDevicePath, joinDevicePath } from './portable-names.js';
 import { figureId, metadataFigureId, inspectTagStructure, TAG_LENGTHS } from './figure-info.js';
+import { smallFileReadGroup } from './small-file-read-group.js';
 
 export const COLLECTION_AUDIT_LIMITS = Object.freeze({
   entries: 8192, folders: 1024, depth: 32, candidates: 8192, bytes: 16 * 1024 * 1024,
@@ -52,7 +53,7 @@ export const COLLECTION_AUDIT_CATALOGUE = freeze({ checkedDate: bundledCatalogue
  * Cancel/session/read failures return an explicitly partial report, with no next IO.
  */
 export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION_AUDIT_CATALOGUE, mode = 'full',
-  today = new Date().toISOString().slice(0, 10), readDirectory, readFile,
+  today = new Date().toISOString().slice(0, 10), readDirectory, readFile, readFilesBatch, readRevision, maxRequestPayload,
   signal, assertSession, onProgress = () => {}, limits = {} } = {}) {
   assertDevicePath(rootPath);
   if (!/^[IE]:\//.test(rootPath) || !['full', 'quick'].includes(mode) || !day(today) ||
@@ -81,6 +82,53 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
   const progress = phase => { try { onProgress({ phase, mode, ...stats, totalToRead: phase === 'reading' ? plannedFiles : null, limited: !!limitsReached.size }); } catch { /* observer only */ } };
   const addId = (map, id, row) => { if (id) { if (!map.has(id)) map.set(id, []); map.get(id).push(row); } };
   const limit = key => { limitsReached.add(key); };
+  let batchAvailable = rootPath.startsWith('E:/') && typeof readFilesBatch === 'function' && typeof readRevision === 'function';
+  let revision;
+  const buffered = new Map();
+  async function readPlanned(index) {
+    const row = files[index];
+    if (batchAvailable && !buffered.has(row.path) && row.size <= 572) {
+      const group = smallFileReadGroup(files, index, item => item.status === 'not-read' && item.path, maxRequestPayload);
+      if (group.length > 1) {
+        if (revision === undefined) {
+          revision = await readRevision();
+          check();
+          if (revision === null) batchAvailable = false;
+          else if (typeof revision !== 'string' || !/^[a-f0-9]{16}$/u.test(revision) || revision === '0000000000000000')
+            throw new Error('Invalid batch storage revision.');
+        }
+        if (batchAvailable) {
+          const requested = group.map(({path, size}) => ({path, size}));
+          const total = requested.reduce((sum, file) => sum + file.size, 0);
+          stats.readAttempts += requested.length;
+          stats.bytesReserved += total;
+          const result = await readFilesBatch(requested, {revision});
+          check();
+          if (result === null) {
+            // Optional command unavailable. No content read has taken place.
+            batchAvailable = false;
+            stats.readAttempts -= requested.length;
+            stats.bytesReserved -= total;
+          } else {
+            if (!Array.isArray(result) || result.length !== group.length) throw new Error('Incomplete batch.');
+            for (const [i, expected] of group.entries()) {
+              const part = result[i];
+              if (part?.path !== expected.path || part.size !== expected.size || !(part.bytes instanceof Uint8Array) ||
+                  part.bytes.byteLength !== expected.size) throw new Error('Invalid batch member.');
+            }
+            for (const part of result) buffered.set(part.path, new Uint8Array(part.bytes));
+          }
+        }
+      }
+    }
+    if (buffered.has(row.path)) {
+      const bytes = buffered.get(row.path);
+      buffered.delete(row.path);
+      return bytes;
+    }
+    ++stats.readAttempts; stats.bytesReserved += row.size;
+    return readFile(row.path, {maxBytes:row.size, exactBytes:row.size});
+  }
   try {
     progress('listing');
     while (cursor < pending.length) {
@@ -144,12 +192,12 @@ export async function auditCollection({ rootPath = 'E:/', catalogue = COLLECTION
     check(); traversalDone = cursor === pending.length;
     // Reuse the validated directory rows so the exact content-read total costs no additional BLE calls.
     if (plannedFiles) progress('reading');
-    for (const row of files) {
+    for (const [fileIndex, row] of files.entries()) {
       if (row.status !== 'not-read') continue;
       const { path, size, metadataId } = row;
-      check(); ++stats.readAttempts; stats.bytesReserved += size;
+      check();
       try {
-        const data = await readFile(path, { maxBytes: size, exactBytes: size });
+        const data = await readPlanned(fileIndex);
         check();
         const bytes = data instanceof Uint8Array ? data : data instanceof ArrayBuffer ? new Uint8Array(data) : null;
         if (!bytes || bytes.byteLength !== size) {

@@ -1,0 +1,92 @@
+{
+  "version": "3.66.2",
+  "date": "2026-11-25",
+  "normalFirmware": {
+    "LCD": "2.22.0-DE4.1",
+    "applicationCounter": 678
+  },
+  "optionalFirmware": {
+    "LCD": [
+      679,
+      680
+    ],
+    "OLED": "DE3.87 Test 6"
+  },
+  "node": {
+    "total": 2397,
+    "passed": 2397,
+    "failed": 0,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "buildTests": {
+    "root": 58,
+    "pages": 58,
+    "windowsLauncher": 26
+  },
+  "browsers": {
+    "client": "Windows Chrome 158.0.8127.88",
+    "widths": [
+      1400,
+      390
+    ],
+    "languages": [
+      "de",
+      "en"
+    ],
+    "normalBoardChecksPerBuild": 62,
+    "normalUserAndDfuChecksPerBuild": 51,
+    "builds": [
+      "/",
+      "/pixl.js/"
+    ],
+    "secureDfuSha256": "a367357bbba7ea0dd2e80b555fb6eeaa0d63fa7ee2673d8b2df601c7f4de43f4"
+  },
+  "portable": {
+    "file": "Allmiibo_Dateimanager_3_66_2_Portable.zip",
+    "bytes": 13899047,
+    "sha256": "a99f282df8ec97838b98deb56d87fb134a31cd401995ec31dc933bca5f777f94",
+    "extractedFilesVerified": 326,
+    "windowsLaunchReuseStop": true
+  },
+  "behaviorEvidence": {
+    "zipRestore": {
+      "emptyFolderDefaultMetadata": {
+        "directoryReads": [
+          6,
+          4
+        ],
+        "metadataWrites": [
+          1,
+          0
+        ]
+      },
+      "twoDirectoriesOneCustomMetadata": {
+        "directoryReads": [
+          10,
+          8
+        ],
+        "metadataWrites": [
+          2,
+          1
+        ]
+      },
+      "scope": "Counts on the functional VFS test adapter. Directory properties and conflicting transactions are checked before marking a restore complete."
+    },
+    "collectionRead": {
+      "modelFilesOf540Bytes": 1081,
+      "batchCommands": 270,
+      "singleFileCommands": 1,
+      "scope": "Identical report versus per-file reads in the collection test, no full-run time inferred."
+    },
+    "optionalLcd680": {
+      "firmwareTag": "de4.2-b2-lcd-transfer-test",
+      "applicationOnly": true,
+      "sha256": "4348e1757224b076064039feda58b86329b4db0d84681f15fcb22918f148f7ca",
+      "observedOnOneLCD": {
+        "dfuSecondsThroughFinalExecute": 50.223,
+        "shortUploadShaReadback": true
+      }
+    }
+  }
+}

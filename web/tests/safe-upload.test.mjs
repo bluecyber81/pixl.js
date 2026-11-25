@@ -31,6 +31,33 @@ test('a new file is also staged and read back, with no backup removal', async ()
   const vfs = memoryVfs(); const result = await run(vfs, { replace: false })
   assert.equal(result.replaced, false); assert.deepEqual(vfs.bytes(target), [7, 8, 9]); assert(!vfs.log.some(entry => entry.op === 'remove'))
 })
+
+test('an approved identical replacement is verified without consuming free space or touching metadata', async () => {
+  for (const bytes of [[], [1,2,3]]) {
+    const vfs = setup(), meta = metadata(0x80, 'keep')
+    vfs.put(target, bytes, meta); vfs.setFree(0)
+    const done = await run(vfs, {file:localFile('a.bin',bytes)})
+    assert.equal(done.unchanged,true); assert.equal(done.verified,true); assert.equal(done.replaced,false)
+    assert.equal(done.recovery.stagePath,null); assert.equal(done.recovery.committed,false)
+    assert.deepEqual(mutations(vfs),[]); assert.deepEqual(vfs.nodes.get(target).meta,meta)
+    assert.equal(vfs.log.filter(e => e.op === 'read').length,2)
+  }
+})
+
+test('identical bytes with changed requested metadata still apply the requested metadata', async () => {
+  const vfs = setup(), updated = metadata(0, 'new note')
+  const done = await run(vfs, {file:localFile('a.bin',[1,2,3]),metadata:updated})
+  assert.equal(done.replaced,true); assert.deepEqual(vfs.nodes.get(target).meta,updated)
+})
+
+test('an intervening same-size edit prevents an unchanged-file receipt', async () => {
+  const vfs = setup()
+  vfs.setHook(({op,when,args}) => {
+    if (op === 'read' && when === 'after' && args[0] === target) vfs.put(target,[9,8,7])
+  })
+  await assert.rejects(run(vfs, {file:localFile('a.bin',[1,2,3])}), {code:'UPLOAD_STALE'})
+  assert.deepEqual(mutations(vfs),[]); assert.deepEqual(vfs.bytes(target),[9,8,7])
+})
 test('a new file checks ancestry and one fresh destination listing between verifying the stage and renaming it', async () => {
   const vfs = memoryVfs()
   await run(vfs, { replace: false, metadata: metadata(0, 'new file') })

@@ -1,0 +1,116 @@
+Allmiibo Dateimanager 3.66.2 – normale Ausgabe für LCD DE4.1 / App678
+
+Lauftext: Unter Bild & Video Text eingeben, Vorschau prüfen und an ein LCD mit BLE-Bildempfang senden oder für den Animationsplayer speichern.
+Scrolling text: Open Images & video, enter your text, then preview, send to an LCD running the BLE image receiver, or export for the animation player.
+
+Ordnerupload: Nach einer Unterbrechung dieselbe Quelle und dasselbe Ziel auswählen. Bei knappem Speicher den dateiweisen Upload wählen. Bereits bestätigte Dateien bleiben erhalten.
+Folder upload: Select the same source and destination after reconnecting. Use file-by-file upload when space is limited.
+
+Online: https://bluecyber81.github.io/pixl.js/
+Bild & Video: https://bluecyber81.github.io/pixl.js/?workspace=stream
+Windows-Portable: https://github.com/bluecyber81/pixl.js/releases/download/web3.66.2/Allmiibo_Dateimanager_3_66_2_Portable.zip
+Webquellen: https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.2.zip
+LCD-Updater: https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.1-lcd-app#board=LCD
+Signierte App678-ZIP fürs Handy: https://github.com/bluecyber81/pixl.js/releases/download/de4.1/Allmiibo_LCD_DE4_1_678_NUR_APP.zip
+
+Windows: lokale Ausgabe starten
+
+1. Die komplette Portable-ZIP in einen eigenen Ordner entpacken.
+2. Python 3.8 oder neuer muss vorhanden sein. Das Paket enthält den Python-/CMD-
+   Starter; ein eigener Python-Interpreter oder eine EXE ist nicht enthalten.
+3. Start-Dateimanager.cmd öffnen. Der lokale Server bindet an 127.0.0.1:8765.
+   Falls der Browser nicht automatisch aufgeht, die Adresse in Chrome oder Edge öffnen.
+4. Stop-Dateimanager.cmd beendet dieselbe lokale Instanz. Ein fremder Dienst am
+   gewählten Port wird nicht beendet. Einen anderen Port wählt z.B. -Port 8766.
+
+Start-Dateimanager-Direkt.cmd zeigt den Server in der Konsole; Strg-C beendet ihn.
+package.json, release_version.py und die Starter gehören zusammen. Node/npm sind
+zum Benutzen der fertigen Ausgabe nicht erforderlich.
+
+Bild & Video: Vorschau und Bluetooth
+
+1. Eine lokale Bild-/Videodatei auswählen, eine Datei ablegen oder Demo verwenden.
+2. Einpassen/Ausschnitt/Strecken, Drehen, Hell-Dunkel-Grenze und Inversion einstellen.
+   „Punktraster für Fotos“ bildet Helligkeitsabstufungen durch ein festes Raster ab.
+   Die Vorschau zeigt 128 × 64 Pixel. Die Medien werden nicht hochgeladen.
+3. Dateiverbindung und Fernbedienung trennen. Am LCD „BLE-Bildempfang“ öffnen.
+4. „Mit Bildempfang verbinden“ und anschließend ausdrücklich Bild, Video oder Demo
+   senden. Voreingestellte 5 Bilder/s sind ein Zielwert, keine zugesicherte Funkrate.
+5. Stoppen, Ausblenden und Bereichwechsel beenden die Übertragung. Es gibt keine
+   automatische Wiederaufnahme. Am Gerät schaltet links die Informationen um,
+   rechts invertiert die Anzeige, und Mitte beendet den Bildempfang.
+
+Die Bildoptionen werden auf diesem Gerät gespeichert, sofern der Browser das
+erlaubt. Eine lokale Datei bis 128 MiB bleibt höchstens 30 Minuten ab Auswahl in
+der geöffneten Seite verfügbar; größere Dateien können verwendet werden, müssen
+nach einem Bereichwechsel aber erneut ausgewählt werden. Neuladen oder Schließen
+der Seite verwirft die gemerkte Datei. „Zurücksetzen“ lädt Vorgaben und Demo.
+
+Videos benötigen einen vom Browser unterstützten Codec, zum Beispiel ein hier
+abspielbares MP4 oder WebM. GIF wird als Einzelbild verarbeitet. Bluetooth-Senden
+setzt einen unterstützten Web-Bluetooth-Browser und LCD App673 oder neuer voraus.
+Vorschau und Playerexport funktionieren ohne Bluetooth. OLED unterstützt den
+LCD-Bildempfang nicht.
+
+Für den Animationsplayer speichern
+
+1. Unter der Vorschau „Für den Animationsplayer speichern“ öffnen.
+2. Für Video Anfang und Ende wählen; für die Demo eine Dauer einstellen.
+   Die Bildrate wird unter Wiedergabe eingestellt. Größe und Bildanzahl prüfen.
+3. „Player-Datei erstellen“ starten. Fortschritt und „Export abbrechen“ sind
+   vorhanden. Bei mehr als 1 MiB den Ausschnitt oder die Bildrate verkleinern.
+4. Erst nach erfolgreichem Export „Datei speichern“ wählen. Die fertige BIN
+   im Dateibereich nach E:/player/ kopieren. Die normale Speicherprüfung gilt.
+5. Auf dem LCD den Animationsplayer öffnen und die Datei auswählen.
+
+Der Export erzeugt das bestehende PIXV-Format (128 × 64, 1 Bit pro Pixel).
+Er schreibt nichts automatisch auf das Gerät. Ausblenden oder Verlassen beendet
+einen laufenden Export; eine unvollständige Datei wird nicht zum Download angeboten.
+
+Seit LCD DE3.102 / App675 enthalten
+
+- Im Dateimenü des Animationsplayers lassen sich „Endlosschleife“ und „Bildzähler“
+  vor dem Start umschalten. Beide starten ausgeschaltet und gelten für die aktuelle
+  Playersitzung; sie erzeugen keine dauerhaften Einstellungs-Schreibvorgänge.
+- Der Bildempfang zeichnet vollständige Bilder und sichtbare Statusänderungen neu.
+  Einzelne Transportteile lösen keine unnötigen Bildschirmneuzeichnungen aus.
+  Das bisherige App673-Übertragungsformat bleibt erhalten.
+- Die App674-Menüsymbole bleiben enthalten. Das neue Webangebot ist mit App673+
+  nutzbar; App675 ergänzt die Player-Optionen und die Anzeigeoptimierung.
+
+Katalog und weitere Fehlerbehebungen
+
+Ocarina- und Fatal-Fury-Hinweise werden zwischen Spielübersicht, Filter und
+Figurendetails vereinheitlicht. Belegte weitere Spielzuordnungen für Sword Kirby
+& Dragoon und Noir Dedede & Hydra ergänzen den Katalog. Die Nintendo-Quellen
+stehen bei den Angaben. Switch und 3DS bleiben getrennt; die neuen Webzuordnungen
+erzeugen keine erfundenen Firmwaregruppen.
+
+Erneute Auswahl derselben Datei nach Ladefehler, Dateierkennung bei generischem
+Binärtyp und Wiederherstellung bei schnellen Bereichwechseln sind korrigiert.
+Sicherungen, PC-/Gerätevergleich, Synchronisation, Fernbedienung und Diagnose
+bleiben verfügbar.
+
+Firmwareauswahl und Prüfungen
+
+DE4.1/App678 ist die reguläre LCD-Anwendung für PFS1 mit Z21 und S112 7.3.0.
+Die installierte Anwendung und das passende Profil erscheinen unter Gerät & Diagnose.
+Im Menü „Switch 2 wecken“ lässt sich das lokale Weckprofil nach Rückfrage entfernen.
+App677 wurde auf einem LCD geflasht. Der Besitzer bestätigte den allgemeinen Betrieb.
+OLED Test 6 bleibt das eigene Angebot für den OLED-Bildschirm.
+
+Übertragungen in 3.66.2 / Transfers in 3.66.2
+
+DE: Die Inhaltsprüfung im Figurenkatalog und die Sicherung lesen bis zu vier kleine Dateien pro Anfrage, wenn das LCD den Sammelbefehl unterstützt. Die Schnellübersicht liest nur Ordner und Dateieigenschaften. Der normale Ordnerupload kann neue Unterordner abschnittsweise übernehmen. Nach einer Unterbrechung dieselbe lokale Quelle und dasselbe Ziel erneut wählen. Bestehende Zieldateien bleiben durch Vergleich und bestätigte Veröffentlichung geschützt. Eine vollständige Inhaltsprüfung steht separat zur Verfügung.
+
+EN: The catalogue content check and backup can read up to four small files per request on compatible LCD devices. The quick overview reads folders and file properties. Normal folder uploads can publish new subfolders in stages. After a disconnect, select the same source and destination to resume. The client compares existing files and waits for the device to confirm publication. A full content comparison is available separately.
+
+LCD: DE4.1 / App678 ist stabil und vorausgewählt. App679 und App680 sind optionale LCD-Testversionen für Gruppen-Uploads. Auf einem LCD erreichte das Windows-Web-DFU für App680 den letzten Execute nach 50,2 Sekunden. Ein kurzer Upload wurde durch SHA-Rücklesen geprüft.
+LCD: DE4.1 / App678 remains the stable default. App679 and App680 are optional LCD test releases with grouped uploads. On one LCD, Web DFU on Windows reached the final Execute for App680 in 50.2 seconds. A short upload was checked by SHA readback.
+
+OLED: Das separate OLED-Profil verwendet weiterhin das bisherige DFU-Verfahren. / The separate OLED profile retains its existing DFU transfer settings.
+
+ZIP-Wiederherstellung / ZIP restore
+
+DE: Wenn ein neu angelegter Ordner bereits die vorgesehenen Eigenschaften hat, wird er noch einmal gelesen und der unnötige Schreibvorgang entfällt. Die Prüfung auf fremde temporäre Transaktionen und auf veränderte Eigenschaften bleibt aktiv. Für einen leeren Ordner mit Standardeigenschaften sank im Funktionstest die Zahl der Ordnerabfragen von sechs auf vier.
+EN: New folders with the intended properties are confirmed by a fresh read and skip an unnecessary write. The restore still checks for unrelated transactions and changed properties. In the functional test, restoring one empty folder with default properties required four directory reads instead of six.

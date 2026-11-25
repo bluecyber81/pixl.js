@@ -13,6 +13,37 @@ const mutations = vfs => vfs.log.filter(item => ['write', 'rename', 'remove', 'm
 async function backup(vfs, rootPath = 'E:/') { return createBackup({ rootPath, ...vfs.api, preserveLegacyNames: true }) }
 async function load(blob) { return loadBackupZip(blob, { JSZip }) }
 async function simple() { const vfs = memoryVfs(); vfs.put('E:/tags/a.bin', [1, 2, 3], metadata(0x81, 'original note')); return { vfs, result: await backup(vfs) } }
+
+test('ZIP comparison, fresh preflight, staging and committed-file verification use supported device digests', async () => {
+  const {result} = await simple(), archive = await load(result.blob)
+  const target = memoryVfs(), path = 'E:/tags/a.bin'
+  target.put(path, [3,2,1])
+  const calls = []
+  const options = {readFileDigest: async (file,size) => {
+    calls.push(file)
+    const bytes = Uint8Array.from(target.bytes(file)); assert.equal(bytes.length,size)
+    return sha256Bytes(bytes)
+  }}
+  const plan = await preview(archive, target, options)
+  assert.equal(plan.entries.find(e => e.targetPath === path).status, 'change')
+  const done = await execute(plan, target, [path], options)
+  assert.equal(done.filesCompleted, 1)
+  assert.deepEqual(target.bytes(path), [1,2,3])
+  assert.equal(target.log.filter(e => e.op === 'read').length, 0)
+  assert.deepEqual(calls, [path,path,path,'E:/tags/~uabcdef012345',path,path])
+})
+
+test('an unavailable ZIP digest falls back to exact reads and an invalid or failed reply blocks writes', async () => {
+  const {result} = await simple(), archive = await load(result.blob), path = 'E:/tags/a.bin'
+  const target = memoryVfs(); target.put(path,[3,2,1])
+  const plan = await preview(archive, target, {readFileDigest:async () => null})
+  assert.equal(target.log.filter(e => e.op === 'read').length, 1)
+  for (const digest of [async () => 'invalid', async () => {throw Error('lost connection')}]) {
+    await assert.rejects(execute(plan,target,[path],{readFileDigest:digest}))
+    assert.equal(mutations(target).length, 0)
+    assert.deepEqual(target.bytes(path),[3,2,1])
+  }
+})
 async function rewritten(blob, change, updateManifestHash = false) {
   const zip = await JSZip.loadAsync(await blob.arrayBuffer()); await change(zip)
   if (updateManifestHash) {
@@ -389,4 +420,73 @@ test('restore cannot exceed the device path or per-component UTF-8 bounds after 
   const { result } = await simple(), archive = await load(result.blob), target = memoryVfs()
   await assert.rejects(preview(archive, target, { rootPath: 'E:/' + 'é'.repeat(23) + '/abcdefghi' }))
   assert.equal(target.log.length, 0)
+})
+
+async function emptyDirectoryPlan(entries) {
+  const source = memoryVfs(), target = memoryVfs()
+  source.nodes.delete('E:/tags')
+  for (const [path, meta] of entries) source.nodes.set(path, {type: 1, meta})
+  const archive = await load((await backup(source)).blob)
+  const plan = await preview(archive, target)
+  target.log.length = 0
+  return {target, plan, selected: plan.entries.map(entry => entry.targetPath)}
+}
+
+test('restore reads one fresh root for namespace and collision checks and verifies default metadata in place', async () => {
+  const {target, plan, selected} = await emptyDirectoryPlan([['E:/alpha',metadata()]])
+  const result = await execute(plan, target, selected)
+  assert.deepEqual(result.completedPaths, ['E:/alpha'])
+  assert.deepEqual(target.log.map(({op, args}) => [op,args[0]]), [
+    ['list','E:/'], ['list','E:/'], ['mkdir','E:/alpha'], ['list','E:/'], ['list','E:/'],
+  ])
+})
+
+test('changed directory metadata still receives a fresh post-write readback', async () => {
+  const entries = [['E:/alpha',metadata()], ['E:/beta',metadata(1,'custom')]]
+  const {target, plan, selected} = await emptyDirectoryPlan(entries)
+  const result = await execute(plan, target, selected)
+  assert.equal(result.directoriesCompleted, 2)
+  assert.equal(target.log.filter(item => item.op === 'list').length, 8)
+  assert.deepEqual(target.log.filter(item => item.op === 'meta').map(item => item.args[0]), ['E:/beta'])
+  assert.deepEqual(target.nodes.get('E:/beta').meta, metadata(1,'custom'))
+  const retry = await emptyDirectoryPlan(entries)
+  retry.target.setHook(({when,op,args}) => {
+    if (when === 'after' && op === 'meta') retry.target.nodes.get(args[0]).meta = metadata(1,'unconfirmed')
+  })
+  await assert.rejects(execute(retry.plan, retry.target, retry.selected), {code:'ZIP_METADATA'})
+})
+
+test('a new collision or transaction after the first mkdir stops later directories', async () => {
+  for (const interloper of ['E:/BETA','E:/.pixl_txn_old']) {
+    const {target, plan, selected} = await emptyDirectoryPlan([['E:/alpha',metadata()], ['E:/beta',metadata()]])
+    target.setHook(({when,op,args}) => {
+      if (when === 'after' && op === 'mkdir' && args[0] === 'E:/alpha') {
+        target.nodes.set(interloper, {type:1,meta:metadata()})
+      }
+    })
+    await assert.rejects(execute(plan,target,selected), error => {
+      assert.equal(error.code, 'ZIP_STALE')
+      assert.deepEqual(error.importProgress.createdFolders, ['E:/alpha'])
+      return true
+    })
+    assert(target.nodes.has(interloper))
+    assert(!target.nodes.has('E:/beta'))
+  }
+})
+
+test('cancellation on the last fresh listing cannot mark unchanged folder metadata as completed', async () => {
+  const {target, plan, selected} = await emptyDirectoryPlan([['E:/alpha',metadata()]])
+  const controller = new AbortController()
+  let created = false, readsAfterCreate = 0
+  target.setHook(({when,op}) => {
+    if (when === 'after' && op === 'mkdir') created = true
+    if (when === 'after' && created && op === 'list' && ++readsAfterCreate === 2) controller.abort()
+  })
+  await assert.rejects(execute(plan,target,selected,{signal:controller.signal}), error => {
+    assert.equal(error.code, 'ZIP_CANCELLED')
+    assert.deepEqual(error.importProgress.createdFolders, ['E:/alpha'])
+    assert.deepEqual(error.importProgress.completedPaths, [])
+    return true
+  })
+  assert.equal(target.log.filter(item => item.op === 'meta').length, 0)
 })

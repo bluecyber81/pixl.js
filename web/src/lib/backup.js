@@ -2,6 +2,7 @@
 // The caller must serialize this job with other UI operations on its session.
 import { rawMetadataHex, decodeRawMetadata } from './raw-metadata.js'
 import { updateZipCrc32 } from './zip-crc32.js'
+import { smallFileReadGroup } from './small-file-read-group.js'
 export const BACKUP_LIMITS = Object.freeze({
   maxBytes: 16 * 1024 * 1024,
   maxFileBytes: 8 * 1024 * 1024,
@@ -429,18 +430,6 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
   const preparedFiles = new Map()
   let canBatchRead = !!readFilesBatch, canBatchDigest = !!readFileDigestsBatch
   const small = record => record.type === 'file' && record.sourcePath.startsWith('E:/') && record.size <= 572
-  function batchCandidates(start) {
-    const selected = []
-    let requestBytes = 10 // mode, count, u64 revision
-    for (let index = start; index < records.length; ++index) {
-      const record = records[index]
-      if (record.type === 'directory') continue
-      const size = 4 + encoder.encode(record.sourcePath).length
-      if (!small(record) || selected.length === 4 || requestBytes + size > 243) break
-      selected.push(record); requestBytes += size
-    }
-    return selected
-  }
   function checkedBatch(value, requested, digest) {
     if (!Array.isArray(value) || value.length !== requested.length) fail('BACKUP_BATCH', 'Incomplete small-file batch response.')
     return value.map((entry, index) => {
@@ -457,7 +446,7 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
   }
   async function prepareSmallBatch(start) {
     if (readRawMetadata || initialRevision === null || !(canBatchRead || canBatchDigest)) return false
-    const candidates = batchCandidates(start)
+    const candidates = smallFileReadGroup(records, start, record => small(record) && record.sourcePath, transportBefore?.maxRequestPayload)
     if (candidates.length < 2) return false
     const staged = []
     for (const record of candidates) {
@@ -517,7 +506,7 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
       checkpoint()
       const entry = fresh[index]
       ++operations.fileReads
-      const result = batchBytes ? batchBytes[index] : await readFile(entry.record.sourcePath, {maxBytes:entry.record.size})
+      const result = batchBytes ? batchBytes[index] : await readFile(entry.record.sourcePath, {maxBytes:entry.record.size, exactBytes:entry.record.size})
       checkpoint()
       const bytes = new Uint8Array(bytesOf(result))
       if (bytes.byteLength !== entry.record.size) fail('BACKUP_SIZE', 'A file size changed or its read was incomplete.')
@@ -580,7 +569,7 @@ async function buildBackup({ root, readDirectory, readFile, readFileDigest, read
       let highWater = 0
       ++operations.fileReads
       const result = await readFile(record.sourcePath, {
-        maxBytes: record.size,
+        maxBytes: record.size, exactBytes: record.size,
         onProgress: value => {
           const received = value?.received_bytes
           if (Number.isSafeInteger(received) && received >= highWater && received <= record.size) {

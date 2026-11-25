@@ -1,6 +1,6 @@
 # Allmiibo LCD and Pixl.js OLED
 
-## LCD DE4.1 / App678 and file manager 3.66.1
+## LCD DE4.1 / App678 and file manager 3.66.2
 
 DE4.1 is the regular firmware for the nRF52832 Allmiibo with an ST7567 LCD, existing Packed LittleFS (PFS1), Z21 bootloader and Nordic S112 7.3.0 (FWID 0x0126). A compatible LCD running App675, App676 or App677 can update directly. Back up your files and select the intact signed ZIP in **nRF Device Firmware Update** on your phone. After restart, **Device & diagnostics** should show **2.22.0-DE4.1** and application counter **678**.
 
@@ -8,9 +8,10 @@ DE4.1 is the regular firmware for the nRF52832 Allmiibo with an ST7567 LCD, exis
 
 - **Switch 2 wake:** A failed settings save can be retried. “Forget pairing” asks for confirmation with Cancel selected initially. Confirming removes the local wake profile and turns off automatic button-start wake.
 - **Images and video:** The receiver refreshes the display on complete frames and status changes. The animation player offers a session-only loop and frame counter. Preview scrolling text on your phone and send it to the LCD or save it for the player.
-- **File manager:** Version 3.66.1 recognizes the DE4 family for supported LCD features and verifies the matching update package. The catalogue includes the English and German game notes for Mineru’s Construct.
+- **File transfers.** On compatible LCDs, Web 3.66.2 groups small reads for backups and content checks. New subfolders can be published in stages. Windows Web DFU uses larger confirmed transfer windows on LCD. The firmware selector defaults to DE4.1. [Optional LCD App680 beta](https://github.com/bluecyber81/pixl.js/releases/tag/de4.2-b2-lcd-transfer-test)
+- **File manager:** Version 3.66.2 recognizes the DE4 family for supported LCD features and verifies the matching update package. The catalogue includes the English and German game notes for Mineru’s Construct.
 
-[Open file manager](https://bluecyber81.github.io/pixl.js/) · [Image & video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Windows portable ZIP](https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
+[Open file manager](https://bluecyber81.github.io/pixl.js/) · [Image & video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.2/Allmiibo_Dateimanager_3_66_2_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.2.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
 
 The 24 November device report covers the immediately preceding App677. Physical App678 readback and interrupted DFU on hardware were pending at publication. [DE4.1 qualification](docs/validation/DE4_1.json) · [App677 owner report](https://github.com/bluecyber81/pixl.js/releases/tag/de3.104-lcd-test1)
 

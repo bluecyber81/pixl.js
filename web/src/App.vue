@@ -122,7 +122,7 @@
       <strong>{{ $t('info.uploadPaused') }}</strong>
       <p><template v-if="syncResume.folderName">{{ syncResume.folderName }} · </template>{{ syncResume.plan.rootPath }} · {{ $t('info.uploadCheckpoint', { done: syncResume.job.completed.length, total: syncResume.selectedPaths.length }) }}</p>
       <p>{{ $t('info.uploadResumeHint') }}</p>
-      <p v-if="syncResume.job.newFolderUpload?.stagePath">{{ $t('info.folderStage', {path:syncResume.job.newFolderUpload.stagePath}) }}</p>
+      <p v-if="syncWorkingFolder?.stagePath">{{ $t('info.folderStage', {path:syncWorkingFolder.stagePath}) }}</p>
       <button type="button" class="sync-resume-continue" @click="resume_sync" :disabled="!syncResumeMatches || busy || disconnecting || upload_diag_visible || syncDialog || zipDialog">{{ $t('info.uploadContinue') }}</button>
       <button type="button" :disabled="busy" @click="forget_sync">{{ $t('info.uploadForget') }}</button>
     </section>
@@ -312,6 +312,14 @@
       <FirmwareBoardChoice v-if="visitedWorkspaces.has('update')" :connected="connected" :version="firmwareVersion" :boot="bootInfo" :locale="language">
       <template #lcd>
       <CurrentLcdDownloads :connected="connected" :version="firmwareVersion" :boot="bootInfo" :locale="language" />
+      <div class="tool-section">
+        <h3>LCD DE4.2-b2 / App680 · Beta</h3>
+        <p>{{ language.startsWith('de') ? 'App680 nutzt beim Schreiben Ordnerfilter und aktualisiert das Dateisystem-Manifest atomar. Auf einem LCD wurden das Update und ein kurzer Upload mit SHA-Prüfung getestet. Die App-ZIP setzt Z21 und S112 7.3.0 voraus.' : 'App680 uses directory filters during writes and updates the filesystem manifest atomically. The update and a short upload with SHA verification were tested on one LCD. The app ZIP requires Z21 and S112 7.3.0.' }}</p>
+        <p><a :href="archiveLinks.transferBeta680" download>{{ language.startsWith('de') ? 'App680 fürs Handy herunterladen (ZIP)' : 'Download App680 for your phone (ZIP)' }}</a> · <a :href="'dfu/web.html?package=de4.2-b2-lcd-app-test' + (connected ? lastDfuReference || '' : '')">{{ language.startsWith('de') ? 'App680 im Web-DFU öffnen' : 'Open App680 in Web DFU' }}</a></p>
+        <h3>LCD DE4.2-b1 / App679 · Beta</h3>
+        <p>{{ language.startsWith('de') ? 'App679 unterstützt den Gruppen-Upload kleiner Dateien ebenfalls. Das App-Update setzt Z21 und S112 7.3.0 voraus.' : 'App679 also supports grouped small-file uploads. The app update requires Z21 and S112 7.3.0.' }}</p>
+        <p><a :href="archiveLinks.transferBeta" download>{{ language.startsWith('de') ? 'App679 fürs Handy herunterladen (ZIP)' : 'Download App679 for your phone (ZIP)' }}</a> · <a :href="'dfu/web.html?package=de4.2-b1-lcd-app-test' + (connected ? lastDfuReference || '' : '')">{{ language.startsWith('de') ? 'App679 im Web-DFU öffnen' : 'Open App679 in Web DFU' }}</a></p>
+      </div>
       <p class="workspace-description">{{ $t('workflow.updateScope') }}</p>
       <a class="guide-link" :href="guideUrl + '#flash'" target="_blank" rel="noopener noreferrer">{{ $t('workflow.flashGuide') }}</a>
       <div class="update-steps"><div><span aria-hidden="true">1</span><p>{{ $t('workflow.updateStepDevice') }}</p><el-button type="info" size="small" @click="on_btn_enter_dfu"
@@ -579,9 +587,9 @@
         <h3>{{ uploadHub.files }}</h3>
 <TransferStatus v-if="transfer" :transfer="transfer" :stats="transferStats" :format-size="format_size" :can-cancel="true" :cancelling="transferCancelling" @cancel="cancel_transfer" />
               <p>{{ $t('tools.uploadNotice') }}</p>
-        <el-checkbox v-model="safeUploads" :disabled="pendingUploads > 0" @change="value => { if (value) verifyUploads = true }">{{ $t('info.safeUploads') }}</el-checkbox>
-        <p v-if="safeUploads">{{ $t('info.safeUploadHint') }}</p><p v-else class="notice error">{{ $t('info.directUploadWarning') }}</p>
-        <el-checkbox v-model="verifyUploads" :disabled="safeUploads || pendingUploads > 0">{{ $t('tools.verify') }}</el-checkbox>
+        <el-checkbox v-model="safeUploads" :disabled="pendingUploads > 0">{{ $t('info.safeUploads') }}</el-checkbox>
+        <p v-if="safeUploads">{{ $t('info.safeUploadHint') }}</p><p v-else-if="replaceUploads">{{ $t('info.directUploadWarning') }}</p>
+        <el-checkbox :model-value="safeUploads || verifyUploads" :disabled="safeUploads || pendingUploads > 0" @update:model-value="verifyUploads = $event">{{ $t('tools.verify') }}</el-checkbox>
         <el-checkbox v-model="replaceUploads" :disabled="pendingUploads > 0">{{ $t('tools.replace') }}</el-checkbox>
         <el-upload ref="upload" class="upload-demo" drag action="#" multiple
           :http-request="on_upload_request" :on-error="on_upload_error" :disabled="!connected || enteringDfu || cancellingUploads || backingUp || dialogPending" :before-remove="before_upload_remove">
@@ -597,15 +605,15 @@
         </el-upload>
       </div>
       <template #footer>
-        <span role="status" aria-live="polite">{{ pendingUploads ? uploadHub.queued + ': ' + pendingUploads : uploadHub.idle }}</span>
+        <span role="status" aria-live="polite">{{ pendingUploads ? uploadHub.queued + ': ' + pendingUploads : fastUploadStatus || uploadHub.idle }}</span>
         <el-button @click="on_upload_diag_close(() => { upload_diag_visible = false })">{{ uploadHub.close }}</el-button>
       </template>
     </el-dialog>
 
   <footer class="source-footer">
-    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.66.1" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.1' : '3.66.1 source code' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.66.1 (ZIP)' : 'Windows 3.66.1 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.1 (ZIP)' : '3.66.1 source code (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.66.2" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.2' : '3.66.2 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.66.2 (ZIP)' : 'Windows 3.66.2 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.2 (ZIP)' : '3.66.2 source code (ZIP)' }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
@@ -641,7 +649,7 @@ import { editMetadataFlags } from "./lib/raw-metadata.js"
 import { safeUpload, writableDirectoryPath } from "./lib/safe-upload.js"
 import { uploadNameTree, reviewUploadNames } from "./lib/upload-names.js"
 import { createSyncPlan, createSyncJob, executeSyncJob } from "./lib/sync-plan.js"
-import { newFolderUploadRoot, executeNewFolderUpload } from "./lib/new-folder-upload.js"
+import { newFolderUploadRoot, executeNewFolderUpload, prepareLeafUploads, pendingFolderUpload } from "./lib/new-folder-upload.js"
 import { HISTORY_FILENAME, folderBinding, readSyncHistory, createSyncHistory } from "./lib/sync-history.js"
 import { captureTransferLink, createBackupTransferObservation, normalizeTransferObservation } from "./lib/transfer-observation.js"
 import { createTransferMeter } from "./lib/transfer-meter.js"
@@ -684,14 +692,14 @@ export default {
       driveInfo: [], transportInfo: null, infoLoading: false,
       transferStats: null, transferHistory: [], lastDownload: null, runtimeInfo: null, runtimeState: 'unknown', bootInfo: null, bootState: 'unknown', lastDfuReference: '',
       gameFolderOpened:false,
-      safeUploads: true, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
+      safeUploads: false, recoveryNotes: [], cancellingUploads: false, workflowCancelling: false,
       syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0, syncNames: null, syncNameSerial: 0,
       syncHistoryName: '', syncHistoryReady: null, syncResume: null,
       syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1, syncFilter: 'all', syncFolderName: '', syncFolderContents: false,
       collectionReport:null, collectionStale:false, collectionObservation:null, collectionRevision:0, collectionBusy:false, collectionWriting:false, collectionCatalogue:catalogueBaseline, collectionSelected:null, searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
       page: 1, pageSize: 100, sortKey: 'name', sortOrder: 'ascending',
       cancellingBackup: false, lastBackup: null, transfer: null, browserIssue: '',
-      verifyUploads: true, replaceUploads: false,
+      verifyUploads: false, replaceUploads: false, fastUploadStatus: '',
       connBtnType: "",
       connBtnText: `${this.$t("conn.connect")}`,
       version: "",
@@ -775,6 +783,7 @@ export default {
       }));
       return [...entries, ...remoteRows].sort((a,b) => a.relativePath.localeCompare(b.relativePath));
     },
+    syncWorkingFolder() { return pendingFolderUpload(this.syncResume?.job); },
     syncNewFolderTarget() {
       return !this.syncFolderContents && firmwareBoard(this.firmwareVersion) === 'LCD' &&
         newFolderUploadRoot(this.syncPlan, this.syncSelected);
@@ -995,6 +1004,12 @@ export default {
       const generation = this.sessionGeneration;
       this.assert_session(generation);
       return { assertSession: () => this.assert_session(generation),
+        maxRequestPayload: proto.get_transport_diagnostics?.()?.maxRequestPayload,
+        readFilesBatch: typeof proto.vfs_read_small_batch === 'function' ? async (files, {revision}) => {
+          this.assert_session(generation);
+          const result = await proto.vfs_read_small_batch(files, revision, this.firmwareVersion);
+          this.assert_session(generation); return result;
+        } : undefined,
         readRevision: async () => {
           this.assert_session(generation);
           const revision = await proto.vfs_small_create_revision(this.firmwareVersion);
@@ -1487,6 +1502,9 @@ export default {
       return {...this.transfer_adapters(generation),
         readFileDigest:(path,size) => current(() => proto.vfs_backup_digest(path,size,this.firmwareVersion)),
         readCreateRevision:() => current(() => proto.vfs_small_create_revision(this.firmwareVersion)),
+        canGroupCreate:() => ['2.22.0-DE4.2-b1', '2.22.0-DE4.2-b2'].includes(this.firmwareVersion) && current(() => proto.vfs_probe_group_create(this.firmwareVersion)),
+        readRawMetadata:path => current(async () => this.checked(await proto.vfs_read_raw_meta(path))),
+        createGroup:(parent,entries,revision) => current(() => proto.vfs_group_create(parent,entries,revision)),
         createSmall:(path,bytes,sha,revision) => current(() => proto.vfs_small_create(path,bytes,sha,revision)),
         publishSmallFolder:(stage,target,revision) => current(() => proto.vfs_publish_staged_folder(stage,target,revision))
       };
@@ -1508,9 +1526,9 @@ export default {
       return layout.mounted && supportsFolderPublication(this.firmwareVersion, layout.engineSha256);
     },
     forget_sync() {
-      const stage = this.syncResume?.job.newFolderUpload?.stagePath;
+      const stage = this.syncWorkingFolder?.stagePath;
       if (stage) {
-        this.remember_recovery({recovery:{targetPath:this.syncResume.plan.rootPath, committed:null, phase:'folder-upload',
+        this.remember_recovery({recovery:{targetPath:this.syncWorkingFolder.targetPath, committed:null, phase:'folder-upload',
           recoveryFiles:[{path:stage,role:'stage',state:'possible'}]}});
       }
       this.syncResume = null;
@@ -1536,7 +1554,7 @@ export default {
       const controller = new AbortController(); this.workflowCancelling=false; this._syncController = controller; this.syncing = true;
       this.syncHistoryReady = null; this.syncStatus = ''; const adapters = this.folder_upload_adapters(generation);
       try {
-        const eligible = job.newFolderUpload || (!request.directFolder && !request.folderContents && plan.rootPath.startsWith('E:/') && newFolderUploadRoot(plan, selectedPaths));
+        const eligible = job.newFolderUpload || (!request.directFolder && !request.folderContents && plan.rootPath.startsWith('E:/') && newFolderUploadRoot(plan, selectedPaths, true));
         const selected = new Set(selectedPaths);
         const hasNewFiles = plan.rootPath.startsWith('E:/') && plan.entries.some(entry => entry.status === 'add' && selected.has(entry.targetPath));
         const packedWriter = (eligible || hasNewFiles) && await this.supports_folder_publish(generation);
@@ -1544,7 +1562,8 @@ export default {
         if (job.newFolderUpload && !publishFolder) throw new Error(this.$t('info.folderCapabilityChanged'));
         const execute = publishFolder ? executeNewFolderUpload : executeSyncJob;
         const result = await execute({job,plan,files,deviceKey:pixl.get_device_key?.(),selectedPaths,
-          ...adapters, signal:controller.signal, writeNewPackedFile:packedWriter ? adapters.writeFile : undefined,
+          ...adapters, signal:controller.signal, quickPacked:packedWriter, writeNewPackedFile:packedWriter ? adapters.writeFile : undefined,
+          prepareLeafUploads:packedWriter && !request.directFolder ? prepareLeafUploads : undefined,
           uploadFile: async options => {
             interruptedReplacement = null;
             try {
@@ -1564,10 +1583,12 @@ export default {
         });
         this.assert_session(generation);
         if (binding && !controller.signal.aborted) this.syncHistoryReady = createSyncHistory(plan, binding, history, result.job);
-        this.syncStatus = result.skipped ? this.$t('info.syncContinued', result) : this.$t('info.syncDone');
-        this.remember_transfer('sync','success',result.uploadedBytes,true); return result;
+        const storedOnly = result.job?.acknowledgedOnly?.length || 0;
+        this.syncStatus = storedOnly ? this.$t('info.syncStoredQuick', {count:storedOnly}) :
+          result.skipped ? this.$t('info.syncContinued', result) : this.$t('info.syncDone');
+        this.remember_transfer('sync','success',result.uploadedBytes,!storedOnly); return result;
       } catch(error) {
-        if (this._activeFolderUpload === request && (job.newFolderUpload?.stagePath || !this.session_current(generation) || error.code === 'DISCONNECTED')) {
+        if (this._activeFolderUpload === request && (pendingFolderUpload(job)?.stagePath || !this.session_current(generation) || error.code === 'DISCONNECTED')) {
           this.syncResume = Object.freeze({...request, interruptedReplacement});
         }
         if (this.session_current(generation)) {
@@ -2452,6 +2473,7 @@ export default {
 
     on_btn_upload() {
       if (this.btn_disabled()) return;
+      this.fastUploadStatus = '';
       this.upload_diag_visible = true;
     },
 
@@ -2503,6 +2525,15 @@ export default {
       let controller;
       let targetName = options.file.name;
       if (!Number.isSafeInteger(options.file.size) || options.file.size < 0 || options.file.size > 2 * 1024 * 1024) return Promise.reject(new Error(this.$t('upload.fileSizeLimit')));
+      let batch;
+      if (!verify) {
+        if (this._fastUploadBatch?.generation !== generation || this._fastUploadBatch.dir !== dir) {
+          this._fastUploadBatch = { generation, dir, remaining: 0, written: 0, drive: null, sample: null };
+        }
+        batch = this._fastUploadBatch;
+        ++batch.remaining;
+      }
+      this.fastUploadStatus = '';
       ++this.pendingUploads;
       const checkPreflight = () => {
         this.assert_session(generation);
@@ -2567,11 +2598,18 @@ export default {
           await this.ask_dialog(() => this.$confirm(this.$t(safe ? 'info.safeReplaceWarning' : 'tools.replaceWarning', { name: targetName }), this.$t('upload.title'), this.confirm_options()));
           checkPreflight();
         }
-        const drives = await this.read_drive_info(generation);
-        checkPreflight();
-        const destination = drives.find(drive => drive.label === dir[0]);
+        const oldBytes = safe ? 0 : existing?.size || 0;
+        let destination = batch?.drive;
+        if (!destination || !uploadSpaceAvailable(destination, options.file.size, oldBytes)) {
+          const drives = await this.read_drive_info(generation);
+          checkPreflight();
+          destination = drives.find(drive => drive.label === dir[0]);
+        }
         if (!destination || destination.status !== 0) throw new Error(this.$t('info.driveUnavailable'));
-        if (!uploadSpaceAvailable(destination, options.file.size, safe ? 0 : existing?.size || 0)) throw new Error(this.$t('info.notEnoughSpace'));
+        // Equal-sized replacements may already match. safeUpload checks the
+        // available workspace immediately before staging a changed file.
+        const canMatchExisting = safe && existing?.size === options.file.size;
+        if (!canMatchExisting && !uploadSpaceAvailable(destination, options.file.size, oldBytes)) throw new Error(this.$t('info.notEnoughSpace'));
         if (safe) {
           const adapters = this.transfer_adapters(generation);
           const result = await safeUpload({path, file:options.file, replace:!!existing, ...adapters,
@@ -2580,8 +2618,9 @@ export default {
           });
           this.remember_recovery(result); this.assert_session(generation);
           if (result.cancelledAfterCommit) this.$message({type:'info',message:this.$t('info.cancelledAfterCommit')});
+          if (result.unchanged) this.$message({type:'info',message:this.$t('info.uploadUnchanged',{name:targetName})});
           options.onProgress?.({percent:100});
-          this.remember_transfer('upload','success',options.file.size,true);
+          this.remember_transfer('upload','success',result.unchanged ? 0 : options.file.size,true);
           return {};
         }
         // Hash source bytes before touching the destination so local read or
@@ -2612,13 +2651,34 @@ export default {
           if (bytes.byteLength !== options.file.size || await sha256(bytes) !== sourceHash) throw new Error(this.$t('tools.verificationFailed'));
           this.assert_session(generation);
         }
+        if (batch) {
+          ++batch.written;
+          batch.drive = {...destination, freeBytes: destination.freeBytes - Math.max(0, options.file.size - oldBytes)};
+          if (options.file.size > 0 && options.file.size <= 572) batch.sample = {path, file:options.file};
+        }
         options.onProgress?.({ percent: 100 });
         this.remember_transfer('upload', 'success', options.file.size, verify);
         return {};
       };
       // FileReader and overwrite prompts belong to the same ordered queue as
       // the transfer. A rejected entry must not strand the next queued upload.
-      const pending = (this._uploadTail || Promise.resolve()).then(run);
+      const pending = (this._uploadTail || Promise.resolve()).then(run).catch(error => {
+        if (batch) { batch.failed = true; batch.drive = null; }
+        throw error;
+      }).finally(async () => {
+        if (!batch || --batch.remaining > 0) return;
+        if (this._fastUploadBatch === batch) this._fastUploadBatch = null;
+        if (batch.failed || !this.session_current(generation)) return;
+        const sample = batch.sample;
+        const digest = sample && await proto.vfs_backup_digest(sample.path, sample.file.size, this.firmwareVersion);
+        this.assert_session(generation);
+        if (digest) {
+          const expected = await sha256(await sample.file.arrayBuffer());
+          this.assert_session(generation);
+          if (digest !== expected) throw new Error(this.$t('tools.uploadSampleFailed', {name:sample.file.name}));
+        }
+        this.fastUploadStatus = this.$t(digest ? 'tools.uploadSampleMatched' : 'tools.uploadBatchClosed', {count:batch.written});
+      });
       this._uploadTail = pending.catch(() => {});
       return pending.catch(error => {
         this.remember_recovery(error);
@@ -2962,7 +3022,7 @@ export default {
       this.language = locale;
       this.$i18n.locale = locale;
       document.documentElement.lang = locale.replace('_', '-');
-      document.title = 'Allmiibo ' + this.$t('workflow.appTitle') + ' ' + webVersion;
+      document.title = 'Allmiibo ' + this.$t('workflow.appTitle') + ' ' + webVersion + this.archiveLinks.labelSuffix;
       this.refresh_listing_language();
       this.connBtnText = this.$t(this.disconnecting ? 'info.disconnecting' : this.connected ? 'conn.disconnect' : this.connecting ? 'conn.connecting' : 'conn.connect');
       this.version = this.firmwareVersion ? this.$t('status.connected') + this.firmwareVersion : '';

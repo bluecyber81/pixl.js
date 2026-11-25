@@ -9,7 +9,7 @@ const ByteBuffer = require('bytebuffer');
 ByteBuffer.DEFAULT_ENDIAN = ByteBuffer.LITTLE_ENDIAN;
 
 exports.readDigestWire = async function readDigestWire(vfs, { digestReply, batch = false,
-  revision = '0000000000000001', batchReply, linkReply } = {}) {
+  revision = '0000000000000001', batchReply, linkReply, groupWire } = {}) {
   const bus = new EventEmitter(), requests = [], replies = [], errors = [], timers = new Map();
   let timer = 0, openPath = null;
   const root = process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../../src/lib');
@@ -85,10 +85,15 @@ exports.readDigestWire = async function readDigestWire(vfs, { digestReply, batch
   }
   const pixl = {
     get_connection_state: () => 'connected',
-    tx_data(value) {
+    async tx_data(value,withoutResponse) {
       const wire = Buffer.from(value);
       if (wire.length > 247 || wire.readUInt16LE(2) !== 0) throw new Error('Unexpected fragmented mock request');
       requests.push(wire);
+      if (groupWire && [0x27,0x28].includes(wire[0])) {
+        const result = await groupWire(wire[0],wire.subarray(4),withoutResponse);
+        if (result) notify(wire[0],result);
+        return;
+      }
       Promise.resolve().then(() => response(wire[0], wire.subarray(4))).then(value => notify(wire[0], value)).catch(error => {
         errors.push(error); bus.emit('ble_disconnected', error);
       });
@@ -97,7 +102,7 @@ exports.readDigestWire = async function readDigestWire(vfs, { digestReply, batch
     disconnect: () => bus.emit('ble_disconnected'),
   };
   const context = { module: { exports: {} }, ...require(path.join(root, 'hardware-profile.js')),
-    ...require(path.join(root, 'device-extra-diagnostics.js')),
+    ...require(path.join(root, 'device-extra-diagnostics.js')), ...require(path.join(root, 'group-create-wire.js')),
     ByteBuffer, Promise, Error, ArrayBuffer, Uint8Array, DataView, TextEncoder, TextDecoder,
     console, pixl, i18n: { global: { t: value => value } }, sharedEventDispatcher: () => bus,
     setTimeout: callback => { const id = ++timer; timers.set(id, callback); return id; },

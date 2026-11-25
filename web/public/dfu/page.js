@@ -1,11 +1,13 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { lcdTest676 } from './lcd-app676-reference.mjs';
 import { lcdTest677 } from './lcd-app677-reference.mjs';
+import { lcdTest680, lcdTest680Package } from './lcd-app680-reference.mjs';
+import { lcdTest679, lcdTest679Package } from './lcd-app679-reference.mjs';
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.66.1';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.66.2';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
-import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.66.1';
-import { lcdRelease, lcdReleasePackage } from './lcd-release-reference.mjs?v=3.66.1';
+import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.66.2';
+import { lcdRelease, lcdReleasePackage } from './lcd-release-reference.mjs?v=3.66.2';
 
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -73,7 +75,9 @@ function targetDescription(target) {
         const {app, bl, sd} = ref;
         lines.push(choose(`Zuletzt im Dateimanager gelesen · App-Zähler ${app} · Bootloader-Zähler ${bl} · SoftDevice ${hexId(sd)}.`,
             `Last read in the file manager · application counter ${app} · bootloader counter ${bl} · SoftDevice ${hexId(sd)}.`));
-        if (app > target.counter) lines.push(boardSelect.value === 'OLED'
+        if ([679, 680].includes(target.counter) && (bl !== 21 || sd !== 0x0126 || app > target.counter)) {
+            lines.push(choose(`App${target.counter} erfordert ein LCD mit Z21, S112 7.3.0 und App-Zähler bis ${target.counter}.`, `App${target.counter} requires an LCD with Z21, S112 7.3.0 and an application counter of ${target.counter} or lower.`));
+        } else if (app > target.counter) lines.push(boardSelect.value === 'OLED'
             ? choose('Die ausgewählte OLED-Anwendung ist älter als der ausgelesene Stand. Wähle ein aktuelleres OLED-Paket.', 'The selected OLED application is older than the version read from the device. Choose a newer OLED package.')
             : choose('Die ausgewählte Anwendung ist älter als der ausgelesene Stand. Z15, Z17 und Z19 können sie bei gültiger Signatur installieren. Prüfe vor dem Übertragen, ob du zu dieser Version zurückkehren möchtest.', 'The selected application is older than the version read from the device. Z15, Z17 and Z19 can install it if the signature is valid. Check that you intend to return to this version before transferring.'));
         if (!target.softDevices.includes(sd)) lines.push(choose('Die ausgelesene FWID steht nicht in der Anforderungsliste.', 'The reported FWID is absent from the list of accepted IDs.'));
@@ -91,11 +95,11 @@ function selectedProfileMismatch(entry) {
 }
 function showSource(board, selectedVersion) {
     const oled = board === 'OLED';
-    const preview = !oled && [lcdTest677, lcdTest676, ...lcdPreviews].find(item => item.firmwareVersion === selectedVersion);
+    const preview = !oled && [lcdTest680, lcdTest679, lcdTest677, lcdTest676, ...lcdPreviews].find(item => item.firmwareVersion === selectedVersion);
     const previous = !oled && selectedVersion === '2.22.0-DE3.102';
-    const revision = oled ? 'de3.87-oled-t6' : preview ? preview.sourceCommit : previous ? 'release/lcd-de3102-app675' : 'release/lcd-de41-app678';
+    const revision = oled ? 'de3.87-oled-t6' : [lcdTest679, lcdTest680].includes(preview) ? preview.releaseTag : preview ? preview.sourceCommit : previous ? 'release/lcd-de3102-app675' : 'release/lcd-de41-app678';
     const sourceLink = document.getElementById('profile-source');
-    const name = oled ? 'OLED DE3.87 Test 6' : preview ? 'LCD ' + preview.firmwareVersion.split('-')[1] + ' / App' + preview.applicationCounter : previous ? 'LCD DE3.102 / App675' : 'LCD DE4.1 / App678';
+    const name = oled ? 'OLED DE3.87 Test 6' : preview ? 'LCD ' + preview.firmwareVersion.replace('2.22.0-', '') + ' / App' + preview.applicationCounter : previous ? 'LCD DE3.102 / App675' : 'LCD DE4.1 / App678';
     sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + revision);
     setText(sourceLink, 'Quellcode ' + name, name + ' source code');
 }
@@ -108,7 +112,9 @@ function controls() {
     const boardConflict = boardHints.length > 1 || handoffBoard && handoffBoard !== boardSelect.value;
     const ref = recentBootReference();
     const target = latestState.target;
-    const targetConflict = target && ref && (!target.softDevices.includes(ref.sd) ||
+    const transferCandidate = [lcdTest679Package, lcdTest680Package].find(entry => target?.counter === entry.counter);
+    const candidateConflict = transferCandidate && ref && (selectedProfileMismatch(transferCandidate) || ref.app > target.counter);
+    const targetConflict = candidateConflict || target && ref && (!target.softDevices.includes(ref.sd) ||
         boardSelect.value === 'OLED' && ref.app > target.counter);
     boardSelect.disabled = latestState.busy || latestState.loading || loading;
     fileInput.disabled = boardConflict || latestState.busy || latestState.loading || loading;
@@ -162,7 +168,7 @@ function updateAwake() {
 awakeChoice.addEventListener('change', updateAwake);
 window.addEventListener('pagehide', () => { awake?.dispose(); awake = null; });
 window.addEventListener('pageshow', () => { if (!awake) { awake = newAwakeController(); updateAwake(); } });
-let phaseText;
+let phaseText, rateFormat;
 let currentPhaseIndex = -1, currentPhaseFailed = false;
 const phaseItems = phaseNames.map(name => document.getElementById('phase-' + name));
 function renderPhaseDetail() {
@@ -179,6 +185,7 @@ language.subscribe(({ locale }) => {
 }, pageLocales);
 language.subscribe(({ locale }) => {
     phaseText = dfuPhaseLanguages[locale];
+    rateFormat = new Intl.NumberFormat(phaseText.lang, { maximumFractionDigits: 1 });
     phases.lang = phaseText.lang;
     phaseItems.forEach((item, index) => { item.textContent = phaseText.steps[index]; });
     reconnectLink.textContent = phaseText.open;
@@ -215,13 +222,14 @@ function transferEstimate(state, now) {
     if (elapsed < 1000 || bytes === 0 || state.currentBytes === state.totalBytes) return '';
     const bytesPerSecond = 1000 * bytes / elapsed;
     const remaining = Math.ceil((state.totalBytes - state.currentBytes) / bytesPerSecond);
-    const rate = (bytesPerSecond / 1024).toLocaleString(phaseText.lang, { maximumFractionDigits: 1 });
+    const rate = rateFormat.format(bytesPerSecond / 1024);
     return ` · ${rate} KiB/s · ≈ ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')} min`;
 }
 const updater = new AllmiiboDfuUpdater({
     Package: SecureDfuPackage,
-    validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}, [lcdRelease, ...lcdPreviews]),
-    createDfu: () => new SecureDfu(CRC32.buf, undefined, 0, { extendCrc32: CRC32.buf }),
+    validatePackage: candidate => AllmiiboBundledPackages.validatePackage(candidate, boardSelect.value, bundled?.catalog || {packages:[]}, [lcdRelease, lcdTest679, lcdTest680, ...lcdPreviews]),
+    createDfu: () => new SecureDfu(CRC32.buf, undefined, 0, { extendCrc32: CRC32.buf, probeInitPacket: boardSelect.value === 'LCD',
+        windowedFirmwareWrites: boardSelect.value === 'LCD' }),
     onStatus: (de, en) => setText(statusText, de, en),
     onPhase: showPhase,
     onState: state => { latestState = state; document.getElementById('package-target').textContent = targetDescription(state.target); controls(); },

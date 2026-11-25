@@ -8,7 +8,7 @@
     const keys=['id','version','counter','file','bytes','sha256','board','storage','bootloader','softDevice','applicationOnly','migrationRequired'];
     const need=(ok,de,en)=>{if(!ok)throw new DfuValidationError(de,en);};
     function validateCatalog(input){
-        need(input&&Object.keys(input).sort().join(',')==='packages,schema'&&input.schema===1&&Array.isArray(input.packages)&&input.packages.length<=32,'Ungültiger lokaler Firmware-Katalog.', 'Invalid local firmware catalogue.');
+        need(input&&Object.keys(input).sort().join(',')==='packages,schema'&&input.schema===1&&Array.isArray(input.packages)&&input.packages.length<=33,'Ungültiger lokaler Firmware-Katalog.', 'Invalid local firmware catalogue.');
         const seen=new Set();
         const packages=input.packages.map(item=>{
             const fields = item?.channel === 'prerelease' ? [...keys, 'channel'] : keys;
@@ -17,6 +17,19 @@
             if (de41) need(item.id === 'de4.1-lcd-app' && item.board === 'LCD' && item.counter === 678 &&
                 item.file === 'Allmiibo_LCD_DE4_1_678_NUR_APP.zip' && !item.channel && item.bootloader === 'Z21',
                 'Unpassendes LCD-App678-Profil.', 'Incorrect LCD App678 profile.');
+            const transfers = {
+                '2.22.0-DE4.2-b1': {counter:679, id:'de4.2-b1-lcd-app-test', file:'Allmiibo_LCD_DE4_2_b1_App679_NUR_APP_TEST.zip', bytes:257000, sha256:'1e508061e86d75addb1345d5d8c9b0eac94ebf02081c519517461e952a7f5f17'},
+                '2.22.0-DE4.2-b2': {counter:680, id:'de4.2-b2-lcd-app-test', file:'Allmiibo_LCD_DE4_2_b2_App680_NUR_APP_TEST.zip', bytes:257040, sha256:'4348e1757224b076064039feda58b86329b4db0d84681f15fcb22918f148f7ca'},
+            };
+            const transfer = Object.hasOwn(transfers, item.version) && transfers[item.version];
+            if (transfer) {
+                need(!seen.has(item.id) && Object.entries(transfer).every(([key,value]) => item[key] === value) &&
+                    item.board === 'LCD' && item.storage === 'PFS1' && item.bootloader === 'Z21' && item.softDevice === 'S112 7.3.0' &&
+                    item.channel === 'prerelease' && item.applicationOnly === true && item.migrationRequired === false,
+                    `Das Paket passt nicht zum signierten LCD-Test App${transfer.counter}.`, `The package does not match the signed LCD App${transfer.counter} test.`);
+                seen.add(item.id);
+                return Object.freeze({...item});
+            }
             const oled = item.board === 'OLED';
             const version = oled
                 ? /^2\.22\.0-DE3\.([1-9][0-9]{0,3})-OLEDt([1-9][0-9]{0,2})$/.exec(item.version)
@@ -62,6 +75,12 @@
         const entry = reference ? {board: reference.board, counter: reference.applicationCounter, version: reference.firmwareVersion,
             privatePreview: reference.artifactStatus !== 'stable-signed-application'}
             : catalog.packages.find(item => item.sha256 === candidate.archiveSha256 && item.bytes === candidate.archiveBytes);
+        const targetCounter = candidate.image?.target?.counter;
+        if (board === 'LCD' && (targetCounter === 679 || targetCounter === 680)) {
+            const required = targetCounter === 679 ? '2.22.0-DE4.2-b1' : '2.22.0-DE4.2-b2';
+            need(entry?.version === required && candidate.image.target.softDevices.length === 1,
+                `Wähle für App${targetCounter} die passende signierte LCD-Test-ZIP.`, `For App${targetCounter}, select the matching signed LCD test ZIP.`);
+        }
         need(!entry || entry.board === board, 'Diese ZIP gehört zum anderen Display. Wähle das passende Gerät und Paket.',
             'This ZIP targets the other display. Select the matching device and package.');
         need(board !== 'OLED' || entry, 'Für OLED bitte die veröffentlichte OLED-App-ZIP wählen.',

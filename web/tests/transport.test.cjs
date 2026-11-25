@@ -1518,6 +1518,48 @@ test('single-frame writes can rely on the file protocol acknowledgement only whe
     await f.api.disconnect();
 });
 
+test('single-frame reads wait for their full application reply before the next query', async () => {
+    const f = protocolFixture();
+    await modernProtocol(f);
+    const folder = f.api.vfs_read_folder('E:/');
+    const next = command(f, 0x14);
+    await flush();
+    assert.deepEqual(f.writes.map(frame => frame[0]), [0x16]);
+    assert.equal(f.writeModes.at(-1), true);
+    f.rx(0x16, [], 0x8000);
+    await flush();
+    assert.equal(f.writes.length, 1);
+    f.rx(0x16, [], 1);
+    assert.deepEqual(Array.from((await folder).data), []);
+    await flush();
+    assert.equal(f.writeModes.at(-1), true);
+    f.rx(0x14, [42]);
+    assert.deepEqual(bytes((await next).data), [42]);
+});
+
+test('read optimisation preserves legacy writes, fragment flow control and modifying commands', async () => {
+    const f = protocolFixture();
+    const legacy = command(f, 0x16);
+    assert.equal(f.writeModes.at(-1), false);
+    f.rx(0x16);
+    await legacy;
+    await modernProtocol(f);
+    for (const [cmd, payload, fast] of [
+        [0x05, [1], true], [0x05, [69, 86, 84, 33, 1], false],
+        [0x02, [], false], [0x11, [69], false], [0x18, [0, 0], false],
+        [0x0a, [76, 67, 68, 49, 0], true], [0x21, [1, 0, 69, 0, 0], true],
+        [0x22, [], true], [0x22, [1], false], [0x25, [], true], [0x25, [1], false],
+        [0x16, Array(25).fill(1), false],
+    ]) {
+        const start = f.writeModes.length;
+        const pending = payloadCommand(f, payload, cmd);
+        await flush();
+        assert.deepEqual(f.writeModes.slice(start), payload.length > 16 ? [false, false] : [fast]);
+        f.rx(cmd);
+        await pending;
+    }
+});
+
 test('DE3.13 metadata flag edits retain a leading BOM in the stored note',async()=>{
     const f=protocolFixture(),note='\ufeffkeep ä',encoded=Array.from(Buffer.from(note));
     const listing=f.api.vfs_read_folder('E:/');

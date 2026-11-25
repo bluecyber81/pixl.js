@@ -2,10 +2,12 @@ import release from '../../package.json' with { type: 'json' };
 
 export function projectDownloads(buildVersion) {
   const version = release.version;
-  const directory = 'https://bluecyber81.github.io/pixl.js/downloads/web' + version + '/';
+  const directory = 'https://github.com/bluecyber81/pixl.js/releases/download/web' + version + '/';
   const fileVersion = version.replaceAll('.', '_');
   return {
     version,
+    transferBeta680: 'firmware/Allmiibo_LCD_DE4_2_b2_App680_NUR_APP_TEST.zip',
+    transferBeta: 'firmware/Allmiibo_LCD_DE4_2_b1_App679_NUR_APP_TEST.zip',
     labelSuffix: version === buildVersion ? '' : ' · ' + version,
     portable: directory + 'Allmiibo_Dateimanager_' + fileVersion + '_Portable.zip',
     source: 'https://github.com/bluecyber81/pixl.js/archive/refs/tags/web' + version + '.zip',

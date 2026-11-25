@@ -1,5 +1,6 @@
 import { assertPortableEntryName, assertDevicePath, assertWritableDevicePath, joinDevicePath, portableNameKey, splitDevicePath } from './portable-names.js'
 import { snapshotFile, sha256Bytes, deviceFileSha256, checkedDirectory, targetEntry, copyMetadata, metadataKey, directoryPathAccess, writableDirectoryPath as writableRoot, UPLOAD_LIMITS } from './safe-upload.js'
+import { decodeRawMetadata } from './raw-metadata.js'
 import { commonVersion, folderBinding, isHistoryConflict } from './sync-history.js'
 
 export const SYNC_LIMITS = Object.freeze({ maxEntries: 4096, maxDepth: 32, maxBytes: 16 * 1024 * 1024 })
@@ -171,6 +172,7 @@ export function createSyncJob(plan) {
   if (plan?.schema !== 1 || !/^[a-f0-9]{64}$/u.test(plan.fingerprint || '')) fail('SYNC_PLAN', 'A verified comparison plan is required.')
   return { schema: 1, deviceKey: checkedDeviceKey(plan.deviceKey), planFingerprint: plan.fingerprint, completed: [], state: 'ready' }
 }
+const newFileMetadataKey = metadataKey(decodeRawMetadata(new Uint8Array(128).fill(255)))
 const sameExpectation = (a, b) => !a && !b || !!a && !!b && a.size === b.size && a.sha256 === b.sha256 && metadataKey(a.metadata) === metadataKey(b.metadata)
 const desiredPresent = (original, current) => current?.expected?.size === original.size && current.expected.sha256 === original.sha256 &&
   (!original.expected || metadataKey(current.expected.metadata) === metadataKey(original.expected.metadata))
@@ -178,7 +180,8 @@ const desiredPresent = (original, current) => current?.expected?.size === origin
 /** Job data stays in RAM. Every invocation verifies the device identity, plan,
  * local bytes and actual destination bytes afresh. No blind offset resume and
  * no deletes. The caller keeps the same file selection and serializes the job. */
-export async function executeSyncJob({ job, plan, deviceKey, files, selectedPaths, readDirectory, readFile, readFileDigest, createDirectory, uploadFile, writeNewPackedFile, assertSession, signal, onProgress }) {
+export async function executeSyncJob(options) {
+  const { job, plan, deviceKey, files, selectedPaths, readDirectory, readFile, readFileDigest, createDirectory, uploadFile, writeNewPackedFile, assertSession, signal, onProgress } = options
   const check = () => checkpoint(assertSession, signal)
   check()
   if (job?.schema !== 1 || ['running', 'validating'].includes(job.state) || job.deviceKey !== checkedDeviceKey(deviceKey) || plan?.deviceKey !== deviceKey ||
@@ -186,6 +189,7 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
   // Claim the job before awaiting crypto, so two rapid Execute clicks cannot
   // both pass the idle check and interleave whole-file transactions.
   const previousState = job.state
+  if (job.leafUpload && !['failed', 'paused'].includes(previousState)) fail('SYNC_JOB', 'Unexpected working folder checkpoint.')
   job.state = 'validating'
   try {
     if (await fingerprint(plan) !== plan.fingerprint) fail('SYNC_STALE', 'The comparison plan changed; compare again.')
@@ -204,6 +208,10 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
   const expectedLocal = new Map(plan.entries.map(entry => [entry.targetPath, entry]))
   if (sources.files.size !== expectedLocal.size || [...sources.files.keys()].some(path => !expectedLocal.has(path))) fail('SYNC_LOCAL_CHANGED', 'The local file selection changed; compare again.')
   if (!Array.isArray(job.completed) || job.completed.some(path => !expectedLocal.has(path)) || new Set(job.completed).size !== job.completed.length) fail('SYNC_JOB', 'Invalid completion checkpoint.')
+  if (job.publishedLeaves !== undefined && !Array.isArray(job.publishedLeaves)) fail('SYNC_JOB', 'Invalid published folder checkpoint.')
+  const publishedDirectories = new Set(job.publishedLeaves)
+  if (job.publishedLeaves && (publishedDirectories.size !== job.publishedLeaves.length ||
+      [...publishedDirectories].some(path => !plan.directories.some(dir => dir.path === path && dir.status === 'create')))) fail('SYNC_JOB', 'Invalid published folder checkpoint.')
   job.state = 'running'
   let completed = 0, skipped = 0, uploadedBytes = 0
   try {
@@ -212,13 +220,20 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
     // Every local target and ancestor is rechecked. Device-only subtrees were
     // reported in the preview and cannot be read or changed by this upload.
     const fresh = await createSyncPlan({ rootPath: plan.rootPath, deviceKey, files: localSelection, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress, includeDeviceOnly:false })
+    // A mounted PackedFS revision belongs to this connection. A raw CLOSE on
+    // this engine acknowledges the complete write and 128-byte metadata.
+    const revision = () => options.readCreateRevision?.()
+    const startRevision = options.quickPacked && typeof writeNewPackedFile === 'function' ? await revision() : null
+    const quick = typeof startRevision === 'string' && /^[0-9a-f]{16}$/.test(startRevision) && startRevision !== '0000000000000000'
+    const acknowledgedOnly = new Set()
     const currentByPath = new Map(fresh.entries.map(entry => [entry.targetPath, entry]))
     for (const entry of plan.entries) {
       const current = currentByPath.get(entry.targetPath)
       if (current?.sha256 !== entry.sha256 || current.size !== entry.size) fail('SYNC_LOCAL_CHANGED', 'Local file contents changed; compare again.')
       if (!selected.has(entry.targetPath) && !job.completed.includes(entry.targetPath)) continue
       if (job.completed.includes(entry.targetPath)) {
-        if (!desiredPresent(entry, current)) fail('SYNC_STALE', 'A previously completed file changed on the device; compare again.')
+        if (!desiredPresent(entry, current) || publishedDirectories.has(splitDevicePath(entry.targetPath).parent) &&
+            metadataKey(current.expected.metadata) !== newFileMetadataKey) fail('SYNC_STALE', 'A previously completed file changed on the device; compare again.')
       } else if (current.status === 'blocked' || !desiredPresent(entry, current) && !sameExpectation(entry.expected, current.expected)) {
         throw new SyncError('SYNC_STALE', 'A destination changed after comparison; compare again.', { preflightTarget: entry.targetPath })
       }
@@ -226,17 +241,32 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
     // An atomic creation checks its entire path while PackedFS owns the writer
     // lock. This set only avoids repeated mkdir discovery, never authorizes a write.
     const knownDirectories = new Set(fresh.directories.filter(dir => dir.status === 'existing').map(dir => dir.path))
-    for (const entry of wanted) {
+    const leaves = options.prepareLeafUploads && typeof writeNewPackedFile === 'function'
+      ? await options.prepareLeafUploads({options, fresh, wanted, sources, check}) : new Map()
+    const pendingLeaf = job.leafUpload?.targetPath
+    if (job.leafUpload && (!leaves.has(pendingLeaf) || leaves.get(pendingLeaf).entries.some(entry => job.completed.includes(entry.targetPath)))) fail('SYNC_STALE', 'The pending folder publication requires the original selection and device capability.')
+    // Reconcile an interrupted or unacknowledged rename before starting another group.
+    const order = pendingLeaf ? [...leaves.get(pendingLeaf).entries, ...wanted.filter(entry => splitDevicePath(entry.targetPath).parent !== pendingLeaf)] : wanted
+    const publishedLeaves = new Set()
+    for (const entry of order) {
       check()
+      const leafPath = splitDevicePath(entry.targetPath).parent
+      if (publishedLeaves.has(leafPath)) continue
+      let leaf = leaves.get(leafPath)
+      if (leaf && !job.leafUpload && !await leaf.canStart()) {
+        leaves.delete(leafPath)
+        leaf = null
+      }
       const current = currentByPath.get(entry.targetPath)
-      if (desiredPresent(entry, current)) {
+      if (!leaf && desiredPresent(entry, current)) {
         if (!job.completed.includes(entry.targetPath)) job.completed.push(entry.targetPath)
         ++skipped; observe(onProgress, { phase: 'syncing', path: entry.targetPath, done: completed + skipped, total: wanted.length, filesDone: completed + skipped, filesTotal: wanted.length }); continue
       }
       const atomicAdd = !entry.expected && typeof writeNewPackedFile === 'function'
       const ancestors = plan.directories.filter(directory => entry.targetPath.startsWith(directory.path + '/')).sort((a, b) => a.path.length - b.path.length)
       for (const directory of ancestors) {
-        if (atomicAdd && knownDirectories.has(directory.path)) continue
+        if (leaf?.path === directory.path || atomicAdd && knownDirectories.has(directory.path)) continue
+        if (job.leafUpload) fail('SYNC_STALE', 'An ancestor of the working folder is no longer available.')
         check()
         const slash = directory.path.lastIndexOf('/'), parent = slash === 2 ? directory.path.slice(0, 3) : directory.path.slice(0, slash), name = directory.path.slice(slash + 1)
         const listing = checkedDirectory(await readDirectory(parent)); check()
@@ -249,6 +279,22 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
         knownDirectories.add(directory.path)
       }
       check()
+      if (leaf) {
+        const result = await leaf.run(update => observe(onProgress, {...update,
+          filesDone:completed + skipped + (update.filesDone || 0), filesTotal:wanted.length}))
+        // Child checkpoints refer to private staging. Only a verified publication
+        // authorizes these final path names in the outer checkpoint.
+        for (const item of leaf.entries) if (!job.completed.includes(item.targetPath)) job.completed.push(item.targetPath)
+        for (const path of result.job.acknowledgedOnly || []) acknowledgedOnly.add(path)
+        job.leafUpload = null
+        publishedDirectories.add(leafPath)
+        job.publishedLeaves = [...publishedDirectories]
+        publishedLeaves.add(leafPath)
+        completed += result.completed; skipped += result.skipped; uploadedBytes += result.uploadedBytes
+        check()
+        observe(onProgress, {phase:'syncing',path:leafPath,done:completed+skipped,total:wanted.length,filesDone:completed+skipped,filesTotal:wanted.length})
+        continue
+      }
       // Pin an immutable byte snapshot immediately before handing it to the
       // writer; an adapter must not re-read a changed host file after approval.
       const uploadBytes = await snapshotFile(sources.files.get(entry.targetPath).file); check()
@@ -276,8 +322,11 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
             onProgress: value => progress({phase:'uploading', path:entry.targetPath, done:value.written_bytes, total:entry.size})
           })
           check()
-          const sha = await deviceFileSha256(entry.targetPath, entry.size, {readFile, readFileDigest, check, sizeError:'SYNC_VERIFY'})
-          if (sha !== entry.sha256) fail('SYNC_VERIFY', 'The new file failed device SHA-256 verification.')
+          if (quick) acknowledgedOnly.add(entry.targetPath)
+          else {
+            const sha = await deviceFileSha256(entry.targetPath, entry.size, {readFile, readFileDigest, check, sizeError:'SYNC_VERIFY'})
+            if (sha !== entry.sha256) fail('SYNC_VERIFY', 'The new file failed device SHA-256 verification.')
+          }
         } else {
           await requireWritableParent()
           const result = await uploadFile({ path: entry.targetPath, file: new Blob([uploadBytes]), replace: !!entry.expected,
@@ -293,6 +342,14 @@ export async function executeSyncJob({ job, plan, deviceKey, files, selectedPath
       ++completed; uploadedBytes += entry.size; check()
       observe(onProgress, { phase: 'syncing', path: entry.targetPath, done: completed + skipped, total: wanted.length, filesDone: completed + skipped, filesTotal: wanted.length })
     }
+    if (quick) {
+      const endRevision = await revision()
+      check()
+      if (typeof endRevision !== 'string' || !/^[0-9a-f]{16}$/.test(endRevision) || endRevision.slice(0,8) !== startRevision.slice(0,8) ||
+          Number.parseInt(endRevision.slice(8),16) < Number.parseInt(startRevision.slice(8),16)) fail('SYNC_STALE', 'The storage generation changed during upload.')
+    }
+    if (acknowledgedOnly.size) job.acknowledgedOnly = [...acknowledgedOnly]
+    else delete job.acknowledgedOnly
     job.equalPaths = fresh.entries.filter(entry => entry.comparison === 'same').map(entry => entry.targetPath)
     job.state = 'complete'
     return { completed, skipped, uploadedBytes, total: wanted.length, job }

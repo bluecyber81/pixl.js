@@ -1,5 +1,9 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## Dateimanager 3.66.2 · 25. November 2026
+
+Die normalen Datei- und Ordnerübertragungen, Sicherungen und die Inhaltsprüfung im Figurenkatalog verwenden die schnellen Wege auf unterstützten LCDs. Das LCD-Web-DFU verwendet nach der Gerätebestätigung größere Schreibfenster. DE4.1/App678 bleibt die stabile Vorauswahl. App680 und App679 stehen im LCD-Updater als Vorabversionen zur Auswahl. [Änderungen und Bedienung](../web/LIESMICH_3_66_2.txt)
+
 ## Dateimanager 3.66.1 · 25. November 2026
 
 Die Versionsprüfung erkennt DE4.1/App678 und frühere Firmwarestände. Die Standardauswahl lädt die signierte Finalversion für LCD. OLED und ältere Downloads bleiben separat erreichbar. [Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip)

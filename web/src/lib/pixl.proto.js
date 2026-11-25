@@ -12,6 +12,7 @@ import { parseStartupDiagnostics } from "./startup-diagnostics.js"
 import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, parseStorageGcDiagnostics, supportsMenuDiagnostics, supportsBleTestDiagnostics, supportsLinkDiagnostics, supportsStorageGcDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
 
+import { groupCreateFrames } from "./group-create-wire.js"
 import i18n from '../i18n'
 
 
@@ -38,6 +39,8 @@ var small_read_probe = null
 var small_batch_capability = null
 var small_batch_probe = null
 var small_create_tx = 0
+var group_create_probe = null
+const groupFramesOption = Symbol('grouped file create')
 var storage_info_cache = new Map()
 var storage_info_queries = new Map()
 var transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0, completedCommands: 0 }
@@ -106,7 +109,8 @@ export function op_queue_push(cmd, tx_data_cb, rx_data_cb, options = {}) {
             p_reject: reject,
             max_response_bytes,
             progress_cb: options.progress_cb,
-            optional_probe: options.optional_probe === true
+            optional_probe: options.optional_probe === true,
+            group_frames: options[groupFramesOption]
         }
         op_queue.push(op);
         process_op_queue();
@@ -119,6 +123,20 @@ function process_op_queue() {
     if (!op_ongoing && op_queue.length > 0) {
         var op = op_queue.shift();
         proocess_op(op);
+    }
+}
+
+async function send_group_frames(op) {
+    for (const bytes of op.group_frames) {
+        if (active_op !== op) throw new Error('Bluetooth session changed');
+        if (op.rx_done) {
+            // Only COMMIT may succeed. An early negative response ends this transaction.
+            if (op.response?.status) return;
+            throw new Error('Unexpected grouped create receipt before COMMIT');
+        }
+        const data = new ByteBuffer();
+        data.append(bytes);
+        await tx_data_frame(op.cmd,0,0,data);
     }
 }
 
@@ -138,7 +156,7 @@ function proocess_op(op) {
     }
     arm_response_timeout(op);
     try {
-        Promise.resolve(tx_data_frame(op.cmd, 0, 0, bb)).then(() => {
+        Promise.resolve(op.group_frames ? send_group_frames(op) : tx_data_frame(op.cmd, 0, 0, bb)).then(() => {
             if (active_op !== op) return;
             op.tx_done = true;
             finish_when_ready(op);
@@ -642,6 +660,52 @@ export function vfs_small_create_revision(firmwareVersion) {
         small_create_generation = generation;
         return revision;
     });
+}
+
+// Version and connection capabilities gate the probe. The folder publisher also
+// verifies the mounted engine before granting access to private staging writes.
+export function vfs_probe_group_create(firmwareVersion) {
+    if (!['2.22.0-DE4.2-b1', '2.22.0-DE4.2-b2'].includes(firmwareVersion) || !transport_capabilities?.chunkedRequests ||
+        transport_capabilities.gattValueCapacity - DF_HEADER_SIZE < 196) return Promise.resolve(false);
+    const generation = transport_generation;
+    if (group_create_probe?.generation === generation) return group_create_probe.promise;
+    const probe = {generation, available:false};
+    probe.promise = op_queue_push(0x27, () => {}, b => {
+        if (b.remaining() !== 16 || b.readUint32() !== 0x47425850 || b.readUint8() !== 1 ||
+            b.readUint8() !== 4 || b.readUint16() !== 572) throw new Error('Invalid group capability.');
+        return read_revision(b);
+    }, {max_bytes:16}).then(reply => {
+        if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+        if (reply.status === 255) return false;
+        checked_response(reply);
+        return probe.available = true;
+    }).catch(error => {
+        if (group_create_probe === probe) group_create_probe = null;
+        throw error;
+    });
+    group_create_probe = probe;
+    return probe.promise;
+}
+
+export async function vfs_group_create(parent, entries, revision) {
+    const generation = transport_generation;
+    if (group_create_probe?.generation !== generation || !group_create_probe.available) throw new Error('Group create unavailable.');
+    const count = entries.length, id = small_create_tx = (small_create_tx + 1) >>> 0 || 1;
+    const limit = Math.min(transport_capabilities.maxRequestPayload, transport_capabilities.gattValueCapacity - DF_HEADER_SIZE, DF_MAX_DATA_SIZE);
+    const frames = await groupCreateFrames(parent,entries,revision,id,limit);
+    if (transport_generation !== generation) throw new Error('Bluetooth session changed');
+    // The queue owns the group until both the final write and its application receipt
+    // finish. BEGIN and DATA use individual ATT responses for backpressure.
+    const reply = await op_queue_push(0x28, () => {}, b => {
+        if (b.remaining() !== 14 || b.readUint8() !== 1 || b.readUint8() !== count || b.readUint32() !== id)
+            throw new Error('Unrelated grouped create receipt.');
+        const next = read_revision(b);
+        if (next.slice(0,8) !== revision.slice(0,8) || parseInt(next.slice(8),16) !== parseInt(revision.slice(8),16) + 1)
+            throw new Error('Unexpected grouped create revision.');
+        return next;
+    }, {max_bytes:14, [groupFramesOption]:frames});
+    if (transport_generation !== generation) throw new Error('Bluetooth session changed');
+    return checked_response(reply);
 }
 
 export function vfs_small_read_capable() {
@@ -1376,6 +1440,13 @@ function read_bytes_array(bb, size) {
     return bytes;
 }
 
+// These application queries send their result in a separate protocol reply.
+// Keep commands with modifying subcommands (notably the MTU test) out of this set.
+const readQueriesWithReply = new Set([
+    0x01, 0x04, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, // version, diagnostics and display
+    0x10, 0x14, 0x16, 0x1c, 0x1d, 0x1f, 0x21,              // drives, files, directories, metadata and digests
+]);
+
 async function tx_data_frame(cmd, status, chunk, data) {
     const generation = transport_generation;
     if (data) data.flip();
@@ -1385,6 +1456,18 @@ async function tx_data_frame(cmd, status, chunk, data) {
     const maximum = profile?.maxRequestPayload ?? DF_MAX_DATA_SIZE;
     if (payload.length > maximum) throw new Error('File-transfer request is too large');
     const capacity = chunked ? profile.gattValueCapacity - DF_HEADER_SIZE : DF_MAX_DATA_SIZE;
+    // Only a complete single-frame request can rely on its application receipt.
+    // The queue still waits for both the browser write and the firmware reply.
+    const useProtocolReply = chunked && payload.length <= capacity && (
+        readQueriesWithReply.has(cmd) || (cmd === 0x05 && payload.length <= 1) ||
+        // COMMIT carries only the transaction ID and has a correlated durable receipt.
+        (cmd === 0x28 && payload.length === 5 && payload[0] === 2 &&
+            group_create_probe?.generation === generation && group_create_probe.available) ||
+        ((cmd === 0x22 || cmd === 0x25) && payload.length === 0) ||
+        cmd === 0x15 || (cmd === 0x23 && payload[0] <= 1) ||
+        (cmd === 0x24 && vfs_small_read_capable()) ||
+        (cmd === 0x26 && small_batch_capability?.generation === generation && !!small_batch_capability.value)
+    );
     let offset = 0, sequence = 0;
     do {
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
@@ -1398,12 +1481,7 @@ async function tx_data_frame(cmd, status, chunk, data) {
         // Await every GATT write; no concurrent writes and no fragments from
         // an earlier connection can leak into a replacement session.
         const wire = frame.toArrayBuffer();
-        // A single negotiated read/write frame already receives a file-protocol reply.
-        // Wait for both that reply and the browser send before advancing the offset.
-        const acknowledgedWrite = cmd === 0x15 || cmd === 0x23 && payload[0] <= 1 ||
-            cmd === 0x24 && vfs_small_read_capable() ||
-            cmd === 0x26 && small_batch_capability?.generation === generation && !!small_batch_capability.value;
-        await pixl.tx_data(wire, acknowledgedWrite && chunked && payload.length <= capacity);
+        await pixl.tx_data(wire, useProtocolReply);
         offset += length; ++sequence;
         if (generation !== transport_generation) throw new Error('Bluetooth session changed');
         ++transport_stats.txFrames;
@@ -1475,7 +1553,7 @@ function on_rx_data(data) {
         op.response = h;
         // Unsupported optional diagnostics are capabilities, not device faults.
         const unsupportedProbe = (h.cmd===0x1c || h.cmd===0x09 || h.cmd===0x04 || h.cmd===0x05 || h.cmd===0x0a || h.cmd===0x0b || h.cmd===0x0c) && op.optional_probe && (h.status===1 || h.status===255);
-        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21 || h.cmd === 0x22 || h.cmd === 0x25) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
+        if (h.status !== 0 && !unsupportedProbe && !((h.cmd === 0x03 || h.cmd === 0x04 || h.cmd === 0x05 || h.cmd === 0x06 || h.cmd === 0x07 || h.cmd === 0x08 || h.cmd === 0x09 || h.cmd === 0x0a || h.cmd === 0x1c || h.cmd === 0x1f || h.cmd === 0x21 || h.cmd === 0x22 || h.cmd === 0x25 || h.cmd === 0x27) && h.status === 255)) transport_last_error = 'DEVICE_STATUS';
     } catch (error) {
         transport_last_error = 'RESPONSE_INVALID';
         op.rx_error = error;

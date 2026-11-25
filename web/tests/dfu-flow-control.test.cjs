@@ -10,8 +10,8 @@ const SecureDfu = require(process.env.SECURE_DFU_UNDER_TEST
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const bytes = size => Uint8Array.from({length:size}, (_, i) => (i * 73 + (i >>> 8) + 9) & 255);
 const INIT = bytes(20);
-function crc(data) {
-  let value = 0xffffffff;
+function crc(data, previous=0) {
+  let value = previous ^ 0xffffffff;
   for (const byte of data) {
     value ^= byte;
     for (let bit=0; bit<8; bit++) value = (value >>> 1) ^ ((value & 1) ? 0xedb88320 : 0);
@@ -38,10 +38,11 @@ function bootloader(image, options={}) {
   const device = new Events(), control = new Events(), packet = new Events();
   const state = {
     selected:1, init:[], firmware:[], commands:[], creates:[], executes:[],
-    packets:[], receipts:[], dropped:0, maxBuffered:0, buffered:0,
+    packets:[], receipts:[], dropped:0, rejectedFlashWords:0, maxBuffered:0, buffered:0,
     pendingWrites:0, overlap:false, prn:0, prnCount:0, disconnected:false,
     firmwarePacketCount:0, receiptBeforeSettlement:0, receiptAfterSettlement:0,
   };
+  const accumulatedCrc=[0,0,0];
   const timers = new Set();
   const schedule = fn => {
     // A separate task is slower than a resolved local enqueue promise without
@@ -61,15 +62,21 @@ function bootloader(image, options={}) {
     const data=dataFor(type), result=new Uint8Array(8), view=new DataView(result.buffer);
     const badOffset=packetRecord && type===2 && packetRecord.firmwareIndex===options.badOffsetAt;
     view.setUint32(0, data.length-(badOffset ? 1 : 0), true);
-    view.setUint32(4, crc(data), true);
+    view.setUint32(4, accumulatedCrc[type] ^ (type===1 && options.badInitChecksum ? 1 : 0), true);
     if (packetRecord && type===2 && packetRecord.firmwareIndex===options.shortReceiptAt) return result.slice(0,4);
     return result;
   };
   const consume = record => {
     if (!device.gatt.connected) return;
     state.buffered--;
+    // Z21 checks this in on_data_obj_write_request before admitting data to
+    // flash or incrementing the reported offset. Init writes are byte-based.
+    if (options.z21 && record.type===2 && record.data.length%4!==0) {
+      state.rejectedFlashWords++;return;
+    }
     if (record.type===2 && record.firmwareIndex===options.damageAt) record.data[0]^=0x80;
     dataFor(record.type).push(...record.data);
+    accumulatedCrc[record.type]=crc(record.data,accumulatedCrc[record.type]);
     if (record.type===2 && record.firmwareIndex===options.disconnectAt) {
       device.gatt.disconnect();
       return;
@@ -101,18 +108,26 @@ function bootloader(image, options={}) {
       } else if (op===6) {
         state.selected=v.getUint8(1);
         const result=new Uint8Array(12), view=new DataView(result.buffer), data=dataFor(state.selected);
-        view.setUint32(0,4096,true); view.setUint32(4,data.length,true); view.setUint32(8,crc(data),true);
+        view.setUint32(0,state.selected===2 ? (options.objectSize ?? 4096) : 4096,true);
+        view.setUint32(4,state.selected===2 ? (options.reportedOffset ?? data.length) : data.length,true); view.setUint32(8,crc(data),true);
         reply(op,result);
       } else if (op===1) {
         state.selected=v.getUint8(1);
-        if (state.selected===1) state.init=[];
+        if (state.selected===1) {state.init=[];accumulatedCrc[1]=0;}
         state.creates.push({type:state.selected, size:v.getUint32(2,true)});
         reply(op);
       } else if (op===3) {
+        // Reproduce a disconnect while the browser is still processing this
+        // checksum write. The test releases the outstanding write explicitly.
+        if (state.consumeDuringChecksum) {
+          state.consumeDuringChecksum();
+          state.consumeDuringChecksum=null;
+          await options.holdDisconnectedWrite();
+        }
         // Let buffered data reach the receiver before its explicit checksum;
         // dropped packets remain dropped and therefore cause a real mismatch.
         while (state.buffered && device.gatt.connected) await wait(1);
-        reply(op,checksum(state.selected));
+        if (!(state.selected===2 && options.missingChecksumAt===state.firmwarePacketCount)) reply(op,checksum(state.selected));
       } else if (op===4) {
         state.executes.push({type:state.selected, offset:dataFor(state.selected).length});
         const final=state.selected===2 && state.firmware.length===image.length;
@@ -129,15 +144,27 @@ function bootloader(image, options={}) {
       firmwareIndex:type===2 ? ++state.firmwarePacketCount : 0};
     state.packets.push(record);
     try {
-      assert.ok(value.length>0 && value.length<=20, 'packet must fit the conservative 20-byte limit');
+      assert.ok(value.length>0);
+      const limit=(type===2 ? options.firmwareMaxWrite : null) ?? options.maxWrite ?? 20;
+      if(value.length>limit){
+        switch(options.oversize){
+          case 'truncate': record.data.length=limit;break;
+          case 'drop': return;
+          case 'reject': throw new Error('Host rejected packet length');
+          default: assert.fail('packet exceeds the model ATT payload');
+        }
+      }
       if (state.buffered>=(options.capacity ?? 2)) state.dropped++;
       else {
         state.buffered++; state.maxBuffered=Math.max(state.maxBuffered,state.buffered);
-        if (options.receiptOrder==='before-write' || options.receiptOrder==='synchronous') consume(record);
+        if (record.type===2 && options.holdDisconnectedWrite && record.firmwareIndex===options.disconnectAt) {
+          state.consumeDuringChecksum=()=>consume(record);
+        } else if (options.receiptOrder==='before-write' || options.receiptOrder==='synchronous') consume(record);
         else schedule(()=>consume(record));
       }
       options.onPacket?.(record,state);
       if (options.receiptOrder==='before-write') await new Promise(resolve=>setImmediate(resolve));
+      if(type===1 && value.length>20 && options.rejectAcceptedInit)throw new Error('Host failed after init write');
     } finally { record.writeSettled=true; state.pendingWrites--; }
   };
   // Intentionally do not provide writeValue: this exercises characteristic
@@ -159,7 +186,7 @@ function bootloader(image, options={}) {
   return {device,control,packet,state};
 }
 const vendorCrc = require('../public/dfu/vendor/crc32.js').buf;
-function client() { return new SecureDfu(crc,{},0,{extendCrc32:vendorCrc,timeouts:{operation:120,gatt:120,reboot:5}}); }
+function client(options={}) { return new SecureDfu(crc,{},0,{extendCrc32:vendorCrc,timeouts:{operation:120,gatt:120,reboot:5},...options}); }
 
 test('each application byte is hashed once across object checks, including a resumed prefix',()=>{
   const image=bytes(363752), other=image.slice();
@@ -292,4 +319,192 @@ test('zero configured delay still yields browser tasks between synchronous packe
   await d.update(p.device,INIT,image);
   assert.equal(secondPacketSawYield,true,'resolved write promises must not starve browser tasks');
   assert.equal(p.state.overlap,false);clean(p,d);
+});
+
+test('a fresh accepted 142-byte signed-init-sized write enables verified larger writes across object boundaries',async()=>{
+  const init=bytes(142), image=bytes(2*4096+72);
+  const p=bootloader(image,{maxWrite:244,capacity:1,z21:true}), d=client({probeInitPacket:true});
+  await d.update(p.device,init,image);
+  assert.equal(p.state.firmwarePacketCount,2*Math.ceil(4096/140)+1);
+  assert.equal(p.state.commands.filter(command=>command[0]===3).length,1+p.state.firmwarePacketCount);
+  assert.deepEqual(p.state.firmware,[...image]);assert.deepEqual(p.state.init,[...init]);
+  assert.equal(p.state.maxBuffered,1);assert.equal(p.state.overlap,false);
+  assert.equal(p.state.dropped,0);assert.equal(d.lastResult.executeAcknowledged,true);clean(p,d);
+});
+
+test('real DE4.1 App678 OTA passes the Z21 data-word rule with 140-byte writes and exact final bytes',async()=>{
+  const Package=require('../public/dfu/package.js');
+  const file=path.resolve(__dirname,'../public/firmware/Allmiibo_LCD_DE4_1_678_NUR_APP.zip');
+  const pkg=await new Package(require('node:fs').readFileSync(file)).load();
+  assert.equal(pkg.archiveSha256,'beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0');
+  const {initData,imageData}=await pkg.getAppImage(),image=new Uint8Array(imageData);
+  assert.equal(initData.byteLength,142);assert.equal(image.length,362724);
+  const p=bootloader(image,{z21:true,maxWrite:244,capacity:1,receiptOrder:'synchronous'});
+  const d=client({probeInitPacket:true});
+  await d.update(p.device,initData,image);
+  assert.equal(p.state.rejectedFlashWords,0);assert.equal(p.state.firmwarePacketCount,2657);
+  assert.equal(p.state.maxBuffered,1);assert.equal(p.state.dropped,0);
+  assert.equal(p.state.creates.filter(object=>object.type===2).length,89);
+  assert.equal(p.state.packets.length+p.state.commands.length,5500);
+  assert.equal(p.state.packets.filter(packet=>packet.type===2).every(packet=>packet.data.length%4===0),true);
+  assert.deepEqual(Buffer.from(p.state.firmware),Buffer.from(image));assert.equal(d.lastResult.executeAcknowledged,true);
+  clean(p,d);
+});
+
+for(const length of [21,22,23,24,25,141,143,144,244,245,511])test('init of '+length+' bytes preserves native command bytes and whole firmware words',async()=>{
+  const image=bytes(408),init=bytes(length),p=bootloader(image,{z21:true,maxWrite:244,receiptOrder:'synchronous'});
+  await client({probeInitPacket:true}).update(p.device,init,image);
+  const expectedWidth=length<24 ? 20 : Math.min(244,length-length%4);
+  const packets=p.state.packets.filter(packet=>packet.type===2);
+  assert.equal(packets[0].data.length,expectedWidth);
+  assert.equal(packets.every(packet=>packet.data.length%4===0),true);
+  assert.equal(p.state.commands.some(cmd=>cmd[0]===2&&cmd[1]===0),length>=24);
+  assert.deepEqual(p.state.init,[...init]);assert.deepEqual(p.state.firmware,[...image]);
+});
+
+test('LCD windowed DFU verifies the signed App678 contents at each object boundary with fewer control writes',async t=>{
+  const Package=require('../public/dfu/package.js');
+  const file=path.resolve(__dirname,'../public/firmware/Allmiibo_LCD_DE4_1_678_NUR_APP.zip');
+  const pkg=await new Package(require('node:fs').readFileSync(file)).load();
+  assert.equal(pkg.archiveSha256,'beb7cf682084a40776f85e29bba228590e02a8a5ebb94fd648b03800db0e03e0');
+  const {initData,imageData}=await pkg.getAppImage(),image=new Uint8Array(imageData);
+  const p=bootloader(image,{z21:true,maxWrite:244,capacity:8});
+  const d=client({probeInitPacket:true,windowedFirmwareWrites:true});
+  await d.update(p.device,initData,image);
+  const checks=p.state.commands.filter(command=>command[0]===3).length;
+  assert.equal(p.state.firmwarePacketCount,2657);
+  assert.equal(p.state.executes.filter(e=>e.type===2).length,89);
+  assert.equal(p.state.rejectedFlashWords,0);
+  assert.equal(p.state.dropped,0);
+  assert.equal(p.state.overlap,false);
+  assert.equal(p.state.maxBuffered,8);
+  assert.ok(checks<400);
+  assert.ok(p.state.packets.length+p.state.commands.length<3300);
+  for(let i=0;i<p.state.commands.length;i++){
+    if(p.state.commands[i][0]===4)assert.equal(p.state.commands[i-1][0],3);
+  }
+  t.diagnostic(JSON.stringify({firmwareDataWrites:p.state.firmwarePacketCount,checksums:checks,
+    totalGattWrites:p.state.packets.length+p.state.commands.length,peakBuffered:p.state.maxBuffered}));
+  assert.deepEqual(Buffer.from(p.state.firmware),Buffer.from(image));
+  assert.equal(d.lastResult.executeAcknowledged,true);
+  clean(p,d);
+});
+
+test('windowed transfer on a one-packet receiver resumes at its confirmed prefix and keeps the window small',async()=>{
+  const image=bytes(8192+64),p=bootloader(image,{z21:true,maxWrite:244,capacity:1});
+  const d=client({probeInitPacket:true,windowedFirmwareWrites:true});
+  await d.update(p.device,bytes(142),image);
+  assert.equal(p.state.dropped,1);
+  assert.equal(p.state.overlap,false);
+  assert.deepEqual(p.state.firmware,[...image]);
+  assert.equal(d.lastResult.executeAcknowledged,true);
+  clean(p,d);
+});
+
+test('bad data within a window can never be executed',async()=>{
+  const image=bytes(8192),p=bootloader(image,{z21:true,maxWrite:244,capacity:8,damageAt:4});
+  const d=client({probeInitPacket:true,windowedFirmwareWrites:true});
+  await assert.rejects(d.update(p.device,bytes(142),image),/CRC32 mismatch/);
+  assert.equal(p.state.executes.filter(e=>e.type===2).length,0);
+  assert.equal(d.lastResult,null);
+  clean(p,d);
+});
+
+test('a disconnect within a modeled window resumes from the receiver offset on the next session',async()=>{
+  const image=bytes(8192+84),init=bytes(142);
+  const p=bootloader(image,{z21:true,maxWrite:244,capacity:8,disconnectAt:6});
+  const options={probeInitPacket:true,windowedFirmwareWrites:true};
+  await assert.rejects(client(options).update(p.device,init,image),/disconnect|ended/);
+  assert.equal(p.state.executes.filter(e=>e.type===2).length,0);
+  const prefix=Uint8Array.from(p.state.firmware);
+  assert.equal(prefix.length,6*140);
+  assert.deepEqual(prefix,image.subarray(0,prefix.length));
+  await client(options).update(p.device,init,image);
+  assert.deepEqual(p.state.firmware,[...image]);
+  assert.equal(p.state.executes.filter(e=>e.type===2).at(-1).offset,image.length);
+});
+
+test('invalid firmware length, resume offset and intermediate object boundary cannot produce partial flash words',async()=>{
+  const init=bytes(142);
+  for(const length of [1,2,3,139,141,142,143]){
+    const image=bytes(length),p=bootloader(image,{z21:true,maxWrite:244});
+    await assert.rejects(client({probeInitPacket:true}).update(p.device,init,image),/length.*word aligned/);
+    assert.deepEqual(p.state.commands,[]);assert.deepEqual(p.state.packets,[]);
+  }
+  for(const invalid of [{reportedOffset:1},{reportedOffset:82},{objectSize:251}]){
+    const image=bytes(500),p=bootloader(image,{z21:true,maxWrite:244,...invalid});
+    await assert.rejects(client({probeInitPacket:true}).update(p.device,init,image),/boundary.*word aligned/);
+    assert.equal(p.state.firmwarePacketCount,0);assert.equal(p.state.creates.some(obj=>obj.type===2),false);
+  }
+});
+
+for(const oversize of ['truncate','drop','reject'])test('20-byte peer keeps confirmed firmware transfers after init '+oversize,async()=>{
+  const image=bytes(208),init=bytes(142);
+  const p=bootloader(image,{oversize,z21:true}),d=client({probeInitPacket:true});
+  await d.update(p.device,init,image);
+  assert.equal(p.state.firmwarePacketCount,Math.ceil(image.length/20));
+  assert.equal(p.state.creates.filter(item=>item.type===1).length,2);
+  assert.equal(p.state.receipts.filter(item=>item.type===2).length,p.state.firmwarePacketCount);
+  assert.deepEqual(p.state.firmware,[...image]);assert.deepEqual(p.state.init,[...init]);
+  assert.equal(p.state.maxBuffered,1);assert.equal(p.state.overlap,false);clean(p,d);
+});
+
+test('wrong init checksum aborts before any firmware write, Execute or retry',async()=>{
+  const image=bytes(304),p=bootloader(image,{maxWrite:244,badInitChecksum:true,z21:true}),d=client({probeInitPacket:true});
+  await assert.rejects(d.update(p.device,bytes(142),image),/CRC32 mismatch/);
+  assert.equal(p.state.creates.length,1);assert.equal(p.state.executes.length,0);
+  assert.equal(p.state.packets.length,1);assert.equal(d.lastResult,null);clean(p,d);
+});
+
+test('a host error after accepting a long init packet recreates only the confirmed command object',async()=>{
+  const init=bytes(142),image=bytes(304),p=bootloader(image,{maxWrite:244,rejectAcceptedInit:true,z21:true});
+  const d=client({probeInitPacket:true});
+  await d.update(p.device,init,image);
+  assert.deepEqual(p.state.init,[...init]);assert.deepEqual(p.state.firmware,[...image]);
+  assert.equal(p.state.creates.filter(item=>item.type===1).length,2);
+  assert.equal(p.state.firmwarePacketCount,Math.ceil(image.length/20));
+  assert.equal(p.state.maxBuffered,1);clean(p,d);
+});
+
+test('data truncated below a previously measured length aborts at the first verified offset without replay',async()=>{
+  const image=bytes(304),p=bootloader(image,{maxWrite:244,firmwareMaxWrite:20,oversize:'truncate',z21:true});
+  const d=client({probeInitPacket:true});
+  await assert.rejects(d.update(p.device,bytes(142),image),error=>error.expectedOffset===140 && error.receivedOffset===20);
+  assert.equal(p.state.firmwarePacketCount,1);assert.equal(p.state.executes.filter(item=>item.type===2).length,0);
+  assert.equal(d.lastResult,null);clean(p,d);
+});
+
+for(const [failure,pattern] of [[{missingChecksumAt:2},/timed out/],[{damageAt:2},/CRC32 mismatch/]]){
+  test('larger data writes stop on '+Object.keys(failure)[0]+' without replay or Execute',async()=>{
+    const image=bytes(600),p=bootloader(image,{maxWrite:244,...failure}),d=client({probeInitPacket:true});
+    await assert.rejects(d.update(p.device,bytes(142),image),pattern);
+    assert.equal(p.state.firmwarePacketCount,2);assert.equal(p.state.executes.filter(item=>item.type===2).length,0);
+    assert.equal(d.lastResult,null);clean(p,d);
+  });
+}
+
+test('interrupted large write resumes using the CRC-confirmed prefix and the new connection starts at 20 bytes',async()=>{
+  const image=bytes(4096+352),init=bytes(142);
+  const entered=Promise.withResolvers(),release=Promise.withResolvers();
+  const p=bootloader(image,{maxWrite:244,z21:true,disconnectAt:31,holdDisconnectedWrite(){
+    entered.resolve();return release.promise;
+  }});
+  const options={probeInitPacket:true,timeouts:{operation:5000,gatt:5000,reboot:5}};
+  const first=assert.rejects(client(options).update(p.device,init,image),/disconnect|ended/);
+  await entered.promise;
+  try{
+    // Give all notification rejection handlers a turn with the original
+    // platform promise deliberately unresolved. The device is disconnected.
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(p.device.gatt.connected,false);assert.equal(p.state.pendingWrites,1);
+    await assert.rejects(client(options).update(p.device,init,image),/active DFU session/);
+  }finally{release.resolve();}
+  await first;
+  const count=p.state.packets.length,offset=p.state.firmware.length;
+  assert.equal(offset,4096+140);
+  await client(options).update(p.device,init,image);
+  const remainder=p.state.packets.slice(count);
+  assert.ok(remainder.every(packet=>packet.type===2&&packet.data.length<=20));
+  assert.deepEqual(remainder.flatMap(packet=>packet.data),[...image.slice(offset)]);
+  assert.deepEqual(p.state.firmware,[...image]);assert.equal(p.state.overlap,false);
 });

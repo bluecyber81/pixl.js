@@ -93,7 +93,7 @@ async function scan(o){
   await walk(root,0);return {records,snapshots}
 }
 async function rawAt(o,path){checkpoint(o);const value=rawMetadataHex(await o.readRawMetadata(path));checkpoint(o);return value}
-async function hashAt(o,path,size){checkpoint(o);const bytes=asBytes(await o.readFile(path,{maxBytes:size}));checkpoint(o);need(bytes.length===size,'MIGRATION_CHANGED','A file changed size during verification.');const hash=await sha256Bytes(bytes);checkpoint(o);return hash}
+async function hashAt(o,path,size){checkpoint(o);const bytes=asBytes(await o.readFile(path,{maxBytes:size,exactBytes:size}));checkpoint(o);need(bytes.length===size,'MIGRATION_CHANGED','A file changed size during verification.');const hash=await sha256Bytes(bytes);checkpoint(o);return hash}
 export async function createMigrationBackup(o){
   checkedStorage(o.storageInfo);checkpoint(o)
   // createBackup already reads and rechecks every directory. Record its first
@@ -295,7 +295,7 @@ export async function restoreMigrationArchive(o){
   for(const existing of initial.records.values())if(!intended.has(existing.sourcePath)&&!journalPaths.has(existing.sourcePath)){
     const plan=recovery.get(existing.sourcePath),source=plan&&intended.get(plan.sourcePath)
     need(plan&&existing.type==='file'&&existing.size<=source.size,'MIGRATION_EXTRA','The destination contains unrelated entries; no automatic deletion was attempted.')
-    checkpoint(o);const actual=asBytes(await o.readFile(existing.sourcePath,{maxBytes:existing.size}));checkpoint(o)
+    checkpoint(o);const actual=asBytes(await o.readFile(existing.sourcePath,{maxBytes:existing.size,exactBytes:existing.size}));checkpoint(o)
     const expected=readBackupArchiveFile(archive,source.sourcePath)
     need(actual.length===existing.size&&actual.every((byte,i)=>byte===expected[i]),'MIGRATION_EXTRA','An interrupted staging/backup file contains different bytes. It was preserved; resolve this recovery copy before continuing. No automatic deletion was attempted.')
     cleanup.push(existing.sourcePath)

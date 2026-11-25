@@ -1,6 +1,6 @@
 # Allmiibo LCD und Pixl.js OLED
 
-## LCD DE4.1 / App678 und Dateimanager 3.66.1
+## LCD DE4.1 / App678 und Dateimanager 3.66.2
 
 DE4.1 ist die reguläre Firmware für das nRF52832-Allmiibo mit ST7567-LCD, eingerichtetem Packed LittleFS (PFS1), Bootloader Z21 und Nordic S112 7.3.0 (FWID 0x0126). Auf einem passenden LCD lässt sich die signierte App-ZIP direkt über App675, App676 oder App677 einspielen. Sichere deine Dateien und wähle die ungeöffnete ZIP in **nRF Device Firmware Update** am Handy. Nach dem Neustart zeigt **Gerät & Diagnose** die Version **2.22.0-DE4.1** und den App-Zähler **678**.
 
@@ -8,9 +8,10 @@ DE4.1 ist die reguläre Firmware für das nRF52832-Allmiibo mit ST7567-LCD, eing
 
 - **Switch 2 wecken:** Einstellungen lassen sich nach einem Speicherfehler erneut speichern. „Kopplung vergessen“ fragt nach und startet bei „Abbrechen“. Bestätigen entfernt das lokale Weckprofil und schaltet das automatische Wecken aus.
 - **Bild & Video:** Der Bildempfänger aktualisiert die Anzeige bei vollständigen Bildern und Statusänderungen. Im Player kannst du Endlosschleife und Bildzähler für die laufende Sitzung einschalten. Text vom Handy lässt sich mit Vorschau als Lauftext senden oder für den Player speichern.
-- **Dateimanager:** Version 3.66.1 erkennt die neue DE4-Reihe für die unterstützten LCD-Funktionen und prüft das passende Updatepaket. Der Figurenkatalog enthält die deutschen und englischen Spielhinweise für Minerus Konstrukt.
+- **Dateiübertragung.** Web 3.66.2 bündelt kleine Lesevorgänge für Backups und Inhaltsprüfungen auf kompatiblen LCDs. Neue Unterordner können abschnittsweise übertragen werden. Das Web-DFU verwendet auf LCD größere bestätigte Datenblöcke. Die Firmwareauswahl startet mit DE4.1. [Optionale LCD-Beta App680](https://github.com/bluecyber81/pixl.js/releases/tag/de4.2-b2-lcd-transfer-test)
+- **Dateimanager:** Version 3.66.2 erkennt die neue DE4-Reihe für die unterstützten LCD-Funktionen und prüft das passende Updatepaket. Der Figurenkatalog enthält die deutschen und englischen Spielhinweise für Minerus Konstrukt.
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Windows-Portable (ZIP)](https://bluecyber81.github.io/pixl.js/downloads/web3.66.1/Allmiibo_Dateimanager_3_66_1_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.1.zip) · [Handbuch](https://bluecyber81.github.io/pixl.js/guide/index.html) · [English](README.md)
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [Windows-Portable (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.2/Allmiibo_Dateimanager_3_66_2_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.2.zip) · [Handbuch](https://bluecyber81.github.io/pixl.js/guide/index.html) · [English](README.md)
 
 Die Gerätebestätigung vom 24. November gilt für den direkten Vorgänger App677. Der erste Rücklesetest der neuen Kennung App678 und der unterbrochene DFU-Vorgang auf Hardware stehen bei Veröffentlichung aus. [Prüfstand DE4.1](docs/validation/DE4_1.json) · [Gerätebestätigung App677](https://github.com/bluecyber81/pixl.js/releases/tag/de3.104-lcd-test1)
 
