@@ -1,6 +1,6 @@
 // Hand off the published application ZIP. Local files and device references stay in the browser.
 import { lcdTest679, lcdTest679Package } from './lcd-app679-reference.mjs';
-import { lcdTest680, lcdTest680Package, lcdFinal680, lcdFinal680Package } from './lcd-app680-reference.mjs?v=3.67.0';
+import { lcdTest680, lcdTest680Package, lcdFinal680, lcdFinal680Package } from './lcd-app680-reference.mjs?v=3.67.1';
 
 export function nrfDfuLink(entry) {
     const transferPackage = [[lcdTest679Package, lcdTest679], [lcdFinal680Package, lcdFinal680], [lcdTest680Package, lcdTest680]]
