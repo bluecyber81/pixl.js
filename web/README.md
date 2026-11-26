@@ -1,12 +1,14 @@
 # Allmiibo Dateimanager
 
-## Normale Ausgabe 3.66.3 und LCD DE4.2 / App680
+## Normale Ausgabe 3.67.0 und LCD DE4.2 / App680
 
-Web 3.66.3 übernimmt die schnellen Übertragungen in die normale Homepage und die Windows-Ausgabe. Beim Lesen werden kleine Dateien gebündelt. Beim Schreiben können neue Unterordner auch in bestehende Ziele übertragen werden. LCD DE4.2 ist jetzt vorausgewählt. App680 ist die finale LCD-Version. Sie meldet auf dem Gerät weiterhin 2.22.0-DE4.2-b2. App679 bleibt als Vorabversion verfügbar. [Änderungen und Bedienung](LIESMICH_3_66_3.txt)
+Der Dateimanager bündelt beim Ordnervergleich die Prüfsummen kleiner Dateien auf unterstützten LCDs. Der Figurenkatalog lädt bei Bedarf und ergänzt acht deutsch-englische Spielhinweise. Für lange Dateinamen gibt es Kurzvorschläge. Der Umstiegsassistent kann den Platzbedarf direkt für App680 prüfen.
 
-Web 3.66.3 unterstützt LCD DE4.2/App680 beim Gerätevergleich, in der Diagnose, bei der Dateiübertragung und im Updater. Die bisherigen LCD-Testversionen und OLED Test 6 sind im Archiv verfügbar.
+Web 3.67.0 übernimmt die schnellen Übertragungen in die normale Homepage und die Windows-Ausgabe. Beim Lesen werden kleine Dateien gebündelt. Beim Schreiben können neue Unterordner auch in bestehende Ziele übertragen werden. LCD DE4.2 ist jetzt vorausgewählt. App680 ist die finale LCD-Version. Sie meldet auf dem Gerät weiterhin 2.22.0-DE4.2-b2. App679 bleibt als Vorabversion verfügbar. [Änderungen und Bedienung](LIESMICH_3_67_0.txt)
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App680 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.2-lcd-app#board=LCD) · [Signierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Windows-Portable (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.3/Allmiibo_Dateimanager_3_66_3_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.3.zip).
+Web 3.67.0 unterstützt LCD DE4.2/App680 beim Gerätevergleich, in der Diagnose, bei der Dateiübertragung und im Updater. Die bisherigen LCD-Testversionen und OLED Test 6 sind im Archiv verfügbar.
+
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Bild & Video](https://bluecyber81.github.io/pixl.js/?workspace=stream) · [App680 im Updater](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.2-lcd-app#board=LCD) · [Signierte App-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Windows-Portable (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/web3.67.0/Allmiibo_Dateimanager_3_67_0_Portable.zip) · [Webquellen (ZIP)](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.67.0.zip).
 
 Der Bildsender merkt die Bildoptionen, behält eine ausgewählte Datei beim Bereichwechsel vorübergehend und ergänzt Drehung, Punktraster sowie Drag & Drop. Der lokale Playerexport erzeugt aus Bild, Demo oder Videoausschnitt eine PIXV-BIN mit Vorschau der Dateigröße, Fortschritt und Abbruch. Die fertige Datei wird ausdrücklich gespeichert und anschließend über den Dateibereich nach **E:/player/** übertragen. Eine Datei bis 128 MiB wird höchstens 30 Minuten in der geöffneten Seite gemerkt; ein Export ist auf 1 MiB begrenzt.
 
@@ -14,9 +16,9 @@ App675 ergänzt die optionalen Player-Einstellungen **Endlosschleife** und **Bil
 
 Der Katalog vereinheitlicht bereits vorhandene Ocarina-/Fatal-Fury-Hinweise in Filter, Spielübersicht und Figurendetails. Nintendo-belegte Kirby-Zuordnungen kommen hinzu. Bestehende Übersetzungen, Shadow-Link-Einschränkung, Yoshi-Webzuordnungen und die Unterscheidung von Switch und 3DS bleiben erhalten. Die Webdaten erfinden keine Firmwaregruppen oder Geräte-Spielordner.
 
-[Bedienung und Änderungen](LIESMICH_3_66_3.txt) · [Deutsche Anleitung](public/guide/index.html#bild-video) · [English guide](public/guide/en.html#bild-video) · [Ordnerupload-Prüfung 3.65.1](../docs/validation/WEB3_65_1_UPLOAD.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/de4.2) · [App678-Simulatorquellen (historisches Profil)](public/sources/LCD_DE4_1_App678_Simulatorquellen.zip) · [ARM-/PFS-Qualifikation](../docs/validation/DE4_1_PFS.json).
+[Bedienung und Änderungen](LIESMICH_3_67_0.txt) · [Deutsche Anleitung](public/guide/index.html#bild-video) · [English guide](public/guide/en.html#bild-video) · [Ordnerupload-Prüfung 3.65.1](../docs/validation/WEB3_65_1_UPLOAD.json) · [Firmwarequellen](https://github.com/bluecyber81/pixl.js/tree/de4.2) · [App678-Simulatorquellen (historisches Profil)](public/sources/LCD_DE4_1_App678_Simulatorquellen.zip) · [ARM-/PFS-Qualifikation](../docs/validation/DE4_1_PFS.json).
 
-Die PFS1-Engine und die Simulator-WASM bleiben bytegleich zu App672. Die tatsächliche App680 besitzt eigene BIN-/HEX-/OTA-/SourceID-Bindungen und einen frischen ARM-Layoutnachweis. Frühere Crossmount-Prüfungen sind ausdrücklich als wiederverwendete Prüfung derselben Engine gekennzeichnet. Hardwareabnahme und native Windowsausführung werden getrennt von lokalen Softwaretests berichtet.
+Für neue SPIFFS-Umstiege prüft der Assistent mit der an App680 gebundenen PFS1-Engine. Begonnene Wiederherstellungen können mit ihrem ursprünglichen Profil fortgesetzt werden. [Simulatorquellen für App680](public/sources/LCD_DE4_2_App680_Simulatorquellen.zip) · [Prüfbericht](../docs/validation/DE4_2_PFS.json).
 
 ## Archiv: normale Ausgabe 3.64.0 und LCD DE3.101 / App674
 

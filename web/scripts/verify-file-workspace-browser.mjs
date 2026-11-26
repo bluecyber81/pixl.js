@@ -64,11 +64,16 @@ try {
           return (new URL(url).origin===origin || url===imageUrl || (checkSticky && url===luigiImageUrl)) ? route.continue() : route.abort();
         });
         const page = await context.newPage();
-        const errors = [];
+        const errors = [], requested = new Set();
+        page.on('request', request => requested.add(new URL(request.url()).pathname));
         page.on('pageerror', err => errors.push(err.message));
         page.setDefaultTimeout(8000);
         await page.goto(origin+'/pixl.js/');
         assert.equal(await page.title(),(de?'Allmiibo Dateimanager ':'Allmiibo File manager ')+expectedVersion);
+        if (!baseline) {
+          await page.waitForLoadState('networkidle');
+          assert.ok(![...requested].some(p => /\/(?:catalogue|figure-usage)-[^/]+\.js$/i.test(p)), 'The cold start must defer both offline catalogues');
+        }
         await page.locator('.header-tools').getByRole('button',{name:de?'Verbinden':'Connect',exact:true}).click();
         const section = page.locator('#file-workspace');
         await page.locator('.workspace-nav [aria-controls="file-workspace"]').click();
@@ -99,6 +104,7 @@ try {
           return {src:img.currentSrc,width:img.naturalWidth,height:img.naturalHeight,drawWidth:box.width,drawHeight:box.height};
         });
         assert.equal(picture.src,imageUrl);
+        if (!baseline) assert.equal([...requested].filter(p => /\/catalogue-[^/]+\.js$/.test(p)).length, 1, 'One shared offline catalogue chunk for the preview');
         assert.ok(picture.width>1 && picture.height>1 && picture.drawWidth>1 && picture.drawHeight>1);
         if (!baseline && de) {
           if (format==='Laptop') {
@@ -225,7 +231,13 @@ async function checkNamePreflight(page,section,de) {
   const rowFor=file=>editor.locator('[data-source="Sammlung/'+source+file+'"]');
   assert.equal(await compare.isDisabled(),true);
   const priorReadCount=await page.evaluate(()=>window.testPeripheral.commands.length);
+  const folderSuggestion=folderRow.getByRole('button',{name:de?/Vorschlag übernehmen/:/Use suggested name/});
+  await folderSuggestion.click();
+  assert.notEqual(await folderRow.locator('input[type=text]').inputValue(),longFolder);
   await folderRow.locator('input[type=text]').fill('Figuren');
+  const fileRow=rowFor(longFile);
+  await fileRow.getByRole('button',{name:de?/Vorschlag übernehmen/:/Use suggested name/}).click();
+  assert.match(await fileRow.locator('input[type=text]').inputValue(),/\.bin$/);
   await rowFor(longFile).locator('input[type=text]').fill('Mario.bin');
   await rowFor(secondFile).locator('input[type=text]').fill('Mario.bin');
   assert.equal(await compare.isDisabled(),true);

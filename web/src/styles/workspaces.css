@@ -167,3 +167,13 @@
   .filemanager .workspace-nav>button[aria-current="page"] { outline:2px solid Highlight; outline-offset:-2px; }
   .filemanager .start-actions button,.filemanager .brand-mark { border:1px solid ButtonText; }
 }
+
+.device-search{margin:1rem 0;padding:1rem;border:1px solid #c9d7e8;border-radius:12px;background:#f7faff}.device-search summary{cursor:pointer;font-weight:700}
+
+.empty-selection{padding:22px 18px;color:#27323a;overflow-wrap:anywhere}
+.empty-selection .preview-eyebrow{font-size:10px;letter-spacing:.15em;color:#8a929a;font-weight:700;margin:0 0 20px}
+.empty-selection h3{font-size:18px;line-height:1.35;margin:0 0 7px}
+.empty-selection .preview-empty{text-align:center;padding:50px 0}
+.empty-selection .preview-empty>span{font-size:50px;color:#bbc3ca}
+.empty-selection .preview-empty h3{font-size:15px;margin-top:20px}
+.empty-selection .preview-empty p{font-size:12px;line-height:1.6;color:#89939c}

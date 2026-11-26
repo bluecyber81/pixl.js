@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createSyncPlan, createSyncJob, executeSyncJob } from '../src/lib/sync-plan.js'
 import { safeUpload } from '../src/lib/safe-upload.js'
+import { createHash } from 'node:crypto'
 import { memoryVfs, metadata, localFile } from './helpers/memory-vfs.mjs'
 
 const key = 'browser-device-a'
@@ -9,6 +10,75 @@ const compare = (vfs, files, options = {}) => createSyncPlan({ ...vfs.api, rootP
 const execute = (vfs, plan, files, options = {}) => executeSyncJob({ ...vfs.api, plan, job: createSyncJob(plan), files, deviceKey: key,
   uploadFile: input => safeUpload({ ...vfs.api, ...input }), ...options })
 const isMutation = entry => ['write', 'rename', 'remove', 'mkdir', 'meta'].includes(entry.op)
+
+function packedComparison(vfs) {
+  const calls = {groups:[], single:[]}
+  const hash = path => createHash('sha256').update(vfs.nodes.get(path).bytes).digest('hex')
+  const options = {
+    syncSession:1, readCreateRevision:async () => '0000000100000031',
+    readFileDigest:async path => { calls.single.push(path); return hash(path) },
+    readFileDigestsBatch:async (group, {revision}) => {
+      assert.equal(revision, '0000000100000031')
+      calls.groups.push(group)
+      return group.map(row => ({...row, sha256:hash(row.path)}))
+    }
+  }
+  return {calls, options}
+}
+
+test('existing-folder comparison batches small hashes and reuses its verified inventory only on the same session and revision', async () => {
+  for (const state of ['current', 'changed revision', 'new session', 'unavailable revision']) {
+    const vfs = memoryVfs(), {calls, options} = packedComparison(vfs)
+    const files = Array.from({length:8}, (_,i) => localFile('f'+i,[i]))
+    for (const [i, file] of files.entries()) vfs.put('E:/tags/'+file.name, [i])
+    files.push(localFile('new'))
+    const plan = await compare(vfs, files, options)
+    assert.deepEqual(calls.groups.map(group=>group.length), [4,4])
+    assert.equal(calls.single.length, 0)
+    if (state === 'changed revision') {
+      options.readCreateRevision = async () => '0000000100000032'
+      options.readFileDigestsBatch = async group => { calls.groups.push(group); return null }
+    }
+    if (state === 'new session') options.syncSession++
+    if (state === 'unavailable revision') options.readCreateRevision = async () => { throw Object.assign(Error(), {cmd:0x22,status:1}) }
+    const result = await execute(vfs, plan, files, options)
+    assert.equal(result.completed, 1)
+    if (state === 'unavailable revision') assert.ok(calls.single.length >= 8)
+    else assert.equal(calls.groups.length === 2, state === 'current')
+    assert.deepEqual(vfs.bytes('E:/tags/new'), [7,8,9])
+  }
+})
+
+test('group identity, size, hash and complete replies are checked before any upload, and only capability absence falls back', async () => {
+  const vfs = memoryVfs(), {options, calls} = packedComparison(vfs)
+  const files = [localFile('a'), localFile('b')]
+  for (const file of files) vfs.put('E:/tags/'+file.name, [7,8,9])
+  for (const mutate of [rows=>rows.reverse(), rows=>rows.slice(1), rows=>{rows[0].sha256='invalid'; return rows},
+    rows=>{rows[1].size++; return rows}]) {
+    await assert.rejects(compare(vfs, files, {...options, readFileDigestsBatch:async (...args)=>mutate(await options.readFileDigestsBatch(...args))}), {code:'SYNC_CHANGED'})
+  }
+  await assert.rejects(compare(vfs, files, {...options, readFileDigestsBatch:async ()=>{throw Error('link lost')}}), /link lost/)
+  assert.equal(calls.single.length, 0)
+  const plan = await compare(vfs, files, {...options, readFileDigestsBatch:async ()=>null})
+  assert.equal(plan.summary.same, 2)
+  assert.equal(calls.single.length, 2)
+  const decline = async () => { throw Object.assign(Error('No idle PackedFS revision'), {cmd:0x22,status:1}) }
+  const ordinary = await compare(vfs, files, {...options, readCreateRevision:decline})
+  assert.equal(ordinary.summary.same,2)
+  assert.equal(calls.single.length,4)
+  await assert.rejects(compare(vfs, files, {...options, readCreateRevision:async ()=>{throw Error('link lost')}}), /link lost/)
+  assert(!vfs.log.some(isMutation))
+})
+
+test('a reused preview rechecks local files and stops if the storage changes while validating them', async () => {
+  const vfs = memoryVfs(), {options} = packedComparison(vfs)
+  const files = [localFile('a'),localFile('b')]
+  const plan = await compare(vfs, files, options)
+  await assert.rejects(execute(vfs, plan, [localFile('a',[0,0,0]), files[1]], options), {code:'SYNC_LOCAL_CHANGED'})
+  let calls = 0
+  await assert.rejects(execute(vfs, plan, files, {...options, readCreateRevision:async () => ++calls === 1 ? '0000000100000031' : '0000000100000032'}), {code:'SYNC_STALE'})
+  assert(!vfs.log.some(isMutation))
+})
 
 test('comparison includes device-only trees and resuming an upload only revisits branches with local targets', async () => {
   const vfs = memoryVfs(), files = [localFile('hero.bin')]

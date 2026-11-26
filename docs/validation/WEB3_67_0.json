@@ -1,0 +1,171 @@
+{
+  "webVersion": "3.67.0",
+  "firmware": "LCD DE4.2 / App680",
+  "firmwarePackageSha256": "4348e1757224b076064039feda58b86329b4db0d84681f15fcb22918f148f7ca",
+  "qualificationDate": "2026-11-26",
+  "webTests": {
+    "tests": 2410,
+    "pass": 2410,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "productionBuilds": {
+    "pages": {
+      "productionChecks": 58,
+      "chromeChecks": 51,
+      "entryScript": "index-f_KGpjSF.js",
+      "entryBytes": 913974,
+      "gzip9Bytes": 293064
+    },
+    "root": {
+      "productionChecks": 58,
+      "chromeChecks": 51,
+      "entryScript": "index-IX1YVMDW.js",
+      "entryBytes": 913958,
+      "gzip9Bytes": 293036
+    }
+  },
+  "windowsPortable": {
+    "bytes": 14412789,
+    "sha256": "ec2f96e267ac5df1ab81d386c55ff26349e71b72a084a6cefd450e59eb0f4acb",
+    "verifiedFiles": 375
+  },
+  "hostUploadComparison": {
+    "model": "memoryVfs",
+    "baselineCommit": "85427d801d6ffb90b14e9e15b9edf42b88839ce9",
+    "fixtureSha256": "ff21262037114d9c879e06092e7b564f8612a733e2db2740bf370eae1094dc37",
+    "bytes": 658806,
+    "midFileOrderSha256": "da9b9efcdd3d07af6c3c3bd5b6b91abceb40240795bb731a4d81cc3b58ebb435",
+    "interrupt-after-33": {
+      "baseline": {
+        "filesVerified": 1081,
+        "extraFiles": 0,
+        "writes": 1081,
+        "attempts": 1081,
+        "interrupted": {
+          "afterBytes": 540,
+          "pathSha256": "74d4759e0c49f897b1161f85ae0f12cae22afec77f3657dbdae58bd8c19f5624"
+        },
+        "resumedSkipped": 33,
+        "counts": {
+          "list": 5093,
+          "singleDigest": 33,
+          "groupDigest": 0,
+          "revision": 3
+        },
+        "digestCommands": 33
+      },
+      "candidate": {
+        "filesVerified": 1081,
+        "extraFiles": 0,
+        "writes": 1081,
+        "attempts": 1081,
+        "interrupted": {
+          "afterBytes": 540,
+          "pathSha256": "74d4759e0c49f897b1161f85ae0f12cae22afec77f3657dbdae58bd8c19f5624"
+        },
+        "resumedSkipped": 33,
+        "counts": {
+          "list": 5038,
+          "singleDigest": 1,
+          "groupDigest": 8,
+          "revision": 7
+        },
+        "digestCommands": 9
+      }
+    },
+    "add-four": {
+      "baseline": {
+        "filesVerified": 1081,
+        "extraFiles": 0,
+        "writes": 4,
+        "attempts": 4,
+        "interrupted": null,
+        "resumedSkipped": 0,
+        "counts": {
+          "list": 118,
+          "singleDigest": 2154,
+          "groupDigest": 0,
+          "revision": 2
+        },
+        "digestCommands": 2154
+      },
+      "candidate": {
+        "filesVerified": 1081,
+        "extraFiles": 0,
+        "writes": 4,
+        "attempts": 4,
+        "interrupted": null,
+        "resumedSkipped": 0,
+        "counts": {
+          "list": 63,
+          "singleDigest": 29,
+          "groupDigest": 262,
+          "revision": 5
+        },
+        "digestCommands": 291
+      }
+    },
+    "interrupt-during-33": {
+      "baseline": {
+        "filesVerified": 1081,
+        "extraFiles": 0,
+        "writes": 1081,
+        "attempts": 1082,
+        "interrupted": {
+          "afterBytes": 242,
+          "pathSha256": "57105daf3fa1585f0d7efe20a5176d2b918255d0f0c8bdf23c6c27e4c2d08f63"
+        },
+        "resumedSkipped": 32,
+        "counts": {
+          "list": 6182,
+          "singleDigest": 32,
+          "groupDigest": 0,
+          "revision": 3
+        },
+        "digestCommands": 32
+      },
+      "candidate": {
+        "filesVerified": 1081,
+        "extraFiles": 0,
+        "writes": 1081,
+        "attempts": 1082,
+        "interrupted": {
+          "afterBytes": 242,
+          "pathSha256": "57105daf3fa1585f0d7efe20a5176d2b918255d0f0c8bdf23c6c27e4c2d08f63"
+        },
+        "resumedSkipped": 32,
+        "counts": {
+          "list": 6126,
+          "singleDigest": 1,
+          "groupDigest": 8,
+          "revision": 7
+        },
+        "digestCommands": 9
+      }
+    }
+  },
+  "migrationEvidence": "DE4_2_PFS.json",
+  "catalogue": {
+    "gameAssignments": 1416,
+    "bilingualNotes": 174,
+    "newBilingualNotes": 8
+  },
+  "toolchain": {
+    "lockedPackageIdentities": 97,
+    "linuxCIInstall": "Node 26.13.0 / npm 11.19.1 / Ubuntu 24.04 glibc",
+    "linuxIntegrityAndPlatformChecks": 12,
+    "npmAuditKnownAdvisories": 0
+  },
+  "hardware": {
+    "full1081BluetoothSeconds": null,
+    "physicalAndroidTagMoRoundTrip": null,
+    "physicalOLEDContrastComparison": null,
+    "newDeviceWrites": false
+  },
+  "firmwareHostChecks": {
+    "lcdNfcSessionCases": 48,
+    "physicalReader": false
+  }
+}

@@ -164,6 +164,24 @@ export async function retainMigrationSource({archive,report},store=migrationTick
   try{await store.put(receipt);return {retained:true,persistent:true}}
   catch{return {retained:true,persistent:false}}
 }
+// A local marker only selects the previous capacity profile. All layout,
+// live identity, archive and initialization checks still run independently.
+export async function pendingMigrationProfile(archive, deviceKey, profiles, store=migrationTicketStore){
+  if (!deviceKey || !archive?.archiveSha256) return null
+  const deviceHash = await sha256Bytes(encoder.encode(deviceKey))
+  const key = archive.archiveSha256 + ':' + deviceHash
+  let marker
+  try { marker = await store.getMarker(archive.archiveSha256, deviceHash) }
+  catch { /* Offline or disabled IndexedDB still permits local simulation. */ }
+  marker ??= formatMarkers.get(key)
+  if (marker?.state !== 'format_attempted' || marker.archiveSha256 !== archive.archiveSha256 ||
+      marker.deviceIdentitySha256 !== deviceHash) return null
+  return profiles.find(id => {
+    const target = getMigrationCapacityTarget(id)
+    return target.approved && target.layout.engineSha256 === marker.engineSha256 &&
+      migrationApplicationMatches({...marker,settingsCrcValid:true}, target)
+  }) ?? null
+}
 async function markFormat(o,state,identity){
   const deviceHash=await sha256Bytes(encoder.encode(o.deviceKey)),key=o.archive.archiveSha256+':'+deviceHash
   const target=proof(o)

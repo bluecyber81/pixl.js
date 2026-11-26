@@ -60,6 +60,63 @@ def check_hex(path, base, binary):
                 endAddressExclusive=base + len(image), entrypoint=entry)
 
 
+def expected_layout(c, mounted):
+    return struct.pack('<4B4sIIIHHHHI4BI', 1, ord('E'), 3, mounted, b'PFS1',
+        c['BLOCK_COUNT']*c['BLOCK_SIZE'], c['BLOCK_SIZE'], c['BLOCK_COUNT'],
+        c['CACHE_SIZE'], c['CACHE_SIZE'], c['CACHE_SIZE'], c['META_SIZE'],
+        c['SHARD_TARGET'], c['MAX_SHARDS'], c['PATH_MAX'], c['NAME_MAX'], c['MAX_HANDLES'], 7)
+
+
+def protocol_layout_cases(cpu, sym, engine_hash, constants):
+    # App680 LTO inlines vfs_packed_layout into the real 0x1f handler.
+    # Model enabled drives and mount state; capture the BLE transport boundary.
+    entry = sym['df_proto_handler_vfs_packed_layout']
+    sp = sym['__StackTop']
+    evt, frame = sym['__HeapBase'], sym['__HeapBase'] + 16
+    returns = []
+    hooks = {}
+    def respond(emulator, address, _size, _user):
+        action = hooks[address]
+        if action == 'driver':
+            emulator.reg_write(UC_ARM_REG_R0, 1)
+        elif action == 'mounted':
+            emulator.reg_write(UC_ARM_REG_R0, int(mounted))
+        elif action == 'send':
+            data = bytes(emulator.mem_read(emulator.reg_read(UC_ARM_REG_R0), 248))
+            assert data[0:4] == b'\x1f\0\0\0' and data[247] == 72 and not any(data[76:247])
+            returns.append((0, data[4:76]))
+        else:
+            assert emulator.reg_read(UC_ARM_REG_R0) == 0x1f
+            returns.append((emulator.reg_read(UC_ARM_REG_R1), None))
+        emulator.reg_write(UC_ARM_REG_PC, emulator.reg_read(UC_ARM_REG_LR))
+    for name, action in [('get_driver_by_label','driver'), ('packed_mounted.lto_priv.0','mounted'),
+                         ('df_core_send_frame','send'), ('send_vfs_error','vfs-error')]:
+        hooks[sym[name]] = action
+        cpu.hook_add(UC_HOOK_CODE, respond, begin=sym[name], end=sym[name])
+    result = []
+    for drive, geometry, mounted in [('E', True, True), ('E', True, False), ('I', True, True), ('E', False, True)]:
+        returns.clear()
+        cpu.mem_write(sym['geometry_valid'], bytes([int(geometry)]))
+        cpu.mem_write(evt, struct.pack('<B3xI', 2, frame))
+        request = bytearray(248)
+        request[0], request[4], request[247] = 0x1f, ord(drive), 1
+        cpu.mem_write(frame, bytes(request))
+        cpu.reg_write(UC_ARM_REG_MSP, sp)
+        cpu.reg_write(UC_ARM_REG_R0, evt)
+        cpu.reg_write(UC_ARM_REG_LR, 0x101)
+        cpu.emu_start(entry | 1, 0x100, count=10000)
+        assert cpu.reg_read(UC_ARM_REG_PC) == 0x100 and cpu.reg_read(UC_ARM_REG_MSP) == sp
+        assert cpu.mem_read(frame,248) == request
+        (status, data), = returns
+        assert status == (0 if drive == 'E' and geometry else 0xfffffffa)
+        case = dict(drive=drive, geometry=geometry, mounted=mounted, result=status)
+        if status == 0:
+            assert data == expected_layout(constants, mounted) + bytes.fromhex(engine_hash)
+            case['layout72Hex'] = data.hex()
+        result.append(case)
+    return result
+
+
 def layout_cases(sym, binary, engine_hash, constants):
     cpu = Uc(UC_ARCH_ARM, UC_MODE_MCLASS | UC_MODE_THUMB)
     cpu.ctl_set_cpu_model(UC_CPU_ARM_CORTEX_M4)
@@ -68,6 +125,8 @@ def layout_cases(sym, binary, engine_hash, constants):
     cpu.mem_write(sym['__isr_vector'], binary)
     data_size = sym['__data_end__'] - sym['__data_start__']
     cpu.mem_write(sym['__data_start__'], bytes(cpu.mem_read(sym['__etext'], data_size)))
+    if 'vfs_packed_layout' not in sym:
+        return protocol_layout_cases(cpu, sym, engine_hash, constants)
     out, sp = sym['__HeapBase'], sym['__StackTop']
     result = []
     def mounted_hook(emulator, _address, _size, _user):
@@ -88,11 +147,7 @@ def layout_cases(sym, binary, engine_hash, constants):
         assert code == (0 if drive == 'E' and geometry else 0xfffffffa)
         assert cpu.mem_read(out+72, 1) == b'\xa5'
         if code == 0:
-            c = constants
-            expected = struct.pack('<4B4sIIIHHHHI4BI', 1, ord('E'), 3, mounted, b'PFS1',
-                c['BLOCK_COUNT']*c['BLOCK_SIZE'], c['BLOCK_SIZE'], c['BLOCK_COUNT'],
-                c['CACHE_SIZE'], c['CACHE_SIZE'], c['CACHE_SIZE'], c['META_SIZE'],
-                c['SHARD_TARGET'], c['MAX_SHARDS'], c['PATH_MAX'], c['NAME_MAX'], c['MAX_HANDLES'], 7)
+            expected = expected_layout(constants, mounted)
             actual = bytes(cpu.mem_read(out,72))
             assert actual == expected + bytes.fromhex(engine_hash), (
                 'linked PFS layout mismatch', drive, geometry, mounted,
@@ -113,7 +168,7 @@ def main():
     cross_input.add_argument('--reuse-cross-report', type=Path,
                              help='previous cross-mount JSON, only for an explicitly bound byte-identical release engine')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394', 'de395', 'de396', 'de397', 'de398', 'de399', 'de3100', 'de3101', 'de3102', 'de41'], default='de355')
+    parser.add_argument('--profile', choices=['de355', 'de389', 'de391', 'de392', 'de393', 'de394', 'de395', 'de396', 'de397', 'de398', 'de399', 'de3100', 'de3101', 'de3102', 'de41', 'de42'], default='de355')
     args = parser.parse_args()
     fw = args.source / 'fw'
     record = read(args.build/'BUILD_RESULT.json')
@@ -135,6 +190,8 @@ def main():
         assert record['version'] == '2.22.0-DE3.100' and record['counter'] == 673
     if args.profile == 'de3101':
         assert record['version'] == '2.22.0-DE3.101' and record['counter'] == 674
+    if args.profile == 'de42':
+        assert record['version'] == '2.22.0-DE4.2-b2' and record['counter'] == 680
     if args.profile == 'de41':
         assert record['version'] == '2.22.0-DE4.1' and record['counter'] == 678
     if args.profile == 'de3102':
@@ -183,8 +240,11 @@ def main():
                 'Host simulations do not measure physical free space or device acceptance.'])
     if args.profile in ('de396', 'de397'):
         report['limits'].append('BOARD_LCD/PIXL_TEST_DIAGNOSTICS instrumentation is omitted from the RAM-only simulator; no SDK timing or firmware RAM claim.')
-    if args.profile in ('de398', 'de399', 'de3100', 'de3101', 'de3102', 'de41'):
+    if args.profile in ('de398', 'de399', 'de3100', 'de3101', 'de3102', 'de41', 'de42'):
         report['limits'].append('BOARD_LCD/runtime GC diagnostics are omitted from the RAM-only simulator; no SDK timing or firmware RAM claim.')
+    if args.profile == 'de42':
+        report['armEntryPoint'] = 'df_proto_handler_vfs_packed_layout'
+        report['limits'].append('The LTO-inlined layout runs in the linked command handler. Drive availability and mount state are modeled; the reply is captured before BLE transport.')
     if args.reuse_cross_report:
         report['scope'] = f"Fresh linked App{record['counter']} ARM layout binding to the unchanged App672 engine and previously executed cross-mount evidence"
         report['crossMountEvidenceMode'] = 'reused-identical-engine'

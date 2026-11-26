@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "synthetic": true,
+  "files": 1081,
+  "directories": 55,
+  "payloadBytes": 658806,
+  "rowsSha256": "f8194aff38468bd70f818aba981ce4a73a09d2d64cb71eb64ce60b3a0808aad2",
+  "report": {
+    "schema": 1,
+    "kind": "littlefs-capacity-simulation",
+    "passed": true,
+    "wasmSha256": "f1ddb610ec982b946cbaea03c1282b29fceb124eda1b2c0db7e7d4e901e984b6",
+    "firmwareVersion": "2.22.0-DE4.2-b2",
+    "applicationCounter": 680,
+    "engineSha256": "15db90c7d572bfc3043664a90ed077125a9645bca46055ae2fe0dafe0cb055c0",
+    "archiveSha256": "f8194aff38468bd70f818aba981ce4a73a09d2d64cb71eb64ce60b3a0808aad2",
+    "geometry": {
+      "totalBlocks": 512,
+      "blockSize": 4096,
+      "metadataBytes": 128,
+      "includesRestoreStaging": true
+    },
+    "entries": 1136,
+    "verifiedEntries": 1136,
+    "usedBlocks": 218,
+    "observedPeakUsedBlocks": 218,
+    "peakUsedBlocks": 259,
+    "transactionAllowance": {
+      "additionalBlocks": 41,
+      "maxShardBytes": 41353,
+      "largestFileBytes": 40976,
+      "basis": "8 metadata blocks + two conservatively bounded shard copies + largest staged file; added to observed API-boundary peak."
+    },
+    "totalBlocks": 512,
+    "coreHeapPeakBytes": 4304,
+    "freeBytes": 1204224,
+    "conservativeReserveBytes": 1036288,
+    "minimumReservePercent": 20,
+    "metadataBytesPerEntry": 128,
+    "includesRestoreStaging": true,
+    "limits": "Synthetic exact-geometry simulation; not a hardware readback or authorization to format."
+  }
+}

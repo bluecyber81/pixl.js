@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef EXPECTED_ROWS
+#define EXPECTED_ROWS 1208
+#endif
 #define COUNT 4096
 #define DISK (PFS_BLOCK_SIZE * PFS_BLOCK_COUNT)
 #define CHECK(x) do { if (!(x)) { fprintf(stderr,"check failed at line %d: %s\n",__LINE__,#x); exit(1); } } while (0)
@@ -31,7 +34,7 @@ static void load_rows(const char *path) {
         for(unsigned i=0;i<128;i++){ unsigned value; CHECK(sscanf(tab+2*i,"%2x",&value)==1); r->meta[i]=(uint8_t)value; }
         r->kind=(int)kind; r->size=size; r->seed=seed(name); r->active=1; count++;
     }
-    CHECK(!ferror(input)); CHECK(fclose(input)==0); CHECK(count==1208);
+    CHECK(!ferror(input)); CHECK(fclose(input)==0); CHECK(count==EXPECTED_ROWS);
     for(unsigned i=0;i<32;i++)identity[i]=(uint8_t)(17+i*3);
 }
 static void initialize(void) {

@@ -75,9 +75,9 @@ test('both guides offer the current LCD app, full package and aligned storage ta
         assert.match(section('flash'), /Z21/);
         assert.ok(section('bootloader').includes(combo));
         assert.match(section('bootloader'), /(?:unter|below) 21/);
-        assert.match(section('littlefs'), /DE4\.1 \/ 678/);
-        assert.ok(section('littlefs').includes('package=de4.1-lcd-app#board=LCD'));
-        assert.doesNotMatch(section('littlefs'), /<b>DE4\.2 \/ 680<\/b>/);
+        assert.match(section('littlefs'), /DE4\.2-b2 \/ 680/);
+        assert.ok(section('littlefs').includes('package=de4.2-lcd-app#board=LCD'));
+        assert.match(section('littlefs'), /App678/);
         const lcdDownloads = [...section('programme').matchAll(/href="([^"]*Allmiibo_LCD_[^"]*\.zip)"/g)].map(match => match[1]);
         assert.deepEqual(lcdDownloads, [app, combo]);
     }

@@ -1,5 +1,9 @@
 # Allmiibo-Dateimanager im Browser
 
+## Dateimanager 3.67.0 · 26. November 2026
+
+Der Dateimanager bündelt beim Ordnervergleich die Prüfsummen kleiner Dateien auf unterstützten LCDs. Der Figurenkatalog lädt bei Bedarf und ergänzt acht deutsch-englische Spielhinweise. Für lange Dateinamen gibt es Kurzvorschläge. Der Umstiegsassistent kann den Platzbedarf direkt für App680 prüfen. [GitHub](https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.0)
+
 ## Dateimanager 3.66.3 · 25. November 2026
 
 Die normale Homepage und die Windows-Ausgabe bieten DE4.2 / App680 als reguläres LCD-Update an. Die getrennte OLED-Auswahl führt zu DE3.87 Test 6 / App86. Auf unterstützten LCDs liest der Dateimanager kleine Dateien gruppenweise. Die Auswahl **Schnellübersicht** im Figurenkatalog liest nur die Verzeichnisse, **Dateiinhalte prüfen** liest die passenden BIN-Dateien. [Dateimanager](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.3/Allmiibo_Dateimanager_3_66_3_Portable.zip) · [Web-Release](https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.3)

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026-11-24.nintendo-web",
+  "dataVersion": "2026-11-26.nintendo-web",
   "source": {
     "label": "Bundled firmware catalogue",
     "referenceCommit": "6e0004969cd1481a027c2eaa86838a4c3fa1553d",
@@ -206,8 +206,8 @@
     "hashPolicy": "sha256 identifies the local export input; referenceSha256 identifies the exact bytes at referenceUrl. Per-file transformations explain any difference.",
     "webSupplement": {
       "path": "web/src/data/usage-nintendo-supplement.json",
-      "sha256": "4ac9e98aaebdeca87b8733ad589da5ce9255820133b306034906cf7de09175f8",
-      "checkedDate": "2026-11-24",
+      "sha256": "d1144c6958a00e9ab3a4b001c17d088d51cfa598a1ffbf55e00834f93c2db43f",
+      "checkedDate": "2026-11-26",
       "policy": "Reviewed exact catalogue IDs only. Web notes supplement the unchanged firmware CSV export. No new firmware group, downloaded figure file or in-game device test is implied."
     },
     "firmwareDataVersion": "2026-11-16.de376"
@@ -227,11 +227,11 @@
     "firmwareAssociations": 1348,
     "nintendoWebAssociations": 68,
     "legacyEmptyLinkColumns": 3,
-    "englishNoteAssociations": 166,
-    "uniqueEnglishNotes": 66,
-    "uniqueGermanTranslations": 66,
-    "germanNoteAssociations": 166,
-    "nintendoWebNoteAdditions": 94
+    "englishNoteAssociations": 174,
+    "uniqueEnglishNotes": 74,
+    "uniqueGermanTranslations": 74,
+    "germanNoteAssociations": 174,
+    "nintendoWebNoteAdditions": 102
   },
   "groups": [
     {
@@ -1354,6 +1354,54 @@
       "id": 66,
       "en": "Scan the figure for random items.",
       "de": "Scanne die Figur, um zufällige Gegenstände zu erhalten.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 67,
+      "en": "On Switch, Noah unlocks N’s Consul Suit for Noah in game version 2.2.0 or later.",
+      "de": "Auf der Switch schaltet Noah ab Version 2.2.0 den Konsul-Anzug von N für Noah frei.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 68,
+      "en": "On Switch, Mio unlocks M’s Consul Suit for Mio in game version 2.2.0 or later.",
+      "de": "Auf der Switch schaltet Mio ab Version 2.2.0 den Konsul-Anzug von M für Mio frei.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 69,
+      "en": "Grace unlocks a weapon skin for her S&S M232.",
+      "de": "Grace schaltet ein Waffendesign für ihre S&S M232 frei.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 70,
+      "en": "Leon unlocks a weapon skin for his Requiem.",
+      "de": "Leon schaltet ein Waffendesign für seine Requiem frei.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 71,
+      "en": "Scan Diana for up to three types of supplies per sortie, including weapons and healing items.",
+      "de": "Scanne Diana, um pro Einsatz bis zu drei Arten von Nachschub zu erhalten, darunter Waffen und Heilgegenstände.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 72,
+      "en": "Ratha unlocks this figure’s layered armor for the protagonist.",
+      "de": "Ratha schaltet die zu dieser Figur gehörende Dekorrüstung für die Hauptfigur frei.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 73,
+      "en": "Ratha V unlocks this figure’s layered armor for the protagonist.",
+      "de": "Ratha V schaltet die zu dieser Figur gehörende Dekorrüstung für die Hauptfigur frei.",
+      "translation": "editorial-from-primary-source"
+    },
+    {
+      "id": 74,
+      "en": "Rudy unlocks an outfit for Rudy.",
+      "de": "Rudy schaltet ein Outfit für Rudy frei.",
       "translation": "editorial-from-primary-source"
     }
   ],
@@ -11892,8 +11940,12 @@
       "associations": [
         {
           "groupId": 19,
-          "noteId": null,
-          "sourceLine": 224
+          "noteId": 67,
+          "sourceLine": 224,
+          "firmwareNoteId": null,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/59259/p/897/c/120",
+          "webSupplement": true,
+          "platform": "Switch"
         }
       ]
     },
@@ -11902,8 +11954,12 @@
       "associations": [
         {
           "groupId": 19,
-          "noteId": null,
-          "sourceLine": 222
+          "noteId": 68,
+          "sourceLine": 222,
+          "firmwareNoteId": null,
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/59259/p/897/c/120",
+          "webSupplement": true,
+          "platform": "Switch"
         }
       ]
     },
@@ -12962,8 +13018,12 @@
       "associations": [
         {
           "groupId": 79,
-          "noteId": null,
-          "sourceLine": 1329
+          "noteId": 72,
+          "sourceLine": 1329,
+          "firmwareNoteId": null,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/mh-stories3/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -12972,8 +13032,12 @@
       "associations": [
         {
           "groupId": 79,
-          "noteId": null,
-          "sourceLine": 1330
+          "noteId": 73,
+          "sourceLine": 1330,
+          "firmwareNoteId": null,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/mh-stories3/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -12982,8 +13046,12 @@
       "associations": [
         {
           "groupId": 79,
-          "noteId": null,
-          "sourceLine": 1331
+          "noteId": 74,
+          "sourceLine": 1331,
+          "firmwareNoteId": null,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/mh-stories3/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -12992,8 +13060,12 @@
       "associations": [
         {
           "groupId": 78,
-          "noteId": null,
-          "sourceLine": 1333
+          "noteId": 69,
+          "sourceLine": 1333,
+          "firmwareNoteId": null,
+          "sourceUrl": "https://www.nintendo.com/us/store/products/amiibo-grace-ashcroft-resident-evil-requiem-series-128351/",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -13002,8 +13074,12 @@
       "associations": [
         {
           "groupId": 78,
-          "noteId": null,
-          "sourceLine": 1334
+          "noteId": 70,
+          "sourceLine": 1334,
+          "firmwareNoteId": null,
+          "sourceUrl": "https://www.nintendo.com/us/store/products/amiibo-leon-kennedy-resident-evil-requiem-series-128352/",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },
@@ -13012,8 +13088,12 @@
       "associations": [
         {
           "groupId": 77,
-          "noteId": null,
-          "sourceLine": 1332
+          "noteId": 71,
+          "sourceLine": 1332,
+          "firmwareNoteId": null,
+          "sourceUrl": "https://www.nintendo.com/jp/hardware/amiibo/game/aa5pa/index.html",
+          "webSupplement": true,
+          "platform": "Switch 2"
         }
       ]
     },

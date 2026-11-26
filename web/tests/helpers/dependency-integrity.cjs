@@ -35,8 +35,34 @@ function appliesToHost(entry, host) {
   return true;
 }
 
+// Follow the lockfile's installed layout, including hoisted and nested packages.
+// An optional binding for another CPU may have children with no platform rule.
+function hostDependencies(entries, host) {
+  const active = new Set(['']);
+  for (const parent of active) {
+    const entry = entries[parent];
+    const requiredPeers = Object.keys(entry.peerDependencies || {}).filter(name => !entry.peerDependenciesMeta?.[name]?.optional);
+    const names = new Set([...Object.keys(entry.dependencies || {}), ...Object.keys(entry.optionalDependencies || {}),
+      ...Object.keys(parent ? {} : entry.devDependencies || {}), ...requiredPeers]);
+    for (const name of names) {
+      let folder = parent;
+      for (;;) {
+        const candidate = (folder ? folder + '/' : '') + 'node_modules/' + name;
+        if (Object.hasOwn(entries, candidate)) {
+          if (appliesToHost(entries[candidate], host)) active.add(candidate);
+          break;
+        }
+        if (!folder) break;
+        folder = folder.slice(0, Math.max(0, folder.lastIndexOf('/node_modules/')));
+      }
+    }
+  }
+  return active;
+}
+
 function verifyDependencyIntegrity(root, host = hostEnvironment()) {
   const lock = read(path.join(root, 'package-lock.json')), packages = [];
+  const active = hostDependencies(lock.packages, host);
   for (const [location, entry] of Object.entries(lock.packages)) {
     if (!location) continue;
     const name = entry.name || location.split('node_modules/').at(-1);
@@ -44,7 +70,7 @@ function verifyDependencyIntegrity(root, host = hostEnvironment()) {
     const metadata = fs.existsSync(metadataPath) ? read(metadataPath) : null;
     if (!metadata) {
       assert.equal(entry.optional, true, location + ' missing');
-      assert.equal(appliesToHost(entry, host), false, location + ' missing for active host platform');
+      assert.equal(active.has(location), false, location + ' missing for active host platform');
     } else {
       assert.equal(metadata.name, name, location + ' package identity');
       assert.equal(metadata.version, entry.version, location + ' package version');
@@ -54,7 +80,8 @@ function verifyDependencyIntegrity(root, host = hostEnvironment()) {
   }
   assert.ok(packages.some(item => item.metadata), 'No installed dependencies');
   const noticesRoot = path.join(root, 'third-party/npm');
-  for (const notice of read(path.join(noticesRoot, 'SOURCES.json')).packages) {
+  const notices = read(path.join(noticesRoot, 'SOURCES.json')).packages;
+  for (const notice of notices) {
     const matching = packages.filter(item => item.name === notice.name && item.entry.version === notice.version);
     assert.ok(matching.length, notice.name + ' notice version belongs to pinned lock');
     for (const item of matching) {
@@ -70,6 +97,10 @@ function verifyDependencyIntegrity(root, host = hostEnvironment()) {
         if (item.metadata) assert.equal(sha(path.join(item.folder, path.basename(file.file))), file.sha256, notice.name + ' distributed notice');
       }
     }
+  }
+  const documented = new Set(notices.map(item => item.name + '@' + item.version));
+  for (const item of packages) {
+    assert.ok(documented.has(item.name + '@' + item.entry.version), item.name + ' missing from notice inventory');
   }
 }
 

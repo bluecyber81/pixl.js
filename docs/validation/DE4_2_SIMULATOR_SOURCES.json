@@ -1,0 +1,10 @@
+{
+  "path": "web/public/sources/LCD_DE4_2_App680_Simulatorquellen.zip",
+  "bytes": 118776,
+  "sha256": "b7a1164f16e05ec1ce4269768b066e0504f0eb4b19ca0a1a230373842f33449a",
+  "files": 23,
+  "sourceId": "16425b76fc84dc65bd9893d1d8337741abbf0fa8e4fc1aa3545183fb57fe600e",
+  "capacityProfile": "de42",
+  "simulatorProfile": "de42",
+  "wasmRebuilt": true
+}

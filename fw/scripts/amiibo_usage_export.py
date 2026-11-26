@@ -90,9 +90,13 @@ def apply_web_supplement(data, supplement_path):
             text_field(game[field], 'Nintendo game guide ' + field, required=True)
         if game.get('checkedDate'):
             date.fromisoformat(game['checkedDate'])
-        source = urlsplit(game['source'])
-        if source.scheme != 'https' or not source.hostname or not source.hostname.endswith('.nintendo.com') or source.username or source.password:
-            raise ValueError('Nintendo supplement must link to an official HTTPS source')
+        reviewed_sources = [game['source'], *game.get('additionalSources', [])]
+        if game.get('editionSource'):
+            reviewed_sources.append(game['editionSource'])
+        for link in reviewed_sources:
+            source = urlsplit(link)
+            if source.scheme != 'https' or not source.hostname or not source.hostname.endswith('.nintendo.com') or source.username or source.password:
+                raise ValueError('Nintendo supplement must link to an official HTTPS source')
         text_field(game['platform'], 'Nintendo game platform', required=True)
         text_field(game['groupLabel'], 'Nintendo game label', required=True)
         group_id = game['groupId']
@@ -116,6 +120,9 @@ def apply_web_supplement(data, supplement_path):
         if translation not in ('editorial-from-english', 'editorial-from-primary-source'):
             raise ValueError('Unsupported Nintendo note translation provenance')
         for note in game['rows']:
+            note_source = note.get('source', game['source'])
+            if note_source not in reviewed_sources:
+                raise ValueError('Nintendo note must cite a reviewed game source')
             for language in ('en', 'de'):
                 text_field(note[language], 'Nintendo note ' + language, required=True)
             identity = (note['en'], note['de'], translation)
@@ -139,7 +146,7 @@ def apply_web_supplement(data, supplement_path):
                     existing = {'groupId': group_id, 'webOnly': True}
                     rows.append(existing)
                     new_associations += 1
-                existing.update(noteId=note_id, sourceUrl=game['source'],
+                existing.update(noteId=note_id, sourceUrl=note_source,
                                 webSupplement=True, platform=game['platform'])
                 supplemented_notes += 1
             if identity not in note_ids:
