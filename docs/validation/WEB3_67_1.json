@@ -1,0 +1,57 @@
+{
+  "webVersion": "3.67.1",
+  "qualificationDate": "2026-11-26",
+  "webTests": {
+    "tests": 2412,
+    "pass": 2412,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "productionBuilds": {
+    "root": {
+      "productionChecks": 58,
+      "base": "/",
+      "chromeChecks": 51
+    },
+    "pages": {
+      "productionChecks": 58,
+      "base": "/pixl.js/",
+      "chromeChecks": 51
+    }
+  },
+  "windowsPortable": {
+    "bytes": 14413236,
+    "sha256": "00a1499a04a970a2db1dc917dc016eec262f7e7f7c31c6666e91abdce65da4ef",
+    "verifiedFiles": 375
+  },
+  "catalogue": {
+    "source": "web/src/data/usage-nintendo-supplement.json",
+    "generatedUsageSha256": "341e3d0e9f8e6c3118b19ca32754fd24a27f2083d4f85e0cf38df1e68042c1d3",
+    "editionSource": "https://www.nintendo.com/en-gb/Games/Nintendo-Switch-2-Edition/Xenoblade-Chronicles-3-Nintendo-Switch-2-Edition-3116255.html",
+    "switch2ReleaseDate": "2026-12-03",
+    "figuresWithRevisedSwitchNotes": [
+      "22430000043d1b02",
+      "22440000043e1b02"
+    ]
+  },
+  "previousFullUploadEvidence": "docs/validation/WEB3_67_0.json",
+  "localTestRuns": {
+    "initialFullSuite": {
+      "tests": 2412,
+      "pass": 2411,
+      "fail": 1,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "retestedFile": "web/tests/ui-modern.test.cjs",
+    "retestedFileResults": {
+      "tests": 264,
+      "pass": 264,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "reason": "Replaced the old source-text assertion with a catalogue/stream navigation test. The updated file passed in full."
+  }
+}

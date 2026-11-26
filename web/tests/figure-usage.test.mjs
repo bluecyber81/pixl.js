@@ -41,8 +41,8 @@ test('German translations keep the original; missing translations fall back only
 
 test('eight exact catalogue figures gain bilingual reward notes with distinct Switch editions', () => {
   const checks = [
-    ['22430000043d1b02',19,/Konsul-Anzug von N/,/N’s Consul Suit/],
-    ['22440000043e1b02',19,/Konsul-Anzug von M/,/M’s Consul Suit/],
+    ['22430000043d1b02',19,/Konsul Ns Rüstung.*Noah, Lanz und Eunie.*ohne Jacke/,/N’s Consul Suit.*jacketless.*Noah, Lanz and Eunie/],
+    ['22440000043e1b02',19,/Konsulin Ms Rüstung.*Mio, Sena und Taion.*ohne Jacke/,/M’s Consul Suit.*jacketless.*Mio, Sena and Taion/],
     ['3540000005032002',78,/S&S M232/,/S&S M232/],
     ['3541000005042002',78,/Requiem/,/Requiem/],
     ['3580000005062102',77,/drei Arten/,/three types/],
@@ -58,7 +58,8 @@ test('eight exact catalogue figures gain bilingual reward notes with distinct Sw
     assert.equal(row.webSupplement,true);
   }
   const edition=supplement.games.find(game=>game.groupId===19);
-  assert.match(edition.en,/general amiibo support for the Switch 2 Edition/);
+  assert.match(edition.de,/Switch 2 Edition.*3\. Dezember 2026.*allgemeine amiibo-Unterstützung/);
+  assert.match(edition.en,/3 December 2026.*Switch 2 Edition.*general amiibo support/);
   assert.match(edition.editionSource,/Nintendo-Switch-2-Edition/);
   for (const id of ['02de0001009c0502','02710001019b0502'])
     assert.ok(!figureUsage(id,data).some(row=>[77,79].includes(row.groupId)), 'Namesake Animal Crossing cards stay distinct');

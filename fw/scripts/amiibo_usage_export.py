@@ -54,7 +54,20 @@ OCARINA_PRODUCTS = {
 OCARINA_ADDITIONS = [{'operation': 'append-figure-row', 'id': identifier} for identifier in OCARINA_PRODUCTS]
 # A reviewed wording change must name the exact figure, game, language and
 # before/after texts in the same change. Removing a note is never authorized here.
-REVIEWED_NOTE_EDITS = frozenset()
+REVIEWED_NOTE_EDITS = frozenset({
+    ('22430000043d1b02', 19, 'de',
+     'Auf der Switch schaltet Noah ab Version 2.2.0 den Konsul-Anzug von N für Noah frei.',
+     'Auf der Switch erhält Noah ab Version 2.2.0 „Konsul Ns Rüstung“. Noah, Lanz und Eunie erhalten außerdem Outfits ohne Jacke.'),
+    ('22430000043d1b02', 19, 'en',
+     'On Switch, Noah unlocks N’s Consul Suit for Noah in game version 2.2.0 or later.',
+     'On Switch, scan Noah in version 2.2.0 or later to unlock N’s Consul Suit for Noah and jacketless outfits for Noah, Lanz and Eunie.'),
+    ('22440000043e1b02', 19, 'de',
+     'Auf der Switch schaltet Mio ab Version 2.2.0 den Konsul-Anzug von M für Mio frei.',
+     'Auf der Switch erhält Mio ab Version 2.2.0 „Konsulin Ms Rüstung“. Mio, Sena und Taion erhalten außerdem Outfits ohne Jacke.'),
+    ('22440000043e1b02', 19, 'en',
+     'On Switch, Mio unlocks M’s Consul Suit for Mio in game version 2.2.0 or later.',
+     'On Switch, scan Mio in version 2.2.0 or later to unlock M’s Consul Suit for Mio and jacketless outfits for Mio, Sena and Taion.'),
+})
 
 
 def source_lines(path):

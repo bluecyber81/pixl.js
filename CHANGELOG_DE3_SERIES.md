@@ -1,5 +1,9 @@
 # Allmiibo LCD application and file manager history
 
+## File manager 3.67.1 · 26 November 2026
+
+The catalogue now lists Noah’s and Mio’s costume rewards, including the jacketless variants. It also gives Nintendo’s 3 December 2026 release date and confirmed amiibo support for Xenoblade Chronicles 3 – Nintendo Switch 2 Edition. [GitHub](https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.1)
+
 ## File manager 3.67.0 · 26 November 2026
 
 On supported LCDs, the file manager groups checksums for small files during folder comparison. The figure catalogue loads on demand and includes eight new bilingual game notes. The upload dialog suggests shorter file names. The migration assistant can check available space directly for App680. [GitHub](https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.0)
