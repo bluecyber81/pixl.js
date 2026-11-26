@@ -183,7 +183,10 @@
         </div>
       </el-col>
     </el-row>
-    <DeviceSearch :connected="connected" :blocked="(busy && !searchBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible" :generation="sessionGeneration" :directory="current_dir" :locale="language" :catalogue="collectionCatalogue" :get-session="device_search_session" @busy="searchBusy = $event" @navigate="navigate_search_result" @download="download_search_result" />
+    <details class="device-search" @toggle="deviceSearchOpened ||= $event.target.open">
+      <summary>{{ language === 'de_DE' ? 'Auf dem Gerät suchen' : 'Search on the device' }}</summary>
+      <DeviceSearch v-if="deviceSearchOpened" :connected="connected" :blocked="(busy && !searchBusy) || upload_diag_visible || syncDialog || zipDialog || meta_diag_visible" :generation="sessionGeneration" :directory="current_dir" :locale="language" :catalogue="collectionCatalogue" :get-session="device_search_session" @busy="searchBusy = $event" @navigate="navigate_search_result" @download="download_search_result" />
+    </details>
     <div class="file-filters">
       <label class="search-label">{{ $t('tools.search') }}<input type="search" v-model="searchQuery" @input="on_filter_change" :placeholder="$t('tools.search')"></label>
       <label>{{ $t('tools.filter') }} <select v-model="typeFilter" @change="on_filter_change">
@@ -267,7 +270,11 @@
       </div>
       <aside :key="previewSelection?.path" ref="selectionContext" tabindex="-1" :aria-label="language === 'de_DE' ? 'Dateivorschau' : 'File preview'" class="selection-context" :class="{'has-selection': !!previewSelection}" @keydown.esc="dismiss_file_preview">
         <button v-if="previewSelection" type="button" class="mobile-preview-close" @click="dismiss_file_preview">{{ language === 'de_DE' ? 'Vorschau schließen' : 'Close preview' }} ×</button>
-        <SelectionPreview :selection="previewSelection" :locale="language" :catalogue="collectionCatalogue" :blocked="busy || !preview_selection_current()" @download="download_preview_selection" @properties="open_preview_properties" />
+        <SelectionPreview v-if="previewSelection" :selection="previewSelection" :locale="language" :catalogue="collectionCatalogue" :blocked="busy || !preview_selection_current()" @download="download_preview_selection" @properties="open_preview_properties" />
+        <section v-else class="selection-preview empty-selection" :aria-label="language === 'de_DE' ? 'Ausgewählte Figur' : 'Selected figure'">
+          <p class="preview-eyebrow">{{ language === 'de_DE' ? 'AUSWAHL' : 'SELECTION' }}</p>
+          <div class="preview-empty"><span aria-hidden="true">◇</span><h3>{{ language === 'de_DE' ? 'Deine Figur im Blick' : 'Your figure at a glance' }}</h3><p>{{ language === 'de_DE' ? 'Wähle eine Amiibo-Datei. Bild, Serie und Informationen erscheinen hier.' : 'Select an amiibo file. Its image, series and information appear here.' }}</p></div>
+        </section>
       </aside></div>
     </section>
     <details v-show="activeWorkspace === 'backup'" class="workspace-panel" ref="backupWorkspace" id="backup-workspace" @toggle="keep_migration_visible">
@@ -609,9 +616,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.66.3" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.3' : '3.66.3 source code' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.66.3 (ZIP)' : 'Windows 3.66.3 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.66.3 (ZIP)' : '3.66.3 source code (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.67.0" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.67.0' : '3.67.0 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.67.0 (ZIP)' : 'Windows 3.67.0 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.67.0 (ZIP)' : '3.67.0 source code (ZIP)' }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
@@ -660,7 +667,6 @@ import { version as webVersion } from "../package.json"
 import { formatBuildVersion } from './lib/build-version.js'
 import { projectDownloads } from "./lib/project-downloads.js"
 import { dfuReference } from "./lib/release-packages.js"
-import catalogueBaseline from "./data/catalogue.json"
 
 
 
@@ -694,7 +700,7 @@ export default {
       syncDialog: false, syncRoot: '', syncing: false, syncFileCount: 0, syncNames: null, syncNameSerial: 0,
       syncHistoryName: '', syncHistoryReady: null, syncResume: null,
       syncPlan: null, syncSelected: [], syncStatus: '', syncPage: 1, syncFilter: 'all', syncFolderName: '', syncFolderContents: false,
-      collectionReport:null, collectionStale:false, collectionObservation:null, collectionRevision:0, collectionBusy:false, collectionWriting:false, collectionCatalogue:catalogueBaseline, collectionSelected:null, searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
+      collectionReport:null, collectionStale:false, collectionObservation:null, collectionRevision:0, collectionBusy:false, collectionWriting:false, collectionCatalogue:undefined, deviceSearchOpened:false, collectionSelected:null, searchBusy: false, searchQuery: '', typeFilter: 'all', dialogPending: false, backingUp: false,
       page: 1, pageSize: 100, sortKey: 'name', sortOrder: 'ascending',
       cancellingBackup: false, lastBackup: null, transfer: null, browserIssue: '',
       verifyUploads: false, replaceUploads: false, fastUploadStatus: '',
@@ -977,9 +983,9 @@ export default {
       this.collectionSelected = assistant.chosen;
       return true;
     },
-    on_collection_catalogue(result) {
+    on_collection_catalogue(result, baseline) {
       this.collectionObservation=null;
-      this.collectionCatalogue={...catalogueBaseline,entries:result.entries,checkedDate:result.observedAt.slice(0,10),commit:result.source.commit,sourceUrl:result.source.url};
+      this.collectionCatalogue={...baseline,entries:result.entries,checkedDate:result.observedAt.slice(0,10),commit:result.source.commit,sourceUrl:result.source.url,sourceSha256:result.source.sha256};
     },
     on_collection_report(report) {
       this.collectionReport=this.connected ? report : null;
@@ -1498,7 +1504,10 @@ export default {
         return result;
       };
       return {...this.transfer_adapters(generation),
+        syncSession:generation,
+        maxRequestPayload:proto.get_transport_diagnostics?.()?.maxRequestPayload,
         readFileDigest:(path,size) => current(() => proto.vfs_backup_digest(path,size,this.firmwareVersion)),
+        readFileDigestsBatch:(files,{revision}) => current(() => proto.vfs_digest_small_batch(files,revision,this.firmwareVersion)),
         readCreateRevision:() => current(() => proto.vfs_small_create_revision(this.firmwareVersion)),
         canGroupCreate:() => ['2.22.0-DE4.2-b1', '2.22.0-DE4.2-b2'].includes(this.firmwareVersion) && current(() => proto.vfs_probe_group_create(this.firmwareVersion)),
         readRawMetadata:path => current(async () => this.checked(await proto.vfs_read_raw_meta(path))),

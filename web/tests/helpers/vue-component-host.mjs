@@ -12,7 +12,11 @@ export async function loadSfc(url, overrides={}) {
   const imports=[];
   source=source.replace(/import\s+(.+?)\s+from\s+['"]([^'"]+)['"];?/g,(_,binding,spec)=>{imports.push({binding,spec});return '';});
   const modules=[];
-  for(const {spec} of imports) modules.push(spec==='vue'?Vue:overrides[spec]??await import(pathToFileURL(path.resolve(path.dirname(filename),spec))));
+  for (const {spec} of imports) {
+    const url = pathToFileURL(path.resolve(path.dirname(filename), spec));
+    const options = spec.endsWith('.json') ? {with:{type:'json'}} : {};
+    modules.push(spec === 'vue' ? Vue : overrides[spec] ?? await import(url, options));
+  }
   const bindings=imports.map(({binding},index)=>binding.startsWith('{')
     ?`const ${binding.replace(/\s+as\s+/g,':')}=modules[${index}];`:`const ${binding}=modules[${index}].default;`).join('\n');
   return new Function('modules',bindings+'\n'+source.replace('export default','return'))(modules);

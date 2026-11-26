@@ -1,5 +1,9 @@
 # Allmiibo LCD application and file manager history
 
+## File manager 3.67.0 · 26 November 2026
+
+On supported LCDs, the file manager groups checksums for small files during folder comparison. The figure catalogue loads on demand and includes eight new bilingual game notes. The upload dialog suggests shorter file names. The migration assistant can check available space directly for App680. [GitHub](https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.0)
+
 ## LCD DE4.2 / App680 · Final · 25 November 2026
 
 The owner tested App680 on their LCD and confirmed it as final. This release contains the same signed application as DE4.2-b2. **Device & diagnostics** therefore reports **2.22.0-DE4.2-b2**, application counter **680**. Devices already running this build need no further update. The application targets the ST7567 LCD with PFS1, Z21 and S112 7.3.0. PFS1 narrows file lookups by parent directory and updates an existing manifest in one LittleFS commit. If storage runs out, the firmware checks which generation was saved before retrying. [Phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Verification kit](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_Pruefpaket.zip)

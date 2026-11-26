@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "checkedDate": "2026-11-24",
+  "checkedDate": "2026-11-26",
   "policy": "Reviewed exact catalogue IDs only. Web notes supplement the unchanged firmware CSV export. No new firmware group, downloaded figure file or in-game device test is implied.",
   "games": [
     {
@@ -467,6 +467,123 @@
           ],
           "en": "Scan the figure for random items.",
           "de": "Scanne die Figur, um zufällige Gegenstände zu erhalten."
+        }
+      ]
+    },
+    {
+      "id": "xenoblade-chronicles-3",
+      "title": "Xenoblade Chronicles 3",
+      "platform": "Switch",
+      "groupId": 19,
+      "groupLabel": "Xenoblade Chronicles 3",
+      "checkedDate": "2026-11-26",
+      "source": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/59259/p/897/c/120",
+      "translation": "editorial-from-primary-source",
+      "de": "Auf der Switch kannst du Noah und Mio ab Spielversion 2.2.0 im Menü unter System → amiibo scannen. Für die Switch 2 Edition führt Nintendo die amiibo-Unterstützung allgemein auf.",
+      "en": "On Switch, open System → amiibo in game version 2.2.0 or later to scan Noah or Mio. Nintendo lists general amiibo support for the Switch 2 Edition.",
+      "rows": [
+        {
+          "ids": [
+            "22430000043d1b02"
+          ],
+          "de": "Auf der Switch schaltet Noah ab Version 2.2.0 den Konsul-Anzug von N für Noah frei.",
+          "en": "On Switch, Noah unlocks N’s Consul Suit for Noah in game version 2.2.0 or later."
+        },
+        {
+          "ids": [
+            "22440000043e1b02"
+          ],
+          "de": "Auf der Switch schaltet Mio ab Version 2.2.0 den Konsul-Anzug von M für Mio frei.",
+          "en": "On Switch, Mio unlocks M’s Consul Suit for Mio in game version 2.2.0 or later."
+        }
+      ],
+      "editionSource": "https://www.nintendo.com/en-gb/Games/Nintendo-Switch-2-Edition/Xenoblade-Chronicles-3-Nintendo-Switch-2-Edition-3116255.html"
+    },
+    {
+      "id": "resident-evil-requiem",
+      "title": "Resident Evil Requiem",
+      "platform": "Switch 2",
+      "groupId": 78,
+      "groupLabel": "Resident Evil Requiem",
+      "checkedDate": "2026-11-26",
+      "source": "https://www.nintendo.com/us/store/products/amiibo-grace-ashcroft-resident-evil-requiem-series-128351/",
+      "additionalSources": [
+        "https://www.nintendo.com/us/store/products/amiibo-leon-kennedy-resident-evil-requiem-series-128352/"
+      ],
+      "translation": "editorial-from-primary-source",
+      "de": "Grace und Leon schalten auf der Switch 2 jeweils ein anderes Waffendesign frei.",
+      "en": "Grace and Leon each unlock a different weapon skin on Switch 2.",
+      "rows": [
+        {
+          "ids": [
+            "3540000005032002"
+          ],
+          "de": "Grace schaltet ein Waffendesign für ihre S&S M232 frei.",
+          "en": "Grace unlocks a weapon skin for her S&S M232."
+        },
+        {
+          "ids": [
+            "3541000005042002"
+          ],
+          "de": "Leon schaltet ein Waffendesign für seine Requiem frei.",
+          "en": "Leon unlocks a weapon skin for his Requiem.",
+          "source": "https://www.nintendo.com/us/store/products/amiibo-leon-kennedy-resident-evil-requiem-series-128352/"
+        }
+      ]
+    },
+    {
+      "id": "pragmata",
+      "title": "PRAGMATA",
+      "platform": "Switch 2",
+      "groupId": 77,
+      "groupLabel": "PRAGMATA",
+      "checkedDate": "2026-11-26",
+      "source": "https://www.nintendo.com/jp/hardware/amiibo/game/aa5pa/index.html",
+      "translation": "editorial-from-primary-source",
+      "de": "Diana versorgt dich während eines Einsatzes mit Nachschub.",
+      "en": "Diana supplies items during a sortie.",
+      "rows": [
+        {
+          "ids": [
+            "3580000005062102"
+          ],
+          "de": "Scanne Diana, um pro Einsatz bis zu drei Arten von Nachschub zu erhalten, darunter Waffen und Heilgegenstände.",
+          "en": "Scan Diana for up to three types of supplies per sortie, including weapons and healing items."
+        }
+      ]
+    },
+    {
+      "id": "monster-hunter-stories-3",
+      "title": "Monster Hunter Stories 3: Twisted Reflection",
+      "platform": "Switch 2",
+      "groupId": 79,
+      "groupLabel": "Monster Hunter Stories 3: Twisted Reflection",
+      "checkedDate": "2026-11-26",
+      "source": "https://www.nintendo.com/jp/hardware/amiibo/game/mh-stories3/index.html",
+      "translation": "editorial-from-primary-source",
+      "de": "Ratha und Ratha V schalten je eine Dekorrüstung für die Hauptfigur frei. Rudy hat ein eigenes Outfit.",
+      "en": "Ratha and Ratha V each unlock layered armor for the protagonist. Rudy’s figure unlocks an outfit for Rudy.",
+      "rows": [
+        {
+          "ids": [
+            "350c000004fa0f02"
+          ],
+          "de": "Ratha schaltet die zu dieser Figur gehörende Dekorrüstung für die Hauptfigur frei.",
+          "en": "Ratha unlocks this figure’s layered armor for the protagonist."
+        },
+        {
+          "ids": [
+            "350d000004fb0f02"
+          ],
+          "de": "Ratha V schaltet die zu dieser Figur gehörende Dekorrüstung für die Hauptfigur frei.",
+          "en": "Ratha V unlocks this figure’s layered armor for the protagonist."
+        },
+        {
+          "ids": [
+            "350e000004fc0f02"
+          ],
+          "de": "Rudy schaltet ein Outfit für Rudy frei.",
+          "en": "Rudy unlocks an outfit for Rudy."
         }
       ]
     }

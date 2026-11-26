@@ -38,11 +38,12 @@
 <script setup>
 import {computed, ref, shallowRef, watch} from 'vue';
 import usage from '../data/figure-usage.json';
+import bundledCatalogue from '../data/catalogue.json';
 import {applyDeviceFolder, deviceFolderSpec, deviceGames, previewDeviceFolder, suggestedGameFolder} from '../lib/game-folder.js';
 const props = defineProps({catalogue:Object, locale:String, connected:Boolean, supported:Boolean, blocked:Boolean,
   generation:Number, withSession:{type:Function, required:true}});
 const de = computed(() => props.locale?.startsWith('de'));
-const games = computed(() => deviceGames(usage,props.catalogue));
+const games = computed(() => deviceGames(usage,props.catalogue || bundledCatalogue));
 const gameId = ref(0), folder = ref(''), selected = ref([]), query = ref(''), plan = shallowRef(null);
 const pending = ref(false), message = ref(''), customFolder = ref(false);
 const game = computed(() => games.value.find(g => g.id === gameId.value));

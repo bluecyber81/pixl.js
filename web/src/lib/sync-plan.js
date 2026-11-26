@@ -2,6 +2,7 @@ import { assertPortableEntryName, assertDevicePath, assertWritableDevicePath, jo
 import { snapshotFile, sha256Bytes, deviceFileSha256, checkedDirectory, targetEntry, copyMetadata, metadataKey, directoryPathAccess, writableDirectoryPath as writableRoot, UPLOAD_LIMITS } from './safe-upload.js'
 import { decodeRawMetadata } from './raw-metadata.js'
 import { commonVersion, folderBinding, isHistoryConflict } from './sync-history.js'
+import { smallFileReadGroup } from './small-file-read-group.js'
 
 export const SYNC_LIMITS = Object.freeze({ maxEntries: 4096, maxDepth: 32, maxBytes: 16 * 1024 * 1024 })
 export class SyncError extends Error {
@@ -9,6 +10,18 @@ export class SyncError extends Error {
 }
 const fail = (code, message) => { throw new SyncError(code, message) }
 const pathKey = path => path.split('/').map(part => part.normalize('NFC').toLowerCase()).join('/')
+// Live previews only. A reloaded page or a different BLE session must obtain a fresh inventory.
+const previewRevisions = new WeakMap()
+const validRevision = value => typeof value === 'string' && /^[0-9a-f]{16}$/u.test(value) && value !== '0000000000000000'
+async function probeComparisonRevision(read) {
+  try { return await read() }
+  catch (error) {
+    // PXSC can explicitly decline an idle PackedFS revision. Ordinary comparison
+    // still works on that device. Transport and malformed-reply errors propagate.
+    if (error?.cmd === 0x22 && error.status === 1) return null
+    throw error
+  }
+}
 const frozen = value => { if (value && typeof value === 'object') { Object.values(value).forEach(frozen); Object.freeze(value) } return value }
 const observe = (fn, value) => { try { fn?.(value) } catch { /* observers do not control device I/O */ } }
 function checkpoint(assertSession, signal) {
@@ -65,7 +78,8 @@ function writableDirectory(entry) {
 }
 /** Entirely read-only. It compares bytes, not timestamps or filename guesses.
  * Device-only entries are informational and NEVER deletion candidates. */
-export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress, history, localFolder, includeDeviceOnly = true }) {
+export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory, readFile, readFileDigest, readFileDigestsBatch, readCreateRevision,
+  syncSession, maxRequestPayload, assertSession, signal, onProgress, history, localFolder, includeDeviceOnly = true }) {
   const root = rootPathOf(rootPath), identity = checkedDeviceKey(deviceKey)
   if (history && history.binding !== await folderBinding(identity, root, localFolder)) fail('SYNC_HISTORY_BINDING', 'This reference belongs to a different comparison.')
   const sources = sourcesOf(files, root), remote = new Map(), remoteKeys = new Map()
@@ -90,6 +104,10 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
       }
     }
   }
+  const canRemember = includeDeviceOnly && Number.isSafeInteger(syncSession)
+  const revision = sources.files.size > 1 && root.startsWith('E:/') && readCreateRevision && (canRemember || readFileDigestsBatch)
+    ? await probeComparisonRevision(readCreateRevision) : null
+  check()
   const rootAccess = await directoryPathAccess(root, readDirectory, check)
   if (rootAccess === 'unavailable') fail('SYNC_STALE', 'The device folder is no longer available under its original path.')
   await walk(root, 0)
@@ -100,6 +118,34 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
     return { ...directory, pathConflict, status: blocked ? 'blocked' : actual ? 'existing' : 'create' }
   })
   const blockedDirectories = directories.filter(directory => directory.status === 'blocked')
+  // Prepare only existing, unambiguous files which the comparison will hash.
+  const batched = new Map()
+  if (validRevision(revision) && readFileDigestsBatch) {
+    const candidates = []
+    for (const path of sources.files.keys()) {
+      const actual = remote.get(path)
+      if (actual?.type !== 0 || actual.size > 572 || remoteKeys.get(pathKey(path))?.length !== 1) continue
+      try { copyMetadata(actual.meta) } catch (error) { if (error.code === 'UPLOAD_METADATA') continue; throw error }
+      candidates.push({path, size:actual.size})
+    }
+    for (let index = 0; index < candidates.length;) {
+      check()
+      const group = smallFileReadGroup(candidates, index, item => item.path, maxRequestPayload)
+      index += Math.max(1, group.length)
+      if (group.length < 2) continue
+      progress('checking', group[0].path, index-group.length, candidates.length)
+      const result = await readFileDigestsBatch(group, {revision})
+      check()
+      if (result === null) break
+      if (!Array.isArray(result) || result.length !== group.length) fail('SYNC_CHANGED', 'Incomplete grouped digest response.')
+      for (const [i, expected] of group.entries()) {
+        const item = result[i]
+        if (item?.path !== expected.path || item.size !== expected.size || typeof item.sha256 !== 'string' ||
+            !/^[a-f0-9]{64}$/u.test(item.sha256)) fail('SYNC_CHANGED', 'Invalid grouped digest response.')
+        batched.set(expected.path, item.sha256)
+      }
+    }
+  }
   const entries = []
   for (const source of sources.files.values()) {
     check(); progress('checking', source.targetPath, 0, source.size)
@@ -115,7 +161,7 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
       else {
         try {
           const metadata = copyMetadata(actual.meta)
-          const sha256 = await deviceFileSha256(source.targetPath, actual.size, {readFile, readFileDigest, check, sizeError:'SYNC_CHANGED',
+          const sha256 = batched.get(source.targetPath) ?? await deviceFileSha256(source.targetPath, actual.size, {readFile, readFileDigest, check, sizeError:'SYNC_CHANGED',
             onProgress: value => progress('checking', source.targetPath, value.received_bytes ?? value.done ?? 0, actual.size)})
           entry.expected = { size: actual.size, sha256, metadata }
           entry.status = actual.size === source.size && sha256 === hash ? 'same' : metadata.flags.readonly ? 'blocked' : 'change'
@@ -165,6 +211,10 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
   entries.forEach(entry => ++summary[entry.status])
   const plan = { schema: 1, deviceKey: identity, rootPath: root, entries, directories, deviceOnly, summary }
   plan.fingerprint = await fingerprint(plan); check()
+  if (canRemember && validRevision(revision) && await probeComparisonRevision(readCreateRevision) === revision) {
+    previewRevisions.set(plan, {revision, session:syncSession})
+  }
+  check()
   return frozen(plan)
 }
 
@@ -215,16 +265,34 @@ export async function executeSyncJob(options) {
   job.state = 'running'
   let completed = 0, skipped = 0, uploadedBytes = 0
   try {
-    // This second read-only pass catches stale plans and validates completed
-    // entries too. No mkdir/upload happens before this entire pass succeeds.
-    // Every local target and ancestor is rechecked. Device-only subtrees were
-    // reported in the preview and cannot be read or changed by this upload.
-    const fresh = await createSyncPlan({ rootPath: plan.rootPath, deviceKey, files: localSelection, readDirectory, readFile, readFileDigest, assertSession, signal, onProgress, includeDeviceOnly:false })
+    // A matching live preview proves the initial device inventory. Reconnects,
+    // resumed transfers and intervening changes all require a fresh inventory.
+    const revision = () => options.readCreateRevision?.()
+    const preview = previewRevisions.get(plan)
+    const matchedPreview = preview && previousState === 'ready' && !job.completed.length && preview.session === options.syncSession &&
+      await probeComparisonRevision(revision) === preview.revision
+    check()
+    let fresh = plan
+    let validatedRevision = null
+    if (matchedPreview) {
+      // The revision proves the entire device snapshot. Local files can change independently.
+      for (const entry of plan.entries) {
+        const bytes = await snapshotFile(sources.files.get(entry.targetPath).file); check()
+        if (bytes.length !== entry.size || await sha256Bytes(bytes) !== entry.sha256) fail('SYNC_LOCAL_CHANGED', 'Local file contents changed; compare again.')
+        check()
+      }
+      validatedRevision = await options.readCreateRevision()
+      if (validatedRevision !== preview.revision) fail('SYNC_STALE', 'The device changed during upload preflight.')
+      check()
+    } else {
+      fresh = await createSyncPlan({ rootPath: plan.rootPath, deviceKey, files: localSelection, readDirectory, readFile, readFileDigest,
+        readFileDigestsBatch:options.readFileDigestsBatch, readCreateRevision:options.readCreateRevision, maxRequestPayload:options.maxRequestPayload,
+        assertSession, signal, onProgress, includeDeviceOnly:false })
+    }
     // A mounted PackedFS revision belongs to this connection. A raw CLOSE on
     // this engine acknowledges the complete write and 128-byte metadata.
-    const revision = () => options.readCreateRevision?.()
-    const startRevision = options.quickPacked && typeof writeNewPackedFile === 'function' ? await revision() : null
-    const quick = typeof startRevision === 'string' && /^[0-9a-f]{16}$/.test(startRevision) && startRevision !== '0000000000000000'
+    const startRevision = options.quickPacked && typeof writeNewPackedFile === 'function' ? validatedRevision ?? await probeComparisonRevision(revision) : null
+    const quick = validRevision(startRevision)
     const acknowledgedOnly = new Set()
     const currentByPath = new Map(fresh.entries.map(entry => [entry.targetPath, entry]))
     for (const entry of plan.entries) {

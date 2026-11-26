@@ -11,7 +11,7 @@ const script=compileScript(descriptor,{id:'migration-ui'}).content.replace(/^imp
 // Render every static option as a VNode: this lightweight host deliberately has no HTML parser.
 // Five options cross Vue's static-string optimization threshold; no UI assertions are removed.
 const template=vueImports(compileTemplate({source:descriptor.template.content,id:'migration-ui',filename:file.pathname,compilerOptions:{hoistStatic:false}}).code).replace('export function render','function render')
-const makeComponent=new Function('Vue','createMigrationBackup','loadMigrationArchive','verifyMigrationArchive','restoreMigrationArchive','checkMigrationCapacity','MIGRATION_CAPACITY_TARGET','saveBlob','retainMigrationSource','inspectMigrationTarget','formatMigrationTarget','initializeMigrationImport','finishMigrationImport','restartAfterMigration','getMigrationCapacityTarget',script+'\n'+template+'\ncomponent.render=render;return component;')
+const makeComponent=new Function('Vue','createMigrationBackup','loadMigrationArchive','verifyMigrationArchive','restoreMigrationArchive','checkMigrationCapacity','MIGRATION_CAPACITY_TARGET','saveBlob','retainMigrationSource','inspectMigrationTarget','formatMigrationTarget','initializeMigrationImport','finishMigrationImport','restartAfterMigration','getMigrationCapacityTarget','pendingMigrationProfile',script+'\n'+template+'\ncomponent.render=render;return component;')
 const node=(type,text='')=>({type,text,props:{},children:[],parent:null})
 const renderer=Vue.createRenderer({createElement:t=>node(t),createText:t=>node('#text',t),createComment:t=>node('#comment',t),
   setText:(n,t)=>n.text=t,setElementText:(n,t)=>{n.text=t;n.children=[]},patchProp:(n,k,o,v)=>n.props[k]=v,
@@ -23,33 +23,33 @@ function mount(overrides={}){
  const events=[],calls=[],saves=[],root=node('root'),archive=Object.freeze({version:2,fileCount:2,directoryCount:1,byteCount:540,archiveSha256:'a'.repeat(64)})
  const methods={backup:async()=>({blob:new Blob(['zip']),filename:'backup.zip'}),load:async()=>archive,verify:async()=>({verified:true,kind:'migration-source-verification',filesVerified:2,bytesVerified:540,migrationReady:false}),restore:async()=>{throw Error('Unexpected restore')},capacity:async()=>{throw Error('Not approved')},...overrides}
  const unexpected=async()=>{throw Error('Unexpected mutation')}
- const Component=makeComponent(Vue,async o=>{calls.push(['backup',o]);return methods.backup(o)},async(f,o)=>{calls.push(['load',f,o]);return methods.load(f,o)},async o=>{calls.push(['verify',o]);return methods.verify(o)},methods.restore,methods.capacity,{approved:overrides.approved===true},(...a)=>saves.push(a),methods.retain|| (async()=>({retained:true,persistent:true})),methods.inspect||unexpected,methods.format||unexpected,methods.initialize||unexpected,methods.finish||unexpected,methods.restart||unexpected,profile=>({...getMigrationCapacityTarget(profile),...(overrides.getCapacityTarget?.(profile) || {approved:overrides.approved===true})}))
+ const Component=makeComponent(Vue,async o=>{calls.push(['backup',o]);return methods.backup(o)},async(f,o)=>{calls.push(['load',f,o]);return methods.load(f,o)},async o=>{calls.push(['verify',o]);return methods.verify(o)},methods.restore,methods.capacity,{approved:overrides.approved===true},(...a)=>saves.push(a),methods.retain|| (async()=>({retained:true,persistent:true})),methods.inspect||unexpected,methods.format||unexpected,methods.initialize||unexpected,methods.finish||unexpected,methods.restart||unexpected,profile=>({...getMigrationCapacityTarget(profile),...(overrides.getCapacityTarget?.(profile) || {approved:overrides.approved===true})}),overrides.pendingProfile|| (async()=>null))
  const props=Vue.reactive({connected:true,blocked:false,generation:1,language:'de_DE',getSession:()=>{const generation=props.generation;return {deviceKey:'A',firmwareVersion:'2.22.0-DE3.30-PREP',assertSession:()=>{if(generation!==props.generation)throw Error('stale')},readStorageInfo:async()=>({schema:1})}},confirmRestore:async()=>{calls.push(['confirm'])},onBusy:x=>events.push(x)})
  let vm;const app=renderer.createApp({render:()=>Vue.h(Component,{...props,ref:value=>vm=value})});app.mount(root)
  return {root,props,events,calls,saves,app,archive,get vm(){return vm},button:label=>flat(root).find(n=>n.type==='button'&&text(n).includes(label)),input:()=>flat(root).find(n=>n.type==='input')}
 }
 async function load(h){await h.input().props.onChange({target:{files:[{name:'saved.zip'}],value:'saved.zip'}});await Vue.nextTick()}
 
-test('the normal App678 default retains separate test and historical choices and the connected DE3.65 identity',async()=>{
+test('the normal App680 default retains separate test and historical choices and the connected DE3.65 identity',async()=>{
  const h=mount({approved:true,capacity:async()=>({passed:true})})
  try {
   const options=flat(h.root).filter(n=>n.type==='option')
-  assert.equal(options[0].props.value,'de41')
-  assert.equal(text(options[0]),'DE4.1 / 678')
-  for(const [index,id,label] of [[1,'de3102','DE3.102 / 675'],[2,'de3101','DE3.101 / 674'],[3,'de3100','DE3.100 / 673'],[4,'de399','DE3.99 / 672'],[5,'de398','DE3.98 / 671'],[6,'de397','DE3.97 / 670 · Test 1'],[7,'de396','DE3.96 / 669 · Test 1'],[8,'de395','DE3.95 / 668'],[9,'de394','DE3.94 / 667'],[10,'de392','DE3.92 / 665'],[11,'de391','DE3.91 / 664']]) {
-    assert.equal(options[index].props.value,id);assert.equal(text(options[index]),label)
+  assert.equal(options[0].props.value,'de42')
+  assert.equal(text(options[0]),'DE4.2-b2 / 680')
+  for(const [index,id,label] of [[0,'de41','DE4.1 / 678'],[1,'de3102','DE3.102 / 675'],[2,'de3101','DE3.101 / 674'],[3,'de3100','DE3.100 / 673'],[4,'de399','DE3.99 / 672'],[5,'de398','DE3.98 / 671'],[6,'de397','DE3.97 / 670 · Test 1'],[7,'de396','DE3.96 / 669 · Test 1'],[8,'de395','DE3.95 / 668'],[9,'de394','DE3.94 / 667'],[10,'de393','DE3.93 / 666'],[11,'de392','DE3.92 / 665'],[12,'de391','DE3.91 / 664']]) {
+    assert.equal(options[index+1].props.value,id);assert.equal(text(options[index+1]),label)
   }
-  assert.equal(h.vm.selectedCapacityOption.reference,'DE4.1 / 678')
+  assert.equal(h.vm.selectedCapacityOption.reference,'DE4.2-b2 / 680')
   assert.match(text(h.root),/normale Firmware verwendet weiterhin PFS1/)
   assert.doesNotMatch(text(h.root),/Test 1 verwendet weiterhin/)
   assert.match(text(h.root),/keine erneute Speicherumstellung/)
   await load(h);await h.vm.checkCapacity()
   h.vm.target={identity:{firmwareVersion:'2.22.0-DE3.65',applicationCounter:637},state:{mounted:true,ready:true}}
   await Vue.nextTick()
-  assert.match(text(h.root),/Simuliertes Prüfprofil DE4\.1 \/ 678/)
+  assert.match(text(h.root),/Simuliertes Prüfprofil DE4\.2-b2 \/ 680/)
   assert.match(text(h.root),/2.22.0-DE3.65 · Anwendungszähler 637/)
   h.props.language='en';await Vue.nextTick()
-  assert.match(text(h.root),/Simulated profile DE4\.1 \/ 678/)
+  assert.match(text(h.root),/Simulated profile DE4\.2-b2 \/ 680/)
   assert.match(text(h.root),/normal firmware continues to use PFS1/)
   h.vm.changeCapacityProfile('de397');await Vue.nextTick()
   assert.equal(h.vm.selectedCapacityOption.reference,'DE3.97 / 670 · Test 1')
@@ -255,9 +255,24 @@ test('3.26 already-Packed notice requires a fresh explicit storage response, nev
  }finally{h.app.unmount()}
 })
 
+test('reopening a saved archive resumes its App678 profile before a fresh simulation',async()=>{
+ let observed, pending='de41'
+ const h=mount({approved:true,pendingProfile:async()=>pending,capacity:async(_archive,options)=>{observed=options.capacityProfile;return {passed:true}}})
+ try {
+  await load(h)
+  assert.equal(h.vm.capacityProfile,'de42')
+  await h.vm.checkCapacity()
+  assert.equal(h.vm.capacityProfile,'de41')
+  assert.equal(observed,'de41')
+  pending=null
+  await load(h);await h.vm.checkCapacity()
+  assert.equal(observed,'de42')
+ } finally { h.app.unmount() }
+})
+
 test('3.26 capacity profile is explicit and changes invalidate prior proof without modifying a bound import',async()=>{
  let observed;const h=mount({approved:true,capacity:async(a,o)=>{observed=o.capacityProfile;return{passed:true}}});try{
-  await load(h);assert.equal(h.vm.capacityProfile,'de41');await h.vm.checkCapacity();assert.equal(observed,'de41');
+  await load(h);assert.equal(h.vm.capacityProfile,'de42');await h.vm.checkCapacity();assert.equal(observed,'de42');
   h.vm.target={identity:{},state:{mounted:false}};h.vm.changeCapacityProfile('legacy');assert.equal(h.vm.capacityProfile,'legacy');assert.equal(h.vm.capacityProof,null);assert.equal(h.vm.target,null);
   await h.vm.checkCapacity();assert.equal(observed,'legacy');h.vm.target={identity:{},state:{pending:true,bound:true}};
   h.vm.changeCapacityProfile('current');assert.equal(h.vm.capacityProfile,'legacy');assert(h.vm.capacityProof);

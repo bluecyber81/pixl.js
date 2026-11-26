@@ -1,18 +1,20 @@
 # Allmiibo LCD and Pixl.js OLED
 
-## LCD DE4.2 / App680 and file manager 3.66.3
+## LCD DE4.2 / App680 and file manager 3.67.0
+
+On supported LCDs, the file manager groups checksums for small files during folder comparison. The figure catalogue loads on demand and includes eight new bilingual game notes. The upload dialog suggests shorter file names. The migration assistant can check available space directly for App680.
 
 **DE4.2 is the owner-confirmed final release** for the nRF52832 Allmiibo with an ST7567 LCD, existing Packed LittleFS (PFS1), Z21 bootloader and Nordic S112 7.3.0 (FWID 0x0126). **Device & diagnostics** shows **2.22.0-DE4.2-b2 / App680**. If you already see that version and counter, you have the final release. The signed application ZIP is byte-for-byte identical to the tested package.
 
 [LCD phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Update an LCD in the browser](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.2-lcd-app#board=LCD) · [Verification kit with BIN and HEX](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_Pruefpaket.zip) · [GitHub release](https://github.com/bluecyber81/pixl.js/releases/tag/de4.2)
 
-- **Collection checks and backup.** The file manager reads small files in groups on supported LCDs. On the same App680 LCD, checking the contents of 26 figures of 540 bytes each took 10.29 seconds with file manager 3.66.2, down from 20.85 seconds with 3.66.1. Both runs took about 44 seconds for 25 files of 2 KiB each. A complete backup ZIP has yet to be timed on hardware with 3.66.3.
+- **Collection checks and backup.** The file manager reads small files in groups on supported LCDs. On the same App680 LCD, checking the contents of 26 figures of 540 bytes each took 10.29 seconds with file manager 3.66.2, down from 20.85 seconds with 3.66.1. Both runs took about 44 seconds for 25 files of 2 KiB each. A complete backup ZIP has yet to be timed on hardware with 3.67.0.
 - **Folder uploads.** App680 can create several small files together in PFS1. The file manager uses this when adding new subfolders. After reconnecting, a folder upload can resume in the same browser tab.
 - **Switch 2, images and video.** “Forget pairing” removes the local wake profile after confirmation. The animation player supports looping. You can preview scrolling text on your phone and send it to the LCD.
 
 [Highlights since DE3.10](docs/PROJECT_OVERVIEW.md)
 
-[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.66.3/Allmiibo_Dateimanager_3_66_3_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.66.3.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
+[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.67.0/Allmiibo_Dateimanager_3_67_0_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.67.0.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
 
 ## OLED and older LCD devices
 

@@ -8,18 +8,30 @@ read = lambda p: json.loads(p.read_text(encoding='utf-8-sig'))
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output', type=Path, required=True)
 parser.add_argument('--gcc', default='gcc')
-parser.add_argument('--profile', choices=['de355','de389','de391','de392','de393','de395','de396','de397','de398','de399'], default='de355')
+parser.add_argument('--profile', choices=['de355','de389','de391','de392','de393','de395','de396','de397','de398','de399','de42'], default='de355')
 args = parser.parse_args()
 out = args.output.resolve()
 out.mkdir(parents=True, exist_ok=False)
-fixture = WEB/'tests/fixtures/capacity-collection-1208.json'
-rows = read(fixture)
-assert len(rows) == 1208 and sum(row['kind'] == 0 for row in rows) == 1131
+if args.profile == 'de42':
+    fixture = WEB/'tests/fixtures/capacity-app680-sizes.json'
+    spec = read(fixture)
+    dirs = spec['directories']
+    def entry(path, kind, size, ordinal):
+        raw = bytes((ordinal + offset) % 256 for offset in range(128))
+        return dict(path=path, kind=kind, size=size, rawMeta128Hex=raw.hex())
+    rows = [entry('/d'+str(i), 1, 0, i) for i in range(dirs)]
+    sizes = [size for size, count in spec['sizeCounts'] for _ in range(count)]
+    assert len(sizes) == spec['fileCount'] == 1081 and sum(sizes) == spec['payloadBytes'] == 658806
+    rows += [entry(f'/d{i%dirs}/{i}.bin', 0, size, dirs+i) for i,size in enumerate(sizes)]
+else:
+    fixture = WEB/'tests/fixtures/capacity-collection-1208.json'
+    rows = read(fixture)
+    assert len(rows) == 1208 and sum(row['kind'] == 0 for row in rows) == 1131
 rows.sort(key=lambda r: (-r['kind'],len(r['path'].split('/')),r['path']))
 assert all(not any(x in r['path'] for x in '\t\r\n') and len(r['path'].encode('utf8'))<64 for r in rows)
 (out/'synthetic-rows.tsv').write_text(''.join(f"{r['kind']} {r['size']}\t{r['path']}\t{r['rawMeta128Hex']}\n" for r in rows), encoding='utf8', newline='\n')
 compiler = subprocess.check_output([args.gcc,'--version'],text=True)
-profiles = {'old':{'de355':'packed-simulator-current','de389':'packed-simulator-de355','de391':'packed-simulator-de389','de392':'packed-simulator-de391','de393':'packed-simulator-de392','de395':'packed-simulator-de393','de396':'packed-simulator-de395','de397':'packed-simulator-de396','de398':'packed-simulator-de397','de399':'packed-simulator-de398'}[args.profile],
+profiles = {'old':{'de355':'packed-simulator-current','de389':'packed-simulator-de355','de391':'packed-simulator-de389','de392':'packed-simulator-de391','de393':'packed-simulator-de392','de395':'packed-simulator-de393','de396':'packed-simulator-de395','de397':'packed-simulator-de396','de398':'packed-simulator-de397','de399':'packed-simulator-de398','de42':'packed-simulator-de399'}[args.profile],
             'new':'packed-simulator-'+args.profile}
 sources = {'harness':sha(WEB/'tests/fixtures/pfs-compat-host.c'),'fixture':sha(fixture)}
 identities, builds = {}, []
@@ -30,7 +42,7 @@ for label, name in profiles.items():
     identities[label] = read(folder/'ENGINE_IDENTITY.json')
     for n,v in bound['sourceFiles'].items(): sources[name+'/'+n] = v
     command = [args.gcc,'-std=c11','-O2','-Wall','-Wextra','-Werror',
-        *('-D'+name for name in bound['defines']),'-I'+str(folder/'core'),'-I'+str(folder/'littlefs'),
+        '-DEXPECTED_ROWS='+str(len(rows)), *('-D'+name for name in bound['defines']),'-I'+str(folder/'core'),'-I'+str(folder/'littlefs'),
         str(WEB/'tests/fixtures/pfs-compat-host.c'),str(folder/'core/packed_fs.c'),
         str(folder/'littlefs/lfs.c'),str(folder/'littlefs/lfs_util.c'),'-o',str(out/(label+'.exe'))]
     result = subprocess.run(command,capture_output=True,text=True,timeout=120)
@@ -62,11 +74,16 @@ assert after_sources==sources
 report={'schema':1,'profile':args.profile,'passed':True,'deviceAccess':False,'syntheticDataOnly':True,
     'compiler':compiler,'format':'PFS1','layoutConstantsUnchanged':True,
     'engines':{k:v['engineSha256'] for k,v in identities.items()},'sourcesBefore':sources,'sourcesAfter':after_sources,
-    'builds':builds,'cases':cases,'filesInitially':1131,'directoriesInitially':77,
+    'builds':builds,'cases':cases,'filesInitially':sum(r['kind']==0 for r in rows),'directoriesInitially':sum(r['kind']==1 for r in rows),
     'verification':'Every active path, kind, size, content byte, raw128 byte, import identity and complete namespace at each phase, including remount.',
     'mutations':['replace existing content and raw128','rename existing file','remove existing file','add8193-byte file','add empty file','old-engine replacement after new-engine writes'],
     'limits':['Host synthetic flash only. Not a device readback, timing benchmark or proof against every power interruption.',
               'Read-only stages perform no flash programming/erase. Writable phases exercise normal APIs and GC, not injected flash failures.']}
+if args.profile == 'de42':
+    report['payloadBytesInitially'] = sum(row['size'] for row in rows)
+    # Public evidence uses symbolic paths; the commands themselves run on real local paths.
+    for item in builds + cases:
+        item['command'] = [arg.replace(str(out), '$OUTPUT').replace(str(WEB), '$WEB') for arg in item['command']]
 if args.profile == 'de355': report['version'] = '3.58.1'
 (out/'PFS_CROSS_VERSION.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf8')
 print(json.dumps({'passed':True,'cases':len(cases),'report':str(out/'PFS_CROSS_VERSION.json')}))

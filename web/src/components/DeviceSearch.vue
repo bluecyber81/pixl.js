@@ -1,6 +1,5 @@
 <template>
-  <details class="device-search">
-    <summary>{{ text.title }}</summary>
+  <div class="device-search-body">
     <form @submit.prevent="run" :aria-busy="running">
       <label>{{ text.query }}<input type="search" v-model="query" maxlength="200" :disabled="running" :placeholder="text.placeholder"></label>
       <label>{{ text.scope }}<select v-model="scope" :disabled="running"><option value="folder" :disabled="!directory">{{ text.folder }}</option><option value="device">{{ text.device }}</option></select></label>
@@ -37,15 +36,15 @@
           @click="selectResult('download', result)">{{ text.download }}</button>
       </li>
     </ol>
-  </details>
+  </div>
 </template>
 <script>
 import { createDeviceSearch } from '../lib/device-search.js';
 import { inspectTagStructure, publicFigureImage, TAG_LENGTHS } from '../lib/figure-info.js';
 import catalogueBaseline from '../data/catalogue.json';
 const copy = {
-  de: { title:'Auf dem Gerät suchen', query:'Datei, Figur, Serie oder Notiz', placeholder:'Zum Beispiel Zelda oder Animal Crossing', scope:'Suchbereich', folder:'Aktueller Ordner', device:'Gesamte Sammlung (E:)', search:'Suchen', cancel:'Abbrechen', hint:'Liest nur Ordner und Metadaten. Figurennamen und Serien stammen aus dem lokalen Katalog; ohne gespeicherte Figuren-ID sind nur Dateiname und Notiz durchsuchbar. Keine BIN-Dateien werden heruntergeladen.', searching:'Suche läuft.', done:'Suche abgeschlossen.', cancelled:'Suche abgebrochen. Bisherige Treffer bleiben sichtbar.', failed:'Suche konnte nicht abgeschlossen werden. Verbindung prüfen und erneut suchen.', folders:'Ordner', entries:'Einträge', matches:'Treffer', limited:'Teilergebnis: Suchgrenze erreicht oder ungültige Einträge übersprungen. Suche in einem kleineren Ordner oder mit genauerem Begriff wiederholen.', openFolder:'Ordner öffnen', showFile:'Im Ordner anzeigen' },
-  en: { title:'Search on the device', query:'File, figure, series or note', placeholder:'For example Zelda or Animal Crossing', scope:'Search scope', folder:'Current folder', device:'Entire collection (E:)', search:'Search', cancel:'Cancel', hint:'Reads folders and metadata only. Figure names and series come from the local catalogue; without a saved figure ID only filenames and notes are searchable. No BIN files are downloaded.', searching:'Searching.', done:'Search complete.', cancelled:'Search cancelled. Results found so far remain visible.', failed:'Search could not finish. Check the connection and search again.', folders:'folders', entries:'entries', matches:'matches', limited:'Partial result: a search limit was reached or invalid entries were skipped. Search a smaller folder or use a more precise query.', openFolder:'Open folder', showFile:'Show in folder' }
+  de: { query:'Datei, Figur, Serie oder Notiz', placeholder:'Zum Beispiel Zelda oder Animal Crossing', scope:'Suchbereich', folder:'Aktueller Ordner', device:'Gesamte Sammlung (E:)', search:'Suchen', cancel:'Abbrechen', hint:'Liest nur Ordner und Metadaten. Figurennamen und Serien stammen aus dem lokalen Katalog; ohne gespeicherte Figuren-ID sind nur Dateiname und Notiz durchsuchbar. Keine BIN-Dateien werden heruntergeladen.', searching:'Suche läuft.', done:'Suche abgeschlossen.', cancelled:'Suche abgebrochen. Bisherige Treffer bleiben sichtbar.', failed:'Suche konnte nicht abgeschlossen werden. Verbindung prüfen und erneut suchen.', folders:'Ordner', entries:'Einträge', matches:'Treffer', limited:'Teilergebnis: Suchgrenze erreicht oder ungültige Einträge übersprungen. Suche in einem kleineren Ordner oder mit genauerem Begriff wiederholen.', openFolder:'Ordner öffnen', showFile:'Im Ordner anzeigen' },
+  en: { query:'File, figure, series or note', placeholder:'For example Zelda or Animal Crossing', scope:'Search scope', folder:'Current folder', device:'Entire collection (E:)', search:'Search', cancel:'Cancel', hint:'Reads folders and metadata only. Figure names and series come from the local catalogue; without a saved figure ID only filenames and notes are searchable. No BIN files are downloaded.', searching:'Searching.', done:'Search complete.', cancelled:'Search cancelled. Results found so far remain visible.', failed:'Search could not finish. Check the connection and search again.', folders:'folders', entries:'entries', matches:'matches', limited:'Partial result: a search limit was reached or invalid entries were skipped. Search a smaller folder or use a more precise query.', openFolder:'Open folder', showFile:'Show in folder' }
 };
 Object.assign(copy.de, {
   download:'Vom Gerät herunterladen',
@@ -146,11 +145,11 @@ export default {
 };
 </script>
 <style scoped>
-.device-search{margin:1rem 0;padding:1rem;border:1px solid #c9d7e8;border-radius:12px;background:#f7faff}.device-search summary{cursor:pointer;font-weight:700}.device-search form{display:flex;align-items:end;gap:.7rem;flex-wrap:wrap;margin-top:1rem}.device-search label{display:flex;flex-direction:column;gap:.3rem}.device-search label:first-child{flex:1;min-width:200px}.device-search input,.device-search select,.device-search button{font:inherit;min-height:42px;border-radius:7px;border:1px solid #a7bad2;padding:.5rem .7rem;background:white;color:#203753}.device-search button{cursor:pointer}.device-search button:disabled{opacity:.55;cursor:default}.search-note,.search-warning{font-size:.87rem;line-height:1.5}.search-warning{color:#80501b}.search-results{padding:0;list-style:none;max-height:32rem;overflow:auto}.search-results li+li{margin-top:.5rem}.search-results button{width:100%;text-align:left;display:flex;flex-direction:column;gap:.25rem;overflow-wrap:anywhere}.search-results span,.search-results small{font-size:.85rem;color:#526987}@media(max-width:600px){.device-search form>*{width:100%}.device-search label:first-child{min-width:0}}
+.device-search-body form{display:flex;align-items:end;gap:.7rem;flex-wrap:wrap;margin-top:1rem}.device-search-body label{display:flex;flex-direction:column;gap:.3rem}.device-search-body label:first-child{flex:1;min-width:200px}.device-search-body input,.device-search-body select,.device-search-body button{font:inherit;min-height:42px;border-radius:7px;border:1px solid #a7bad2;padding:.5rem .7rem;background:white;color:#203753}.device-search-body button{cursor:pointer}.device-search-body button:disabled{opacity:.55;cursor:default}.search-note,.search-warning{font-size:.87rem;line-height:1.5}.search-warning{color:#80501b}.search-results{padding:0;list-style:none;max-height:32rem;overflow:auto}.search-results li+li{margin-top:.5rem}.search-results button{width:100%;text-align:left;display:flex;flex-direction:column;gap:.25rem;overflow-wrap:anywhere}.search-results span,.search-results small{font-size:.85rem;color:#526987}@media(max-width:600px){.device-search-body form>*{width:100%}.device-search-body label:first-child{min-width:0}}
 </style>
 <style scoped>
-.device-search .content-option{flex-basis:100%;flex-direction:row;align-items:center;font-size:.85rem;gap:.55rem}
-.device-search .content-option input{flex:none;width:18px;height:18px;min-height:18px;padding:0}
+.device-search-body .content-option{flex-basis:100%;flex-direction:row;align-items:center;font-size:.85rem;gap:.55rem}
+.device-search-body .content-option input{flex:none;width:18px;height:18px;min-height:18px;padding:0}
 .result-preview{border:1px solid #a7bad2;border-top:0;padding:.75rem;background:white;border-radius:0 0 8px 8px;overflow-wrap:anywhere}
 .result-preview img{display:block;margin:.25rem auto .6rem;max-height:9rem;max-width:100%;object-fit:contain}
 .result-preview p{margin:.4rem 0}.result-preview button{width:auto}

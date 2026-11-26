@@ -1,4 +1,5 @@
 """Keep the first published LCD app, review ZIP and web release identical in both READMEs."""
+import json
 import re
 from pathlib import Path
 
@@ -7,7 +8,7 @@ RELEASES = "https://github.com/bluecyber81/pixl.js/releases/"
 ROUTES = {
     "LCD app": r"download/[^/]+/Allmiibo_LCD_[^/]+_NUR_APP\.zip",
     "LCD review package": r"download/[^/]+/Allmiibo_LCD_[^/]+_Pruefpaket\.zip",
-    "web release": r"tag/web[0-9]+\.[0-9]+\.[0-9]+",
+    "web portable ZIP": r"download/web[0-9]+\.[0-9]+\.[0-9]+/Allmiibo_Dateimanager_[0-9_]+_Portable\.zip",
 }
 
 
@@ -26,6 +27,9 @@ def published_downloads(readme):
 def main():
     en = published_downloads(ROOT / "README.md")
     de = published_downloads(ROOT / "README.de.md")
+    expected = json.loads((ROOT / "RELEASE_INFO.json").read_bytes())["web_downloads"]["portable"]
+    if en["web portable ZIP"] != expected:
+        raise SystemExit("README.md does not link to the current portable download")
     for kind in ROUTES:
         if en[kind] != de[kind]:
             raise SystemExit(f"Published {kind} differs between README.md ({en[kind]}) and README.de.md ({de[kind]})")

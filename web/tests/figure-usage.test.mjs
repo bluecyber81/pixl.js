@@ -39,6 +39,31 @@ test('German translations keep the original; missing translations fall back only
   for (const row of figureUsage(groupingOnly.id, data)) assert.equal(row.text, null);
 });
 
+test('eight exact catalogue figures gain bilingual reward notes with distinct Switch editions', () => {
+  const checks = [
+    ['22430000043d1b02',19,/Konsul-Anzug von N/,/N’s Consul Suit/],
+    ['22440000043e1b02',19,/Konsul-Anzug von M/,/M’s Consul Suit/],
+    ['3540000005032002',78,/S&S M232/,/S&S M232/],
+    ['3541000005042002',78,/Requiem/,/Requiem/],
+    ['3580000005062102',77,/drei Arten/,/three types/],
+    ['350c000004fa0f02',79,/Dekorrüstung/,/layered armor/],
+    ['350d000004fb0f02',79,/Dekorrüstung/,/layered armor/],
+    ['350e000004fc0f02',79,/Outfit für Rudy/,/outfit for Rudy/],
+  ];
+  for (const [id,group,de,en] of checks) {
+    const row=figureUsage(id,data,'de_DE').find(row=>row.groupId===group);
+    assert.match(row.text,de);
+    assert.match(row.original,en);
+    assert.equal(row.platform,group===19?'Switch':'Switch 2');
+    assert.equal(row.webSupplement,true);
+  }
+  const edition=supplement.games.find(game=>game.groupId===19);
+  assert.match(edition.en,/general amiibo support for the Switch 2 Edition/);
+  assert.match(edition.editionSource,/Nintendo-Switch-2-Edition/);
+  for (const id of ['02de0001009c0502','02710001019b0502'])
+    assert.ok(!figureUsage(id,data).some(row=>[77,79].includes(row.groupId)), 'Namesake Animal Crossing cards stay distinct');
+});
+
 test('all exported rows keep a group path and pinned source line without external requests', () => {
   let associations = 0, notes = 0, translated = 0, official = 0;
   for (const figure of data.figures) {
@@ -53,7 +78,8 @@ test('all exported rows keep a group path and pinned source line without externa
         const game = supplement.games.find(game => game.groupId === row.groupId);
         assert.ok(game, 'Every added association is tied to a reviewed game source');
         assert.equal(row.platform, game.platform);
-        assert.equal(row.sourceUrl, game.source);
+        const reviewed = game.rows.find(note => note.ids.includes(figure.id));
+        assert.equal(row.sourceUrl, reviewed.source || game.source);
         assert.ok(new URL(row.sourceUrl).hostname.endsWith('.nintendo.com'));
         assert.ok(row.text && row.original);
         continue;
@@ -78,7 +104,7 @@ test('all exported rows keep a group path and pinned source line without externa
       assert.match(row.sourceUrl, /^https:\/\/github\.com\/bluecyber81\/pixl\.js\/blob\/[0-9a-f]{40}\/fw\/data\/amiidb_link\.csv#L[1-9][0-9]*$/);
     }
   }
-  assert.deepEqual({ associations, notes, translated, official }, { associations: 1416, notes: 166, translated: 162, official: 4 });
+  assert.deepEqual({ associations, notes, translated, official }, { associations: 1416, notes: 174, translated: 170, official: 4 });
 });
 
 test('reviewed Nintendo web notes use exact editions and platforms without firmware-only group inference', () => {

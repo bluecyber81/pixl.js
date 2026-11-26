@@ -16,7 +16,7 @@ assert.ok(directory && evidence && ['/', '/pixl.js/'].includes(base), 'Expected 
 const root = path.resolve(directory), output = path.resolve(evidence);
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const version = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
-assert.equal(version, '3.66.3');
+assert.equal(version, '3.67.0');
 assert.equal(lcdRelease.artifactStatus, 'stable-signed-application');
 assert.equal(lcdRelease.firmwareChannel, 'normal');
 assert.equal(entry.id, 'de4.2-lcd-app');
@@ -93,7 +93,7 @@ try {
       const migration = page.locator('.migration-panel');
       await migration.waitFor();
       if (!await migration.evaluate(element => element.open)) await migration.locator(':scope > summary').click();
-      check(`${width}: normal capacity default`, await migration.locator('select').inputValue() === 'de41');
+      check(`${width}: normal capacity default`, await migration.locator('select').inputValue() === 'de42');
       check(`${width}: normal capacity label`, await migration.locator('option').first().textContent() === 'DE4.1 / 678');
       check(`${width}: no migration needed for existing PFS1`, /normale Firmware verwendet weiterhin PFS1/.test(await migration.innerText()));
       packageRequests.length = 0;

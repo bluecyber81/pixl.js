@@ -68,3 +68,33 @@ test('mapped local names still respect remote read-only parents and case aliases
   }
   assert.ok(!vfs.log.some(row=>['write','mkdir','rename','remove'].includes(row.op)))
 })
+
+test('suggestions keep UTF-8 characters and extensions and reserve selected sibling names', () => {
+  const prefix = '😍'.repeat(10)
+  const inputs = [source(prefix+'.BIN'), source(prefix+'😍'.repeat(4)+'one.bin'), source(prefix+'😍'.repeat(4)+'two.bin')]
+  const nodes = uploadNameTree(inputs)
+  const review = edits => reviewUploadNames('E:/collection', nodes, edits, inputs)
+  const initial = review({})
+  const [,one,two] = initial.rows
+  assert.equal(initial.problems,2)
+  for (const row of [one,two]) {
+    assert.match(row.suggestion,/^(?:😍)+-\d+\.bin$/u)
+    assert.ok(new TextEncoder().encode(row.suggestion).length <= 47)
+  }
+  assert.notEqual(one.suggestion,two.suggestion)
+  const applied=review({1:{name:one.suggestion},2:{name:two.suggestion}})
+  assert.equal(applied.problems,0)
+  assert.deepEqual(applied.files.map(item=>item.relativePath),[inputs[0].relativePath,one.suggestion,two.suggestion])
+})
+
+test('a parent suggestion can repair a path too long to preserve the leaf extension', () => {
+  const inputs = [source('LongDirectory/Figure.bin')]
+  const nodes = uploadNameTree(inputs)
+  const root = 'E:/' + 'x'.repeat(44)
+  const initial = reviewUploadNames(root,nodes,{},inputs)
+  assert.equal(initial.rows[1].error.code,'PATH_LIMIT')
+  assert.ok(initial.rows[0].suggestion)
+  assert.equal(reviewUploadNames(root,nodes,{0:{name:initial.rows[0].suggestion}},inputs).problems,0)
+  assert.equal(initial.rows[1].suggestion,undefined)
+  assert.equal(inputs[0].relativePath,'LongDirectory/Figure.bin')
+})

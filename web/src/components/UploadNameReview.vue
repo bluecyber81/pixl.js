@@ -14,6 +14,9 @@
         </label>
         <label><input type="checkbox" :disabled="busy || row.inheritedSkip" :checked="row.skipped || row.inheritedSkip" @change="change(row,{skipped:$event.target.checked})"> {{ de ? 'Überspringen' : 'Skip' }}</label>
         <small>{{ row.target }}</small>
+        <button v-if="row.suggestion" type="button" class="name-suggestion" :disabled="busy" @click="change(row,{name:row.suggestion})">
+          {{ de ? 'Vorschlag übernehmen' : 'Use suggested name' }} · {{ row.suggestion }}
+        </button>
         <small v-if="row.error" class="issue">{{ reason(row.error) }}</small>
       </div>
       <p v-if="!visibleRows.length">{{ de ? 'Keine Prüfhinweise.' : 'No issues.' }}</p>
@@ -72,4 +75,5 @@ function reason(error){
 </script>
 <style scoped>
 .sync-name-review{margin:12px 0;border:1px solid #cfdddd;border-radius:8px;padding:10px}.toggle,.pages button{border:1px solid #c1d4d6;background:#f0f7f6;color:#164e55;border-radius:6px;padding:7px 10px;cursor:pointer}.sync-name-review p,.sync-name-review small{font-size:.86rem}.sync-name-row{margin-top:8px;padding:8px 0;border-top:1px solid #dce6e6;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:end;overflow-wrap:anywhere}.sync-name-row label:first-child span{display:block}.sync-name-row label:first-child span+span{color:#526c72;font-size:.78rem}.sync-name-row input[type=text]{width:100%;font:inherit;padding:6px;box-sizing:border-box;border:1px solid #9cb3b5;border-radius:4px}.sync-name-row small{grid-column:1/-1;color:#526c72}.sync-name-row .issue{color:#8b3c10}.pages{display:flex;align-items:center;gap:12px;margin-top:8px}@media(max-width:500px){.sync-name-row{grid-template-columns:minmax(0,1fr)}}
+.name-suggestion{grid-column:1/-1;justify-self:start;max-width:100%;overflow-wrap:anywhere;padding:.45rem .65rem;border:1px solid #9bbfb6;border-radius:6px;background:#f0f7f6;color:#164e55;cursor:pointer}
 </style>

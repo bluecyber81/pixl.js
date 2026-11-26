@@ -3,6 +3,7 @@
     <h4>{{ gameTitle(game, de) }} · {{ game.platform }}</h4>
     <p>{{ de ? game.de : game.en }}</p>
     <a :href="game.source" target="_blank" rel="noopener noreferrer">{{ de ? 'Spielhinweis von Nintendo' : 'Nintendo game guide' }}</a>
+    <a v-if="game.editionSource" :href="game.editionSource" target="_blank" rel="noopener noreferrer">{{ de ? 'Nintendo zur Switch 2 Edition' : 'Nintendo Switch 2 Edition details' }}</a>
     <a v-if="game.communityLink" :href="game.communityLink" target="_blank" rel="noopener noreferrer">{{ de ? 'Air Riders Stat Tracker (Community)' : 'Air Riders Stat Tracker (community)' }}</a>
   </section>
 </template>

@@ -18,8 +18,9 @@ function fixture(host, change = () => {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'pixl-dependency-'));
   const write = (name, value) => { const target = path.join(root, name); fs.mkdirSync(path.dirname(target), { recursive: true }); fs.writeFileSync(target, typeof value === 'string' ? value : JSON.stringify(value)); };
   const license = 'Synthetic MIT notice\n', hash = crypto.createHash('sha256').update(license).digest('hex');
-  const lock = { packages: { '': {} } }, notices = { packages: [] };
+  const lock = { packages: { '': {dependencies: {portable: '1.2.3'}, optionalDependencies: {}} } }, notices = { packages: [] };
   for (const [name, constraints] of Object.entries(variants)) {
+    if (constraints.optional) lock.packages[''].optionalDependencies[name] = '1.2.3';
     const metadata = { name, version: '1.2.3', license: 'MIT' };
     lock.packages['node_modules/' + name] = { ...metadata, ...constraints };
     notices.packages.push({ name, version: metadata.version, declared_license: metadata.license,
@@ -61,6 +62,23 @@ test('missing ordinary or platform-neutral optional dependencies still fail', ()
     lock.packages['node_modules/portable'].optional = optional;
     fs.unlinkSync(path.join(root, 'node_modules/portable/package.json'));
   }), /missing/);
+});
+
+test('a neutral optional child is required only when a parent is active on this platform', () => {
+  function links({ lock, root }, active) {
+    const entries = lock.packages;
+    delete entries[''].dependencies.portable;
+    entries['node_modules/portable'].optional = true;
+    entries['node_modules/native-windows'].dependencies = { portable: '1.2.3' };
+    if (active) entries['node_modules/native-linux'].dependencies = { portable: '1.2.3' };
+    fs.unlinkSync(path.join(root, 'node_modules/portable/package.json'));
+  }
+  fixture(linux, model => links(model, false));
+  assert.throws(() => fixture(linux, model => links(model, true)), /missing for active host platform/);
+});
+
+test('every locked package also needs a notice entry', () => {
+  assert.throws(() => fixture(linux, ({ notices }) => notices.packages.pop()), /missing from notice inventory/);
 });
 
 test('foreign optional notices still require matching lock version and license metadata', () => {

@@ -264,6 +264,16 @@ const de41 = {
   applicationCounter: 678,
   approvedApplications: [{firmwareVersion: '2.22.0-DE4.1', applicationCounter: 678}],
 }
+// The stable App680 package retains its compiled DE4.2-b2 version string.
+const de42 = {
+  ...de41,
+  url: '/lfs-capacity-de42.wasm',
+  wasmSha256: 'f1ddb610ec982b946cbaea03c1282b29fceb124eda1b2c0db7e7d4e901e984b6',
+  firmwareVersion: '2.22.0-DE4.2-b2',
+  applicationCounter: 680,
+  approvedApplications: [{firmwareVersion: '2.22.0-DE4.2-b2', applicationCounter: 680}],
+  layout: {...de41.layout, engineSha256: '15db90c7d572bfc3043664a90ed077125a9645bca46055ae2fe0dafe0cb055c0'},
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -288,9 +298,11 @@ export const DE398_MIGRATION_CAPACITY_TARGET=freezeTarget(de398)
 export const DE399_MIGRATION_CAPACITY_TARGET=freezeTarget(de399)
 export const DE3100_MIGRATION_CAPACITY_TARGET=freezeTarget(de3100)
 export const DE3101_MIGRATION_CAPACITY_TARGET=freezeTarget(de3101)
+export const DE42_MIGRATION_CAPACITY_TARGET=freezeTarget(de42)
 export const DE41_MIGRATION_CAPACITY_TARGET=freezeTarget(de41)
 export const DE3102_MIGRATION_CAPACITY_TARGET=freezeTarget(de3102)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de42')return DE42_MIGRATION_CAPACITY_TARGET
   if(profile==='de41')return DE41_MIGRATION_CAPACITY_TARGET
   if(profile==='de3102')return DE3102_MIGRATION_CAPACITY_TARGET
   if(profile==='de3101')return DE3101_MIGRATION_CAPACITY_TARGET

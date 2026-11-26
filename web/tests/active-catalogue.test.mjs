@@ -26,12 +26,12 @@ test('App shares the same catalogue update with search, selection and properties
   const components = Object.fromEntries(tags.map(name => [name, {
     name, props: ['catalogue'], render() { received[name] = this.catalogue; return Vue.h('div'); },
   }]));
-  const baseline = { entries: [], commit: 'a'.repeat(40) };
+  const baseline = { entries: [], commit: 'a'.repeat(40), sourceSha256:'c'.repeat(64) };
   const state = {
     collectionCatalogue: baseline, collectionObservation: { previous: true }, connected: true,
     busy: false, searchBusy: false, upload_diag_visible: false, syncDialog: false, zipDialog: false,
     meta_diag_visible: true, sessionGeneration: 1, current_dir: 'E:/', language: 'de_DE',
-    previewSelection: null, preview_selection_current: () => false,
+    deviceSearchOpened:true, previewSelection: {path:'E:/fixture.bin'}, preview_selection_current: () => false,
     meta_form: { row: { type: 'REG' }, path: 'E:/synthetic.bin', amiibo: { head: 0xf1234567, tail: 2 } },
     figureInspection: null, device_search_session() { throw Error('No device access expected'); },
     navigate_search_result() {}, download_search_result() {}, download_preview_selection() {}, open_preview_properties() {},
@@ -40,17 +40,18 @@ test('App shares the same catalogue update with search, selection and properties
   await renderBindings();
   for (const name of tags) assert.equal(received[name], baseline, `${name} receives baseline`);
 
-  const handler = source.match(/on_collection_catalogue\(result\) \{([^]*?)\n    \},/);
+  const handler = source.match(/on_collection_catalogue\(result, baseline\) \{([^]*?)\n    \},/);
   assert.ok(handler, 'actual App catalogue handler is present');
-  const update = new Function('catalogueBaseline', `return function(result){${handler[1]}}`)(baseline);
+  const update = new Function('result', 'baseline', handler[1]);
   const fresh = { entries: [{ id: 'f123456700000002', name: 'Future Fixture' }], observedAt: '2026-11-03T12:00:00Z',
-    source: { commit: 'b'.repeat(40), url: 'https://github.com/8bitDream/AmiiboAPI' } };
-  update.call(state, fresh);
+    source: { commit: 'b'.repeat(40), sha256:'d'.repeat(64), url: 'https://github.com/8bitDream/AmiiboAPI' } };
+  update.call(state, fresh, baseline);
   assert.equal(state.collectionObservation, null);
   await renderBindings();
   for (const name of tags) {
     assert.equal(received[name], state.collectionCatalogue, `${name} receives the active snapshot`);
     assert.equal(received[name].entries, fresh.entries);
     assert.equal(received[name].commit, fresh.source.commit);
+    assert.equal(received[name].sourceSha256, fresh.source.sha256);
   }
 });

@@ -258,7 +258,7 @@ export default {
       }
       finally{if(current()){this.running='';this._controller=null;this.progress=null;if(device)this.$emit('busy',false);if(kind==='upload')this.$emit('writing',false);this.applyPendingFigureSelection();}}
     },
-    async checkUpdates(){await this.operation('catalogue',async(signal,current)=>{const result=await checkCatalogueUpdates({baseline,signal});if(current()){this.reviewPage=1;this.updates=result;this.entries=result.entries;this.report=null;this.$emit('catalogue',result);if(this.chosen)this.chosen=this.entryFor(this.chosen.id)||this.chosen;}});},
+    async checkUpdates(){await this.operation('catalogue',async(signal,current)=>{const result=await checkCatalogueUpdates({baseline,signal});if(current()){this.reviewPage=1;this.updates=result;this.entries=result.entries;this.report=null;this.$emit('catalogue',result,baseline);if(this.chosen)this.chosen=this.entryFor(this.chosen.id)||this.chosen;}});},
     async scanContents(){if(!this.connected||this.blocked||this.running||this.scope==='folder'&&!this.directory)return;this.mode='full';await this.scan();},
     async scan(){
       if(!this.connected || this.blocked || this.running || this.scope === 'folder' && !this.directory)return;
