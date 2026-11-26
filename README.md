@@ -1,6 +1,8 @@
 # Allmiibo LCD and Pixl.js OLED
 
-## LCD DE4.2 / App680 and file manager 3.67.0
+## LCD DE4.2 / App680 and file manager 3.67.1
+
+The catalogue now lists Noah’s and Mio’s costume rewards, including the jacketless variants. It also gives Nintendo’s 3 December 2026 release date and confirmed amiibo support for Xenoblade Chronicles 3 – Nintendo Switch 2 Edition.
 
 On supported LCDs, the file manager groups checksums for small files during folder comparison. The figure catalogue loads on demand and includes eight new bilingual game notes. The upload dialog suggests shorter file names. The migration assistant can check available space directly for App680.
 
@@ -8,13 +10,13 @@ On supported LCDs, the file manager groups checksums for small files during fold
 
 [LCD phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Update an LCD in the browser](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.2-lcd-app#board=LCD) · [Verification kit with BIN and HEX](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_Pruefpaket.zip) · [GitHub release](https://github.com/bluecyber81/pixl.js/releases/tag/de4.2)
 
-- **Collection checks and backup.** The file manager reads small files in groups on supported LCDs. On the same App680 LCD, checking the contents of 26 figures of 540 bytes each took 10.29 seconds with file manager 3.66.2, down from 20.85 seconds with 3.66.1. Both runs took about 44 seconds for 25 files of 2 KiB each. A complete backup ZIP has yet to be timed on hardware with 3.67.0.
+- **Collection checks and backup.** The file manager reads small files in groups on supported LCDs. On the same App680 LCD, checking the contents of 26 figures of 540 bytes each took 10.29 seconds with file manager 3.66.2, down from 20.85 seconds with 3.66.1. Both runs took about 44 seconds for 25 files of 2 KiB each. A complete backup ZIP has yet to be timed on hardware with 3.67.1.
 - **Folder uploads.** App680 can create several small files together in PFS1. The file manager uses this when adding new subfolders. After reconnecting, a folder upload can resume in the same browser tab.
 - **Switch 2, images and video.** “Forget pairing” removes the local wake profile after confirmation. The animation player supports looping. You can preview scrolling text on your phone and send it to the LCD.
 
 [Highlights since DE3.10](docs/PROJECT_OVERVIEW.md)
 
-[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.67.0/Allmiibo_Dateimanager_3_67_0_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.67.0.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
+[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.67.1/Allmiibo_Dateimanager_3_67_1_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.67.1.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
 
 ## OLED and older LCD devices
 

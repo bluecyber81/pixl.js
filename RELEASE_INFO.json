@@ -1395,25 +1395,25 @@
       "evidence": "docs/validation/WEB3_65_0_FINAL_DELIVERY.json"
     }
   },
-  "web_version": "3.67.0",
+  "web_version": "3.67.1",
   "web_release_status": "normal",
-  "web_release_notes": "web/LIESMICH_3_67_0.txt",
-  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web3.67.0",
-  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.67.0.zip",
-  "web_portable_url": "https://github.com/bluecyber81/pixl.js/releases/download/web3.67.0/Allmiibo_Dateimanager_3_67_0_Portable.zip",
+  "web_release_notes": "web/LIESMICH_3_67_1.txt",
+  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web3.67.1",
+  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.67.1.zip",
+  "web_portable_url": "https://github.com/bluecyber81/pixl.js/releases/download/web3.67.1/Allmiibo_Dateimanager_3_67_1_Portable.zip",
   "web_downloads": {
-    "portable": "https://github.com/bluecyber81/pixl.js/releases/download/web3.67.0/Allmiibo_Dateimanager_3_67_0_Portable.zip",
-    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.67.0.zip",
-    "portableBytes": 14412789,
-    "portableSha256": "ec2f96e267ac5df1ab81d386c55ff26349e71b72a084a6cefd450e59eb0f4acb"
+    "portable": "https://github.com/bluecyber81/pixl.js/releases/download/web3.67.1/Allmiibo_Dateimanager_3_67_1_Portable.zip",
+    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.67.1.zip",
+    "portableBytes": 14413236,
+    "portableSha256": "00a1499a04a970a2db1dc917dc016eec262f7e7f7c31c6666e91abdce65da4ef"
   },
   "web_upload_evidence": "docs/validation/WEB3_67_0.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.0",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.1",
   "web_publication_date": "2026-11-26",
   "web_qualification_date": "2026-11-26",
-  "web_evidence": "docs/validation/WEB3_67_0.json",
-  "web_test_total": 2410,
-  "web_test_passed": 2410,
+  "web_evidence": "docs/validation/WEB3_67_1.json",
+  "web_test_total": 2412,
+  "web_test_passed": 2412,
   "web_test_failed": 0,
   "web_test_skipped": 0,
   "release_label": "DE4.2",
@@ -1434,6 +1434,13 @@
       "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.66.3",
       "portableBytes": 14157590,
       "portableSha256": "8f976f9b370cbc0c42afd78a06595a579de42a2b6da2f8e9ac06890c78566c3b"
+    },
+    {
+      "version": "3.67.0",
+      "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.0",
+      "evidence": "docs/validation/WEB3_67_0.json",
+      "portableBytes": 14412789,
+      "portableSha256": "ec2f96e267ac5df1ab81d386c55ff26349e71b72a084a6cefd450e59eb0f4acb"
     }
   ]
 }

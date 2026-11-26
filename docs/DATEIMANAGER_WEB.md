@@ -1,5 +1,9 @@
 # Allmiibo-Dateimanager im Browser
 
+## Dateimanager 3.67.1 · 26. November 2026
+
+Bei Noah und Mio nennt der Figurenkatalog jetzt die deutschen Spielnamen der Kostüme und die Varianten ohne Jacke. Für Xenoblade Chronicles 3 – Nintendo Switch 2 Edition führt er Nintendos Termin am 3. Dezember 2026 und die bestätigte amiibo-Unterstützung auf. [GitHub](https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.1)
+
 ## Dateimanager 3.67.0 · 26. November 2026
 
 Der Dateimanager bündelt beim Ordnervergleich die Prüfsummen kleiner Dateien auf unterstützten LCDs. Der Figurenkatalog lädt bei Bedarf und ergänzt acht deutsch-englische Spielhinweise. Für lange Dateinamen gibt es Kurzvorschläge. Der Umstiegsassistent kann den Platzbedarf direkt für App680 prüfen. [GitHub](https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.0)

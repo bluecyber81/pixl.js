@@ -616,9 +616,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.67.0" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.67.0' : '3.67.0 source code' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.67.0 (ZIP)' : 'Windows 3.67.0 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.67.0 (ZIP)' : '3.67.0 source code (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.67.1" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.67.1' : '3.67.1 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.67.1 (ZIP)' : 'Windows 3.67.1 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.67.1 (ZIP)' : '3.67.1 source code (ZIP)' }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
@@ -3057,8 +3057,9 @@ export default {
 
     this._unsubscribeLanguage = window.AllmiiboLanguage.subscribe(this.apply_language);
     try {
-      if (new URL(window.location.href).searchParams.get('workspace') === 'stream') {
-        this.$nextTick(() => this.show_workspace('stream'));
+      const workspace = new URL(window.location.href).searchParams.get('workspace');
+      if (workspace === 'stream' || workspace === 'catalogue') {
+        this.$nextTick(() => this.show_workspace(workspace));
       }
     } catch { /* A missing or non-URL location leaves the regular file workspace selected. */ }
   },

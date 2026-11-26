@@ -1,13 +1,13 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { lcdTest676 } from './lcd-app676-reference.mjs';
 import { lcdTest677 } from './lcd-app677-reference.mjs';
-import { lcdFinal680, lcdFinal680Package } from './lcd-app680-reference.mjs?v=3.67.0';
+import { lcdFinal680, lcdFinal680Package } from './lcd-app680-reference.mjs?v=3.67.1';
 import { lcdTest679, lcdTest679Package } from './lcd-app679-reference.mjs';
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.67.0';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.67.1';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
-import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.67.0';
-import { lcdRelease } from './lcd-release-reference.mjs?v=3.67.0';
+import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.67.1';
+import { lcdRelease } from './lcd-release-reference.mjs?v=3.67.1';
 
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');

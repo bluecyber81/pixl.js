@@ -11,7 +11,7 @@ host-test contribution; say clearly which checks were performed on a real device
 | --- | --- |
 | LCD application | [DE4.2 / App680 release sources](fw/application/src/) and [unsigned release builder](tools/build_lcd.py). The [DE3.75 tag](https://github.com/bluecyber81/pixl.js/tree/de3.75/fw/application/src) preserves the archived App648 sources. |
 | Storage and capacity simulation | `fw/application/src/mod/vfs/`, `fw/components/littlefs/`; browser adapters and pinned simulators under `web/src/lib/` and `web/third-party/` |
-| Browser file manager | [Web sources and build instructions](web/README.md). [Web 3.67.0](https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.0) provides portable and source packages. |
+| Browser file manager | [Web sources and build instructions](web/README.md). [Web 3.67.1](https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.1) provides portable and source packages. |
 | Firmware host regressions | `fw/tests/de2/` and `fw/tests/de3/`; C harnesses and Python runners |
 | Application build and memory layout | `fw/application/Makefile`, `fw/ld/application.ld`, `tools/build_lcd.py` |
 | Current Z21 bootloader | [Build and test instructions](bootloader-z21/README.md) and [Z21 and App654 production evidence](docs/validation/DE3_81.json). |

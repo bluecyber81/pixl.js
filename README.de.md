@@ -1,6 +1,8 @@
 # Allmiibo LCD und Pixl.js OLED
 
-## LCD DE4.2 / App680 und Dateimanager 3.67.0
+## LCD DE4.2 / App680 und Dateimanager 3.67.1
+
+Bei Noah und Mio nennt der Figurenkatalog jetzt die deutschen Spielnamen der Kostüme und die Varianten ohne Jacke. Für Xenoblade Chronicles 3 – Nintendo Switch 2 Edition führt er Nintendos Termin am 3. Dezember 2026 und die bestätigte amiibo-Unterstützung auf.
 
 Der Dateimanager bündelt beim Ordnervergleich die Prüfsummen kleiner Dateien auf unterstützten LCDs. Der Figurenkatalog lädt bei Bedarf und ergänzt acht deutsch-englische Spielhinweise. Für lange Dateinamen gibt es Kurzvorschläge. Der Umstiegsassistent kann den Platzbedarf direkt für App680 prüfen.
 
@@ -8,13 +10,13 @@ Der Dateimanager bündelt beim Ordnervergleich die Prüfsummen kleiner Dateien a
 
 [Handy-ZIP für LCD](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [LCD im Browser aktualisieren](https://bluecyber81.github.io/pixl.js/dfu/web.html?package=de4.2-lcd-app#board=LCD) · [Prüfpaket mit BIN und HEX](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_Pruefpaket.zip) · [GitHub-Release](https://github.com/bluecyber81/pixl.js/releases/tag/de4.2)
 
-- **Figurenbestand und Sicherung.** Der Dateimanager liest kleine Dateien auf unterstützten LCDs in Gruppen. Bei der Inhaltsprüfung von 26 Figuren à 540 Byte auf demselben App680-LCD sank die Zeit von 20,85 Sekunden mit Dateimanager 3.66.1 auf 10,29 Sekunden mit 3.66.2. Bei 25 Dateien à 2 KiB lagen beide Durchläufe bei rund 44 Sekunden. Für die Dauer einer vollständigen Sicherungs-ZIP mit 3.67.0 liegt keine Gerätemessung vor.
+- **Figurenbestand und Sicherung.** Der Dateimanager liest kleine Dateien auf unterstützten LCDs in Gruppen. Bei der Inhaltsprüfung von 26 Figuren à 540 Byte auf demselben App680-LCD sank die Zeit von 20,85 Sekunden mit Dateimanager 3.66.1 auf 10,29 Sekunden mit 3.66.2. Bei 25 Dateien à 2 KiB lagen beide Durchläufe bei rund 44 Sekunden. Für die Dauer einer vollständigen Sicherungs-ZIP mit 3.67.1 liegt keine Gerätemessung vor.
 - **Ordner übertragen.** App680 kann kleine Dateien gemeinsam im PFS1-Dateisystem anlegen. Der Dateimanager nutzt dies für neue Unterordner. Nach einem Verbindungsabbruch lässt sich der Ordnerauftrag im selben Browser-Tab fortsetzen.
 - **Switch 2, Bild und Video.** „Kopplung vergessen“ entfernt nach Rückfrage das lokale Weckprofil. Im Animationsplayer kannst du eine Endlosschleife aktivieren. Lauftext lässt sich am Handy vorbereiten und an das LCD senden.
 
 [Verbesserungen seit DE3.10](docs/PROJEKTUEBERBLICK.md)
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.67.0/Allmiibo_Dateimanager_3_67_0_Portable.zip) · [Webquellen](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.67.0.zip) · [Handbuch](https://bluecyber81.github.io/pixl.js/guide/index.html) · [English](README.md)
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.67.1/Allmiibo_Dateimanager_3_67_1_Portable.zip) · [Webquellen](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.67.1.zip) · [Handbuch](https://bluecyber81.github.io/pixl.js/guide/index.html) · [English](README.md)
 
 ## OLED und ältere LCD-Geräte
 

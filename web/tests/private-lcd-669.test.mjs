@@ -189,8 +189,8 @@ test('the mobile current download uses normal App680 while retained App669 keeps
   assert.ok(lcdPreviewPackages.includes(lcdPreviewPackage));
   assert.ok(html.includes('https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip'));
   assert.match(html, /DE4\.2 \/ App680/);
-  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.67.0'"));
+  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.67.1'"));
   assert.equal(catalog.packages[0].version, '2.22.0-DE4.2-b2');
-  assert.ok(page.includes("'./lcd-release-reference.mjs?v=3.67.0'"));
+  assert.ok(page.includes("'./lcd-release-reference.mjs?v=3.67.1'"));
 });
 

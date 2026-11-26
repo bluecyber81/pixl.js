@@ -44,11 +44,11 @@ const renderer=Vue.createRenderer({
 });
 function nodes(node,type){ return [node,...node.children.flatMap(child=>nodes(child))].filter(item=>!type||item.type===type); }
 function text(node){ return node.text+node.children.map(text).join(''); }
-async function mount(name,props={}){
+async function mount(name,props={},locale='de_DE'){
   const Comp=await component(fileURLToPath(new URL(`../src/components/${name}.vue`,import.meta.url)));
   const state=Vue.reactive(props), root=hostNode('root');
   const app=renderer.createApp({render:()=>Vue.h(Comp,state)});
-  app.use(VueI18n.createI18n({legacy:false,locale:'de_DE',messages:{de_DE:{}}}));
+  app.use(VueI18n.createI18n({legacy:false,locale,messages:{[locale]:{}}}));
   app.mount(root);await Vue.nextTick();return{root,state,app};
 }
 async function click(root,label){ const button=nodes(root,'button').find(node=>text(node)===label);assert.ok(button,label);button.props.onClick();await Vue.nextTick(); }
@@ -149,6 +149,29 @@ test('a remote ID mismatch does not offer an unverified external download', asyn
     assert.equal(nodes(root, 'a').length, 0);
     assert.equal(nodes(root, 'input').length, 0);
   } finally { app.unmount(); }
+});
+
+test('Noah and Mio details include the Switch 2 edition date and source alongside one Switch reward', async () => {
+  for (const [locale, date, rewards] of [
+    ['de_DE', '3. Dezember 2026', ['Konsul Ns Rüstung', 'Konsulin Ms Rüstung']],
+    ['en_US', '3 December 2026', ['N’s Consul Suit', 'M’s Consul Suit']],
+  ]) {
+    const ids = ['22430000043d1b02', '22440000043e1b02'];
+    const { root, state, app } = await mount('FigureDetails', { id: ids[0] }, locale);
+    try {
+      for (const [index, id] of ids.entries()) {
+        state.id = id;
+        await Vue.nextTick();
+        assert.ok(text(root).includes(date));
+        assert.equal(nodes(root, 'a').filter(link => link.props.href?.includes('/Nintendo-Switch-2-Edition/')).length, 1);
+        assert.equal(text(root).split(rewards[index]).length - 1, 1);
+      }
+      state.id = '3540000005032002';
+      await Vue.nextTick();
+      assert.ok(!text(root).includes(date));
+      assert.ok(!nodes(root, 'a').some(link => link.props.href?.includes('/Nintendo-Switch-2-Edition/')));
+    } finally { app.unmount(); }
+  }
 });
 
 test('figure images need opt-in for each identity; QR is local and resets on identity switch',async()=>{

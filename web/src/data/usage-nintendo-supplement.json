@@ -477,24 +477,27 @@
       "groupId": 19,
       "groupLabel": "Xenoblade Chronicles 3",
       "checkedDate": "2026-11-26",
-      "source": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/59259/p/897/c/120",
+      "source": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/59259/~/how-to-update-xenoblade-chronicles-3",
+      "additionalSources": [
+        "https://www.nintendo.com/de-de/Support/Nintendo-Switch/Spiele-Updates/Das-Aktualisieren-von-Xenoblade-Chronicles-3--2247552.html"
+      ],
       "translation": "editorial-from-primary-source",
-      "de": "Auf der Switch kannst du Noah und Mio ab Spielversion 2.2.0 im Menü unter System → amiibo scannen. Für die Switch 2 Edition führt Nintendo die amiibo-Unterstützung allgemein auf.",
-      "en": "On Switch, open System → amiibo in game version 2.2.0 or later to scan Noah or Mio. Nintendo lists general amiibo support for the Switch 2 Edition.",
+      "de": "Auf der Switch kannst du Noah und Mio ab Spielversion 2.2.0 unter System → amiibo scannen. Nintendo nennt für die Switch 2 Edition den 3. Dezember 2026 als Erscheinungstermin und bestätigt allgemeine amiibo-Unterstützung.",
+      "en": "On Switch, scan Noah or Mio under System → amiibo in version 2.2.0 or later. Nintendo lists 3 December 2026 as the release date for the Switch 2 Edition and confirms general amiibo support.",
       "rows": [
         {
           "ids": [
             "22430000043d1b02"
           ],
-          "de": "Auf der Switch schaltet Noah ab Version 2.2.0 den Konsul-Anzug von N für Noah frei.",
-          "en": "On Switch, Noah unlocks N’s Consul Suit for Noah in game version 2.2.0 or later."
+          "de": "Auf der Switch erhält Noah ab Version 2.2.0 „Konsul Ns Rüstung“. Noah, Lanz und Eunie erhalten außerdem Outfits ohne Jacke.",
+          "en": "On Switch, scan Noah in version 2.2.0 or later to unlock N’s Consul Suit for Noah and jacketless outfits for Noah, Lanz and Eunie."
         },
         {
           "ids": [
             "22440000043e1b02"
           ],
-          "de": "Auf der Switch schaltet Mio ab Version 2.2.0 den Konsul-Anzug von M für Mio frei.",
-          "en": "On Switch, Mio unlocks M’s Consul Suit for Mio in game version 2.2.0 or later."
+          "de": "Auf der Switch erhält Mio ab Version 2.2.0 „Konsulin Ms Rüstung“. Mio, Sena und Taion erhalten außerdem Outfits ohne Jacke.",
+          "en": "On Switch, scan Mio in version 2.2.0 or later to unlock M’s Consul Suit for Mio and jacketless outfits for Mio, Sena and Taion."
         }
       ],
       "editionSource": "https://www.nintendo.com/en-gb/Games/Nintendo-Switch-2-Edition/Xenoblade-Chronicles-3-Nintendo-Switch-2-Edition-3116255.html"

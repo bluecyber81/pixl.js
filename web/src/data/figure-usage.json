@@ -206,7 +206,7 @@
     "hashPolicy": "sha256 identifies the local export input; referenceSha256 identifies the exact bytes at referenceUrl. Per-file transformations explain any difference.",
     "webSupplement": {
       "path": "web/src/data/usage-nintendo-supplement.json",
-      "sha256": "d1144c6958a00e9ab3a4b001c17d088d51cfa598a1ffbf55e00834f93c2db43f",
+      "sha256": "c30cc8c4e8fd016cb77ed5e55241581aaaa21f113474beffe139ef78d449f6e3",
       "checkedDate": "2026-11-26",
       "policy": "Reviewed exact catalogue IDs only. Web notes supplement the unchanged firmware CSV export. No new firmware group, downloaded figure file or in-game device test is implied."
     },
@@ -1358,14 +1358,14 @@
     },
     {
       "id": 67,
-      "en": "On Switch, Noah unlocks N’s Consul Suit for Noah in game version 2.2.0 or later.",
-      "de": "Auf der Switch schaltet Noah ab Version 2.2.0 den Konsul-Anzug von N für Noah frei.",
+      "en": "On Switch, scan Noah in version 2.2.0 or later to unlock N’s Consul Suit for Noah and jacketless outfits for Noah, Lanz and Eunie.",
+      "de": "Auf der Switch erhält Noah ab Version 2.2.0 „Konsul Ns Rüstung“. Noah, Lanz und Eunie erhalten außerdem Outfits ohne Jacke.",
       "translation": "editorial-from-primary-source"
     },
     {
       "id": 68,
-      "en": "On Switch, Mio unlocks M’s Consul Suit for Mio in game version 2.2.0 or later.",
-      "de": "Auf der Switch schaltet Mio ab Version 2.2.0 den Konsul-Anzug von M für Mio frei.",
+      "en": "On Switch, scan Mio in version 2.2.0 or later to unlock M’s Consul Suit for Mio and jacketless outfits for Mio, Sena and Taion.",
+      "de": "Auf der Switch erhält Mio ab Version 2.2.0 „Konsulin Ms Rüstung“. Mio, Sena und Taion erhalten außerdem Outfits ohne Jacke.",
       "translation": "editorial-from-primary-source"
     },
     {
@@ -11943,7 +11943,7 @@
           "noteId": 67,
           "sourceLine": 224,
           "firmwareNoteId": null,
-          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/59259/p/897/c/120",
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/59259/~/how-to-update-xenoblade-chronicles-3",
           "webSupplement": true,
           "platform": "Switch"
         }
@@ -11957,7 +11957,7 @@
           "noteId": 68,
           "sourceLine": 222,
           "firmwareNoteId": null,
-          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/59259/p/897/c/120",
+          "sourceUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/59259/~/how-to-update-xenoblade-chronicles-3",
           "webSupplement": true,
           "platform": "Switch"
         }

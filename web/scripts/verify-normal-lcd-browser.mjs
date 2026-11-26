@@ -16,7 +16,7 @@ assert.ok(directory && evidence && ['/', '/pixl.js/'].includes(base), 'Expected 
 const root = path.resolve(directory), output = path.resolve(evidence);
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const version = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
-assert.equal(version, '3.67.0');
+assert.equal(version, '3.67.1');
 assert.equal(lcdRelease.artifactStatus, 'stable-signed-application');
 assert.equal(lcdRelease.firmwareChannel, 'normal');
 assert.equal(entry.id, 'de4.2-lcd-app');
