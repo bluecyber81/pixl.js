@@ -1,9 +1,9 @@
 {
-  "scope": "Installed packages from the pinned npm lockfile, including runtime and build/test dependencies; original license/notice files are copied. Three installed packages have no standalone notice in their distributed package: their exact declared license and available author/repository metadata are recorded without inventing a license text.",
+  "scope": "Runtime, build and optional platform packages pinned in package-lock.json. Root license and notice files are copied from integrity-verified npm archives. Packages without a standalone notice retain their declared license and provenance.",
   "packages": [
     {
       "name": "@babel/helper-string-parser",
-      "version": "7.29.11",
+      "version": "7.29.15",
       "declared_license": "MIT",
       "author": "The Babel Team (https://babel.dev/team)",
       "repository": {
@@ -13,7 +13,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/babel__helper-string-parser-7.29.11/LICENSE",
+          "file": "licenses/babel__helper-string-parser-7.29.15/LICENSE",
           "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
         }
       ],
@@ -39,7 +39,7 @@
     },
     {
       "name": "@babel/parser",
-      "version": "7.29.12",
+      "version": "7.29.15",
       "declared_license": "MIT",
       "author": "The Babel Team (https://babel.dev/team)",
       "repository": {
@@ -49,7 +49,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/babel__parser-7.29.12/LICENSE",
+          "file": "licenses/babel__parser-7.29.15/LICENSE",
           "sha256": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652"
         }
       ],
@@ -57,7 +57,7 @@
     },
     {
       "name": "@babel/types",
-      "version": "7.29.11",
+      "version": "7.29.15",
       "declared_license": "MIT",
       "author": "The Babel Team (https://babel.dev/team)",
       "repository": {
@@ -67,7 +67,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/babel__types-7.29.11/LICENSE",
+          "file": "licenses/babel__types-7.29.15/LICENSE",
           "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
         }
       ],
@@ -91,7 +91,6 @@
       "name": "@element-plus/icons-vue",
       "version": "2.3.2",
       "declared_license": "MIT",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "git+https://github.com/element-plus/element-plus-icons.git",
@@ -101,6 +100,57 @@
         {
           "file": "licenses/element-plus__icons-vue-2.3.2/LICENSE",
           "sha256": "5db4ebb3abd8353774ae148723ccc14087d6dab99473f77a7b799b55defd8dfe"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "@emnapi/core",
+      "version": "2.0.0-beta.2",
+      "declared_license": "MIT",
+      "author": "toyobayashi",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/toyobayashi/emnapi.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/emnapi__core-2.0.0-beta.2/LICENSE",
+          "sha256": "2088f55c6731498410b20c95ebd345ed4a4a800bf74c0fba4d282fd2a021daaa"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "@emnapi/runtime",
+      "version": "2.0.0-beta.2",
+      "declared_license": "MIT",
+      "author": "toyobayashi",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/toyobayashi/emnapi.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/emnapi__runtime-2.0.0-beta.2/LICENSE",
+          "sha256": "2088f55c6731498410b20c95ebd345ed4a4a800bf74c0fba4d282fd2a021daaa"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "@emnapi/wasi-threads",
+      "version": "2.2.0",
+      "declared_license": "MIT",
+      "author": "toyobayashi",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/toyobayashi/emnapi.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/emnapi__wasi-threads-2.2.0/LICENSE",
+          "sha256": "2088f55c6731498410b20c95ebd345ed4a4a800bf74c0fba4d282fd2a021daaa"
         }
       ],
       "standalone_notice_found": true
@@ -161,7 +211,7 @@
     },
     {
       "name": "@intlify/core-base",
-      "version": "11.4.19",
+      "version": "11.4.24",
       "declared_license": "MIT",
       "author": {
         "name": "kazuya kawaguchi",
@@ -174,7 +224,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/intlify__core-base-11.4.19/LICENSE",
+          "file": "licenses/intlify__core-base-11.4.24/LICENSE",
           "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
         }
       ],
@@ -182,7 +232,7 @@
     },
     {
       "name": "@intlify/devtools-types",
-      "version": "11.4.19",
+      "version": "11.4.24",
       "declared_license": "MIT",
       "author": {
         "name": "kazuya kawaguchi",
@@ -195,7 +245,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/intlify__devtools-types-11.4.19/LICENSE",
+          "file": "licenses/intlify__devtools-types-11.4.24/LICENSE",
           "sha256": "8f431e584baf8dc943c4188a9e3c27cf4b6a5b540b2d0801468023db86345e7d"
         }
       ],
@@ -203,7 +253,7 @@
     },
     {
       "name": "@intlify/message-compiler",
-      "version": "11.4.19",
+      "version": "11.4.24",
       "declared_license": "MIT",
       "author": {
         "name": "kazuya kawaguchi",
@@ -216,7 +266,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/intlify__message-compiler-11.4.19/LICENSE",
+          "file": "licenses/intlify__message-compiler-11.4.24/LICENSE",
           "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
         }
       ],
@@ -224,7 +274,7 @@
     },
     {
       "name": "@intlify/shared",
-      "version": "11.4.19",
+      "version": "11.4.24",
       "declared_license": "MIT",
       "author": {
         "name": "kazuya kawaguchi",
@@ -237,7 +287,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/intlify__shared-11.4.19/LICENSE",
+          "file": "licenses/intlify__shared-11.4.24/LICENSE",
           "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
         }
       ],
@@ -262,8 +312,24 @@
       "standalone_notice_found": true
     },
     {
+      "name": "@napi-rs/wasm-runtime",
+      "version": "1.2.6",
+      "declared_license": "MIT",
+      "author": {
+        "name": "LongYinan",
+        "url": "https://github.com/Brooooooklyn"
+      },
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/napi-rs/napi-rs.git",
+        "directory": "wasm-runtime"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
       "name": "@oxc-project/types",
-      "version": "0.156.0",
+      "version": "0.159.0",
       "declared_license": "MIT",
       "author": "Boshen and oxc contributors",
       "repository": {
@@ -273,15 +339,195 @@
       },
       "notice_files": [
         {
-          "file": "licenses/oxc-project__types-0.156.0/LICENSE",
+          "file": "licenses/oxc-project__types-0.159.0/LICENSE",
           "sha256": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3"
         }
       ],
       "standalone_notice_found": true
     },
     {
+      "name": "@rolldown/binding-android-arm-eabi",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-android-arm64",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-darwin-arm64",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-darwin-x64",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-freebsd-x64",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-linux-arm-gnueabihf",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-linux-arm64-gnu",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-linux-arm64-musl",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-linux-ppc64-gnu",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-linux-s390x-gnu",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-linux-x64-gnu",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-linux-x64-musl",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-openharmony-arm64",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-wasm32-wasi",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
+      "name": "@rolldown/binding-win32-arm64-msvc",
+      "version": "1.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rolldown/rolldown.git",
+        "directory": "packages/rolldown"
+      },
+      "notice_files": [],
+      "standalone_notice_found": false
+    },
+    {
       "name": "@rolldown/binding-win32-x64-msvc",
-      "version": "1.2.18",
+      "version": "1.3.3",
       "declared_license": "MIT",
       "repository": {
         "type": "git",
@@ -295,7 +541,6 @@
       "name": "@rolldown/pluginutils",
       "version": "1.0.1",
       "declared_license": "MIT",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "git+https://github.com/rolldown/plugins.git",
@@ -324,10 +569,26 @@
       "standalone_notice_found": true
     },
     {
+      "name": "@tybys/wasm-util",
+      "version": "0.10.5",
+      "declared_license": "MIT",
+      "author": "toyobayashi",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/toyobayashi/wasm-util.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/tybys__wasm-util-0.10.5/LICENSE",
+          "sha256": "09e436100bf926e78df875ec80cf3d0c643dfec779b52cfe2aa96afa0de714cb"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
       "name": "@types/lodash",
       "version": "4.17.27",
       "declared_license": "MIT",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
@@ -345,7 +606,6 @@
       "name": "@types/lodash-es",
       "version": "4.17.12",
       "declared_license": "MIT",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
@@ -363,7 +623,6 @@
       "name": "@types/web-bluetooth",
       "version": "0.0.21",
       "declared_license": "MIT",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
@@ -379,7 +638,7 @@
     },
     {
       "name": "@vitejs/plugin-vue",
-      "version": "6.0.10",
+      "version": "6.0.11",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -389,7 +648,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vitejs__plugin-vue-6.0.10/LICENSE",
+          "file": "licenses/vitejs__plugin-vue-6.0.11/LICENSE",
           "sha256": "29b68325fe026047d13e187b44c33b2acacf7dc647dec4583702e59f235e13b5"
         }
       ],
@@ -397,7 +656,7 @@
     },
     {
       "name": "@vue/compiler-core",
-      "version": "3.5.44",
+      "version": "3.5.46",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -407,7 +666,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue__compiler-core-3.5.44/LICENSE",
+          "file": "licenses/vue__compiler-core-3.5.46/LICENSE",
           "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
         }
       ],
@@ -415,7 +674,7 @@
     },
     {
       "name": "@vue/compiler-dom",
-      "version": "3.5.44",
+      "version": "3.5.46",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -425,7 +684,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue__compiler-dom-3.5.44/LICENSE",
+          "file": "licenses/vue__compiler-dom-3.5.46/LICENSE",
           "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
         }
       ],
@@ -433,7 +692,7 @@
     },
     {
       "name": "@vue/compiler-sfc",
-      "version": "3.5.44",
+      "version": "3.5.46",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -443,7 +702,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue__compiler-sfc-3.5.44/LICENSE",
+          "file": "licenses/vue__compiler-sfc-3.5.46/LICENSE",
           "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
         }
       ],
@@ -451,7 +710,7 @@
     },
     {
       "name": "@vue/compiler-ssr",
-      "version": "3.5.44",
+      "version": "3.5.46",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -461,7 +720,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue__compiler-ssr-3.5.44/LICENSE",
+          "file": "licenses/vue__compiler-ssr-3.5.46/LICENSE",
           "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
         }
       ],
@@ -484,7 +743,7 @@
     },
     {
       "name": "@vue/reactivity",
-      "version": "3.5.44",
+      "version": "3.5.46",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -494,7 +753,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue__reactivity-3.5.44/LICENSE",
+          "file": "licenses/vue__reactivity-3.5.46/LICENSE",
           "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
         }
       ],
@@ -502,7 +761,7 @@
     },
     {
       "name": "@vue/runtime-core",
-      "version": "3.5.44",
+      "version": "3.5.46",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -512,7 +771,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue__runtime-core-3.5.44/LICENSE",
+          "file": "licenses/vue__runtime-core-3.5.46/LICENSE",
           "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
         }
       ],
@@ -520,7 +779,7 @@
     },
     {
       "name": "@vue/runtime-dom",
-      "version": "3.5.44",
+      "version": "3.5.46",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -530,7 +789,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue__runtime-dom-3.5.44/LICENSE",
+          "file": "licenses/vue__runtime-dom-3.5.46/LICENSE",
           "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
         }
       ],
@@ -538,7 +797,7 @@
     },
     {
       "name": "@vue/server-renderer",
-      "version": "3.5.44",
+      "version": "3.5.46",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -548,7 +807,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue__server-renderer-3.5.44/LICENSE",
+          "file": "licenses/vue__server-renderer-3.5.46/LICENSE",
           "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
         }
       ],
@@ -556,7 +815,7 @@
     },
     {
       "name": "@vue/shared",
-      "version": "3.5.44",
+      "version": "3.5.46",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -566,7 +825,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue__shared-3.5.44/LICENSE",
+          "file": "licenses/vue__shared-3.5.46/LICENSE",
           "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
         }
       ],
@@ -630,7 +889,6 @@
       "name": "async-validator",
       "version": "4.2.5",
       "declared_license": "MIT",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "git@github.com:yiminghe/async-validator.git"
@@ -662,13 +920,13 @@
     },
     {
       "name": "csstype",
-      "version": "3.2.3",
+      "version": "3.2.4",
       "declared_license": "MIT",
       "author": "Fredrik Nicol <fredrik.nicol@gmail.com>",
       "repository": "https://github.com/frenic/csstype",
       "notice_files": [
         {
-          "file": "licenses/csstype-3.2.3/LICENSE",
+          "file": "licenses/csstype-3.2.4/LICENSE",
           "sha256": "11d55bd4541c75ee7879547ac49089c489163dae49551389713c3d026cab383e"
         }
       ],
@@ -710,16 +968,15 @@
     },
     {
       "name": "element-plus",
-      "version": "2.14.7",
+      "version": "2.14.8",
       "declared_license": "MIT",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "git+https://github.com/element-plus/element-plus.git"
       },
       "notice_files": [
         {
-          "file": "licenses/element-plus-2.14.7/LICENSE",
+          "file": "licenses/element-plus-2.14.8/LICENSE",
           "sha256": "0790118bb4d66681db1d63181f72ef68e632d632f6db0373ef87cf328561af27"
         }
       ],
@@ -777,10 +1034,25 @@
       "standalone_notice_found": true
     },
     {
+      "name": "fsevents",
+      "version": "2.3.3",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/fsevents/fsevents.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/fsevents-2.3.3/LICENSE",
+          "sha256": "2a8a5d6197bb97a018b8a190dd3ed853d750ca87c8e80c17aad41d6c6ff448e1"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
       "name": "lightningcss",
       "version": "1.33.0",
       "declared_license": "MPL-2.0",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "https://github.com/parcel-bundler/lightningcss.git"
@@ -794,10 +1066,169 @@
       "standalone_notice_found": true
     },
     {
+      "name": "lightningcss-android-arm64",
+      "version": "1.33.0",
+      "declared_license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/parcel-bundler/lightningcss.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/lightningcss-android-arm64-1.33.0/LICENSE",
+          "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "lightningcss-darwin-arm64",
+      "version": "1.33.0",
+      "declared_license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/parcel-bundler/lightningcss.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/lightningcss-darwin-arm64-1.33.0/LICENSE",
+          "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "lightningcss-darwin-x64",
+      "version": "1.33.0",
+      "declared_license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/parcel-bundler/lightningcss.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/lightningcss-darwin-x64-1.33.0/LICENSE",
+          "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "lightningcss-freebsd-x64",
+      "version": "1.33.0",
+      "declared_license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/parcel-bundler/lightningcss.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/lightningcss-freebsd-x64-1.33.0/LICENSE",
+          "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "lightningcss-linux-arm-gnueabihf",
+      "version": "1.33.0",
+      "declared_license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/parcel-bundler/lightningcss.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/lightningcss-linux-arm-gnueabihf-1.33.0/LICENSE",
+          "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "lightningcss-linux-arm64-gnu",
+      "version": "1.33.0",
+      "declared_license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/parcel-bundler/lightningcss.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/lightningcss-linux-arm64-gnu-1.33.0/LICENSE",
+          "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "lightningcss-linux-arm64-musl",
+      "version": "1.33.0",
+      "declared_license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/parcel-bundler/lightningcss.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/lightningcss-linux-arm64-musl-1.33.0/LICENSE",
+          "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "lightningcss-linux-x64-gnu",
+      "version": "1.33.0",
+      "declared_license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/parcel-bundler/lightningcss.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/lightningcss-linux-x64-gnu-1.33.0/LICENSE",
+          "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "lightningcss-linux-x64-musl",
+      "version": "1.33.0",
+      "declared_license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/parcel-bundler/lightningcss.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/lightningcss-linux-x64-musl-1.33.0/LICENSE",
+          "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
+      "name": "lightningcss-win32-arm64-msvc",
+      "version": "1.33.0",
+      "declared_license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/parcel-bundler/lightningcss.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/lightningcss-win32-arm64-msvc-1.33.0/LICENSE",
+          "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
       "name": "lightningcss-win32-x64-msvc",
       "version": "1.33.0",
       "declared_license": "MPL-2.0",
-      "author": null,
       "repository": {
         "type": "git",
         "url": "https://github.com/parcel-bundler/lightningcss.git"
@@ -843,7 +1274,6 @@
       "version": "1.0.3",
       "declared_license": "MIT",
       "author": "Jack Works",
-      "repository": null,
       "notice_files": [],
       "standalone_notice_found": false
     },
@@ -913,6 +1343,22 @@
       "standalone_notice_found": true
     },
     {
+      "name": "napi-windows-process-start-time",
+      "version": "0.1.0",
+      "declared_license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sapphi-red/napi-windows-process-start-time.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/napi-windows-process-start-time-0.1.0/LICENSE",
+          "sha256": "a5fe7fa0c6e92903feb544166a42404b617dc468301df3c9d722b56ed52bd143"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
       "name": "normalize-wheel-es",
       "version": "1.2.0",
       "declared_license": "BSD-3-Clause",
@@ -959,13 +1405,13 @@
     },
     {
       "name": "postcss",
-      "version": "8.5.32",
+      "version": "8.5.33",
       "declared_license": "MIT",
       "author": "Andrey Sitnik <andrey@sitnik.es>",
       "repository": "postcss/postcss",
       "notice_files": [
         {
-          "file": "licenses/postcss-8.5.32/LICENSE",
+          "file": "licenses/postcss-8.5.33/LICENSE",
           "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8"
         }
       ],
@@ -973,7 +1419,7 @@
     },
     {
       "name": "rolldown",
-      "version": "1.2.18",
+      "version": "1.3.3",
       "declared_license": "MIT",
       "repository": {
         "type": "git",
@@ -982,11 +1428,11 @@
       },
       "notice_files": [
         {
-          "file": "licenses/rolldown-1.2.18/LICENSE",
+          "file": "licenses/rolldown-1.3.3/LICENSE",
           "sha256": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734"
         },
         {
-          "file": "licenses/rolldown-1.2.18/THIRD-PARTY-LICENSE",
+          "file": "licenses/rolldown-1.3.3/THIRD-PARTY-LICENSE",
           "sha256": "a877291d800ed43692f3f9ae09d8e01cc6f7293ad39d43896059c188ffbb8b7c"
         }
       ],
@@ -994,13 +1440,13 @@
     },
     {
       "name": "source-map-js",
-      "version": "1.2.2",
+      "version": "1.2.4",
       "declared_license": "BSD-3-Clause",
       "author": "Valentin 7rulnik Semirulnik <v7rulnik@gmail.com>",
       "repository": "7rulnik/source-map-js",
       "notice_files": [
         {
-          "file": "licenses/source-map-js-1.2.2/LICENSE",
+          "file": "licenses/source-map-js-1.2.4/LICENSE",
           "sha256": "6cb0631f71c7749763fd3dd1d5bee52dd1070ec17f2edc1710079ad070bd2fbd"
         }
       ],
@@ -1024,8 +1470,29 @@
       "standalone_notice_found": true
     },
     {
+      "name": "tslib",
+      "version": "2.9.1",
+      "declared_license": "0BSD",
+      "author": "Microsoft Corp.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/tslib.git"
+      },
+      "notice_files": [
+        {
+          "file": "licenses/tslib-2.9.1/CopyrightNotice.txt",
+          "sha256": "da16ddb65f8ca390998fb99223d0112498b56b45784d00afd77ff8ce1ac4de8b"
+        },
+        {
+          "file": "licenses/tslib-2.9.1/LICENSE.txt",
+          "sha256": "210b19e543130388c68654b7497e967119ce17145f66ab7d85688fbd70f08751"
+        }
+      ],
+      "standalone_notice_found": true
+    },
+    {
       "name": "vite",
-      "version": "8.3.8",
+      "version": "8.4.0",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -1035,15 +1502,15 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vite-8.3.8/LICENSE.md",
-          "sha256": "a22152baa1aef74402443008e767e7c689a524c0909d19b0431d97f5ab066a13"
+          "file": "licenses/vite-8.4.0/LICENSE.md",
+          "sha256": "2766dec1874ab68acb200d6dd68c846482250d7fa245710eced29f6348c51d44"
         }
       ],
       "standalone_notice_found": true
     },
     {
       "name": "vue",
-      "version": "3.5.44",
+      "version": "3.5.46",
       "declared_license": "MIT",
       "author": "Evan You",
       "repository": {
@@ -1052,7 +1519,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue-3.5.44/LICENSE",
+          "file": "licenses/vue-3.5.46/LICENSE",
           "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
         }
       ],
@@ -1077,7 +1544,7 @@
     },
     {
       "name": "vue-i18n",
-      "version": "11.4.19",
+      "version": "11.4.24",
       "declared_license": "MIT",
       "author": {
         "name": "kazuya kawaguchi",
@@ -1090,7 +1557,7 @@
       },
       "notice_files": [
         {
-          "file": "licenses/vue-i18n-11.4.19/LICENSE",
+          "file": "licenses/vue-i18n-11.4.24/LICENSE",
           "sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
         }
       ],
