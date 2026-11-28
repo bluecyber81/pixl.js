@@ -1,6 +1,8 @@
 # Allmiibo LCD und Pixl.js OLED
 
-## LCD DE4.2 / App680 und Dateimanager 3.68.0-beta.2 · Web-Vorabversion
+## LCD DE4.2 / App680 und Dateimanager 3.68.0-beta.3 · Web-Vorabversion
+
+Beim Fortsetzen eines Ordneruploads prüft der Dateimanager, ob sich der Gerätespeicher seit dem Vergleich geändert hat. Bei durchgehend bestätigten Schreibgruppen genügt am Ende eine einzige Abfrage der Speicherrevision. Erkennt der Dateimanager eine zwischenzeitliche Änderung, fordert er einen neuen Vergleich an. Die Korrektur benötigt kein Firmwareupdate.
 
 **Neue LCD-Testversion DE4.3-b2 / App683.** Beim Upload in bestehende Ordner bündelt sie bis zu vier neue Dateien mit je höchstens 572 Byte. Nach einem Bluetooth-Abbruch prüft der Dateimanager Inhalt und Metadaten vor dem Fortsetzen. Die signierte App setzt ST7567-LCD, Z21, S112 7.3.0 und vorhandenes PFS1 voraus. [App683 fürs Handy (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b2-lcd-test1/Allmiibo_LCD_DE4_3_b2_App683_NUR_APP_TEST.zip).
 
@@ -18,7 +20,7 @@ Der Dateimanager bündelt beim Ordnervergleich die Prüfsummen kleiner Dateien a
 
 [Verbesserungen seit DE3.10](docs/PROJEKTUEBERBLICK.md)
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.2/Allmiibo_Dateimanager_3_68_0-beta_2_Portable.zip) · [Webquellen](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.2.zip) · [Handbuch](https://bluecyber81.github.io/pixl.js/guide/index.html) · [English](README.md)
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.3/Allmiibo_Dateimanager_3_68_0-beta_3_Portable.zip) · [Webquellen](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.3.zip) · [Handbuch](https://bluecyber81.github.io/pixl.js/guide/index.html) · [English](README.md)
 
 ## OLED und ältere LCD-Geräte
 

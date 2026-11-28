@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "version": "3.68.0-beta.3",
+  "channel": "prerelease",
+  "releaseTag": "web3.68.0-beta.3",
+  "webBaselineCommit": "84a31f9b46037a88bb0ba0d979eca63e9fb37902",
+  "fixes": {
+    "preflight": "Comparison, session and initial storage revision must agree before a packed write. Four changing-revision cases stop before the first write.",
+    "completion": "Bind the final revision to the full chain of known commits. Opaque writers or older devices verify claimed paths with checksums and shared parent listings.",
+    "endRegression": "Late changes to a checkpointed file in guarded, RAW128 and legacy uploads, and interleaving in a mixed upload, were reproduced on the previous candidate."
+  },
+  "tests": {
+    "web": {
+      "tests": 2483,
+      "pass": 2483,
+      "fail": 0,
+      "skipped": 0
+    },
+    "historicDfuFixture": "Optional historical DFU case also executed with the two pinned archives present.",
+    "targetedSubset": {
+      "tests": 195,
+      "pass": 195,
+      "fail": 0,
+      "skipped": 0
+    },
+    "rootBuild": {
+      "tests": 59,
+      "pass": 59,
+      "fail": 0,
+      "skipped": 0
+    },
+    "pagesBuild": {
+      "tests": 59,
+      "pass": 59,
+      "fail": 0,
+      "skipped": 0
+    },
+    "windowsPortableLauncher": {
+      "passed": 24,
+      "skipped": 2,
+      "skippedScope": "POSIX-only checks"
+    },
+    "chrome": {
+      "version": "3.68.0-beta.3",
+      "pages": [
+        {
+          "base": "/",
+          "width": 1365,
+          "title": "Allmiibo Dateimanager 3.68.0-beta.3"
+        },
+        {
+          "base": "/pixl.js/",
+          "width": 390,
+          "title": "Allmiibo Dateimanager 3.68.0-beta.3"
+        }
+      ],
+      "history": {
+        "feature": "folder comparison reference export/import, both copies changed, device download, no automatic selection, metadata race refused, deliberate verified upload",
+        "scope": "Chrome, synthetic peripheral and in-memory write adapter"
+      }
+    },
+    "modelPerformance": "12 new files in 3 guarded groups: one final revision probe and no final file reads. Mixed mkdir, RAW128 and guarded create also avoid end-of-upload file reads with consecutive revisions."
+  },
+  "portable": {
+    "bytes": 14825307,
+    "sha256": "c9d58ccc5d15c3597bdc384e5d78a65953c92580db64c2c29315327f283a4e82",
+    "verifiedPaths": 382
+  },
+  "hardware": {
+    "newUploadBenchmark": false,
+    "firmwareUpdateRequired": false,
+    "supportedOptionalLcd": 683,
+    "defaultStableLcd": 680
+  }
+}

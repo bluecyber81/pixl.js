@@ -172,7 +172,7 @@
         </section>
         <section id="bild-video">
           <h2>Bild oder Video ans LCD senden</h2>
-          <p>Öffne im Dateimanager 3.68.0-beta.2 den Bereich <a href="../?workspace=stream"><b>Bild &amp; Video</b></a>. Für das Senden brauchst du ein LCD mit <b>DE3.100/App673 oder neuer</b> und einen Browser mit Web Bluetooth. Vorschau und Playerexport funktionieren auch ohne Bluetooth. OLED unterstützt diesen Bildempfang nicht.</p>
+          <p>Öffne im Dateimanager 3.68.0-beta.3 den Bereich <a href="../?workspace=stream"><b>Bild &amp; Video</b></a>. Für das Senden brauchst du ein LCD mit <b>DE3.100/App673 oder neuer</b> und einen Browser mit Web Bluetooth. Vorschau und Playerexport funktionieren auch ohne Bluetooth. OLED unterstützt diesen Bildempfang nicht.</p>
           <p>Wähle <b>Lauftext</b>, gib deinen Text ein und stelle das Tempo ein. Spiele die Vorschau am Handy ab. Über <b>Lauftext senden</b> erscheint der Text auf dem verbundenen LCD. Für die spätere Wiedergabe kannst du einen Durchlauf als Playerdatei speichern und im Animationsplayer „Endlosschleife“ einschalten.</p>
           <ol class="steps"><li><h3>Vorschau vorbereiten</h3><p>Wähle eine lokale Bild-/Videodatei, lege eine Datei im Auswahlfeld ab oder wähle <b>Demo verwenden</b>. Die Datei bleibt auf deinem Computer oder Handy und wird nicht hochgeladen. Prüfe die Schwarz-Weiß-Vorschau mit 128 × 64 Pixeln. Stelle Bildformat, <b>Drehen</b>, Hell-Dunkel-Grenze und Inversion ein. <b>Punktraster für Fotos</b> kann Helligkeitsabstufungen besser darstellen.</p></li>
             <li><h3>Bildempfang öffnen und verbinden</h3><p>Trenne die Dateiverbindung oben auf der Webseite beziehungsweise die Fernbedienung in ihrem Bereich. Öffne am LCD im Hauptmenü <b>BLE-Bildempfang</b>. Wähle auf der Webseite <b>Mit Bildempfang verbinden</b> und dein Gerät. Erst nach der Bestätigung des Empfängers ist Senden verfügbar.</p></li>
@@ -194,6 +194,7 @@
           <h2>Änderungen in zwei Ordnern vergleichen</h2>
           <p>Öffne unter <b>Dateien</b> den Geräteordner. Wähle unter <b>Sicherung → Lokale Dateien vergleichen</b> den zugehörigen Ordner auf deinem Computer. Nach dem Vergleich speicherst du mit <b>Vergleichsstand speichern</b> eine kleine JSON-Datei außerhalb der Sammlung. Darin stehen Pfade und Prüfsummen. Die eigentlichen Figurendateien sicherst du über die ZIP-Sicherung.</p>
           <p>Beim nächsten Vergleich wählst du im selben Browserprofil dasselbe Gerät, dieselben Ordner und die gespeicherte JSON-Datei. Wurden beide Fassungen einer Datei verändert, erscheint ein Konflikt. Mit <b>Geräteversion speichern</b> kannst du sie zuerst separat herunterladen. Für eine Übertragung auf das Gerät wählst du die gewünschten Dateien selbst aus.</p>
+          <p>Beim Fortsetzen eines Ordneruploads prüft der Dateimanager, ob sich der Gerätespeicher seit dem Vergleich geändert hat. Bei durchgehend bestätigten Schreibgruppen genügt am Ende eine einzige Abfrage der Speicherrevision. Erkennt der Dateimanager eine zwischenzeitliche Änderung, fordert er einen neuen Vergleich an.</p>
         </section>
         <section id="pixlink">
           <h2>Geräte mit cylin577s PixLink verbinden</h2>

@@ -13,6 +13,12 @@ const pathKey = path => path.split('/').map(part => part.normalize('NFC').toLowe
 // Live previews only. A reloaded page or a different BLE session must obtain a fresh inventory.
 const previewRevisions = new WeakMap()
 const validRevision = value => typeof value === 'string' && /^[0-9a-f]{16}$/u.test(value) && value !== '0000000000000000'
+function nextCommit(revision) {
+  if (!revision) return null
+  const generation = Number.parseInt(revision.slice(8), 16)
+  if (generation === 0xffffffff) fail('SYNC_STALE', 'The storage generation reached its limit. Compare again.')
+  return revision.slice(0, 8) + (generation + 1).toString(16).padStart(8, '0')
+}
 async function probeComparisonRevision(read) {
   try { return await read() }
   catch (error) {
@@ -216,6 +222,28 @@ const sameExpectation = (a, b) => !a && !b || !!a && !!b && a.size === b.size &&
 const desiredPresent = (original, current) => current?.expected?.size === original.size && current.expected.sha256 === original.sha256 &&
   (!original.expected || metadataKey(current.expected.metadata) === metadataKey(original.expected.metadata))
 
+// Opaque writes and older filesystems cannot account for every change by revision.
+// Audit only paths for which this job claims a result, sharing listings and digest requests.
+async function verifyFinalFiles(records, {readDirectory, readFile, readFileDigest, readFileDigestsBatch, maxRequestPayload}, revision, check, rejectFile) {
+  const listings = new Map()
+  const stale = () => fail('SYNC_STALE', 'A file changed before the upload finished. Compare again.')
+  for (const {path, size, metadata} of records) {
+    check()
+    const {parent, name} = splitDevicePath(path)
+    if (!listings.has(parent)) listings.set(parent, checkedDirectory(await readDirectory(parent)))
+    check()
+    const entry = targetEntry(listings.get(parent), name)
+    if (entry?.type !== 0 || entry.size !== size || (metadata !== undefined && metadataKey(entry.meta) !== metadata)) rejectFile(path)
+  }
+  const grouped = validRevision(revision) && readFileDigestsBatch
+    ? await readSmallFileDigests(records, {revision, readFileDigestsBatch, maxRequestPayload, check, invalidReply:stale})
+    : new Map()
+  for (const {path, size, sha256} of records) {
+    const digest = grouped.get(path) ?? await deviceFileSha256(path, size, {readFile, readFileDigest, check, sizeError:'SYNC_STALE'})
+    if (digest !== sha256) rejectFile(path)
+  }
+}
+
 /** Job data stays in RAM. Every invocation verifies the device identity, plan,
  * local bytes and actual destination bytes afresh. No blind offset resume and
  * no deletes. The caller keeps the same file selection and serializes the job. */
@@ -280,7 +308,13 @@ export async function executeSyncJob(options) {
     }
     // A mounted PackedFS revision belongs to this connection. A raw CLOSE on
     // this engine acknowledges the complete write and 128-byte metadata.
-    const startRevision = options.quickPacked && typeof writeNewPackedFile === 'function' ? validatedRevision ?? await probeComparisonRevision(revision) : null
+    const packedPreflight = options.quickPacked && typeof writeNewPackedFile === 'function'
+    const startRevision = packedPreflight ? validatedRevision ?? await probeComparisonRevision(revision) : null
+    check()
+    const comparedRevision = previewRevisions.get(fresh)?.revision
+    if (packedPreflight && (validRevision(comparedRevision) || validRevision(startRevision)) && startRevision !== comparedRevision) {
+      fail('SYNC_STALE', 'The device changed between comparison and upload. Compare again.')
+    }
     const quick = validRevision(startRevision)
     const acknowledgedOnly = new Set()
     const currentByPath = new Map(fresh.entries.map(entry => [entry.targetPath, entry]))
@@ -335,6 +369,10 @@ export async function executeSyncJob(options) {
     check()
     const deferredParents = new Set()
     let guardedRevision = startRevision
+    // A successful exclusive MKDIR or RAW128 CLOSE publishes exactly one PackedFS
+    // manifest. Only a continuous chain can vouch for untouched and resumed files.
+    let expectedRevision = quick ? startRevision : null
+    const rawReadbacks = new Set()
     const canGroup = entry => entry && !entry.expected && !currentByPath.get(entry.targetPath)?.expected &&
       entry.size <= 572 && /^[\x20-\x7e]+$/u.test(entry.targetPath) && !job.completed.includes(entry.targetPath)
     for (let index = 0; index < order.length; index++) {
@@ -366,6 +404,7 @@ export async function executeSyncJob(options) {
           if (!await writableRoot(parent, readDirectory, check)) fail('SYNC_STALE', 'The selected folder or an ancestor is no longer writable.')
           await createDirectory(directory.path); check()
           guardedRevision = null
+          expectedRevision = nextCommit(expectedRevision)
         }
         knownDirectories.add(directory.path)
       }
@@ -374,6 +413,10 @@ export async function executeSyncJob(options) {
         guardedRevision = null
         const result = await leaf.run(update => observe(onProgress, {...update,
           filesDone:completed + skipped + (update.filesDone || 0), filesTotal:wanted.length}))
+        if (expectedRevision && result.revisionReceipt) {
+          if (expectedRevision !== result.revisionReceipt.before) fail('SYNC_STALE', 'Storage changed before the folder publication.')
+          expectedRevision = result.revisionReceipt.after
+        } else expectedRevision = null
         // Child checkpoints refer to private staging. Only a verified publication
         // authorizes these final path names in the outer checkpoint.
         for (const item of leaf.entries) if (!job.completed.includes(item.targetPath)) job.completed.push(item.targetPath)
@@ -396,6 +439,7 @@ export async function executeSyncJob(options) {
         }
         if (!guardedRevision) guardedRevision = await probeComparisonRevision(revision)
         check()
+        if (expectedRevision && guardedRevision !== expectedRevision) fail('SYNC_STALE', 'Storage changed before the next group.')
         if (validRevision(guardedRevision)) {
           const parts = []
           for (const item of siblings) {
@@ -418,6 +462,7 @@ export async function executeSyncJob(options) {
                 parseInt(next.slice(8),16) !== parseInt(guardedRevision.slice(8),16)+1)
               fail('SYNC_STALE','Unconfirmed guarded group revision.')
             guardedRevision = next
+            if (expectedRevision) expectedRevision = next
             for (const item of siblings) {
               job.completed.push(item.targetPath)
               acknowledgedOnly.add(item.targetPath)
@@ -459,12 +504,11 @@ export async function executeSyncJob(options) {
             onProgress: value => progress({phase:'uploading', path:entry.targetPath, done:value.written_bytes, total:entry.size})
           })
           check()
+          expectedRevision = nextCommit(expectedRevision)
           if (quick) acknowledgedOnly.add(entry.targetPath)
-          else {
-            const sha = await deviceFileSha256(entry.targetPath, entry.size, {readFile, readFileDigest, check, sizeError:'SYNC_VERIFY'})
-            if (sha !== entry.sha256) fail('SYNC_VERIFY', 'The new file failed device SHA-256 verification.')
-          }
+          else rawReadbacks.add(entry.targetPath) // Hash these CLOSE acknowledgements together at the end.
         } else {
+          expectedRevision = null // The checked adapter may stage, copy metadata, rename and remove.
           await requireWritableParent()
           const result = await uploadFile({ path: entry.targetPath, file: new Blob([uploadBytes]), replace: !!entry.expected,
             expected: entry.expected, onProgress: progress })
@@ -479,11 +523,43 @@ export async function executeSyncJob(options) {
       ++completed; uploadedBytes += entry.size; check()
       observe(onProgress, { phase: 'syncing', path: entry.targetPath, done: completed + skipped, total: wanted.length, filesDone: completed + skipped, filesTotal: wanted.length })
     }
-    if (quick) {
-      const endRevision = await revision()
+    const revisionCapable = plan.rootPath.startsWith('E:/') && typeof options.readCreateRevision === 'function'
+    const endRevision = revisionCapable ? await probeComparisonRevision(revision) : null
+    check()
+    const staleEnd = () => fail('SYNC_STALE', 'The storage revision changed before the upload finished. Compare again.')
+    if (expectedRevision) {
+      if (endRevision !== expectedRevision) staleEnd()
+    } else {
+      if (validRevision(comparedRevision) && (!validRevision(endRevision) || endRevision.slice(0,8) !== comparedRevision.slice(0,8) ||
+          Number.parseInt(endRevision.slice(8),16) < Number.parseInt(comparedRevision.slice(8),16))) staleEnd()
+      const finished = new Set(job.completed)
+      const records = []
+      for (const current of fresh.entries) {
+        if (!finished.has(current.targetPath) && current.comparison !== 'same') continue
+        const original = expectedLocal.get(current.targetPath)
+        // An unchanged comparison token still covers files already equal at preflight.
+        if (validRevision(endRevision) && endRevision === comparedRevision && desiredPresent(original, current)) continue
+        const existingMetadata = original.expected?.metadata ?? current.expected?.metadata
+        const neutral = publishedDirectories.has(splitDevicePath(current.targetPath).parent) || acknowledgedOnly.has(current.targetPath)
+        const metadata = existingMetadata ? metadataKey(existingMetadata) : neutral ? newFileMetadataKey : undefined
+        records.push({path:current.targetPath, size:original.size, sha256:original.sha256, metadata})
+      }
+      if (records.length) {
+        await verifyFinalFiles(records, options, endRevision, check, path => {
+          if (rawReadbacks.has(path)) {
+            job.completed = job.completed.filter(completedPath => completedPath !== path)
+            fail('SYNC_VERIFY', 'The new file failed the final device verification.')
+          }
+          staleEnd()
+        })
+        if (revisionCapable) {
+          const afterAudit = await probeComparisonRevision(revision)
+          check()
+          if ((afterAudit ?? null) !== (endRevision ?? null)) staleEnd()
+        }
+        for (const record of records) acknowledgedOnly.delete(record.path)
+      }
       check()
-      if (typeof endRevision !== 'string' || !/^[0-9a-f]{16}$/.test(endRevision) || endRevision.slice(0,8) !== startRevision.slice(0,8) ||
-          Number.parseInt(endRevision.slice(8),16) < Number.parseInt(startRevision.slice(8),16)) fail('SYNC_STALE', 'The storage generation changed during upload.')
     }
     if (acknowledgedOnly.size) job.acknowledgedOnly = [...acknowledgedOnly]
     else delete job.acknowledgedOnly

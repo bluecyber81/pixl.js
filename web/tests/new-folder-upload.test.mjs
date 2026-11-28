@@ -467,7 +467,8 @@ async function setupExisting(files) {
   const plan = await createSyncPlan({...vfs.api,rootPath:root,deviceKey:identity,files})
   const job = createSyncJob(plan)
   const options = {...vfs.api,...native,files,plan,job,deviceKey:identity,prepareLeafUploads,
-    writeNewPackedFile:vfs.api.writeFile,uploadFile:async () => assert.fail('Unexpected replacement')}
+    writeNewPackedFile:async (...args) => { await vfs.api.writeFile(...args); native.bump() },
+    uploadFile:async () => assert.fail('Unexpected replacement')}
   return {...vfs, native, plan, job, run:(overrides={}) => executeSyncJob({...options,...overrides})}
 }
 
