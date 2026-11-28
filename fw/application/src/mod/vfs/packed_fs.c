@@ -1940,11 +1940,11 @@ int pfs_close(pfs_file_t *file) {
   r = io_close(fs, &file->io, 0);
   if (r)
     fs->poisoned = true;
+  fs->writer = NULL;
+  detach(&file->h, true);
 #ifdef PIXL_SAVE_PHASES
   runtime_diag_save_finish(1, (uint32_t)size);
 #endif
-  fs->writer = NULL;
-  detach(&file->h, true);
   return 0;
 }
 /* The existing PUT transaction publishes content and raw128 together. */
