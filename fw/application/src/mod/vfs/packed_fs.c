@@ -562,10 +562,56 @@ static int get_catalog(pfs_t *fs, unsigned slot, catalog_t **out) {
  * the immutable group; direct search still checks every index entry it reads.
  * Obsolete/free entries may be replaced normally, including after compaction. */
 static bool manifest_has(const manifest_t *m, uint32_t id);
-static int lookup(pfs_t *fs, const manifest_t *m, const char *path,
-                  pfs_info_t *info, location_t *loc) {
-  uint32_t hash = path_hash(path);
-  unsigned parent_bit = catalog_parent_bit(path);
+static int lookup_in_shard(pfs_t *fs, io_t *io, uint32_t id, uint32_t count,
+                           uint32_t body, uint32_t hash, const char *path,
+                           pfs_info_t *info, location_t *loc) {
+  int r;
+  uint32_t lo = 0, hi = count;
+  uint8_t entry[IX];
+  while (lo < hi) {
+    uint32_t mid = lo + (hi - lo) / 2;
+    r = read_at(fs, io, SH + body + mid * IX, entry, IX);
+    if (r)
+      return r;
+    if (u32(entry + 8) != ~crc(~0u, entry, 8))
+      return LFS_ERR_CORRUPT;
+    if (u32(entry) < hash)
+      lo = mid + 1;
+    else
+      hi = mid;
+  }
+  for (; lo < count; lo++) {
+    r = read_at(fs, io, SH + body + lo * IX, entry, IX);
+    if (r)
+      return r;
+    if (u32(entry + 8) != ~crc(~0u, entry, 8))
+      return LFS_ERR_CORRUPT;
+    if (u32(entry) != hash)
+      break;
+    uint32_t offset = u32(entry + 4);
+    if (offset < SH)
+      return LFS_ERR_CORRUPT;
+    r = read_record(fs, io, offset, SH + body, info, loc, true);
+    if (r)
+      return r;
+    if (!strcmp(info->path, path)) {
+      loc->shard = id;
+      return 0;
+    }
+  }
+  return LFS_ERR_NOENT;
+}
+
+/* For a validated group of siblings only the filename hashes differ. Open a
+ * candidate shard once, verify its header once, then check each possible name
+ * against its CRC-checked index and the full stored path. */
+static int lookup_paths(pfs_t *fs, const manifest_t *m,
+                        const pfs_small_item_t *siblings, unsigned path_count,
+                        pfs_info_t *info, location_t *loc) {
+  uint32_t hashes[PFS_BULK_LIMIT];
+  for (unsigned i = 0; i < path_count; i++)
+    hashes[i] = path_hash(siblings[i].path);
+  unsigned parent_bit = catalog_parent_bit(siblings[0].path);
   for (unsigned slot = 0; slot < m->count; slot++) {
     catalog_t *cat = &fs->catalog[slot % CATALOG_SLOTS];
     if (cat->id != m->ids[slot]) {
@@ -577,64 +623,42 @@ static int lookup(pfs_t *fs, const manifest_t *m, const char *path,
           return checked;
       }
     }
-    if (cat) {
-      if (!(cat->parents[parent_bit >> 5] & (1u << (parent_bit & 31))))
-        continue;
-      unsigned bit = hash & 255u;
-      if (!(cat->filter[bit >> 5] & (1u << (bit & 31))))
-        continue;
-      bit = (hash >> 16) & 255u;
-      if (!(cat->filter[bit >> 5] & (1u << (bit & 31))))
-        continue;
-    }
+    if (cat && !(cat->parents[parent_bit >> 5] & (1u << (parent_bit & 31))))
+      continue;
     io_t io;
-    char name[16];
-    shard_name(m->ids[slot], name);
-    int r = io_open(fs, &io, name, LFS_O_RDONLY);
-    if (r)
-      return r;
+    io.open = false;
     uint32_t count, body;
-    r = shard_header(fs, &io, m->ids[slot], &count, &body);
-    if (r)
-      return io_close(fs, &io, r);
-    uint32_t lo = 0, hi = count;
-    uint8_t entry[IX];
-    while (lo < hi) {
-      uint32_t mid = lo + (hi - lo) / 2;
-      r = read_at(fs, &io, SH + body + mid * IX, entry, IX);
-      if (r)
-        return io_close(fs, &io, r);
-      if (u32(entry + 8) != ~crc(~0u, entry, 8))
-        return io_close(fs, &io, LFS_ERR_CORRUPT);
-      if (u32(entry) < hash)
-        lo = mid + 1;
-      else
-        hi = mid;
-    }
-    for (; lo < count; lo++) {
-      r = read_at(fs, &io, SH + body + lo * IX, entry, IX);
-      if (r)
-        return io_close(fs, &io, r);
-      if (u32(entry + 8) != ~crc(~0u, entry, 8))
-        return io_close(fs, &io, LFS_ERR_CORRUPT);
-      if (u32(entry) != hash)
-        break;
-      uint32_t offset = u32(entry + 4);
-      if (offset < SH)
-        return io_close(fs, &io, LFS_ERR_CORRUPT);
-      r = read_record(fs, &io, offset, SH + body, info, loc, true);
-      if (r)
-        return io_close(fs, &io, r);
-      if (!strcmp(info->path, path)) {
-        loc->shard = m->ids[slot];
-        return io_close(fs, &io, 0);
+    int r;
+    for (unsigned i = 0; i < path_count; i++) {
+      unsigned a = hashes[i] & 255u, b = (hashes[i] >> 16) & 255u;
+      if (cat && (!(cat->filter[a >> 5] & (1u << (a & 31))) ||
+                  !(cat->filter[b >> 5] & (1u << (b & 31)))))
+        continue;
+      if (!io.open) {
+        char name[16];
+        shard_name(m->ids[slot], name);
+        r = io_open(fs, &io, name, LFS_O_RDONLY);
+        if (r)
+          return r;
+        r = shard_header(fs, &io, m->ids[slot], &count, &body);
+        if (r)
+          return io_close(fs, &io, r);
       }
+      r = lookup_in_shard(fs, &io, m->ids[slot], count, body, hashes[i], siblings[i].path, info, loc);
+      if (r != LFS_ERR_NOENT)
+        return io_close(fs, &io, r);
     }
     r = io_close(fs, &io, 0);
     if (r)
       return r;
   }
   return LFS_ERR_NOENT;
+}
+static int lookup(pfs_t *fs, const manifest_t *m, const char *path,
+                  pfs_info_t *info, location_t *loc) {
+  pfs_small_item_t item;
+  item.path = path;
+  return lookup_paths(fs, m, &item, 1, info, loc);
 }
 static int parent_exists(pfs_t *fs, const char *path) {
   char parent[PFS_PATH_MAX];
@@ -1977,26 +2001,39 @@ static int bulk_validate(pfs_t *fs, const pfs_small_item_t *items, unsigned coun
     size_t parent_length = 0;
     pfs_info_t info;
     location_t loc;
-    for (unsigned i = 0; i < count; i++) {
+    unsigned i;
+    int invalid;
+    for (i = 0; i < count; i++) {
         const pfs_small_item_t *item = &items[i];
-        int r = valid_path(item->path, false);
-        if (r) return r;
-        if (!item->bytes || item->size > 572) return LFS_ERR_INVAL;
+        invalid = valid_path(item->path, false);
+        if (invalid) goto invalid_item;
+        invalid = LFS_ERR_INVAL;
+        if (!item->bytes || item->size > 572) goto invalid_item;
         size_t length = (size_t)(strrchr(item->path, '/') - item->path);
         if (!i) {
             parent = item->path;
             parent_length = length;
-            r = parent_exists(fs, item->path);
+            int r = parent_exists(fs, item->path);
             if (r) return r;
         } else if (parent_length != length || memcmp(parent, item->path, length)) {
-            return LFS_ERR_INVAL;
+            goto invalid_item;
         }
         for (unsigned j = 0; j < i; j++)
-            if (!strcmp(items[j].path, item->path)) return LFS_ERR_EXIST;
-        r = lookup(fs, &fs->current, item->path, &info, &loc);
-        if (r != LFS_ERR_NOENT) return r ? r : LFS_ERR_EXIST;
+            if (!strcmp(items[j].path, item->path)) {
+                invalid = LFS_ERR_EXIST;
+                goto invalid_item;
+            }
     }
-    return 0;
+    int r = lookup_paths(fs, &fs->current, items, count, &info, &loc);
+    return r == LFS_ERR_NOENT ? 0 : r ? r : LFS_ERR_EXIST;
+
+invalid_item:
+    /* Preserve the first failure from the sequential API for malformed groups. */
+    for (unsigned j = 0; j < i; j++) {
+        int prior = lookup(fs, &fs->current, items[j].path, &info, &loc);
+        if (prior != LFS_ERR_NOENT) return prior ? prior : LFS_ERR_EXIST;
+    }
+    return invalid;
 }
 
 int pfs_create_small_group(pfs_t *fs, uint32_t expected, const pfs_small_item_t *items, unsigned count) {

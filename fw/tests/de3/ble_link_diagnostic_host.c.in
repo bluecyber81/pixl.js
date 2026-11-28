@@ -7,6 +7,7 @@
 #include <string.h>
 #define SVCALL_AS_NORMAL_FUNCTION
 #define BOARD_LCD 1
+#define NRF_SDH_BLE_PERIPHERAL_LINK_COUNT 1
 #define PIXL_RUNTIME_DIAGNOSTICS 1
 #include "ble.h"
 #include "ble_hci.h"
@@ -24,6 +25,7 @@
 #define RUNTIME_DIAG_GATT_SERVER_TIMEOUT 6
 #define NRF_LOG_INFO(...) ((void)0)
 #define NRF_LOG_DEBUG(...) ((void)0)
+#define NRF_LOG_WARNING(...) ((void)0)
 #define APP_ERROR_CHECK(x) CHECK((x)==NRF_SUCCESS)
 #define CRITICAL_REGION_ENTER() do { ++critical_depth;
 #define CRITICAL_REGION_EXIT() test_critical_exit(); } while (0)
@@ -33,7 +35,8 @@ static unsigned critical_depth, phy_calls, disconnect_calls, tx_calls, checks;
 static uint32_t now, phy_result;
 static uint8_t requested_rx, requested_tx;
 static uint16_t requested_handle;
-static unsigned interval_calls;
+static unsigned interval_calls, sdk_stop_calls;
+static uint32_t ble_conn_params_stop(void) { ++sdk_stop_calls; return NRF_SUCCESS; }
 static uint32_t interval_result;
 static ble_gap_conn_params_t requested_interval;
 static bool work_ready, vfs_idle = true, m_ble_initialized = true;
@@ -249,7 +252,9 @@ int main(void) {
     pass("slow_file_link_requests_20_to_30_ms_busy_once_observed_only_on_gap_event");
 
     disconnect_peer(7);connect_peer(7,12,0,400);file_session();phy_event(7,0,2,2);
-    before=interval_calls;ble_process_pending();CHECK(interval_calls==before);
+    unsigned stops=sdk_stop_calls;
+    before=interval_calls;ble_process_pending();ble_process_pending();
+    CHECK(interval_calls==before && sdk_stop_calls==stops+1);
     disconnect_peer(7);connect_peer(7,60,0,400);file_session();phy_event(7,0,2,2);
     interval_result=NRF_ERROR_NOT_SUPPORTED;ble_process_pending();now+=2000;ble_process_pending();
     CHECK(interval_calls==before+1 && m_conn_handle==7);

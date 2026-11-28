@@ -813,6 +813,9 @@ $(OWN_C_OBJECTS): CFLAGS += -Werror=implicit-function-declaration -Werror=incomp
 ifeq ($(BOARD),LCD)
 LCD_BULK_SIZE_OBJECTS := lfs.c lfs_util.c packed_fs.c vfs_driver_packed.c vfs_packed_runtime.c vfs_persist.c vfs_meta.c vfs.c df_proto_info.c df_small_create.c bulk_wire.c df_core.c df_proto_vfs.c
 $(addprefix $(OUTPUT_DIRECTORY)/pixljs/,$(addsuffix .o,$(LCD_BULK_SIZE_OBJECTS))): CFLAGS += -Os -flto -ffat-lto-objects
+LCD_UI_SIZE_SOURCES := $(filter-out %/u8g2_d_memory.c %/u8g2_d_setup.c,$(filter $(PROJ_DIR)/app/amiibo/% $(PROJ_DIR)/app/amiidb/% $(PROJ_DIR)/app/chameleon/% $(PROJ_DIR)/app/amiibolink/% $(PROJ_DIR)/app/ble/% $(PROJ_DIR)/app/player/% $(PROJ_DIR)/mui/view/% $(U8G2_ROOT)/% $(PROJ_DIR)/amiidb/% $(COMP_DIR)/amiitool/src/% $(COMP_DIR)/qrcode/c/% $(PROJ_DIR)/i18n/% $(PROJ_DIR)/core/%,$(SRC_FILES)))
+LCD_UI_SIZE_OBJECTS := $(addprefix $(OUTPUT_DIRECTORY)/pixljs/,$(addsuffix .o,$(notdir $(LCD_UI_SIZE_SOURCES))))
+$(LCD_UI_SIZE_OBJECTS): CFLAGS += -Os -flto -ffat-lto-objects
 endif
 
 .PHONY: flash flash_softdevice erase

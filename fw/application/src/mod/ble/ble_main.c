@@ -216,7 +216,7 @@ typedef struct {
     uint32_t request_result, retry_tick;
     uint16_t interval, latency, timeout;
     uint8_t rx_phy, tx_phy, attempts, phy_status, interval_attempts;
-    bool params_valid, phy_valid, pending, retry;
+    bool params_valid, phy_valid, pending, retry, keep_fast_interval;
 } ble_link_profile_t;
 static volatile ble_link_profile_t m_link_profile;
 
@@ -238,6 +238,9 @@ static void ble_link_parameters_update(const ble_gap_conn_params_t *params) {
     m_link_profile.interval = valid ? params->min_conn_interval : 0;
     m_link_profile.latency = valid ? params->slave_latency : 0;
     m_link_profile.timeout = valid ? params->conn_sup_timeout : 0;
+    /* The SDK independently schedules 20–75 ms negotiation after a fast GAP
+     * observation. Decide once for this observation when a real file owner exists. */
+    m_link_profile.keep_fast_interval = valid && params->min_conn_interval < 16 && !params->slave_latency;
 }
 
 static void ble_link_profile_reset(const ble_gap_conn_params_t *params) {
@@ -265,11 +268,23 @@ static void ble_link_phy_observe(const ble_gap_evt_phy_update_t *update) {
 static void ble_file_interval_poll(void) {
     const uint16_t min_interval = 16, max_interval = 24;
     CRITICAL_REGION_ENTER();
-    if (m_link_profile.params_valid && m_link_profile.interval > max_interval && !m_link_profile.retry &&
-        m_link_profile.interval_attempts < 2 && m_sessions_enabled && m_file_mode && !m_remote_mode &&
-        !m_mode_pending && m_conn_handle != BLE_CONN_HANDLE_INVALID &&
-        m_nus_session_handle == m_conn_handle && m_release_handle == BLE_CONN_HANDLE_INVALID &&
-        ble_work_can_send()) {
+    const bool file_ready = m_sessions_enabled && m_file_mode && !m_remote_mode && !m_mode_pending &&
+        m_conn_handle != BLE_CONN_HANDLE_INVALID && m_nus_session_handle == m_conn_handle &&
+        m_release_handle == BLE_CONN_HANDLE_INVALID && ble_work_can_send();
+#if NRF_SDH_BLE_PERIPHERAL_LINK_COUNT == 1
+    /* The pinned SDK exposes a timer stop for all configured peripherals.
+     * With the sole link owned by this file session it affects only this peer.
+     * A timer that already fired may have sent its request; a later slow GAP
+     * value still follows the ordinary bounded 20–30 ms request below. */
+    if (m_link_profile.keep_fast_interval && file_ready) {
+        m_link_profile.keep_fast_interval = false;
+        const uint32_t result = ble_conn_params_stop();
+        if (result != NRF_SUCCESS)
+            NRF_LOG_WARNING("BLE file interval timer stop: %lu", (unsigned long)result);
+    }
+#endif
+    if (file_ready && m_link_profile.params_valid && m_link_profile.interval > max_interval &&
+        !m_link_profile.retry && m_link_profile.interval_attempts < 2) {
         const uint32_t now = app_timer_cnt_get();
         const bool phy_starting = m_link_profile.pending &&
             app_timer_cnt_diff_compute(now, m_link_profile.retry_tick) < APP_TIMER_TICKS(1000);

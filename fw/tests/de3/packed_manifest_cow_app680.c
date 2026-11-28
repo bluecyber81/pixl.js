@@ -127,7 +127,63 @@ static void limit_free(unsigned target) {
     }
     REQUIRE(lfs_file_close(&lfs,&file)==0 && lfs_unmount(&lfs)==0 && pfs_mount(fs)==0);
 }
+static void group_lookup_collisions(void) {
+    /* These full paths have the same 32-bit FNV-1a hash (944527721). */
+    const pfs_small_item_t first={"/test/itk35c4zkp",(const uint8_t *)"one",3};
+    const pfs_small_item_t second={"/test/kjfpqm6unl",(const uint8_t *)"two",3};
+    const char *const fresh[]={"/test/new0","/test/new1","/test/new2","/test/new3"};
+    initialize();
+    REQUIRE(pfs_mkdir(fs,"/test")==0);
+    REQUIRE(pfs_create_small_group(fs,pfs_generation(fs),&first,1)==0);
+    REQUIRE(pfs_create_small_group(fs,pfs_generation(fs),&second,1)==0);
+    const uint32_t generation=pfs_generation(fs);
+    for (unsigned hit=0;hit<4;hit++) {
+        pfs_small_item_t siblings[4];
+        for (unsigned i=0;i<4;i++) {
+            siblings[i]=first;
+            siblings[i].path=i==hit ? second.path : fresh[i];
+        }
+        REQUIRE(pfs_create_small_group(fs,generation,siblings,4)==LFS_ERR_EXIST);
+        REQUIRE(pfs_generation(fs)==generation);
+        for (unsigned i=0;i<4;i++) {
+            pfs_info_t info;
+            REQUIRE(pfs_stat(fs,fresh[i],&info)==LFS_ERR_NOENT);
+        }
+    }
+    /* Validation must report an earlier stored name before a later invalid item. */
+    const pfs_small_item_t malformed[]={
+        {"/wrong/parent", first.bytes, first.size},
+        {NULL, first.bytes, first.size},
+        {fresh[3], NULL, 1},
+        {fresh[3], first.bytes, 573},
+    };
+    for (unsigned bad=0;bad<sizeof(malformed)/sizeof(malformed[0]);bad++) {
+        for (unsigned pos=1;pos<4;pos++) {
+            pfs_small_item_t siblings[4];
+            for (unsigned i=0;i<pos;i++)
+                siblings[i]=(pfs_small_item_t){fresh[i], first.bytes, first.size};
+            siblings[pos]=malformed[bad];
+            REQUIRE(pfs_create_small_group(fs,generation,siblings,pos+1)==LFS_ERR_INVAL);
+            for (unsigned hit=0;hit<pos;hit++) {
+                siblings[hit].path=first.path;
+                REQUIRE(pfs_create_small_group(fs,generation,siblings,pos+1)==LFS_ERR_EXIST);
+                siblings[hit].path=fresh[hit];
+            }
+            REQUIRE(pfs_generation(fs)==generation);
+        }
+    }
+    reset_to_disk();
+    const pfs_small_item_t *const files[]={&first,&second};
+    for (unsigned i=0;i<2;i++) {
+        pfs_file_t *file;
+        uint8_t bytes[3];
+        REQUIRE(pfs_open(fs,files[i]->path,LFS_O_RDONLY,&file)==0);
+        REQUIRE(pfs_read(file,bytes,sizeof(bytes))==sizeof(bytes));
+        REQUIRE(!memcmp(bytes,files[i]->bytes,sizeof(bytes)) && pfs_close(file)==0);
+    }
+}
 int main(void) {
+    group_lookup_collisions();
     initialize();memcpy(saved,media.disk,sizeof(saved));
     unsigned remaining=free_blocks();
     for (unsigned op=0;op<OPERATIONS;op++) exercise((enum operation)op,remaining);
