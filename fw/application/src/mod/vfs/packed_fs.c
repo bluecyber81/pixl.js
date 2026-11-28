@@ -523,6 +523,14 @@ static int next_record(pfs_t *fs, const manifest_t *m, cursor_t *c,
   }
   return 0;
 }
+/* Every ID selected from a published manifest names an immutable shard.
+ * A missing backing file is corruption, distinct from an absent logical path. */
+static int open_manifest_shard(pfs_t *fs, io_t *io, uint32_t id) {
+  char name[16];
+  shard_name(id, name);
+  int r = io_open(fs, io, name, LFS_O_RDONLY);
+  return r == LFS_ERR_NOENT ? LFS_ERR_CORRUPT : r;
+}
 static int get_catalog(pfs_t *fs, unsigned slot, catalog_t **out) {
   catalog_t *c = &fs->catalog[slot % CATALOG_SLOTS];
   uint32_t id = fs->current.ids[slot];
@@ -531,9 +539,7 @@ static int get_catalog(pfs_t *fs, unsigned slot, catalog_t **out) {
     /* This index-only cache fill has not inspected parent paths. */
     c->parents[0] = c->parents[1] = UINT32_MAX;
     io_t io;
-    char name[16];
-    shard_name(id, name);
-    int r = io_open(fs, &io, name, LFS_O_RDONLY);
+    int r = open_manifest_shard(fs, &io, id);
     if (r)
       return r;
     r = shard_header(fs, &io, id, &c->count, &c->body);
@@ -635,9 +641,7 @@ static int lookup_paths(pfs_t *fs, const manifest_t *m,
                   !(cat->filter[b >> 5] & (1u << (b & 31)))))
         continue;
       if (!io.open) {
-        char name[16];
-        shard_name(m->ids[slot], name);
-        r = io_open(fs, &io, name, LFS_O_RDONLY);
+        r = open_manifest_shard(fs, &io, m->ids[slot]);
         if (r)
           return r;
         r = shard_header(fs, &io, m->ids[slot], &count, &body);
@@ -2025,10 +2029,15 @@ static int bulk_validate(pfs_t *fs, const pfs_small_item_t *items, unsigned coun
             }
     }
     int r = lookup_paths(fs, &fs->current, items, count, &info, &loc);
-    return r == LFS_ERR_NOENT ? 0 : r ? r : LFS_ERR_EXIST;
+    if (r == LFS_ERR_NOENT) return 0;
+    /* Shard-major search can see a later sibling fail before an earlier one.
+     * Replay only the failure path in original item order. Never accept a
+     * group that already failed, even if a transient read now succeeds. */
+    invalid = r ? io_error(fs, r) : LFS_ERR_EXIST;
 
 invalid_item:
-    /* Preserve the first failure from the sequential API for malformed groups. */
+    /* Replay the valid prefix in caller order. i equals count after a
+     * completed validation. Preserve any original failure on a clean replay. */
     for (unsigned j = 0; j < i; j++) {
         int prior = lookup(fs, &fs->current, items[j].path, &info, &loc);
         if (prior != LFS_ERR_NOENT) return prior ? prior : LFS_ERR_EXIST;
