@@ -1,3 +1,5 @@
+import { lcdTest684, lcdTest684Package } from '../../public/dfu/lcd-app684-reference.mjs';
+import { lcdTest683, lcdTest683Package } from '../../public/dfu/lcd-app683-reference.mjs';
 import { lcdReleasePackage as package674 } from '../../public/dfu/lcd-app674-reference.mjs';
 import { lcdRelease as app675, lcdReleasePackage as package675 } from '../../public/dfu/lcd-app675-reference.mjs';
 import { lcdTest680, lcdTest680Package, lcdFinal680, lcdFinal680Package } from '../../public/dfu/lcd-app680-reference.mjs';
@@ -30,7 +32,7 @@ export function packagePresentation(entry, session = {}, boot = null) {
   const installed=active&&typeof session.firmwareVersion==='string'?session.firmwareVersion:null;
   const diagnostic=active?normalizeBootDiagnostics(boot):null;
   const relation=compareLcdVersions(installed, entry.version);
-  const transferBuild = installed === '2.22.0-DE4.2-b1' || installed === '2.22.0-DE4.2-b2';
+  const transferBuild = [lcdTest679.firmwareVersion,lcdFinal680.firmwareVersion,lcdTest683.firmwareVersion,lcdTest684.firmwareVersion].includes(installed);
   const newer=relation>0 || (entry.board==='LCD' && transferBuild && LCD_Z21_COUNTERS[installed]>entry.counter) ||
     (diagnostic?.settingsCrcValid && diagnostic.applicationCounter>entry.counter);
   const supportedBootloaders = entry.bootloader?.split('/').map(name =>
@@ -44,7 +46,7 @@ export function packagePresentation(entry, session = {}, boot = null) {
     (diagnostic.softDeviceValid && (diagnostic.softDeviceFwid !== UPDATE_TARGET.softDevice.fwid ||
       diagnostic.softDeviceVersion !== UPDATE_TARGET.softDevice.version || diagnostic.softDeviceVariant !== UPDATE_TARGET.softDevice.variant))
   ));
-  const specialTags = { [lcdFinal680Package.id]:lcdFinal680.releaseTag, [lcdTest680Package.id]:lcdTest680.releaseTag, [lcdTest679Package.id]:lcdTest679.releaseTag, 'de3.104-lcd-app-test1': 'de3.104-lcd-test1', 'de3.103-lcd-app-test1': 'de3.103-lcd-test1', 'de3.73-lcd-app': 'de3.73-test646', 'de3.84-lcd-test1-app': 'de3.84-lcd-test1', 'de3.85-lcd-test1-app': 'de3.85-lcd-test1', 'de3.87-lcd-test1-app': 'de3.87-lcd-test1', 'de3.88-lcd-test1-app': 'de3.88-lcd-test1', 'de3.89-lcd-test1-app': 'de3.89-lcd-test1' };
+  const specialTags = { [lcdTest684Package.id]:lcdTest684.releaseTag, [lcdTest683Package.id]:lcdTest683.releaseTag, [lcdFinal680Package.id]:lcdFinal680.releaseTag, [lcdTest680Package.id]:lcdTest680.releaseTag, [lcdTest679Package.id]:lcdTest679.releaseTag, 'de3.104-lcd-app-test1': 'de3.104-lcd-test1', 'de3.103-lcd-app-test1': 'de3.103-lcd-test1', 'de3.73-lcd-app': 'de3.73-test646', 'de3.84-lcd-test1-app': 'de3.84-lcd-test1', 'de3.85-lcd-test1-app': 'de3.85-lcd-test1', 'de3.87-lcd-test1-app': 'de3.87-lcd-test1', 'de3.88-lcd-test1-app': 'de3.88-lcd-test1', 'de3.89-lcd-test1-app': 'de3.89-lcd-test1' };
   const releaseTag = specialTags[entry.id] || entry.version.split('-')[1].toLowerCase();
   const localDownloadUrl = deploymentPath(`firmware/${entry.file}`); // Validate even a pinned download's filename.
   const samePackage = reference => ['id','version','counter','file','board','bytes','sha256']
