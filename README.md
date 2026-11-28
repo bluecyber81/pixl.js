@@ -1,12 +1,16 @@
 # Allmiibo LCD and Pixl.js OLED
 
-LCD DE4.3-b4 / App685 is available with file manager 3.68.0-beta.5. The portable build includes the signed phone ZIP, Web DFU and the matching storage simulator. The default is stable LCD App680. [Windows portable](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b4-lcd-test1/Allmiibo_Dateimanager_3_68_0-beta_5_Portable.zip) · [Web source](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.5.zip).
+## LCD test firmware DE4.3-b7 / App688
 
-## LCD DE4.2 / App680 and file manager 3.68.0-beta.4 · web prerelease
+File manager 3.68.0-beta.6 recognises App688 on an ST7567 LCD with Packed LittleFS (PFS1), Z21 and S112 7.3.0. During folder upload it groups up to four eligible new files of up to 572 bytes each. If App688 is already installed, connect and upload.
+
+When rebuilding a storage block, App688 copies existing records while checking their CRC. Two uploads of the same 13-file folder on one LCD took 10.033 and 9.276 seconds. All file contents and metadata matched after both runs. [Signed phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b7-lcd-test1/Allmiibo_LCD_DE4_3_b7_App688_NUR_APP_TEST.zip) · [Test release](https://github.com/bluecyber81/pixl.js/releases/tag/de4.3-b7-lcd-test1) · [Open the file manager](https://bluecyber81.github.io/pixl.js/)
+
+## Stable LCD firmware DE4.2 / App680 and earlier changes
 
 When resuming a folder upload, the file manager checks whether device storage has changed since the comparison. If the device confirms every write group with a storage revision, a single revision check suffices at the end. If it detects an intervening change, the file manager asks you to compare the folder again. The fix requires no firmware update.
 
-**New LCD test release DE4.3-b3 / App684.** The firmware reduces repeated storage reads when uploading small files. It groups up to four new files of up to 572 bytes each. After an interrupted transfer, the file manager checks the contents and metadata when resuming. The signed application targets an ST7567 LCD with PFS1, Z21 and S112 7.3.0. [App684 phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b3-lcd-test1/Allmiibo_LCD_DE4_3_b3_App684_NUR_APP_TEST.zip)
+**LCD test release DE4.3-b3 / App684.** The firmware reduces repeated storage reads when uploading small files. It groups up to four new files of up to 572 bytes each. After an interrupted transfer, the file manager checks the contents and metadata when resuming. The signed application targets an ST7567 LCD with PFS1, Z21 and S112 7.3.0. [App684 phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b3-lcd-test1/Allmiibo_LCD_DE4_3_b3_App684_NUR_APP_TEST.zip)
 
 The catalogue now lists Noah’s and Mio’s costume rewards, including the jacketless variants. It also gives Nintendo’s 3 December 2026 release date and confirmed amiibo support for Xenoblade Chronicles 3 – Nintendo Switch 2 Edition.
 
@@ -22,7 +26,7 @@ On supported LCDs, the file manager groups checksums for small files during fold
 
 [Highlights since DE3.10](docs/PROJECT_OVERVIEW.md)
 
-[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.4/Allmiibo_Dateimanager_3_68_0-beta_4_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.4.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
+[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.6/Allmiibo_Dateimanager_3_68_0-beta_6_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.6.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
 
 ## OLED and older LCD devices
 

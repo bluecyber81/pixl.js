@@ -1,0 +1,105 @@
+{
+  "version": "3.68.0-beta.6",
+  "date": "2026-11-28",
+  "channel": "prerelease",
+  "productionBuilds": {
+    "root": 68,
+    "githubPages": 68
+  },
+  "node": {
+    "tests": 2498,
+    "pass": 2498,
+    "fail": 0,
+    "skipped": 0
+  },
+  "sourceTag": "web3.68.0-beta.6",
+  "optionalLcdPackage": {
+    "id": "de4.3-b7-lcd-app-test",
+    "version": "2.22.0-DE4.3-b7",
+    "counter": 688,
+    "channel": "prerelease",
+    "path": "firmware/Allmiibo_LCD_DE4_3_b7_App688_NUR_APP_TEST.zip",
+    "bytes": 255250,
+    "sha256": "60bc4a8f4af9fda3cb5ab5622f0fe2c95fd454a957a7b716b3dafbaa36a4f31b",
+    "sourceTag": "de4.3-b7-lcd-test1",
+    "distribution": "prerelease",
+    "sourceCommit": "d98d717418f452cc857e62547e33f1f1dee47625",
+    "sourceId": "c9a228d7ebfc56211e6e827b2ce324a2754063b97e595b1a94d47dddf1b37c5f",
+    "engineSha256": "2265f1d8817d3f9b616d9920588154046dbeae8796c11944b40af688ef8638ac",
+    "simulatorSha256": "b29a4dffedcd33462d64233e05a9c009a8c96b2e2bdd18e86158cb041a7fe359",
+    "deviceAcceptance": "dfu-and-short-upload-content-raw128-and-stack-readback-on-one-lcd"
+  },
+  "hardwareTestRecord": "LCD_APP688_SHORT_DEVICE.json",
+  "portable": {
+    "archive": "Allmiibo_Dateimanager_3_68_0-beta_6_Portable.zip",
+    "bytes": 16057855,
+    "sha256": "db3a0aa3696630b3f4e59ad6959beb560571820f76d4b00a146d5ecc706ee644",
+    "extractedFilesVerified": 403,
+    "startReuseStopPassed": true
+  },
+  "storageSimulator": {
+    "engineSha256": "2265f1d8817d3f9b616d9920588154046dbeae8796c11944b40af688ef8638ac",
+    "wasmSha256": "b29a4dffedcd33462d64233e05a9c009a8c96b2e2bdd18e86158cb041a7fe359",
+    "wasmBytes": 65623
+  },
+  "browser": {
+    "version": "3.68.0-beta.6",
+    "pages": [
+      {
+        "base": "/",
+        "width": 1365,
+        "locale": "de_DE",
+        "title": "Allmiibo Dateimanager 3.68.0-beta.6",
+        "app688HandyHash": true,
+        "app688DfuDeepLink": true,
+        "stableDfuDefault": 680
+      },
+      {
+        "base": "/",
+        "width": 1365,
+        "locale": "en",
+        "title": "Allmiibo File manager 3.68.0-beta.6",
+        "app688HandyHash": true,
+        "app688DfuDeepLink": true,
+        "stableDfuDefault": 680
+      },
+      {
+        "base": "/pixl.js/",
+        "width": 390,
+        "locale": "de_DE",
+        "title": "Allmiibo Dateimanager 3.68.0-beta.6",
+        "app688HandyHash": true,
+        "app688DfuDeepLink": true,
+        "stableDfuDefault": 680
+      },
+      {
+        "base": "/pixl.js/",
+        "width": 390,
+        "locale": "en",
+        "title": "Allmiibo File manager 3.68.0-beta.6",
+        "app688HandyHash": true,
+        "app688DfuDeepLink": true,
+        "stableDfuDefault": 680
+      }
+    ],
+    "history": {
+      "feature": "folder comparison reference export/import, both copies changed, device download, no automatic selection, metadata race refused, deliberate verified upload",
+      "scope": "Chrome, synthetic peripheral and in-memory write adapter"
+    }
+  },
+  "folderUploadBrowserTest": {
+    "scope": "Chrome, production Pages build, normal folder selection and upload with a simulated Bluetooth peripheral",
+    "positive": {
+      "source": "App688",
+      "files": 4,
+      "payloadBytes": 2160,
+      "groupCommits": 1,
+      "groupDigestVerified": true,
+      "uiCompleted": true
+    },
+    "wrongSourceId": {
+      "groupWritesObserved": 0,
+      "regularFileOpenObserved": true
+    }
+  }
+}
