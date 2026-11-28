@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "application": "allmiibo-dateimanager",
-  "version": "3.68.0-beta.3",
+  "version": "3.68.0-beta.4",
   "base": "/pixl.js/",
-  "sourceTag": "web3.68.0-beta.3",
+  "sourceTag": "web3.68.0-beta.4",
   "channel": "prerelease",
-  "packageManifestSha256": "5a3a29ed1efff7b48fbf05608ca3f70de792389c42da09cd0d6f59a7fb4b99a9",
+  "packageManifestSha256": "6b8c782284e7ddd866c7d8176bc3bba2daf78ef54b5f92dfbec1808d6c4c4666",
   "firmware": {
     "id": "de4.2-lcd-app",
     "version": "2.22.0-DE4.2-b2",
@@ -49,6 +49,22 @@
       "engineSha256": "9eef0104dc2603b0933e0174b8a12443bafc7353f884cc9f84cca23c90a595b1",
       "simulatorSha256": "0ef1d368a648f325d70001a079e733250445777be29d1e470237b8762c96cf3b",
       "deviceAcceptance": "pending"
+    },
+    {
+      "id": "de4.3-b3-lcd-app-test",
+      "version": "2.22.0-DE4.3-b3",
+      "counter": 684,
+      "channel": "prerelease",
+      "path": "firmware/Allmiibo_LCD_DE4_3_b3_App684_NUR_APP_TEST.zip",
+      "bytes": 265216,
+      "sha256": "30978b023a7f55f8f36a3885a00e761edc003ff8a0d444274c8aac924166654b",
+      "sourceTag": "de4.3-b3-lcd-test1",
+      "distribution": "prerelease",
+      "sourceCommit": "07f6e49259a720df140348aba49d47c523c8faa2",
+      "sourceId": "34fd944f230d602740b34928d6f52be3e73c8fc2895bc7c002691ea8d36d6576",
+      "engineSha256": "1dcaa2112e4bc09c3080da8aeba61e65a559ebb4bc8466b02d766c98a6e304bf",
+      "simulatorSha256": "ed5cfc06ee287cfc746c6730192db4a2466734d2fccc9d3d36d555b1c47f2bbd",
+      "deviceAcceptance": "dfu-and-short-upload-content-and-raw128-readback-on-one-lcd"
     }
   ]
 }
