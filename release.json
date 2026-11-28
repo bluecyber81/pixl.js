@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "application": "allmiibo-dateimanager",
-  "version": "3.68.0-beta.4",
+  "version": "3.68.0-beta.6",
   "base": "/pixl.js/",
-  "sourceTag": "web3.68.0-beta.4",
+  "sourceTag": "web3.68.0-beta.6",
   "channel": "prerelease",
-  "packageManifestSha256": "6b8c782284e7ddd866c7d8176bc3bba2daf78ef54b5f92dfbec1808d6c4c4666",
+  "packageManifestSha256": "8a5d43e54aee64e3366184a5853a79022226219e639d55ddb2b7765f2630c4e4",
   "firmware": {
     "id": "de4.2-lcd-app",
     "version": "2.22.0-DE4.2-b2",
@@ -65,6 +65,38 @@
       "engineSha256": "1dcaa2112e4bc09c3080da8aeba61e65a559ebb4bc8466b02d766c98a6e304bf",
       "simulatorSha256": "ed5cfc06ee287cfc746c6730192db4a2466734d2fccc9d3d36d555b1c47f2bbd",
       "deviceAcceptance": "dfu-and-short-upload-content-and-raw128-readback-on-one-lcd"
+    },
+    {
+      "id": "de4.3-b4-lcd-app-test",
+      "version": "2.22.0-DE4.3-b4",
+      "counter": 685,
+      "channel": "prerelease",
+      "path": "firmware/Allmiibo_LCD_DE4_3_b4_App685_NUR_APP_TEST.zip",
+      "bytes": 255383,
+      "sha256": "c1173f4260c020c94359105591a9b6ef1f6bbd9c24e73e3956f802472156db38",
+      "sourceTag": "de4.3-b4-lcd-test1",
+      "distribution": "prerelease",
+      "sourceCommit": "a319dc5ce536bb7c1a0d809763844738e918b6e5",
+      "sourceId": "b4606497ecd38809b56e1c4df24a79cf4e518f58be686065150559097a413d2e",
+      "engineSha256": "31ed856ea31124372012bbdf26bda98db4855783cfe9f4325911cc307de375ae",
+      "simulatorSha256": "f0746c06cf8c82578460335737eb54a7a5b8f4f14832155bea03ab7661e71607",
+      "deviceAcceptance": "dfu-and-short-upload-content-raw128-and-stack-readback-on-one-lcd"
+    },
+    {
+      "id": "de4.3-b7-lcd-app-test",
+      "version": "2.22.0-DE4.3-b7",
+      "counter": 688,
+      "channel": "prerelease",
+      "path": "firmware/Allmiibo_LCD_DE4_3_b7_App688_NUR_APP_TEST.zip",
+      "bytes": 255250,
+      "sha256": "60bc4a8f4af9fda3cb5ab5622f0fe2c95fd454a957a7b716b3dafbaa36a4f31b",
+      "sourceTag": "de4.3-b7-lcd-test1",
+      "distribution": "prerelease",
+      "sourceCommit": "d98d717418f452cc857e62547e33f1f1dee47625",
+      "sourceId": "c9a228d7ebfc56211e6e827b2ce324a2754063b97e595b1a94d47dddf1b37c5f",
+      "engineSha256": "2265f1d8817d3f9b616d9920588154046dbeae8796c11944b40af688ef8638ac",
+      "simulatorSha256": "b29a4dffedcd33462d64233e05a9c009a8c96b2e2bdd18e86158cb041a7fe359",
+      "deviceAcceptance": "dfu-and-short-upload-content-raw128-and-stack-readback-on-one-lcd"
     }
   ]
 }

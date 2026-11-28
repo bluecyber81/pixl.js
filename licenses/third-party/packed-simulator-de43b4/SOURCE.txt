@@ -1,0 +1,2 @@
+LCD DE4.3-b4 / App685. Engine and toolchain hashes are recorded in SOURCE_BINDING.json.
+Repository build: python3 web/scripts/build-capacity-de43b4.py --sdk /path/to/wasi-sdk-34.0-x86_64-linux --output /tmp/app685-rebuild
