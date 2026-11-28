@@ -1,6 +1,6 @@
 {
   "name": "allmiibo-web",
-  "version": "3.68.0-beta.2",
+  "version": "3.68.0-beta.3",
   "description": "Allmiibo Bluetooth-Dateimanager mit ZIP-Sicherung und Übertragungsprüfung",
   "private": true,
   "type": "module",

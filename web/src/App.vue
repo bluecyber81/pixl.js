@@ -619,9 +619,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.68.0-beta.2" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.68.0-beta.2' : '3.68.0-beta.2 source code' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.68.0-beta.2 (ZIP)' : 'Windows 3.68.0-beta.2 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.68.0-beta.2 (ZIP)' : '3.68.0-beta.2 source code (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.68.0-beta.3" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.68.0-beta.3' : '3.68.0-beta.3 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.68.0-beta.3 (ZIP)' : 'Windows 3.68.0-beta.3 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.68.0-beta.3 (ZIP)' : '3.68.0-beta.3 source code (ZIP)' }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>

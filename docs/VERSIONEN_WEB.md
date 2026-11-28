@@ -1,5 +1,9 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## 3.68.0-beta.3 · 28.11.2026
+
+Beim Fortsetzen eines Ordneruploads prüft der Dateimanager, ob sich der Gerätespeicher seit dem Vergleich geändert hat. Bei durchgehend bestätigten Schreibgruppen genügt am Ende eine einzige Abfrage der Speicherrevision. Erkennt der Dateimanager eine zwischenzeitliche Änderung, fordert er einen neuen Vergleich an. Die Firmwareauswahl bietet App680 als stabile LCD-Version und App683 als Testversion an. [GitHub](https://github.com/bluecyber81/pixl.js/releases/tag/web3.68.0-beta.3)
+
 ## 3.68.0-beta.2 · 28.11.2026
 
 Der Dateimanager prüft die Speicherrevision jetzt auch beim Vergleich einer einzelnen Datei. Bei LCD DE4.3-b2 / App683 lassen sich neue kleine Dateien direkt in vorhandenen Ordnern gemeinsam anlegen. Für bis zu vier Dateien prüft die Firmware Namen und Schreibrechte direkt auf dem Gerät. Nach einer unklaren Bestätigung vergleicht der Browser alle Dateien und Metadaten erneut. App680 bleibt die finale LCD-Firmware.

@@ -501,6 +501,7 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       // The firmware checks this exact revision and the no-clobber rename
       // under the same writer lock. Any intervening mutation rejects publication.
       if (!proof || !continuousReceipts || !ordered.every(path => coveredPaths.has(path))) {
+        freshLeaf = false // This audit establishes a new anchor only for the staged subtree.
         proof = (await audit(state.stagePath, false)).revision
         acknowledgedOnly.clear()
       }
@@ -529,15 +530,20 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
     }
     // Rename itself advances the revision. An interleaved mutation invalidates
     // every receipt, including changes of the same byte length.
+    let revisionReceipt
     if (candidate && (!validRevision(publishedRevision) || !consecutiveCommits(proof, publishedRevision))) {
       await audit(targetPath, false)
       acknowledgedOnly.clear()
-    } else if (parentSample && freshLeaf) {
-      parentSample.parent = parent
-      parentSample.revision = publishedRevision
-      parentSample.entries = [...initial, {name:targetName, type:1, size:0, meta:decodeRawMetadata(emptyMetadata)}]
+    } else if (freshLeaf && continuousReceipts) {
+      // Every commit from the empty stage through its exclusive publication was accounted for.
+      revisionReceipt = {before:candidate, after:publishedRevision}
+      if (parentSample) {
+        parentSample.parent = parent
+        parentSample.revision = publishedRevision
+        parentSample.entries = [...initial, {name:targetName, type:1, size:0, meta:decodeRawMetadata(emptyMetadata)}]
+      }
     }
-    return finish()
+    return {...finish(), revisionReceipt}
   } catch (error) {
     job.state = signal?.aborted ? 'paused' : 'failed'
     error.syncJob = job

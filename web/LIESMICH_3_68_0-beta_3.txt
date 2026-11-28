@@ -1,0 +1,17 @@
+Allmiibo Dateimanager 3.68.0-beta.3 · öffentliche Testversion / public prerelease
+
+Deutsch
+
+Beim Fortsetzen eines Ordneruploads prüft der Dateimanager, ob sich der Gerätespeicher seit dem Vergleich geändert hat. Bei durchgehend bestätigten Schreibgruppen genügt am Ende eine einzige Abfrage der Speicherrevision. Erkennt der Dateimanager eine zwischenzeitliche Änderung, fordert er einen neuen Vergleich an.
+
+Bei Geräten oder Schreibwegen ohne lückenlose Revisionsbestätigung prüft der Dateimanager die betroffenen Dateien über Prüfsummen. Geeignete Geräte können Prüfsummen kleiner Dateien gebündelt liefern.
+
+Die Windows-ZIP entpacken und Start-Dateimanager.cmd öffnen. Voraussetzung ist Python 3. Für diese Webkorrektur genügt die vorhandene Firmware. Unter „Update“ ist LCD DE4.2 / App680 vorausgewählt. LCD DE4.3-b2 / App683 steht separat als Testversion bereit.
+
+English
+
+When resuming a folder upload, the file manager checks whether device storage has changed since the comparison. If the device confirms every write group with a storage revision, a single revision check suffices at the end. If it detects an intervening change, the file manager asks you to compare the folder again.
+
+If the device or write operation cannot confirm a continuous storage revision, the file manager verifies the affected files by checksum. Compatible devices can return checksums for several small files in one request.
+
+Extract the Windows ZIP and open Start-Dateimanager.cmd. Python 3 is required. Your existing firmware is sufficient for this web fix. Update selects stable LCD DE4.2 / App680 by default and lists LCD DE4.3-b2 / App683 separately as a test version.
