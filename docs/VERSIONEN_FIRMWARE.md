@@ -1,5 +1,9 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## LCD DE4.3-b7 / App688 · Testversion · 28. November 2026
+
+Beim Neuaufbau eines Speicherblocks prüft und kopiert die App unveränderte Datensätze in einem Durchgang. Auf einem LCD dauerten zwei Uploads mit 13 Dateien und je 8.528 Nutzbytes 10,033 und 9,276 Sekunden. Alle Dateien und 15 Raw128-Metadatensätze wurden je Lauf zurückgelesen. Die App-ZIP setzt LCD, Packed LittleFS, Z21 und S112 7.3.0 voraus. [Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b7-lcd-test1/Allmiibo_LCD_DE4_3_b7_App688_NUR_APP_TEST.zip) · [Testrelease](https://github.com/bluecyber81/pixl.js/releases/tag/de4.3-b7-lcd-test1).
+
 ## LCD DE4.3-b4 / App685 · Testversion · 28. November 2026
 
 Die signierte App-ZIP enthält nur die LCD-Anwendung. Sie setzt Packed LittleFS, Z21 und S112 7.3.0 voraus. Die App bündelt die CRC-Berechnung beim Schreiben, behält die vollständige Ordnerprüfung bei und schafft 128 Byte zusätzlichen Programmplatz gegenüber App684. Die Geräte-Diagnose lässt sich im Dateimanager 3.68.0-beta.5 mit dem signierten Quellstand vergleichen. [Testrelease und Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/tag/de4.3-b4-lcd-test1)

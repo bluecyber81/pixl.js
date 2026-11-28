@@ -35,12 +35,13 @@ test('the normal App680 default retains separate test and historical choices and
  try {
   const options=flat(h.root).filter(n=>n.type==='option')
   assert.equal(options[0].props.value,'de42')
-  assert.equal(options[1].props.value,'de43b4');assert.equal(text(options[1]),'DE4.3-b4 / 685 · Test')
-  assert.equal(options[2].props.value,'de43b3');assert.equal(text(options[2]),'DE4.3-b3 / 684 · Test')
-  assert.equal(options[3].props.value,'de43b2');assert.equal(text(options[3]),'DE4.3-b2 / 683 · Test')
+  assert.equal(options[1].props.value,'de43b7');assert.equal(text(options[1]),'DE4.3-b7 / 688 · Test')
+  assert.equal(options[2].props.value,'de43b4');assert.equal(text(options[2]),'DE4.3-b4 / 685 · Test')
+  assert.equal(options[3].props.value,'de43b3');assert.equal(text(options[3]),'DE4.3-b3 / 684 · Test')
+  assert.equal(options[4].props.value,'de43b2');assert.equal(text(options[4]),'DE4.3-b2 / 683 · Test')
   assert.equal(text(options[0]),'DE4.2-b2 / 680')
   for(const [index,id,label] of [[0,'de41','DE4.1 / 678'],[1,'de3102','DE3.102 / 675'],[2,'de3101','DE3.101 / 674'],[3,'de3100','DE3.100 / 673'],[4,'de399','DE3.99 / 672'],[5,'de398','DE3.98 / 671'],[6,'de397','DE3.97 / 670 · Test 1'],[7,'de396','DE3.96 / 669 · Test 1'],[8,'de395','DE3.95 / 668'],[9,'de394','DE3.94 / 667'],[10,'de393','DE3.93 / 666'],[11,'de392','DE3.92 / 665'],[12,'de391','DE3.91 / 664']]) {
-    assert.equal(options[index+4].props.value,id);assert.equal(text(options[index+4]),label)
+    assert.equal(options[index+5].props.value,id);assert.equal(text(options[index+5]),label)
   }
   assert.equal(h.vm.selectedCapacityOption.reference,'DE4.2-b2 / 680')
   assert.match(text(h.root),/normale Firmware verwendet weiterhin PFS1/)

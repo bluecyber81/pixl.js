@@ -57,6 +57,7 @@ test('guarded wire accepts E root and refuses a nonportable or non-ASCII visible
 
 for (const [current, profile] of [
  [require('../public/dfu/lcd-app684-reference.mjs').lcdTest684, 'de43b3'],
+ [require('../public/dfu/lcd-app688-reference.mjs').lcdTest688, 'de43b7'],
  [require('../public/dfu/lcd-app685-reference.mjs').lcdTest685, 'de43b4'],
 ]) test('App' + current.applicationCounter + ' accepts four files and binds the source on each connection', async () => {
  const currentTarget=require('../src/lib/migration-capacity.js').getMigrationCapacityTarget(profile);

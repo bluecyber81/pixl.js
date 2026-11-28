@@ -13,6 +13,7 @@ assert.ok(['/', '/pixl.js/', '/pixl.js/test/app669/', '/pixl.js/test/app670/'].i
 const deployed=url=>base+url.slice(1)
 const sha=data=>createHash('sha256').update(data).digest('hex')
 const profiles={
+ de43b7:{url:'/lfs-capacity-de43b7.wasm',wasm:'b29a4dffedcd33462d64233e05a9c009a8c96b2e2bdd18e86158cb041a7fe359',engine:'2265f1d8817d3f9b616d9920588154046dbeae8796c11944b40af688ef8638ac',counter:688,version:'2.22.0-DE4.3-b7'},
  de43b4:{url:'/lfs-capacity-de43b4.wasm',wasm:'f0746c06cf8c82578460335737eb54a7a5b8f4f14832155bea03ab7661e71607',engine:'31ed856ea31124372012bbdf26bda98db4855783cfe9f4325911cc307de375ae',counter:685,version:'2.22.0-DE4.3-b4'},
  de43b3:{url:'/lfs-capacity-de43b3.wasm',wasm:'ed5cfc06ee287cfc746c6730192db4a2466734d2fccc9d3d36d555b1c47f2bbd',engine:'1dcaa2112e4bc09c3080da8aeba61e65a559ebb4bc8466b02d766c98a6e304bf',counter:684,version:'2.22.0-DE4.3-b3'},
  de3101:{url:'/lfs-capacity-de399.wasm',wasm:'068e6f033c6e3ee95c8be2c7c6ba633daa6821c67ca38ace68a66cd5fece604c',engine:'3ba6db5d72cb6c292beedd36b0b5126d4b63783ff054d07bcbc5c097d19ecd0f',counter:674,version:'2.22.0-DE3.101'},
@@ -48,7 +49,7 @@ const bootstrap=`const {parentPort,workerData}=require('node:worker_threads');
  globalThis.fetch=async(url,options)=>{
    if(typeof url!=='string'||!url.startsWith(workerData.base))throw Error('Request escaped deployment base');
    const canonical='/'+url.slice(workerData.base.length);
-   if(!['/lfs-capacity-de43b4.wasm','/lfs-capacity-de43b3.wasm','/lfs-capacity-de399.wasm','/lfs-capacity-de398.wasm','/lfs-capacity-de397.wasm','/lfs-capacity-de396.wasm','/lfs-capacity-de395.wasm','/lfs-capacity-de393.wasm','/lfs-capacity-de392.wasm','/lfs-capacity-de391.wasm','/lfs-capacity-de355.wasm','/lfs-capacity-de350.wasm','/lfs-capacity.wasm','/lfs-capacity-current.wasm','/lfs-capacity-previous.wasm','/lfs-capacity-de344.wasm','/lfs-capacity-de345.wasm'].includes(canonical))throw Error('Unexpected request');
+   if(!['/lfs-capacity-de43b7.wasm','/lfs-capacity-de43b4.wasm','/lfs-capacity-de43b3.wasm','/lfs-capacity-de399.wasm','/lfs-capacity-de398.wasm','/lfs-capacity-de397.wasm','/lfs-capacity-de396.wasm','/lfs-capacity-de395.wasm','/lfs-capacity-de393.wasm','/lfs-capacity-de392.wasm','/lfs-capacity-de391.wasm','/lfs-capacity-de355.wasm','/lfs-capacity-de350.wasm','/lfs-capacity.wasm','/lfs-capacity-current.wasm','/lfs-capacity-previous.wasm','/lfs-capacity-de344.wasm','/lfs-capacity-de345.wasm'].includes(canonical))throw Error('Unexpected request');
    parentPort.postMessage({kind:'test-fetch',url,cache:options.cache,credentials:options.credentials});
    const selected=workerData.swapAsset?(canonical==='/lfs-capacity.wasm'?'/lfs-capacity-current.wasm':'/lfs-capacity.wasm'):canonical;
    const data=fs.readFileSync(path.join(workerData.dist,selected.slice(1)));

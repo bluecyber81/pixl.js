@@ -1,0 +1,9 @@
+Allmiibo Dateimanager 3.68.0-beta.6 · LCD App688
+
+Deutsch
+
+Entpacke die ZIP und öffne unter Windows Start-Dateimanager.cmd. Der Starter benötigt Python 3. Ist DE4.3-b7 / App688 bereits auf deinem LCD, öffne dort die Bluetooth-Dateiübertragung und verbinde den Dateimanager unter Dateien. Beim Ordnerupload werden geeignete kleine neue Dateien automatisch in Gruppen von bis zu vier übertragen. Unter Update → LCD findest du die signierte App-ZIP für das Handy oder das Web-DFU. App688 ist eine Vorabversion für LCD mit Packed LittleFS, Bootloader Z21 und S112 7.3.0. Die voreingestellte stabile LCD-Version ist DE4.2 / App680.
+
+English
+
+Extract the ZIP and run Start-Dateimanager.cmd on Windows. The launcher needs Python 3. If your LCD already runs DE4.3-b7 / App688, open Bluetooth file transfer on the device and connect under Files in the file manager. When uploading a folder, eligible small new files are automatically transferred in groups of up to four. Under Update → LCD you can download the signed mobile ZIP or start Web DFU. App688 is a prerelease for LCD devices with Packed LittleFS, bootloader Z21 and S112 7.3.0. The default stable LCD version is DE4.2 / App680.

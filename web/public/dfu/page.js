@@ -1,16 +1,17 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { lcdTest676 } from './lcd-app676-reference.mjs';
 import { lcdTest677 } from './lcd-app677-reference.mjs';
-import { lcdFinal680, lcdFinal680Package } from './lcd-app680-reference.mjs?v=3.68.0-beta.5';
+import { lcdFinal680, lcdFinal680Package } from './lcd-app680-reference.mjs?v=3.68.0-beta.6';
 import { lcdTest683Package } from './lcd-app683-reference.mjs';
+import { lcdTest688Package } from './lcd-app688-reference.mjs';
 import { lcdTest685Package } from './lcd-app685-reference.mjs';
 import { lcdTest684Package } from './lcd-app684-reference.mjs';
 import { lcdTest679, lcdTest679Package } from './lcd-app679-reference.mjs';
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.68.0-beta.5';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.68.0-beta.6';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
-import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.68.0-beta.5';
-import { lcdRelease } from './lcd-release-reference.mjs?v=3.68.0-beta.5';
+import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.68.0-beta.6';
+import { lcdRelease } from './lcd-release-reference.mjs?v=3.68.0-beta.6';
 
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -52,7 +53,7 @@ function refreshCapability() {
     setText(capabilityText, ...(capabilityMessages[issue] || ['']));
 }
 refreshCapability();
-const guardedTests = [lcdTest685Package, lcdTest684Package, lcdTest683Package];
+const guardedTests = [lcdTest688Package, lcdTest685Package, lcdTest684Package, lcdTest683Package];
 let bundled = null, latestState = { busy:false, loading:false, ready:false };
 const hexId = value => '0x' + value.toString(16).toUpperCase().padStart(4, '0');
 function recentBootReference() {
@@ -81,7 +82,7 @@ function targetDescription(target) {
         const {app, bl, sd} = ref;
         lines.push(choose(`Zuletzt im Dateimanager gelesen · App-Zähler ${app} · Bootloader-Zähler ${bl} · SoftDevice ${hexId(sd)}.`,
             `Last read in the file manager · application counter ${app} · bootloader counter ${bl} · SoftDevice ${hexId(sd)}.`));
-        if ([679, 680, 683, 684, 685].includes(target.counter) && (bl !== 21 || sd !== 0x0126 || app > target.counter)) {
+        if ([679, 680, 683, 684, 685, 688].includes(target.counter) && (bl !== 21 || sd !== 0x0126 || app > target.counter)) {
             lines.push(choose(`App${target.counter} erfordert ein LCD mit Z21, S112 7.3.0 und App-Zähler bis ${target.counter}.`, `App${target.counter} requires an LCD with Z21, S112 7.3.0 and an application counter of ${target.counter} or lower.`));
         } else if (app > target.counter) lines.push(boardSelect.value === 'OLED'
             ? choose('Die ausgewählte OLED-Anwendung ist älter als der ausgelesene Stand. Wähle ein aktuelleres OLED-Paket.', 'The selected OLED application is older than the version read from the device. Choose a newer OLED package.')

@@ -1,4 +1,5 @@
 import {lcdTest683, lcdTest683Package} from './lcd-app683-reference.mjs';
+import {lcdTest688, lcdTest688Package} from './lcd-app688-reference.mjs';
 import {lcdTest685, lcdTest685Package} from './lcd-app685-reference.mjs';
 import {lcdTest684, lcdTest684Package} from './lcd-app684-reference.mjs';
 // Private LCD packages supplied with this build. No public release is implied.
@@ -168,5 +169,5 @@ export const lcdPreviewPackage670 = Object.freeze({
   channel: 'prerelease'
 });
 export const lcdPreviewPackage = lcdPreviewPackage670;
-export const lcdPreviewPackages = Object.freeze([lcdTest685Package, lcdTest684Package, lcdTest683Package, lcdPreviewPackage670, lcdPreviewPackage669, lcdPreviewPackage668, lcdPreviewPackage667]);
-export const lcdPreviews = Object.freeze([lcdTest685, lcdTest684, lcdTest683, lcdPreview670, lcdPreview669, lcdPreview668, lcdPreview667, lcdPreview665, lcdPreviousPreview]);
+export const lcdPreviewPackages = Object.freeze([lcdTest688Package, lcdTest685Package, lcdTest684Package, lcdTest683Package, lcdPreviewPackage670, lcdPreviewPackage669, lcdPreviewPackage668, lcdPreviewPackage667]);
+export const lcdPreviews = Object.freeze([lcdTest688, lcdTest685, lcdTest684, lcdTest683, lcdPreview670, lcdPreview669, lcdPreview668, lcdPreview667, lcdPreview665, lcdPreviousPreview]);
