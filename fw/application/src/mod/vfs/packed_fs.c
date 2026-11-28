@@ -51,8 +51,11 @@ typedef struct {
   uint32_t hash, offset;
 } index_t;
 typedef struct {
-  uint32_t id, count, body, filter[8], parents[2];
+  uint32_t id, count, body, filter[8];
 } catalog_t;
+/* Separate exact-ID parent filters survive collisions in the 32-slot index cache. */
+typedef struct { uint32_t id, parents[2]; } parent_catalog_t;
+typedef struct { catalog_t index; uint32_t parents[2]; } built_catalog_t;
 typedef struct {
   uint32_t shard, index, offset, count, body;
   io_t io;
@@ -62,6 +65,7 @@ struct pfs {
   struct lfs_config cfg;
   manifest_t current;
   catalog_t catalog[CATALOG_SLOTS];
+  parent_catalog_t parent_catalog[PFS_MAX_SHARDS];
   pfs_alloc_fn alloc;
   pfs_free_fn release;
   handle_t *handles;
@@ -198,9 +202,13 @@ static unsigned catalog_parent_bit(const char *path) {
     hash = (hash ^ (uint8_t)*path++) * 16777619u;
   return hash & 63u;
 }
-static void catalog_parent_add(catalog_t *cat, const char *path) {
+static void catalog_parent_add(uint32_t parents[2], const char *path) {
   unsigned bit = catalog_parent_bit(path);
-  cat->parents[bit >> 5] |= 1u << (bit & 31);
+  parents[bit >> 5] |= 1u << (bit & 31);
+}
+static bool parent_excluded(const pfs_t *fs, unsigned slot, uint32_t id, unsigned bit) {
+  const parent_catalog_t *cat = &fs->parent_catalog[slot];
+  return cat->id == id && !(cat->parents[bit >> 5] & (1u << (bit & 31)));
 }
 static void index_add(index_t *index, unsigned count, uint32_t hash,
                       uint32_t offset) {
@@ -494,9 +502,7 @@ static int next_record(pfs_t *fs, const manifest_t *m, cursor_t *c,
       /* Only a fully mounted, immutable shard may rule out this parent.
        * Cold/replaced/evicted shards fall back to the complete traversal.
        * Comparing the exact ID also preserves open directory snapshots. */
-      const catalog_t *cat = &fs->catalog[c->shard % CATALOG_SLOTS];
-      if (!c->offset && parent_bit < 64 && cat->id == id &&
-          !(cat->parents[parent_bit >> 5] & (1u << (parent_bit & 31)))) {
+      if (!c->offset && parent_bit < 64 && parent_excluded(fs, c->shard, id, parent_bit)) {
         c->shard++;
         c->index = 0;
         continue;
@@ -537,8 +543,6 @@ static int get_catalog(pfs_t *fs, unsigned slot, catalog_t **out) {
   uint32_t id = fs->current.ids[slot];
   if (c->id != id) {
     memset(c, 0, sizeof(*c));
-    /* This index-only cache fill has not inspected parent paths. */
-    c->parents[0] = c->parents[1] = UINT32_MAX;
     io_t io;
     int r = open_manifest_shard(fs, &io, id);
     if (r)
@@ -630,7 +634,7 @@ static int lookup_paths(pfs_t *fs, const manifest_t *m,
           return checked;
       }
     }
-    if (cat && !(cat->parents[parent_bit >> 5] & (1u << (parent_bit & 31))))
+    if (cat && parent_excluded(fs, slot, m->ids[slot], parent_bit))
       continue;
     io_t io;
     io.open = false;
@@ -998,6 +1002,7 @@ int pfs_mount(pfs_t *fs) {
   if (r)
     return r;
   memset(fs->catalog, 0, sizeof(fs->catalog));
+  memset(fs->parent_catalog, 0, sizeof(fs->parent_catalog));
   r = manifest_load(fs, &fs->current);
   uint32_t objects = 0;
   for (unsigned i = 0; !r && i < fs->current.count; i++) {
@@ -1029,7 +1034,7 @@ int pfs_mount(pfs_t *fs) {
           r = mount_index_contains(fs, &io, count, body, hash, offset);
       }
       if (!r) {
-        catalog_parent_add(cat, info.path);
+        catalog_parent_add(fs->parent_catalog[i].parents, info.path);
         offset += loc.size;
         objects++;
       }
@@ -1080,6 +1085,7 @@ int pfs_mount(pfs_t *fs) {
       cat->count = count;
       cat->body = body;
       cat->id = fs->current.ids[i];
+      fs->parent_catalog[i].id = cat->id;
     }
   }
   if (!r && objects != fs->current.objects)
@@ -1109,6 +1115,7 @@ int pfs_format(pfs_t *fs) {
   fs->poisoned = false;
   fs->gc_state = GC_CLEAN;
   memset(fs->catalog, 0, sizeof(fs->catalog));
+  memset(fs->parent_catalog, 0, sizeof(fs->parent_catalog));
   manifest_t m = {0};
   m.generation = m.next_id = m.pending = 1;
   r = publish(fs, &m);
@@ -1255,11 +1262,27 @@ static int write_record(pfs_t *fs, io_t *output, const pfs_info_t *info,
   put32(h, ~sum);
   return r ? r : emit(fs, output, h, 4, NULL, NULL);
 }
+static void rebuild_index_add(index_t *index, unsigned count, uint32_t offset,
+                              const char *path, built_catalog_t *built) {
+  uint32_t hash = path_hash(path);
+  index_add(index, count, hash, offset);
+  if (built) {
+    catalog_add(&built->index, hash);
+    catalog_parent_add(built->parents, path);
+  }
+}
 /* Keep the two IO caches local to rebuilding, never to planning/publication. */
 __attribute__((noinline))
 static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
                    uint32_t count, uint32_t body, bool add,
-                   const pfs_small_item_t *items, unsigned item_count) {
+                   const pfs_small_item_t *items, unsigned item_count,
+                   built_catalog_t *built) {
+  if (built) {
+    memset(built, 0, sizeof(*built));
+    built->index.id = newid;
+    built->index.count = count;
+    built->index.body = body;
+  }
   if (count > MAX_RECORDS)
     return LFS_ERR_NOSPC;
   index_t *index = fs->alloc(count * sizeof(*index));
@@ -1303,7 +1326,7 @@ static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
       bool replaced = c->op == PUT && !strcmp(info.path, c->path), keep;
       r = transform(c, &info, &keep);
       if (!r && keep) {
-        index_add(index, indexed++, path_hash(info.path), output_offset);
+        rebuild_index_add(index, indexed++, output_offset, info.path, built);
         output_offset += record_size(&info);
       }
       if (!r && keep)
@@ -1313,7 +1336,7 @@ static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
     }
   }
   if (!r && add) {
-    index_add(index, indexed++, path_hash(c->info.path), output_offset);
+    rebuild_index_add(index, indexed++, output_offset, c->info.path, built);
     output_offset += record_size(&c->info);
   }
   if (!r && add)
@@ -1323,7 +1346,7 @@ static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
     pfs_info_t info = {.type = PFS_FILE, .size = items[i].size};
     strcpy(info.path, items[i].path);
     memset(info.meta, 0xff, sizeof(info.meta));
-    index_add(index, indexed++, path_hash(info.path), output_offset);
+    rebuild_index_add(index, indexed++, output_offset, info.path, built);
     output_offset += record_size(&info);
     r = write_record(fs, &output, &info, NULL, 0, items[i].bytes, &sum);
   }
@@ -1508,7 +1531,7 @@ static int build_transaction(pfs_t *fs, const change_t *c, manifest_t *m,
     }
     uint32_t id = m->next_id++;
     r = rebuild(fs, c, i < fs->current.count ? fs->current.ids[i] : 0, id,
-                plan.counts[i], plan.bodies[i], (int)i == plan.addslot, NULL, 0);
+                plan.counts[i], plan.bodies[i], (int)i == plan.addslot, NULL, 0, NULL);
     if (!r)
       m->ids[m->count++] = id;
   }
@@ -2091,17 +2114,28 @@ int pfs_create_small_group(pfs_t *fs, uint32_t expected, const pfs_small_item_t 
     fs->transaction = true;
     fs->gc_state = GC_PENDING;
     const change_t no_replacement = {.op = PUT, .path = ""};
+    /* Only publish filters for a successfully committed immutable shard.
+     * A failed transaction can reuse its IDs; never install speculative data. */
+    built_catalog_t built[2];
     for (unsigned i = first; !r && i <= slot; i++) {
         const bulk_shard_t *s = &shards[i];
         const uint32_t id = m.next_id++;
         r = rebuild(fs, &no_replacement, s->old_id, id, s->count, s->body, false,
-                    items + s->first, s->added);
+                    items + s->first, s->added, &built[i]);
         if (!r) {
             if (s->old_id) m.ids[old_slots - 1] = id;
             else m.ids[m.count++] = id;
         }
     }
     if (!r) r = publish(fs, &m);
+    if (!r) {
+        for (unsigned i = first; i <= slot; ++i) {
+            const unsigned published_slot = m.count - 1 - (slot - i);
+            fs->catalog[published_slot % CATALOG_SLOTS] = built[i].index;
+            fs->parent_catalog[published_slot] = (parent_catalog_t){
+                built[i].index.id, {built[i].parents[0], built[i].parents[1]}};
+        }
+    }
     fs->transaction = false;
     r = io_error(fs, r);
     maintain(fs);
