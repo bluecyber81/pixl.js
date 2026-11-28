@@ -7,7 +7,7 @@ import { parseBootDiagnostics } from "./boot-diagnostics.js"
 import { captureDisplayPhoto, parseDisplayPage, supportsDisplayPhoto } from "./display-photo.js"
 import { parsePowerDiagnostics } from "./power-diagnostics.js"
 import { buildDiagnosticBoard, parseBuildDiagnostics } from "./lcd-build-diagnostics.js"
-import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, privateStorageVersion, matchesPrivateStorageIdentity, LCD_Z21_COUNTERS, supportsLegacyLcdFeature } from "./hardware-profile.js"
+import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, requiresBoundStorageIdentity, matchesPrivateStorageIdentity, LCD_Z21_COUNTERS, supportsLegacyLcdFeature } from "./hardware-profile.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
 import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, parseStorageGcDiagnostics, supportsMenuDiagnostics, supportsBleTestDiagnostics, supportsLinkDiagnostics, supportsStorageGcDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
@@ -647,21 +647,27 @@ function read_revision(b) {
 }
 
 let privateIdentityProbe = null;
-function privateIdentityReady() {
-    return privateIdentityProbe?.generation === transport_generation && privateIdentityProbe.confirmed === true;
+function privateIdentityReady(firmwareVersion) {
+    return privateIdentityProbe?.generation === transport_generation && privateIdentityProbe.firmwareVersion === firmwareVersion && privateIdentityProbe.confirmed === true;
 }
 export async function trusted_storage_session(firmwareVersion) {
-    if (firmwareVersion !== privateStorageVersion) return true;
+    if (!requiresBoundStorageIdentity(firmwareVersion)) return true;
     const generation = transport_generation;
-    if (!privateIdentityProbe || privateIdentityProbe.generation !== generation) {
+    if (!privateIdentityProbe || privateIdentityProbe.generation !== generation || privateIdentityProbe.firmwareVersion !== firmwareVersion) {
+        if (privateIdentityProbe?.generation === generation && privateIdentityProbe.firmwareVersion !== firmwareVersion) {
+            guarded_create_probe = null;
+            group_create_probe = null;
+            small_create_generation = -1;
+            small_batch_capability = null;
+        }
         const readIdentity = async () => {
             const boot = await get_boot_diagnostics();
             const build = await get_lcd_build_diagnostics(firmwareVersion);
             const response = await vfs_storage_layout('E');
             if (generation !== transport_generation) throw new Error('Bluetooth session changed');
-            return response.status === 0 && matchesPrivateStorageIdentity(boot, build, response.data);
+            return response.status === 0 && matchesPrivateStorageIdentity(boot, build, response.data, firmwareVersion);
         };
-        const probe = {generation, confirmed:false};
+        const probe = {generation, firmwareVersion, confirmed:false};
         probe.result = readIdentity().then(matches => {
             if (generation !== transport_generation) throw new Error('Bluetooth session changed');
             return probe.confirmed = matches;
@@ -675,8 +681,8 @@ export async function trusted_storage_session(firmwareVersion) {
 }
 
 export function vfs_small_create_revision(firmwareVersion) {
-    if (firmwareVersion === privateStorageVersion && !privateIdentityReady())
-        return trusted_storage_session(firmwareVersion).then(ok => ok && privateIdentityReady() ? vfs_small_create_revision(firmwareVersion) : null);
+    if (requiresBoundStorageIdentity(firmwareVersion) && !privateIdentityReady(firmwareVersion))
+        return trusted_storage_session(firmwareVersion).then(ok => ok && privateIdentityReady(firmwareVersion) ? vfs_small_create_revision(firmwareVersion) : null);
     if (!(LCD_Z21_COUNTERS[firmwareVersion] >= 661)) return Promise.resolve(null);
     const generation = transport_generation;
     small_create_generation = -1;
@@ -699,9 +705,9 @@ export function vfs_small_create_revision(firmwareVersion) {
 // Version and connection capabilities gate the probe. The folder publisher also
 // verifies the mounted engine before granting access to private staging writes.
 export function vfs_probe_group_create(firmwareVersion) {
-    if (firmwareVersion === privateStorageVersion && !privateIdentityReady())
-        return trusted_storage_session(firmwareVersion).then(ok => ok && privateIdentityReady() ? vfs_probe_group_create(firmwareVersion) : false);
-    if (!['2.22.0-DE4.2-b1', '2.22.0-DE4.2-b2', privateStorageVersion].includes(firmwareVersion) || !transport_capabilities?.chunkedRequests ||
+    if (requiresBoundStorageIdentity(firmwareVersion) && !privateIdentityReady(firmwareVersion))
+        return trusted_storage_session(firmwareVersion).then(ok => ok && privateIdentityReady(firmwareVersion) ? vfs_probe_group_create(firmwareVersion) : false);
+    if ((!requiresBoundStorageIdentity(firmwareVersion) && !['2.22.0-DE4.2-b1', '2.22.0-DE4.2-b2'].includes(firmwareVersion)) || !transport_capabilities?.chunkedRequests ||
         transport_capabilities.gattValueCapacity - DF_HEADER_SIZE < 196) return Promise.resolve(false);
     const generation = transport_generation;
     if (group_create_probe?.generation === generation) return group_create_probe.promise;
@@ -724,7 +730,7 @@ export function vfs_probe_group_create(firmwareVersion) {
 }
 
 export async function vfs_probe_guarded_create(version) {
-    if (version !== privateStorageVersion || !transport_capabilities?.chunkedRequests ||
+    if (!requiresBoundStorageIdentity(version) || !transport_capabilities?.chunkedRequests ||
         transport_capabilities.gattValueCapacity - DF_HEADER_SIZE < 196) return false;
     const generation = transport_generation;
     if (!await trusted_storage_session(version) || transport_generation !== generation) return false;
@@ -806,8 +812,8 @@ export function vfs_probe_small_read(firmwareVersion) {
 // App670 and later known LCD builds advertise the bounded READ/DIGEST contract separately. Keep PXSC
 // unchanged so older file managers retain their strict existing parser.
 export function vfs_probe_small_batch(firmwareVersion) {
-    if (firmwareVersion === privateStorageVersion && !privateIdentityReady())
-        return trusted_storage_session(firmwareVersion).then(ok => ok && privateIdentityReady() ? vfs_probe_small_batch(firmwareVersion) : null);
+    if (requiresBoundStorageIdentity(firmwareVersion) && !privateIdentityReady(firmwareVersion))
+        return trusted_storage_session(firmwareVersion).then(ok => ok && privateIdentityReady(firmwareVersion) ? vfs_probe_small_batch(firmwareVersion) : null);
     if (!(LCD_Z21_COUNTERS[firmwareVersion] >= 670)) return Promise.resolve(null);
     if (small_batch_capability?.generation === transport_generation && small_batch_capability.version === firmwareVersion)
         return Promise.resolve(small_batch_capability.value);

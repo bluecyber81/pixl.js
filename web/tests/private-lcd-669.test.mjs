@@ -148,7 +148,7 @@ test('private App669 recognition binds the actual signed application ZIP, BIN an
   assert.equal(catalog.packages.find(item => item.id === 'de3.89-lcd-app').counter, 662);
   assert.equal(catalog.packages.find(item => item.id === 'de3.100-lcd-app').counter, 673);
   assert.equal(catalog.packages.some(item => item.counter === 669), false);
-  assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [683,670,669,668,667,665,664]);
+  assert.deepEqual(lcdPreviews.map(item => item.applicationCounter), [684,683,670,669,668,667,665,664]);
 });
 
 test('App669 diagnostics and capacity require the new exact source, counter and engine while retaining previous profiles', () => {
@@ -189,8 +189,8 @@ test('the mobile current download uses normal App680 while retained App669 keeps
   assert.ok(lcdPreviewPackages.includes(lcdPreviewPackage));
   assert.ok(html.includes('https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip'));
   assert.match(html, /DE4\.2 \/ App680/);
-  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.68.0-beta.3'"));
+  assert.ok(page.includes("'./lcd-private-reference.mjs?v=3.68.0-beta.4'"));
   assert.equal(catalog.packages[0].version, '2.22.0-DE4.2-b2');
-  assert.ok(page.includes("'./lcd-release-reference.mjs?v=3.68.0-beta.3'"));
+  assert.ok(page.includes("'./lcd-release-reference.mjs?v=3.68.0-beta.4'"));
 });
 

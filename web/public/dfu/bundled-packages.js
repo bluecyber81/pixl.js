@@ -5,10 +5,11 @@
 }(typeof globalThis!=='undefined'?globalThis:this,function(DfuValidationError){
     'use strict';
     const MAX_BYTES=2*1024*1024;
+    const MAX_PACKAGES=35;
     const keys=['id','version','counter','file','bytes','sha256','board','storage','bootloader','softDevice','applicationOnly','migrationRequired'];
     const need=(ok,de,en)=>{if(!ok)throw new DfuValidationError(de,en);};
     function validateCatalog(input){
-        need(input&&Object.keys(input).sort().join(',')==='packages,schema'&&input.schema===1&&Array.isArray(input.packages)&&input.packages.length<=34,'Ungültiger lokaler Firmware-Katalog.', 'Invalid local firmware catalogue.');
+        need(input&&Object.keys(input).sort().join(',')==='packages,schema'&&input.schema===1&&Array.isArray(input.packages)&&input.packages.length<=MAX_PACKAGES,'Ungültiger lokaler Firmware-Katalog.', 'Invalid local firmware catalogue.');
         const seen=new Set();
         const packages=input.packages.map(item=>{
             const fields = item?.channel === 'prerelease' ? [...keys, 'channel'] : keys;
@@ -18,6 +19,7 @@
                 item.file === 'Allmiibo_LCD_DE4_1_678_NUR_APP.zip' && !item.channel && item.bootloader === 'Z21',
                 'Unpassendes LCD-App678-Profil.', 'Incorrect LCD App678 profile.');
             const transfers = {
+                '2.22.0-DE4.3-b3': {counter:684, id:'de4.3-b3-lcd-app-test', file:'Allmiibo_LCD_DE4_3_b3_App684_NUR_APP_TEST.zip', bytes:265216, sha256:'30978b023a7f55f8f36a3885a00e761edc003ff8a0d444274c8aac924166654b'},
                 '2.22.0-DE4.3-b2': {counter:683, id:'de4.3-b2-lcd-app-test', file:'Allmiibo_LCD_DE4_3_b2_App683_NUR_APP_TEST.zip', bytes:255217, sha256:'6ca4c5c7184ebe303812185026969f69b704b88171e320fb2ac08c19f6e6a36b'},
                 '2.22.0-DE4.2-b1': {counter:679, id:'de4.2-b1-lcd-app-test', file:'Allmiibo_LCD_DE4_2_b1_App679_NUR_APP_TEST.zip', bytes:257000, sha256:'1e508061e86d75addb1345d5d8c9b0eac94ebf02081c519517461e952a7f5f17'},
                 '2.22.0-DE4.2-b2': {counter:680, id:'de4.2-lcd-app', file:'Allmiibo_LCD_DE4_2_App680_NUR_APP.zip', bytes:257040, sha256:'4348e1757224b076064039feda58b86329b4db0d84681f15fcb22918f148f7ca'},
@@ -77,8 +79,8 @@
             privatePreview: reference.artifactStatus !== 'stable-signed-application'}
             : catalog.packages.find(item => item.sha256 === candidate.archiveSha256 && item.bytes === candidate.archiveBytes);
         const targetCounter = candidate.image?.target?.counter;
-        if (board === 'LCD' && [679,680,683].includes(targetCounter)) {
-            const required = {679:'2.22.0-DE4.2-b1',680:'2.22.0-DE4.2-b2',683:'2.22.0-DE4.3-b2'}[targetCounter];
+        if (board === 'LCD' && [679,680,683,684].includes(targetCounter)) {
+            const required = {679:'2.22.0-DE4.2-b1',680:'2.22.0-DE4.2-b2',683:'2.22.0-DE4.3-b2',684:'2.22.0-DE4.3-b3'}[targetCounter];
             need(entry?.version === required && candidate.image.target.softDevices.length === 1,
                 `Wähle für App${targetCounter} die passende signierte LCD-ZIP.`, `For App${targetCounter}, select the matching signed LCD ZIP.`);
         }
@@ -165,5 +167,5 @@
             }
         }
     }
-    return Object.freeze({validateCatalog,validatePackage,packageUrl,Loader,MAX_BYTES});
+    return Object.freeze({validateCatalog,validatePackage,packageUrl,Loader,MAX_BYTES,MAX_PACKAGES});
 }));

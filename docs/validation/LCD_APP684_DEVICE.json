@@ -1,0 +1,145 @@
+{
+  "verified": "one owner LCD; Windows Web Bluetooth",
+  "hardware": "nRF52832, LCD, PFS1, bootloader Z21, S112 7.3.0",
+  "firmware": {
+    "version": "2.22.0-DE4.3-b3",
+    "counter": 684,
+    "sourceId": "34fd944f230d602740b34928d6f52be3e73c8fc2895bc7c002691ea8d36d6576",
+    "packedEngine": "1dcaa2112e4bc09c3080da8aeba61e65a559ebb4bc8466b02d766c98a6e304bf",
+    "appOnly": true,
+    "zipSha256": "30978b023a7f55f8f36a3885a00e761edc003ff8a0d444274c8aac924166654b",
+    "dfuConfirmedBytes": 360432,
+    "dfuExecutionSeconds": 49.94
+  },
+  "existingFilesBeforeAndAfter": {
+    "files": 13,
+    "contentBytes": 7020,
+    "raw128Bytes": 1664,
+    "rootEntries": 10,
+    "unchanged": true
+  },
+  "runs": [
+    {
+      "counter": 683,
+      "webVersion": "3.68.0-beta.3",
+      "files": 13,
+      "bytes": 8528,
+      "subdirectories": 0,
+      "uploadMs": 10380,
+      "pickerThroughCompletionMs": 12562,
+      "rawMetadataRecordsVerified": 15,
+      "deviceSha256": 12,
+      "fullFileReadback": 1,
+      "independentVerificationMs": 2803,
+      "spaceBefore": 1155072,
+      "spaceAfter": 1155072,
+      "guardedBatchSizes": [
+        4,
+        4,
+        4
+      ],
+      "browserDisconnectedAfter": null,
+      "reconnectMs": 0
+    },
+    {
+      "counter": 684,
+      "webVersion": "3.68.0-beta.4",
+      "files": 13,
+      "bytes": 8528,
+      "subdirectories": 0,
+      "uploadMs": 9506,
+      "pickerThroughCompletionMs": 11697,
+      "rawMetadataRecordsVerified": 15,
+      "deviceSha256": 12,
+      "fullFileReadback": 1,
+      "independentVerificationMs": 2863,
+      "spaceBefore": 1155072,
+      "spaceAfter": 1155072,
+      "guardedBatchSizes": [
+        4,
+        4,
+        4
+      ],
+      "browserDisconnectedAfter": null,
+      "reconnectMs": 0
+    },
+    {
+      "counter": 684,
+      "webVersion": "3.68.0-beta.4",
+      "files": 13,
+      "bytes": 8528,
+      "subdirectories": 0,
+      "uploadMs": 18105,
+      "pickerThroughCompletionMs": 19792,
+      "rawMetadataRecordsVerified": 15,
+      "deviceSha256": 12,
+      "fullFileReadback": 1,
+      "independentVerificationMs": 3011,
+      "spaceBefore": 1155072,
+      "spaceAfter": 1155072,
+      "guardedBatchSizes": [
+        4,
+        4,
+        4
+      ],
+      "browserDisconnectedAfter": 4,
+      "reconnectMs": 7302,
+      "disconnectEvidence": {
+        "controlClient": "disconnected",
+        "productDisconnectEvent": true,
+        "physicalRadioDrop": "not independently observed at controller or peripheral"
+      },
+      "firmwareDisconnectCounterDelta": null
+    },
+    {
+      "counter": 684,
+      "webVersion": "3.68.0-beta.4",
+      "files": 50,
+      "bytes": 28540,
+      "subdirectories": 3,
+      "uploadMs": 34418,
+      "pickerThroughCompletionMs": 37105,
+      "rawMetadataRecordsVerified": 55,
+      "deviceSha256": 49,
+      "fullFileReadback": 1,
+      "independentVerificationMs": 7919,
+      "spaceBefore": 1155072,
+      "spaceAfter": 1155072,
+      "guardedBatchSizes": [
+        4,
+        4,
+        4,
+        3,
+        4,
+        4,
+        4,
+        4,
+        1,
+        4,
+        4,
+        4,
+        4,
+        1
+      ],
+      "browserDisconnectedAfter": null,
+      "reconnectMs": 0
+    }
+  ],
+  "fixture50": {
+    "files540": 48,
+    "files572": 1,
+    "files2048": 1,
+    "subdirectoriesPrecreated": 3,
+    "averageBytesPerFile": 570.8,
+    "fullDatasetMean": 609.44,
+    "straightLineSeconds": 744.12,
+    "tenMinuteTargetSeconds": 600,
+    "estimateOnly": true
+  },
+  "limits": [
+    "Short synthetic uploads to an existing destination. No 1,081-file upload. Different firmware and web profiles between the single 13-file runs.",
+    "The timed product phase excludes independent verification and cleanup; pickerThroughCompletion includes local preparation.",
+    "Independent observation of a browser GATT disconnect; physical loss during the interruption was not independently confirmed.",
+    "The 50-file fixture omits the 40,976-byte file. Actual 1,081-file elapsed time depends on directory shape, available storage, fragmentation, file mix and radio conditions."
+  ]
+}

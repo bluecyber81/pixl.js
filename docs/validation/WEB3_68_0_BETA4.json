@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "version": "3.68.0-beta.4",
+  "channel": "prerelease",
+  "releaseTag": "web3.68.0-beta.4",
+  "sourceBaseline": "d81899e9567235d4e74e3eb5e95deba9583b212a",
+  "coverage": {
+    "uploadRevisionRegression": "WEB3_68_0_BETA3.json",
+    "app684ShortHardware": "LCD_APP684_DEVICE.json",
+    "fastPath": "One final revision read, no per-file reread for twelve new files in three acknowledged groups. Fallback checks claimed paths independently when the revision chain cannot be established."
+  },
+  "tests": {
+    "web": {
+      "tests": 2488,
+      "pass": 2488,
+      "fail": 0,
+      "skipped": 0
+    },
+    "targetedSubset": {
+      "tests": 401,
+      "pass": 401,
+      "fail": 0,
+      "skipped": 0
+    },
+    "rootBuild": {
+      "tests": 62,
+      "pass": 62,
+      "fail": 0,
+      "skipped": 0
+    },
+    "pagesBuild": {
+      "tests": 62,
+      "pass": 62,
+      "fail": 0,
+      "skipped": 0
+    },
+    "windowsLauncher": {
+      "passed": 24,
+      "skipped": 2,
+      "scope": "Windows. Two POSIX-specific scenarios skipped."
+    },
+    "browser": {
+      "version": "3.68.0-beta.4",
+      "pages": [
+        {
+          "base": "/",
+          "width": 1365,
+          "title": "Allmiibo Dateimanager 3.68.0-beta.4",
+          "app684HandyHash": true,
+          "app684DfuDeepLink": true,
+          "stableDfuDefault": 680
+        },
+        {
+          "base": "/pixl.js/",
+          "width": 390,
+          "title": "Allmiibo Dateimanager 3.68.0-beta.4",
+          "app684HandyHash": true,
+          "app684DfuDeepLink": true,
+          "stableDfuDefault": 680
+        }
+      ],
+      "history": {
+        "feature": "folder comparison reference export/import, both copies changed, device download, no automatic selection, metadata race refused, deliberate verified upload",
+        "scope": "Chrome, synthetic peripheral and in-memory write adapter"
+      }
+    }
+  },
+  "portable": {
+    "bytes": 15243551,
+    "sha256": "dad4a269f0b9991548f4a807516defe65098af5ea9f81b7a5a8cd568e8843c64",
+    "verifiedPaths": 389
+  },
+  "firmware": {
+    "default": 680,
+    "optional": 684,
+    "maxGuardedFiles": 4,
+    "sourceCommit": "07f6e49259a720df140348aba49d47c523c8faa2",
+    "appOtaSha256": "30978b023a7f55f8f36a3885a00e761edc003ff8a0d444274c8aac924166654b",
+    "fullCollectionTimeMeasured": false
+  }
+}

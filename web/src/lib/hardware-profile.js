@@ -1,6 +1,7 @@
 import { UPDATE_TARGET } from './update-target.js';
 import { lcdTest683 } from '../../public/dfu/lcd-app683-reference.mjs';
-import { DE43B2_MIGRATION_CAPACITY_TARGET, DE42_MIGRATION_CAPACITY_TARGET, DE41_MIGRATION_CAPACITY_TARGET, DE3102_MIGRATION_CAPACITY_TARGET, DE3101_MIGRATION_CAPACITY_TARGET, DE3100_MIGRATION_CAPACITY_TARGET, DE399_MIGRATION_CAPACITY_TARGET, DE398_MIGRATION_CAPACITY_TARGET, DE397_MIGRATION_CAPACITY_TARGET, DE396_MIGRATION_CAPACITY_TARGET, DE395_MIGRATION_CAPACITY_TARGET, DE394_MIGRATION_CAPACITY_TARGET, DE393_MIGRATION_CAPACITY_TARGET, DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET, MIGRATION_CAPACITY_TARGET } from './migration-capacity.js';
+import { lcdTest684 } from '../../public/dfu/lcd-app684-reference.mjs';
+import { DE43B3_MIGRATION_CAPACITY_TARGET, DE43B2_MIGRATION_CAPACITY_TARGET, DE42_MIGRATION_CAPACITY_TARGET, DE41_MIGRATION_CAPACITY_TARGET, DE3102_MIGRATION_CAPACITY_TARGET, DE3101_MIGRATION_CAPACITY_TARGET, DE3100_MIGRATION_CAPACITY_TARGET, DE399_MIGRATION_CAPACITY_TARGET, DE398_MIGRATION_CAPACITY_TARGET, DE397_MIGRATION_CAPACITY_TARGET, DE396_MIGRATION_CAPACITY_TARGET, DE395_MIGRATION_CAPACITY_TARGET, DE394_MIGRATION_CAPACITY_TARGET, DE393_MIGRATION_CAPACITY_TARGET, DE392_MIGRATION_CAPACITY_TARGET, DE391_MIGRATION_CAPACITY_TARGET, DE389_MIGRATION_CAPACITY_TARGET, MIGRATION_CAPACITY_TARGET } from './migration-capacity.js';
 
 // A profile is opt-in. Only the browser's already hashed, per-device lookup key is used locally.
 const profileValue = 'lipo-551520-180mah-v1';
@@ -48,21 +49,28 @@ export const LCD_Z21_COUNTERS = Object.freeze({
   '2.22.0-DE4.1': 678,
   '2.22.0-DE4.2-b1': 679,
   '2.22.0-DE4.2-b2': 680,
+  [lcdTest684.firmwareVersion]: lcdTest684.applicationCounter,
   [lcdTest683.firmwareVersion]: lcdTest683.applicationCounter,
 });
 const lcdDisplayBuilds = ['2.22.0-DE3.77', '2.22.0-DE3.78', '2.22.0-DE3.79', '2.22.0-DE3.80', '2.22.0-DE3.81', ...Object.keys(LCD_Z21_COUNTERS)];
 export const privateStorageVersion = lcdTest683.firmwareVersion;
-export function matchesPrivateStorageIdentity(boot, build, layout) {
-  return boot?.applicationCounter === lcdTest683.applicationCounter && boot.chipPart === lcdTest683.chipPart &&
+const boundStorageProfiles = new Map([
+  [lcdTest683.firmwareVersion, {reference:lcdTest683, target:DE43B2_MIGRATION_CAPACITY_TARGET}],
+  [lcdTest684.firmwareVersion, {reference:lcdTest684, target:DE43B3_MIGRATION_CAPACITY_TARGET}],
+]);
+export const requiresBoundStorageIdentity = version => boundStorageProfiles.has(version);
+export function matchesPrivateStorageIdentity(boot, build, layout, version = privateStorageVersion) {
+  const profile = boundStorageProfiles.get(version);
+  return !!profile && boot?.applicationCounter === profile.reference.applicationCounter && boot.chipPart === profile.reference.chipPart &&
     boot.bootloaderCounter === 21 && boot.softDeviceVariant === 112 && boot.softDeviceVersion === 7003000 &&
     boot.softDeviceFwid === 0x126 && boot.settingsCrcValid === true && boot.softDeviceValid === true &&
     boot.bootAddressValid === true && boot.bootVectorsValid === true && boot.addressConflict === false &&
     boot.bootHashValid === true && boot.bootRegionSha256 === 'd3f9da7c477ce56a38d4458585222bffca793fddf614f54937012e4819d717fb' &&
-    build?.board === 'LCD' && typeof lcdTest683.sourceId === 'string' && build.sourceId === lcdTest683.sourceId &&
-    layout?.mounted === true && Object.entries(DE43B2_MIGRATION_CAPACITY_TARGET.layout).every(([k,v]) => layout[k] === v);
+    build?.board === 'LCD' && build.sourceId === profile.reference.sourceId &&
+    layout?.mounted === true && Object.entries(profile.target.layout).every(([k,v]) => layout[k] === v);
 }
 export function supportsFolderPublication(version, engine, confirmedPrivateDevice = false) {
-  if (version === privateStorageVersion) return confirmedPrivateDevice === true && engine === lcdTest683.engineSha256;
+  if (requiresBoundStorageIdentity(version)) return confirmedPrivateDevice === true && engine === boundStorageProfiles.get(version).reference.engineSha256;
   if (firmwareBoard(version) !== 'LCD') return false;
   if (version === '2.22.0-DE4.2-b1') return engine === '4b779ad5f10e12d881e0c96c4495c6db3290cbac3c015b50d11dd73dc8189758';
   // The App676 and App677 test builds use the same PFS engine for directory publication as App675.

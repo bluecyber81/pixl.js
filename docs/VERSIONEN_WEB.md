@@ -1,5 +1,9 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## 3.68.0-beta.4 · 28.11.2026
+
+Der Dateimanager unterstützt die LCD-Testfirmware DE4.3-b3 / App684 mit ihrem eigenen Speicherprofil. Für die schnelle Abschlussprüfung nutzt er weiterhin die veröffentlichten Vierergruppen. Die Laufzeit für 1.081 Dateien mit App684 ist offen. [Webrelease](https://github.com/bluecyber81/pixl.js/releases/tag/web3.68.0-beta.4)
+
 ## 3.68.0-beta.3 · 28.11.2026
 
 Beim Fortsetzen eines Ordneruploads prüft der Dateimanager, ob sich der Gerätespeicher seit dem Vergleich geändert hat. Bei durchgehend bestätigten Schreibgruppen genügt am Ende eine einzige Abfrage der Speicherrevision. Erkennt der Dateimanager eine zwischenzeitliche Änderung, fordert er einen neuen Vergleich an. Die Firmwareauswahl bietet App680 als stabile LCD-Version und App683 als Testversion an. [GitHub](https://github.com/bluecyber81/pixl.js/releases/tag/web3.68.0-beta.3)

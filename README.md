@@ -1,10 +1,10 @@
 # Allmiibo LCD and Pixl.js OLED
 
-## LCD DE4.2 / App680 and file manager 3.68.0-beta.3 · web prerelease
+## LCD DE4.2 / App680 and file manager 3.68.0-beta.4 · web prerelease
 
 When resuming a folder upload, the file manager checks whether device storage has changed since the comparison. If the device confirms every write group with a storage revision, a single revision check suffices at the end. If it detects an intervening change, the file manager asks you to compare the folder again. The fix requires no firmware update.
 
-**New LCD test release DE4.3-b2 / App683.** When uploading to existing folders, it groups up to four new files of up to 572 bytes each. After an interrupted transfer the file manager checks contents and metadata before resuming. The signed application targets an ST7567 LCD with Z21, S112 7.3.0 and an existing PFS1 filesystem. [App683 phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b2-lcd-test1/Allmiibo_LCD_DE4_3_b2_App683_NUR_APP_TEST.zip).
+**New LCD test release DE4.3-b3 / App684.** The firmware reduces repeated storage reads when uploading small files. It groups up to four new files of up to 572 bytes each. After an interrupted transfer, the file manager checks the contents and metadata when resuming. The signed application targets an ST7567 LCD with PFS1, Z21 and S112 7.3.0. [App684 phone ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b3-lcd-test1/Allmiibo_LCD_DE4_3_b3_App684_NUR_APP_TEST.zip)
 
 The catalogue now lists Noah’s and Mio’s costume rewards, including the jacketless variants. It also gives Nintendo’s 3 December 2026 release date and confirmed amiibo support for Xenoblade Chronicles 3 – Nintendo Switch 2 Edition.
 
@@ -20,7 +20,7 @@ On supported LCDs, the file manager groups checksums for small files during fold
 
 [Highlights since DE3.10](docs/PROJECT_OVERVIEW.md)
 
-[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.3/Allmiibo_Dateimanager_3_68_0-beta_3_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.3.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
+[Open the file manager](https://bluecyber81.github.io/pixl.js/) · [Windows portable ZIP](https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.4/Allmiibo_Dateimanager_3_68_0-beta_4_Portable.zip) · [Web source ZIP](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.4.zip) · [Guide](https://bluecyber81.github.io/pixl.js/guide/en.html) · [Deutsch](README.de.md)
 
 ## OLED and older LCD devices
 
