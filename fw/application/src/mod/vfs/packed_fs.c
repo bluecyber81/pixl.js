@@ -400,8 +400,10 @@ static int read_record(pfs_t *fs, io_t *io, uint32_t offset, uint32_t limit,
                        pfs_info_t *info, location_t *loc, bool want_meta) {
   return read_record_prefix(fs, io, offset, limit, info, loc, want_meta, NULL, NULL);
 }
-static int verify_record(pfs_t *fs, io_t *io, const location_t *loc,
-                         uint32_t *body_crc) {
+/* An unchanged record can be streamed to the unpublished replacement shard
+ * while checking its original CRC. A failed check prevents publication. */
+static int copy_verified_record(pfs_t *fs, io_t *io, const location_t *loc,
+                                io_t *output, uint32_t *body_crc) {
   uint32_t sum = ~0u;
   for (uint32_t off = 0; off < loc->size - 4;) {
     uint32_t n = loc->size - 4 - off;
@@ -410,14 +412,20 @@ static int verify_record(pfs_t *fs, io_t *io, const location_t *loc,
     int r = read_at(fs, io, loc->offset + off, fs->copy, n);
     if (r)
       return r;
-    sum = crc(sum, fs->copy, n);
-    if (body_crc)
-      *body_crc = crc(*body_crc, fs->copy, n);
+    if (output) {
+      r = emit(fs, output, fs->copy, n, &sum, body_crc);
+      if (r)
+        return r;
+    } else {
+      sum = crc(sum, fs->copy, n);
+    }
     off += n;
   }
   uint8_t stored[4];
   int r = read_at(fs, io, loc->offset + loc->size - 4, stored, 4);
-  return r ? r : u32(stored) == ~sum ? 0 : LFS_ERR_CORRUPT;
+  if (r || u32(stored) != ~sum)
+    return r ? r : LFS_ERR_CORRUPT;
+  return output ? emit(fs, output, stored, sizeof(stored), NULL, NULL) : 0;
 }
 /* Mount consumes immutable records in order. Decode the prefix and include
  * those same bytes in both checksums before reading metadata and payload.
@@ -1319,9 +1327,12 @@ static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
     for (unsigned j = 0; !r && j < oldcount; j++) {
       pfs_info_t info;
       location_t loc;
-      r = read_record(fs, &input, offset, SH + oldbody, &info, &loc, true);
-      if (!r)
-        r = verify_record(fs, &input, &loc, NULL);
+      r = read_record(fs, &input, offset, SH + oldbody, &info, &loc,
+                      c->op == RENAME);
+      if (r)
+        break;
+      bool changed = matches(c, info.path);
+      r = copy_verified_record(fs, &input, &loc, changed ? NULL : &output, &sum);
       if (r)
         break;
       bool replaced = c->op == PUT && !strcmp(info.path, c->path), keep;
@@ -1330,7 +1341,7 @@ static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
         rebuild_index_add(index, indexed++, output_offset, info.path, built);
         output_offset += record_size(&info);
       }
-      if (!r && keep)
+      if (!r && keep && changed)
         r = write_record(fs, &output, &info, replaced ? &c->stage->io : &input,
                          replaced ? 0 : loc.data, NULL, &sum);
       offset += loc.size;
@@ -1799,7 +1810,7 @@ int pfs_open(pfs_t *fs, const char *path, int flags, pfs_file_t **output) {
       io_t old;
       r = io_open(fs, &old, name, LFS_O_RDONLY);
       if (!r)
-        r = verify_record(fs, &old, &loc, NULL);
+        r = copy_verified_record(fs, &old, &loc, NULL, NULL);
       for (uint32_t offset = 0; !r && offset < info.size;) {
         uint32_t n = info.size - offset;
         if (n > PFS_CACHE_SIZE)
@@ -1823,7 +1834,7 @@ int pfs_open(pfs_t *fs, const char *path, int flags, pfs_file_t **output) {
     shard_name(loc.shard, name);
     r = io_open(fs, &file->io, name, LFS_O_RDONLY);
     if (!r)
-      r = verify_record(fs, &file->io, &loc, NULL);
+      r = copy_verified_record(fs, &file->io, &loc, NULL, NULL);
   }
   if (r) {
     io_close(fs, &file->io, r);
