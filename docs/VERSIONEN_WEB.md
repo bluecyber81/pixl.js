@@ -1,5 +1,13 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## 3.68.0-beta.6 · 28. November 2026
+
+Der Dateimanager erkennt die signierte LCD-Testfirmware App688 anhand ihrer Firmware- und Speicherkennung. Beim Ordnerupload überträgt er bis zu vier geeignete kleine neue Dateien gemeinsam. Die Updateansicht enthält die App-ZIP und Web-DFU. Der Kapazitätstest verwendet das zugehörige Speichermodell. [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.6/Allmiibo_Dateimanager_3_68_0-beta_6_Portable.zip) · [Webquellen](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.6.zip).
+
+## 3.68.0-beta.5 · 28.11.2026
+
+Die portable Testversion unterstützt LCD DE4.3-b4 / App685. Diagnose, Vierergruppen, Speicherprüfung und Web-DFU verwenden das zum signierten Paket gehörende Profil. Die finale LCD-Auswahl ist weiterhin App680. [Download](https://github.com/bluecyber81/pixl.js/releases/tag/de4.3-b4-lcd-test1)
+
 ## 3.68.0-beta.4 · 28.11.2026
 
 Der Dateimanager unterstützt die LCD-Testfirmware DE4.3-b3 / App684 mit ihrem eigenen Speicherprofil. Für die schnelle Abschlussprüfung nutzt er weiterhin die veröffentlichten Vierergruppen. Die Laufzeit für 1.081 Dateien mit App684 ist offen. [Webrelease](https://github.com/bluecyber81/pixl.js/releases/tag/web3.68.0-beta.4)

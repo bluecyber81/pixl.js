@@ -5,7 +5,7 @@
 }(typeof globalThis!=='undefined'?globalThis:this,function(DfuValidationError){
     'use strict';
     const MAX_BYTES=2*1024*1024;
-    const MAX_PACKAGES=35;
+    const MAX_PACKAGES=37;
     const keys=['id','version','counter','file','bytes','sha256','board','storage','bootloader','softDevice','applicationOnly','migrationRequired'];
     const need=(ok,de,en)=>{if(!ok)throw new DfuValidationError(de,en);};
     function validateCatalog(input){
@@ -19,6 +19,8 @@
                 item.file === 'Allmiibo_LCD_DE4_1_678_NUR_APP.zip' && !item.channel && item.bootloader === 'Z21',
                 'Unpassendes LCD-App678-Profil.', 'Incorrect LCD App678 profile.');
             const transfers = {
+                '2.22.0-DE4.3-b7': {counter:688, id:'de4.3-b7-lcd-app-test', file:'Allmiibo_LCD_DE4_3_b7_App688_NUR_APP_TEST.zip', bytes:255250, sha256:'60bc4a8f4af9fda3cb5ab5622f0fe2c95fd454a957a7b716b3dafbaa36a4f31b'},
+                '2.22.0-DE4.3-b4': {counter:685, id:'de4.3-b4-lcd-app-test', file:'Allmiibo_LCD_DE4_3_b4_App685_NUR_APP_TEST.zip', bytes:255383, sha256:'c1173f4260c020c94359105591a9b6ef1f6bbd9c24e73e3956f802472156db38'},
                 '2.22.0-DE4.3-b3': {counter:684, id:'de4.3-b3-lcd-app-test', file:'Allmiibo_LCD_DE4_3_b3_App684_NUR_APP_TEST.zip', bytes:265216, sha256:'30978b023a7f55f8f36a3885a00e761edc003ff8a0d444274c8aac924166654b'},
                 '2.22.0-DE4.3-b2': {counter:683, id:'de4.3-b2-lcd-app-test', file:'Allmiibo_LCD_DE4_3_b2_App683_NUR_APP_TEST.zip', bytes:255217, sha256:'6ca4c5c7184ebe303812185026969f69b704b88171e320fb2ac08c19f6e6a36b'},
                 '2.22.0-DE4.2-b1': {counter:679, id:'de4.2-b1-lcd-app-test', file:'Allmiibo_LCD_DE4_2_b1_App679_NUR_APP_TEST.zip', bytes:257000, sha256:'1e508061e86d75addb1345d5d8c9b0eac94ebf02081c519517461e952a7f5f17'},
@@ -79,8 +81,8 @@
             privatePreview: reference.artifactStatus !== 'stable-signed-application'}
             : catalog.packages.find(item => item.sha256 === candidate.archiveSha256 && item.bytes === candidate.archiveBytes);
         const targetCounter = candidate.image?.target?.counter;
-        if (board === 'LCD' && [679,680,683,684].includes(targetCounter)) {
-            const required = {679:'2.22.0-DE4.2-b1',680:'2.22.0-DE4.2-b2',683:'2.22.0-DE4.3-b2',684:'2.22.0-DE4.3-b3'}[targetCounter];
+        if (board === 'LCD' && [679,680,683,684,685,688].includes(targetCounter)) {
+            const required = {679:'2.22.0-DE4.2-b1',680:'2.22.0-DE4.2-b2',683:'2.22.0-DE4.3-b2',684:'2.22.0-DE4.3-b3',685:'2.22.0-DE4.3-b4',688:'2.22.0-DE4.3-b7'}[targetCounter];
             need(entry?.version === required && candidate.image.target.softDevices.length === 1,
                 `Wähle für App${targetCounter} die passende signierte LCD-ZIP.`, `For App${targetCounter}, select the matching signed LCD ZIP.`);
         }

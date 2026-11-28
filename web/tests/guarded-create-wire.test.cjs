@@ -55,15 +55,18 @@ test('guarded wire accepts E root and refuses a nonportable or non-ASCII visible
  await assert.rejects(groupCreateFrames('E:/',entries,rev,1,243))
 })
 
-test('App684 negotiates four files using the actual signed source and refuses cross-version reuse on one link',async()=>{
- const {lcdTest684}=require('../public/dfu/lcd-app684-reference.mjs');
- const target684=require('../src/lib/migration-capacity.js').getMigrationCapacityTarget('de43b3');
+for (const [current, profile] of [
+ [require('../public/dfu/lcd-app684-reference.mjs').lcdTest684, 'de43b3'],
+ [require('../public/dfu/lcd-app688-reference.mjs').lcdTest688, 'de43b7'],
+ [require('../public/dfu/lcd-app685-reference.mjs').lcdTest685, 'de43b4'],
+]) test('App' + current.applicationCounter + ' accepts four files and binds the source on each connection', async () => {
+ const currentTarget=require('../src/lib/migration-capacity.js').getMigrationCapacityTarget(profile);
  const entries=Array.from({length:4},(_,n)=>({name:'item'+n+'.bin',bytes:new Uint8Array(540)}));
  for(const [packets,maximum,capable] of [
-  [identity(lcdTest684,target684),4,true],
-  [identity(lcdTest684,target684),8,false],
+  [identity(current,currentTarget),4,true],
+  [identity(current,currentTarget),8,false],
   [identity(ref,target),4,false],
-  [identity(lcdTest684,target),4,false],
+  [identity(current,target),4,false],
  ]) {
   const fixture=await readDigestWire({},{identityPackets:packets,groupWire:async(cmd,data)=>{
    if(cmd===0x29){
@@ -75,14 +78,14 @@ test('App684 negotiates four files using the actual signed source and refuses cr
    const payload=Buffer.alloc(14);payload.set([1,4]);payload.writeUInt32LE(data.readUInt32LE(1),2);
    payload.writeBigUInt64LE(BigInt('0x'+next),6);return {payload};
   }});
-  if(maximum!==4){await assert.rejects(fixture.api.vfs_probe_guarded_create(lcdTest684.firmwareVersion));continue;}
-  assert.equal(await fixture.api.vfs_probe_guarded_create(lcdTest684.firmwareVersion),capable);
+  if(maximum!==4){await assert.rejects(fixture.api.vfs_probe_guarded_create(current.firmwareVersion));continue;}
+  assert.equal(await fixture.api.vfs_probe_guarded_create(current.firmwareVersion),capable);
   if(!capable){assert.equal(fixture.requests.some(b=>b[0]===0x29),false);continue;}
   assert.equal(await fixture.api.vfs_guarded_create('E:/',entries,rev),next);
   await assert.rejects(fixture.api.vfs_guarded_create('E:/',[...entries,{name:'last',bytes:new Uint8Array()}],rev));
   assert.equal(await fixture.api.trusted_storage_session(ref.firmwareVersion),false);
   await assert.rejects(fixture.api.vfs_guarded_create('E:/',entries,rev));
-  assert.equal(await fixture.api.trusted_storage_session(lcdTest684.firmwareVersion),true);
+  assert.equal(await fixture.api.trusted_storage_session(current.firmwareVersion),true);
   assert.equal(fixture.requests.some(b=>b[0]===0x2b||b[0]===0x2c),false);
  }
 });

@@ -1395,27 +1395,23 @@
       "evidence": "docs/validation/WEB3_65_0_FINAL_DELIVERY.json"
     }
   },
-  "web_version": "3.68.0-beta.4",
+  "web_version": "3.68.0-beta.6",
   "web_release_status": "prerelease",
-  "web_release_notes": "web/LIESMICH_3_68_0-beta_4.txt",
-  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web3.68.0-beta.4",
-  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.4.zip",
-  "web_portable_url": "https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.4/Allmiibo_Dateimanager_3_68_0-beta_4_Portable.zip",
+  "web_release_notes": "web/LIESMICH_3_68_0-beta_6.txt",
+  "web_source_url": "https://github.com/bluecyber81/pixl.js/tree/web3.68.0-beta.6",
+  "web_source_archive_url": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.6.zip",
+  "web_portable_url": "https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.6/Allmiibo_Dateimanager_3_68_0-beta_6_Portable.zip",
   "web_downloads": {
-    "portable": "https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.4/Allmiibo_Dateimanager_3_68_0-beta_4_Portable.zip",
-    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.4.zip",
-    "portableBytes": 15243551,
-    "portableSha256": "dad4a269f0b9991548f4a807516defe65098af5ea9f81b7a5a8cd568e8843c64"
+    "portable": "https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.6/Allmiibo_Dateimanager_3_68_0-beta_6_Portable.zip",
+    "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.6.zip",
+    "portableSha256": "db3a0aa3696630b3f4e59ad6959beb560571820f76d4b00a146d5ecc706ee644",
+    "portableBytes": 16057855
   },
-  "web_upload_evidence": "docs/validation/WEB3_67_0.json",
-  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.68.0-beta.4",
+  "web_upload_evidence": "docs/validation/LCD_APP688_SHORT_DEVICE.json",
+  "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.68.0-beta.6",
   "web_publication_date": "2026-11-28",
   "web_qualification_date": "2026-11-28",
-  "web_evidence": "docs/validation/WEB3_68_0_BETA4.json",
-  "web_test_total": 2488,
-  "web_test_passed": 2488,
-  "web_test_failed": 0,
-  "web_test_skipped": 0,
+  "web_evidence": "docs/validation/WEB3_68_0_BETA6.json",
   "release_label": "DE4.2",
   "firmware_source_tag": "de4.2",
   "normal_web_release_history": [
@@ -1455,14 +1451,25 @@
       "evidence": "docs/validation/WEB3_68_0_BETA3.json",
       "portableBytes": 14825307,
       "portableSha256": "c9d58ccc5d15c3597bdc384e5d78a65953c92580db64c2c29315327f283a4e82"
+    },
+    {
+      "version": "3.68.0-beta.4",
+      "release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.68.0-beta.4",
+      "evidence": "docs/validation/WEB3_68_0_BETA4.json",
+      "portableBytes": 15243551,
+      "portableSha256": "dad4a269f0b9991548f4a807516defe65098af5ea9f81b7a5a8cd568e8843c64"
     }
   ],
   "web_optional_lcd_test": {
-    "counter": 684,
-    "firmware": "2.22.0-DE4.3-b3",
-    "releaseTag": "de4.3-b3-lcd-test1",
-    "url": "https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b3-lcd-test1/Allmiibo_LCD_DE4_3_b3_App684_NUR_APP_TEST.zip",
-    "otaBytes": 265216,
-    "otaSha256": "30978b023a7f55f8f36a3885a00e761edc003ff8a0d444274c8aac924166654b"
-  }
+    "counter": 688,
+    "firmware": "2.22.0-DE4.3-b7",
+    "releaseTag": "de4.3-b7-lcd-test1",
+    "url": "https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b7-lcd-test1/Allmiibo_LCD_DE4_3_b7_App688_NUR_APP_TEST.zip",
+    "otaBytes": 255250,
+    "otaSha256": "60bc4a8f4af9fda3cb5ab5622f0fe2c95fd454a957a7b716b3dafbaa36a4f31b"
+  },
+  "web_test_total": 2498,
+  "web_test_passed": 2498,
+  "web_test_failed": 0,
+  "web_test_skipped": 0
 }

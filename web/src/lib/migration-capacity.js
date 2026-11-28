@@ -1,4 +1,6 @@
 import { lcdTest683 } from '../../public/dfu/lcd-app683-reference.mjs';
+import { lcdTest688 } from '../../public/dfu/lcd-app688-reference.mjs';
+import { lcdTest685 } from '../../public/dfu/lcd-app685-reference.mjs';
 import { lcdTest684 } from '../../public/dfu/lcd-app684-reference.mjs';
 
 // Exact reviewed simulation engine. This alone never authorizes formatting.
@@ -289,6 +291,18 @@ const de43b3 = {
   approvedApplications:[{firmwareVersion:lcdTest684.firmwareVersion, applicationCounter:lcdTest684.applicationCounter}],
   layout:{...de42.layout, engineSha256:lcdTest684.engineSha256}
 }
+const de43b4 = {
+  ...de42, url:'/lfs-capacity-de43b4.wasm', wasmSha256:lcdTest685.wasmSha256,
+  firmwareVersion:lcdTest685.firmwareVersion, applicationCounter:lcdTest685.applicationCounter,
+  approvedApplications:[{firmwareVersion:lcdTest685.firmwareVersion, applicationCounter:lcdTest685.applicationCounter}],
+  layout:{...de42.layout, engineSha256:lcdTest685.engineSha256}
+}
+const de43b7 = {
+  ...de42, url:'/lfs-capacity-de43b7.wasm', wasmSha256:lcdTest688.wasmSha256,
+  firmwareVersion:lcdTest688.firmwareVersion, applicationCounter:lcdTest688.applicationCounter,
+  approvedApplications:[{firmwareVersion:lcdTest688.firmwareVersion, applicationCounter:lcdTest688.applicationCounter}],
+  layout:{...de42.layout, engineSha256:lcdTest688.engineSha256}
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -313,12 +327,16 @@ export const DE398_MIGRATION_CAPACITY_TARGET=freezeTarget(de398)
 export const DE399_MIGRATION_CAPACITY_TARGET=freezeTarget(de399)
 export const DE3100_MIGRATION_CAPACITY_TARGET=freezeTarget(de3100)
 export const DE3101_MIGRATION_CAPACITY_TARGET=freezeTarget(de3101)
+export const DE43B7_MIGRATION_CAPACITY_TARGET=freezeTarget(de43b7)
+export const DE43B4_MIGRATION_CAPACITY_TARGET=freezeTarget(de43b4)
 export const DE43B3_MIGRATION_CAPACITY_TARGET=freezeTarget(de43b3)
 export const DE43B2_MIGRATION_CAPACITY_TARGET=freezeTarget(de43b2)
 export const DE42_MIGRATION_CAPACITY_TARGET=freezeTarget(de42)
 export const DE41_MIGRATION_CAPACITY_TARGET=freezeTarget(de41)
 export const DE3102_MIGRATION_CAPACITY_TARGET=freezeTarget(de3102)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de43b7')return DE43B7_MIGRATION_CAPACITY_TARGET
+  if(profile==='de43b4')return DE43B4_MIGRATION_CAPACITY_TARGET
   if(profile==='de43b3')return DE43B3_MIGRATION_CAPACITY_TARGET
   if(profile==='de43b2')return DE43B2_MIGRATION_CAPACITY_TARGET
   if(profile==='de42')return DE42_MIGRATION_CAPACITY_TARGET

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "observedOn": "2026-11-28",
+  "board": "LCD",
+  "counter": 685,
+  "referenceMatches": {
+    "sourceId": true,
+    "engineSha256": true,
+    "bootloaderCounter": 21,
+    "softDevice": "S112 7.3.0"
+  },
+  "upload": {
+    "files": 13,
+    "payloadBytes": 8528,
+    "uploadMilliseconds": 10310,
+    "preparedOperationMilliseconds": 12515,
+    "independentAuditMilliseconds": 2683,
+    "verifiedRaw128Records": 15,
+    "allContentAndRaw128Verified": true,
+    "ownedTestFolderRemoved": true,
+    "freeBytesBefore": 1155072,
+    "freeBytesAfterCleanup": 1155072
+  },
+  "stack": {
+    "reservedBytes": 8192,
+    "minFreeBeforeBytes": 6032,
+    "minFreeAfterBytes": 3376
+  },
+  "runtime": {
+    "vfsErrors": 0,
+    "allocationFailures": 0,
+    "timeouts": 0,
+    "previousFault": null
+  },
+  "scope": "One device and this short upload. No full 1081-file Bluetooth upload or universal stack bound."
+}

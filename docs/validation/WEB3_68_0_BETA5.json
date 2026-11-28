@@ -1,0 +1,121 @@
+{
+  "version": "3.68.0-beta.5",
+  "channel": "prerelease",
+  "webSourceTag": "web3.68.0-beta.5",
+  "basedOn": "6f62bb3b32b8fa9d9f731f0f66052ac62393e2cf",
+  "signingAndAcceptance": {
+    "reference": {
+      "id": "de4.3-b4-lcd-app-test",
+      "version": "2.22.0-DE4.3-b4",
+      "counter": 685,
+      "channel": "prerelease",
+      "path": "firmware/Allmiibo_LCD_DE4_3_b4_App685_NUR_APP_TEST.zip",
+      "bytes": 255383,
+      "sha256": "c1173f4260c020c94359105591a9b6ef1f6bbd9c24e73e3956f802472156db38",
+      "sourceTag": "de4.3-b4-lcd-test1",
+      "distribution": "prerelease",
+      "sourceCommit": "a319dc5ce536bb7c1a0d809763844738e918b6e5",
+      "sourceId": "b4606497ecd38809b56e1c4df24a79cf4e518f58be686065150559097a413d2e",
+      "engineSha256": "31ed856ea31124372012bbdf26bda98db4855783cfe9f4325911cc307de375ae",
+      "simulatorSha256": "f0746c06cf8c82578460335737eb54a7a5b8f4f14832155bea03ab7661e71607",
+      "deviceAcceptance": "dfu-and-short-upload-content-raw128-and-stack-readback-on-one-lcd"
+    },
+    "physicalDeviceEvidence": "LCD_APP685_SHORT_DEVICE.json"
+  },
+  "webSuite": {
+    "node": {
+      "tests": 2493,
+      "pass": 2493,
+      "fail": 0,
+      "skipped": 0
+    },
+    "scope": "All stock Node test files including 16 individually executed historical capacity profiles and two hash-verified historical DFU ZIPs.",
+    "fileCount": 173,
+    "rootBuild": {
+      "tests": 65,
+      "pass": 65,
+      "fail": 0,
+      "skipped": 0
+    },
+    "pagesBuild": {
+      "tests": 65,
+      "pass": 65,
+      "fail": 0,
+      "skipped": 0
+    },
+    "focused": {
+      "tests": 125,
+      "pass": 125,
+      "fail": 0,
+      "skipped": 0
+    },
+    "windowsLauncher": {
+      "run": 26,
+      "passed": 24,
+      "skipped": 2,
+      "reason": "two POSIX-only scenarios"
+    },
+    "chrome": {
+      "version": "3.68.0-beta.5",
+      "pages": [
+        {
+          "base": "/",
+          "width": 1365,
+          "locale": "de_DE",
+          "title": "Allmiibo Dateimanager 3.68.0-beta.5",
+          "app685HandyHash": true,
+          "app685DfuDeepLink": true,
+          "stableDfuDefault": 680
+        },
+        {
+          "base": "/",
+          "width": 1365,
+          "locale": "en",
+          "title": "Allmiibo File manager 3.68.0-beta.5",
+          "app685HandyHash": true,
+          "app685DfuDeepLink": true,
+          "stableDfuDefault": 680
+        },
+        {
+          "base": "/pixl.js/",
+          "width": 390,
+          "locale": "de_DE",
+          "title": "Allmiibo Dateimanager 3.68.0-beta.5",
+          "app685HandyHash": true,
+          "app685DfuDeepLink": true,
+          "stableDfuDefault": 680
+        },
+        {
+          "base": "/pixl.js/",
+          "width": 390,
+          "locale": "en",
+          "title": "Allmiibo File manager 3.68.0-beta.5",
+          "app685HandyHash": true,
+          "app685DfuDeepLink": true,
+          "stableDfuDefault": 680
+        }
+      ],
+      "history": {
+        "feature": "folder comparison reference export/import, both copies changed, device download, no automatic selection, metadata race refused, deliberate verified upload",
+        "scope": "Chrome, synthetic peripheral and in-memory write adapter"
+      }
+    }
+  },
+  "portable": {
+    "assetRelease": "de4.3-b4-lcd-test1",
+    "filename": "Allmiibo_Dateimanager_3_68_0-beta_5_Portable.zip",
+    "size": 15650892,
+    "sha256": "d85d45e2a1c9c237dbb4ea65967ab6f3402a566aafdc9e67d3c655a6b58f96ca",
+    "extractedPathsVerified": 396,
+    "startReuseStopPassed": true
+  },
+  "storageSimulator": {
+    "engineSha256": "31ed856ea31124372012bbdf26bda98db4855783cfe9f4325911cc307de375ae",
+    "wasmSha256": "f0746c06cf8c82578460335737eb54a7a5b8f4f14832155bea03ab7661e71607",
+    "wasmBytes": 65374,
+    "rebuiltWithPinnedWasiSdk34": true,
+    "syntheticFiles": 1081,
+    "syntheticPayloadBytes": 658806,
+    "verifiedEntriesIncludingDirectories": 1136
+  }
+}

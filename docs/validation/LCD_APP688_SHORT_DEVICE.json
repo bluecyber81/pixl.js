@@ -1,0 +1,228 @@
+{
+  "schema": 1,
+  "date": "2026-11-28",
+  "board": "LCD",
+  "bootloader": "Z21",
+  "softDevice": "S112 7.3.0",
+  "web": "3.68.0-beta.5 with local measurement profiles",
+  "firmwareSource": "d98d717418f452cc857e62547e33f1f1dee47625",
+  "runs": [
+    {
+      "counter": 686,
+      "repetition": 1,
+      "tickHz": 16384,
+      "uploadMs": 9891,
+      "runtimeStackMinFreeBytes": 3416,
+      "vfsErrors": 0,
+      "freeRestored": 1155072,
+      "checks": {
+        "files": 13,
+        "bytes": 8528,
+        "raw128": 15
+      },
+      "group": {
+        "operations": 3,
+        "amount": 12,
+        "total": 5219.727,
+        "guardOrStageSync": 1018.982,
+        "prepare": 2871.948,
+        "manifest": 28.748,
+        "finish": 1300.049,
+        "shardSync": 217.163,
+        "manifestSync": 7.385
+      },
+      "single": {
+        "operations": 1,
+        "amount": 2048,
+        "total": 412.537,
+        "guardOrStageSync": 2.441,
+        "prepare": 169.067,
+        "manifest": 9.094,
+        "finish": 231.934,
+        "shardSync": 4.333,
+        "manifestSync": 2.686
+      }
+    },
+    {
+      "counter": 686,
+      "repetition": 2,
+      "tickHz": 16384,
+      "uploadMs": 10295,
+      "runtimeStackMinFreeBytes": 3312,
+      "vfsErrors": 0,
+      "freeRestored": 1155072,
+      "checks": {
+        "files": 13,
+        "bytes": 8528,
+        "raw128": 15
+      },
+      "group": {
+        "operations": 3,
+        "amount": 12,
+        "total": 4581.787,
+        "guardOrStageSync": 1023.01,
+        "prepare": 2878.906,
+        "manifest": 29.663,
+        "finish": 650.208,
+        "shardSync": 216.98,
+        "manifestSync": 7.874
+      },
+      "single": {
+        "operations": 1,
+        "amount": 2048,
+        "total": 1092.102,
+        "guardOrStageSync": 2.441,
+        "prepare": 934.387,
+        "manifest": 7.69,
+        "finish": 147.583,
+        "shardSync": 685.73,
+        "manifestSync": 2.686
+      }
+    },
+    {
+      "counter": 687,
+      "repetition": 1,
+      "tickHz": 16384,
+      "uploadMs": 9511,
+      "runtimeStackMinFreeBytes": 3384,
+      "vfsErrors": 0,
+      "freeRestored": 1155072,
+      "checks": {
+        "files": 13,
+        "bytes": 8528,
+        "raw128": 15
+      },
+      "group": {
+        "operations": 3,
+        "amount": 12,
+        "total": 4583.191,
+        "guardOrStageSync": 1018.005,
+        "prepare": 2866.943,
+        "manifest": 29.419,
+        "finish": 668.823,
+        "shardSync": 217.651,
+        "manifestSync": 8.118
+      },
+      "single": {
+        "operations": 1,
+        "amount": 2048,
+        "total": 539.551,
+        "guardOrStageSync": 2.38,
+        "prepare": 212.28,
+        "manifest": 10.742,
+        "finish": 314.148,
+        "shardSync": 4.333,
+        "manifestSync": 2.747
+      }
+    },
+    {
+      "counter": 687,
+      "repetition": 2,
+      "tickHz": 16384,
+      "uploadMs": 9948,
+      "runtimeStackMinFreeBytes": 3048,
+      "vfsErrors": 0,
+      "freeRestored": 1155072,
+      "checks": {
+        "files": 13,
+        "bytes": 8528,
+        "raw128": 15
+      },
+      "group": {
+        "operations": 3,
+        "amount": 12,
+        "total": 5189.88,
+        "guardOrStageSync": 1012.573,
+        "prepare": 2850.586,
+        "manifest": 27.893,
+        "finish": 1298.828,
+        "shardSync": 217.529,
+        "manifestSync": 7.446
+      },
+      "single": {
+        "operations": 1,
+        "amount": 2048,
+        "total": 414.368,
+        "guardOrStageSync": 2.38,
+        "prepare": 169.312,
+        "manifest": 9.399,
+        "finish": 233.276,
+        "shardSync": 4.395,
+        "manifestSync": 2.747
+      }
+    },
+    {
+      "counter": 688,
+      "repetition": 1,
+      "tickHz": 16384,
+      "uploadMs": 10033,
+      "runtimeStackMinFreeBytes": 3368,
+      "vfsErrors": 0,
+      "freeRestored": 1155072,
+      "checks": {
+        "files": 13,
+        "bytes": 8528,
+        "raw128": 15
+      },
+      "group": {
+        "operations": 3,
+        "amount": 12,
+        "total": 4261.475,
+        "guardOrStageSync": 1022.034,
+        "prepare": 2559.692,
+        "manifest": 29.724,
+        "finish": 650.024,
+        "shardSync": 217.041,
+        "manifestSync": 8.179
+      },
+      "single": {
+        "operations": 1,
+        "amount": 2048,
+        "total": 1087.036,
+        "guardOrStageSync": 2.38,
+        "prepare": 929.443,
+        "manifest": 7.69,
+        "finish": 147.522,
+        "shardSync": 684.998,
+        "manifestSync": 2.686
+      }
+    },
+    {
+      "counter": 688,
+      "repetition": 2,
+      "tickHz": 16384,
+      "uploadMs": 9276,
+      "runtimeStackMinFreeBytes": 3368,
+      "vfsErrors": 0,
+      "freeRestored": 1155072,
+      "checks": {
+        "files": 13,
+        "bytes": 8528,
+        "raw128": 15
+      },
+      "group": {
+        "operations": 3,
+        "amount": 12,
+        "total": 4287.72,
+        "guardOrStageSync": 1023.071,
+        "prepare": 2565.002,
+        "manifest": 29.968,
+        "finish": 669.678,
+        "shardSync": 216.553,
+        "manifestSync": 8.057
+      },
+      "single": {
+        "operations": 1,
+        "amount": 2048,
+        "total": 537.048,
+        "guardOrStageSync": 2.441,
+        "prepare": 209.106,
+        "manifest": 10.864,
+        "finish": 314.636,
+        "shardSync": 4.517,
+        "manifestSync": 2.686
+      }
+    }
+  ],
+  "scope": "Same 13 files, 8528 bytes, local equivalent grouped upload on one physical LCD. Counters 686 and 687 measure the App684 and App685 storage paths. The new public web is qualified separately."
+}

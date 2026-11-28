@@ -1,5 +1,7 @@
 # Allmiibo Dateimanager
 
+Dateimanager 3.68.0-beta.6 erkennt die signierte LCD-Testfirmware DE4.3-b7 / App688 und überträgt kleine neue Dateien in Vierergruppen. Die stabile LCD-Auswahl ist DE4.2 / App680. [Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b7-lcd-test1/Allmiibo_LCD_DE4_3_b7_App688_NUR_APP_TEST.zip) · [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.6/Allmiibo_Dateimanager_3_68_0-beta_6_Portable.zip) · [Webquellen](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.6.zip).
+
 ## Normale Ausgabe 3.68.0-beta.4 und LCD DE4.2 / App680
 
 Beim Fortsetzen eines Ordneruploads prüft der Dateimanager, ob sich der Gerätespeicher seit dem Vergleich geändert hat. Bei durchgehend bestätigten Schreibgruppen genügt am Ende eine einzige Abfrage der Speicherrevision. Erkennt der Dateimanager eine zwischenzeitliche Änderung, fordert er einen neuen Vergleich an.

@@ -3,7 +3,7 @@
     <summary>{{ de ? 'LittleFS: Umstellung & Wiederherstellung' : 'LittleFS: migration & restoration' }}</summary>
     <div class="migration-intro"><p>{{ de ? 'Einmalig umstellen oder eine unterbrochene Wiederherstellung fortsetzen. Deine Sicherung bleibt privat; Formatieren braucht weiterhin deine ausdrückliche Bestätigung.' : 'Migrate once or resume an interrupted restoration. Your backup remains private; formatting still needs your explicit confirmation.' }}</p>
       <button type="button" :disabled="busy || blocked || !connected" @click="readStorageStatus">{{ de ? 'Speicherstatus lesen' : 'Read storage status' }}</button></div>
-    <p v-if="['de43b3','de43b2','de42','de41','de3102','de3101','de3100','de399','de398'].includes(capacityProfile)" class="migration-already">App{{ selectedCapacityOption.counter }} · {{ de ? 'Die normale Firmware verwendet weiterhin PFS1. Bei bereits vorhandenem Packed LittleFS genügt das passende Firmware-Update; dafür ist keine erneute Speicherumstellung nötig.' : 'The normal firmware continues to use PFS1. On an existing Packed LittleFS device, install the matching firmware update; it does not require another storage migration.' }}</p>
+    <p v-if="['de43b7','de43b4','de43b3','de43b2','de42','de41','de3102','de3101','de3100','de399','de398'].includes(capacityProfile)" class="migration-already">App{{ selectedCapacityOption.counter }} · {{ de ? 'Die normale Firmware verwendet weiterhin PFS1. Bei bereits vorhandenem Packed LittleFS genügt das passende Firmware-Update; dafür ist keine erneute Speicherumstellung nötig.' : 'The normal firmware continues to use PFS1. On an existing Packed LittleFS device, install the matching firmware update; it does not require another storage migration.' }}</p>
     <p v-else-if="capacityProfile === 'de396' || capacityProfile === 'de397'" class="migration-already">{{ capacityProfile === 'de397' ? 'App670' : 'App669' }} · {{ de ? 'Test 1 verwendet weiterhin PFS1. Bei bereits vorhandenem Packed LittleFS genügt das passende Firmware-Update; für diesen Test ist keine erneute Speicherumstellung nötig.' : 'Test 1 continues to use PFS1. On an existing Packed LittleFS device, install the matching firmware update; this test does not require another storage migration.' }}</p>
     <p v-if="packedMounted" class="migration-already" role="status"><strong>{{ de ? 'E: verwendet bereits Packed LittleFS.' : 'E: already uses Packed LittleFS.' }}</strong> {{ de ? 'Nicht erneut formatieren. Eine noch offene Wiederherstellung kannst du mit derselben Sicherung fortsetzen. Diese Speicherabfrage allein bestätigt keinen Importabschluss.' : 'Do not format again. Resume any pending restoration with the same backup. This storage query alone does not confirm import completion.' }}</p>
     <p v-if="target?.state.ready" class="migration-already">{{ de ? 'Die letzte Zielabfrage meldet den Import als abgeschlossen.' : 'The last target query reports the import as complete.' }}</p>
@@ -74,7 +74,7 @@
 import { createMigrationBackup, loadMigrationArchive, verifyMigrationArchive, restoreMigrationArchive, checkMigrationCapacity, retainMigrationSource, inspectMigrationTarget, formatMigrationTarget, initializeMigrationImport, finishMigrationImport, restartAfterMigration, pendingMigrationProfile } from '../lib/migration.js'
 import { getMigrationCapacityTarget } from '../lib/migration-capacity.js'
 import { saveBlob } from '../lib/browser-tools.js'
-const capacityProfileIds = ['de42','de43b3','de43b2','de41','de3102','de3101','de3100','de399','de398','de397','de396','de395','de394','de393','de392','de391','de389','current','de354','de350','de345','de344','previous','legacy']
+const capacityProfileIds = ['de42','de43b7','de43b4','de43b3','de43b2','de41','de3102','de3101','de3100','de399','de398','de397','de396','de395','de394','de393','de392','de391','de389','current','de354','de350','de345','de344','previous','legacy']
 const shortVersion = app => app.firmwareVersion.replace(/^.*-(DE[0-9.]+(?:t[0-9]+|-b[0-9]+)?)$/u, '$1')
 const applicationRanges = applications => {
   const groups = []
@@ -98,7 +98,7 @@ export default {
   computed:{de(){return this.language==='de_DE'},capacityApproved(){return getMigrationCapacityTarget(this.capacityProfile).approved},capacityOptions() {
       return capacityProfileIds.map(id => {
         const target = getMigrationCapacityTarget(id)
-        const suffix = ['de43b2','de43b3'].includes(id) ? ' · Test' : ['de396','de397'].includes(id) ? ' · Test 1' : ''
+        const suffix = ['de43b2','de43b7','de43b4','de43b3'].includes(id) ? ' · Test' : ['de396','de397'].includes(id) ? ' · Test 1' : ''
         const reference = shortVersion(target) + ' / ' + target.applicationCounter + suffix
         const range = (applicationRanges(target.approvedApplications) || shortVersion(target) + ' / ' + target.applicationCounter) + suffix
         return {id, counter:target.applicationCounter, label:target.approvedApplications.length <= 1 ? reference : range, range, reference}

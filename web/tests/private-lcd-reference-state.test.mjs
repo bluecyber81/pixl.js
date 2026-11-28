@@ -5,6 +5,8 @@ import {createHash} from 'node:crypto';
 import {nrfDfuLink} from '../public/dfu/nrf-dfu-link.mjs';
 import Bundled from '../public/dfu/bundled-packages.js';
 import {lcdTest683,lcdTest683Package} from '../public/dfu/lcd-app683-reference.mjs';
+import {lcdTest688Package} from '../public/dfu/lcd-app688-reference.mjs';
+import {lcdTest685Package} from '../public/dfu/lcd-app685-reference.mjs';
 import {lcdTest684,lcdTest684Package} from '../public/dfu/lcd-app684-reference.mjs';
 import {lcdPreview, lcdPreview670, lcdPreview669, lcdPreview668, lcdPreview667, lcdPreview665, lcdPreviousPreview, lcdPreviews,
   lcdPreviewPackage, lcdPreviewPackage670, lcdPreviewPackage669, lcdPreviewPackage668, lcdPreviewPackage667, lcdPreviewPackages} from '../public/dfu/lcd-private-reference.mjs';
@@ -78,7 +80,7 @@ test('App669 has its own WASM and engine while App667 keeps the identical histor
 });
 
 test('historical private identities and packages remain separate from the new normal App680 release', () => {
-  assert.deepEqual(lcdPreviews.map(item=>item.applicationCounter),[684,683,670,669,668,667,665,664]);
+  assert.deepEqual(lcdPreviews.map(item=>item.applicationCounter),[688,685,684,683,670,669,668,667,665,664]);
   assert.equal(lcdPreview668.otaSha256,'ce2bfa724cec1a7f8a6004c95434ac7fd016af68c7f0bf1f63de280bea47651b');
   assert.equal(lcdPreview667.otaSha256,'f00ddc2c86225d86e5c9ef50bad9d45b84250b287a4f3df4d2f169357a9688c4');
   assert.equal(lcdPreview667.sourceCommit,'22d5c92cc566fb7da9d43a538f2818d28bfb72a6');
@@ -100,8 +102,8 @@ test('historical private identities and packages remain separate from the new no
 test('retained signed direct-load packages have complete distinct catalog identities', () => {
   const original = JSON.stringify(catalog);
   const runtime = Bundled.validateCatalog({schema:catalog.schema,packages:[...catalog.packages,...lcdPreviewPackages]});
-  assert.deepEqual(lcdPreviewPackages,[lcdTest684Package,lcdTest683Package,lcdPreviewPackage670,lcdPreviewPackage669,lcdPreviewPackage668,lcdPreviewPackage667]);
-  assert.deepEqual(lcdPreviewPackages.map(entry=>entry.counter),[684,683,670,669,668,667]);
+  assert.deepEqual(lcdPreviewPackages,[lcdTest688Package,lcdTest685Package,lcdTest684Package,lcdTest683Package,lcdPreviewPackage670,lcdPreviewPackage669,lcdPreviewPackage668,lcdPreviewPackage667]);
+  assert.deepEqual(lcdPreviewPackages.map(entry=>entry.counter),[688,685,684,683,670,669,668,667]);
   assert.equal(runtime.packages.at(-4).id,'de3.97-lcd-app-test1');
   assert.equal(runtime.packages.at(-3).id,'de3.96-lcd-app-test1');
   assert.equal(runtime.packages.at(-2).id,'de3.95-lcd-app');
@@ -123,7 +125,7 @@ test('mobile normal App680 download uses its own package while historical TEST1 
   assert.match(html,/DE4\.2 \/ App680/);
   assert.doesNotMatch(html,/DE3_93_666|App666/);
   assert.ok(html.includes('href="https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip"'));
-  assert.match(readFileSync(new URL('../.env',import.meta.url),'utf8'),/LCD DE4\.3-b3 \/ App684/);
+  assert.match(readFileSync(new URL('../.env',import.meta.url),'utf8'),/LCD DE4\.3-b7 \/ App688/);
 });
 
 

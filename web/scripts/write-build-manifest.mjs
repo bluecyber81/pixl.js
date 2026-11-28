@@ -5,6 +5,8 @@ import {fileURLToPath} from 'node:url';
 import {lcdReleasePackage as previousPackage, lcdRelease as previousRelease} from '../public/dfu/lcd-release-reference.mjs';
 
 import {lcdTest683, lcdTest683Package} from '../public/dfu/lcd-app683-reference.mjs';
+import {lcdTest688, lcdTest688Package} from '../public/dfu/lcd-app688-reference.mjs';
+import {lcdTest685, lcdTest685Package} from '../public/dfu/lcd-app685-reference.mjs';
 import {lcdTest684, lcdTest684Package} from '../public/dfu/lcd-app684-reference.mjs';
 import {lcdTest679, lcdTest679Package} from '../public/dfu/lcd-app679-reference.mjs';
 import {lcdFinal680 as lcdRelease, lcdFinal680Package as lcdReleasePackage} from '../public/dfu/lcd-app680-reference.mjs';
@@ -27,14 +29,14 @@ const manifest = {schema:1, application:'allmiibo-dateimanager', version:release
   packageManifestSha256:digest(packageBytes), firmware:{id:lcdReleasePackage.id,
     version:lcdReleasePackage.version, counter:lcdReleasePackage.counter,
     path:firmwarePath, bytes:firmware.length, sha256:digest(firmware)}};
-manifest.optionalLcdFirmware = [[previousPackage,previousRelease],[lcdTest679Package,lcdTest679],[lcdTest683Package,lcdTest683],[lcdTest684Package,lcdTest684]].map(([entry,reference]) => {
+manifest.optionalLcdFirmware = [[previousPackage,previousRelease],[lcdTest679Package,lcdTest679],[lcdTest683Package,lcdTest683],[lcdTest684Package,lcdTest684],[lcdTest685Package,lcdTest685],[lcdTest688Package,lcdTest688]].map(([entry,reference]) => {
     const pathName = 'firmware/' + entry.file;
     const bytes = fs.readFileSync(path.join(output,pathName));
     if (bytes.length !== entry.bytes || digest(bytes) !== entry.sha256 || entry.sha256 !== reference.otaSha256)
         throw new Error('Optional LCD firmware package differs from the signed reference: ' + entry.file);
     return {id:entry.id, version:entry.version, counter:entry.counter, channel:entry.channel,
         path:pathName, bytes:entry.bytes, sha256:entry.sha256, sourceTag:reference.releaseTag,
-        ...([lcdTest683,lcdTest684].includes(reference) ? {distribution:'prerelease', sourceCommit:reference.sourceCommit,
+        ...([lcdTest683,lcdTest684,lcdTest685,lcdTest688].includes(reference) ? {distribution:'prerelease', sourceCommit:reference.sourceCommit,
             sourceId:reference.sourceId, engineSha256:reference.engineSha256, simulatorSha256:reference.wasmSha256,
             deviceAcceptance:reference.hardwareAcceptance} : {})};
 });

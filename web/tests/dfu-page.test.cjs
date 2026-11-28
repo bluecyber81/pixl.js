@@ -13,7 +13,7 @@ function harness(supported=true,extra={}){
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/language-preference.js'),'utf8'),context);
     context.lcdTest676 = require('../public/dfu/lcd-app676-reference.mjs').lcdTest676;
     context.lcdTest677 = require('../public/dfu/lcd-app677-reference.mjs').lcdTest677;
-    Object.assign(context, require('../public/dfu/lcd-app684-reference.mjs'), require('../public/dfu/lcd-app683-reference.mjs'), require('../public/dfu/lcd-app679-reference.mjs'), require('../public/dfu/lcd-app680-reference.mjs'));
+    Object.assign(context, require('../public/dfu/lcd-app688-reference.mjs'), require('../public/dfu/lcd-app685-reference.mjs'), require('../public/dfu/lcd-app684-reference.mjs'), require('../public/dfu/lcd-app683-reference.mjs'), require('../public/dfu/lcd-app679-reference.mjs'), require('../public/dfu/lcd-app680-reference.mjs'));
     context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
     context.lcdRelease = require('../public/dfu/lcd-release-reference.mjs').lcdRelease;
     context.lcdReleasePackage = require('../public/dfu/lcd-release-reference.mjs').lcdReleasePackage;
@@ -198,9 +198,9 @@ test('DFU speed and remaining time count only bytes acknowledged in this attempt
 test('all scripts/styles are bundled locally and order includes CRC before bounded package loader',()=>{
     const resources=[...html.matchAll(/<(?:script|link)\b[^>]*(?:src|href)="([^"]+)"/g)].map(m=>m[1]);
     for(const resource of resources){assert.ok(!/^(https?:|\/\/)/.test(resource));assert.ok(fs.existsSync(path.join(__dirname,'../public/dfu',resource.split('?')[0])),resource);}
-    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js?v=3.68.0-beta.4"'));
-    assert.ok(html.indexOf('src="secure-dfu.js?v=3.68.0-beta.4"')<html.indexOf('src="page.js?v=3.68.0-beta.4"'));
-    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.68.0-beta.4"'));
+    assert.ok(html.indexOf('vendor/crc32.js')<html.indexOf('src="package.js?v=3.68.0-beta.6"'));
+    assert.ok(html.indexOf('src="secure-dfu.js?v=3.68.0-beta.6"')<html.indexOf('src="page.js?v=3.68.0-beta.6"'));
+    assert.ok(html.indexOf('../firmware/releases.js')<html.indexOf('src="page.js?v=3.68.0-beta.6"'));
     assert.match(html,/connect-src 'self'/);assert.doesNotMatch(html,/connect-src[^;]*\*/);
     const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(m=>m[1]);
     assert.deepEqual(anchors,['../','../guide/index.html#oled','../guide/index.html','https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/download/de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_APP.zip','../firmware/Allmiibo_LCD_DE3_89_662_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/releases/tag/de3.89','https://github.com/bluecyber81/pixl.js/releases/download/de3.89/Allmiibo_LCD_S112_7_3_0_Z21_DE3_89_662_KOMPLETT.zip','../firmware/Allmiibo_LCD_DE3_81_654_NUR_APP.zip','../guide/#android-de381','../firmware/Allmiibo_LCD_DE3_88_661_NUR_APP.zip','../guide/#lcd-de388','../firmware/Allmiibo_LCD_DE3_87_660_NUR_APP.zip','../guide/#lcd-de387','../firmware/Allmiibo_LCD_DE3_75_648_NUR_APP.zip','../firmware/Allmiibo_LCD_DE3_65_637_NUR_APP.zip','https://github.com/bluecyber81/pixl.js/tree/de4.2','../guide/index.html#iphone','../','../licenses/index.html']);
@@ -439,8 +439,8 @@ test(`App${preview.counter} runtime choice and deep link retain the stable catal
     assert.equal(h.nodes.get('lcd-preview-download').hidden, false);
     assert.equal(h.nodes.get('button').disabled, true);
     assert.deepEqual(h.calls, []);
-    if ([683,684].includes(preview.counter)) {
-        const tag = preview.counter === 684 ? 'de4.3-b3-lcd-test1' : 'de4.3-b2-lcd-test1';
+    if ([683,684,685,688].includes(preview.counter)) {
+        const tag = preview.counter === 688 ? 'de4.3-b7-lcd-test1' : preview.counter === 685 ? 'de4.3-b4-lcd-test1' : preview.counter === 684 ? 'de4.3-b3-lcd-test1' : 'de4.3-b2-lcd-test1';
         assert.equal(h.nodes.get('android-handoff').hidden, false);
         assert.equal(new URL(h.nodes.get('android-dfu-link').href).searchParams.get('file'),'https://github.com/bluecyber81/pixl.js/releases/download/'+tag+'/'+preview.file);
         assert.equal(h.nodes.get('profile-source').href,'https://github.com/bluecyber81/pixl.js/tree/'+tag);
@@ -669,7 +669,7 @@ test('normal updater enables wide initial packets and firmware windows only for 
         assert.equal(settings.at(-1).windowedFirmwareWrites, board === 'LCD');
     }
 });
-for (const firmware of [require('../public/dfu/lcd-app683-reference.mjs').lcdTest683Package, require('../public/dfu/lcd-app684-reference.mjs').lcdTest684Package])
+for (const firmware of [require('../public/dfu/lcd-app683-reference.mjs').lcdTest683Package, require('../public/dfu/lcd-app684-reference.mjs').lcdTest684Package, require('../public/dfu/lcd-app685-reference.mjs').lcdTest685Package, require('../public/dfu/lcd-app688-reference.mjs').lcdTest688Package])
 test(`App${firmware.counter} needs a recent LCD Z21/S112 handoff before Bluetooth selection`,()=>{
  for(const [query,allowed] of [
   ['',false],['#board=LCD',false],['#board=OLED&read='+Date.now()+'&app=680&bl=21&sd=294',false],

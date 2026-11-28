@@ -25,7 +25,7 @@ assert.equal(files, spec.fileCount)
 assert.equal(payload, spec.payloadBytes)
 const rowsSha256 = createHash('sha256').update(JSON.stringify(rows)).digest('hex')
 const selected = process.argv[2] || 'de42'
-assert.ok(['de42','de43b2','de43b3'].includes(selected))
+assert.ok(['de42','de43b2','de43b3','de43b7','de43b4'].includes(selected))
 const target = getMigrationCapacityTarget(selected)
 const wasm = readFileSync(new URL('../public'+target.url, import.meta.url))
 const report = await simulateCapacity(rows, target, {archiveSha256:rowsSha256, fetchImpl:async()=>new Response(wasm)})

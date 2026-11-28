@@ -1,10 +1,16 @@
 # Allmiibo LCD und Pixl.js OLED
 
-## LCD DE4.2 / App680 und Dateimanager 3.68.0-beta.4 · Web-Vorabversion
+## LCD-Testfirmware DE4.3-b7 / App688
+
+Der Dateimanager 3.68.0-beta.6 erkennt App688 auf dem ST7567-LCD mit Packed LittleFS (PFS1), Bootloader Z21 und S112 7.3.0. Beim Ordnerupload fasst er bis zu vier geeignete neue Dateien mit je höchstens 572 Byte zusammen. Wer App688 bereits nutzt, kann nach dem Verbinden sofort hochladen.
+
+App688 kopiert vorhandene Datensätze beim Neuaufbau eines Speicherblocks während der CRC-Prüfung. Zwei Uploads desselben Ordners mit 13 Dateien auf einem LCD dauerten 10,033 und 9,276 Sekunden. In beiden Läufen stimmten anschließend alle Dateiinhalte und Metadaten. [Signierte Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b7-lcd-test1/Allmiibo_LCD_DE4_3_b7_App688_NUR_APP_TEST.zip) · [Testrelease](https://github.com/bluecyber81/pixl.js/releases/tag/de4.3-b7-lcd-test1) · [Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/)
+
+## Stabile LCD-Firmware DE4.2 / App680 und frühere Änderungen
 
 Beim Fortsetzen eines Ordneruploads prüft der Dateimanager, ob sich der Gerätespeicher seit dem Vergleich geändert hat. Bei durchgehend bestätigten Schreibgruppen genügt am Ende eine einzige Abfrage der Speicherrevision. Erkennt der Dateimanager eine zwischenzeitliche Änderung, fordert er einen neuen Vergleich an. Die Korrektur benötigt kein Firmwareupdate.
 
-**Neue LCD-Testversion DE4.3-b3 / App684.** Beim Hochladen kleiner Dateien spart die Firmware wiederholte Lesezugriffe auf den Gerätespeicher. Sie bündelt bis zu vier neue Dateien mit je höchstens 572 Byte. Nach einem Abbruch prüft der Dateimanager Inhalt und Metadaten beim Fortsetzen. Die signierte App ist für ST7567-LCD mit PFS1, Z21 und S112 7.3.0 vorgesehen. [App684 fürs Handy (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b3-lcd-test1/Allmiibo_LCD_DE4_3_b3_App684_NUR_APP_TEST.zip)
+**LCD-Testversion DE4.3-b3 / App684.** Beim Hochladen kleiner Dateien spart die Firmware wiederholte Lesezugriffe auf den Gerätespeicher. Sie bündelt bis zu vier neue Dateien mit je höchstens 572 Byte. Nach einem Abbruch prüft der Dateimanager Inhalt und Metadaten beim Fortsetzen. Die signierte App ist für ST7567-LCD mit PFS1, Z21 und S112 7.3.0 vorgesehen. [App684 fürs Handy (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b3-lcd-test1/Allmiibo_LCD_DE4_3_b3_App684_NUR_APP_TEST.zip)
 
 Bei Noah und Mio nennt der Figurenkatalog jetzt die deutschen Spielnamen der Kostüme und die Varianten ohne Jacke. Für Xenoblade Chronicles 3 – Nintendo Switch 2 Edition führt er Nintendos Termin am 3. Dezember 2026 und die bestätigte amiibo-Unterstützung auf.
 
@@ -20,7 +26,7 @@ Der Dateimanager bündelt beim Ordnervergleich die Prüfsummen kleiner Dateien a
 
 [Verbesserungen seit DE3.10](docs/PROJEKTUEBERBLICK.md)
 
-[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.4/Allmiibo_Dateimanager_3_68_0-beta_4_Portable.zip) · [Webquellen](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.4.zip) · [Handbuch](https://bluecyber81.github.io/pixl.js/guide/index.html) · [English](README.md)
+[Dateimanager öffnen](https://bluecyber81.github.io/pixl.js/) · [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.6/Allmiibo_Dateimanager_3_68_0-beta_6_Portable.zip) · [Webquellen](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.6.zip) · [Handbuch](https://bluecyber81.github.io/pixl.js/guide/index.html) · [English](README.md)
 
 ## OLED und ältere LCD-Geräte
 
