@@ -80,6 +80,53 @@ test('a reused preview rechecks local files and stops if the storage changes whi
   assert(!vfs.log.some(isMutation))
 })
 
+test('a comparison or resumed preflight only returns a plan from its starting revision', async t => {
+  const initial = '0000000100000031'
+  const cases = [
+    ['unchanged', () => initial],
+    ['generation changed', () => '0000000100000032', {code:'SYNC_CHANGED'}],
+    ['remount', () => '0000000200000031', {code:'SYNC_CHANGED'}],
+    ['revision lost', () => null, {code:'SYNC_CHANGED'}],
+    ['revision declined', () => { throw Object.assign(Error('PXSC declined'), {cmd:0x22,status:1}) }, {code:'SYNC_CHANGED'}],
+    ['transport closed', () => { throw Error('link lost') }, /link lost/]
+  ]
+  for (const includeDeviceOnly of [true, false]) {
+    for (const [label, last, error] of cases) await t.test(`${label}, includeDeviceOnly=${includeDeviceOnly}`, async () => {
+      const vfs = memoryVfs(), {options} = packedComparison(vfs)
+      let reads = 0
+      const plan = compare(vfs, [localFile('a'),localFile('b')], {...options, includeDeviceOnly,
+        readCreateRevision:async () => ++reads === 1 ? initial : last()})
+      if (error) await assert.rejects(plan, error)
+      else assert.equal((await plan).summary.add, 2)
+      assert.equal(reads, 2)
+      assert(!vfs.log.some(isMutation))
+    })
+  }
+})
+
+test('losing the session during the closing revision read discards the plan', async () => {
+  const vfs = memoryVfs(), {options} = packedComparison(vfs), controller = new AbortController()
+  let reads = 0
+  await assert.rejects(compare(vfs, [localFile('a'),localFile('b')], {...options,
+    includeDeviceOnly:false, signal:controller.signal, readCreateRevision:async () => {
+      if (++reads === 2) controller.abort()
+      return '0000000100000031'
+    }}), {code:'SYNC_CANCELLED'})
+  assert(!vfs.log.some(isMutation))
+})
+
+test('a comparison without a PackedFS starting revision keeps the single-read fallback', async () => {
+  const vfs = memoryVfs(), {options, calls} = packedComparison(vfs)
+  let reads = 0
+  const files = [localFile('a'),localFile('b')]
+  for (const file of files) vfs.put('E:/tags/'+file.name, [7,8,9])
+  const plan = await compare(vfs, files, {...options, readCreateRevision:async () => { ++reads; return null }})
+  assert.equal(plan.summary.same, 2)
+  assert.equal(reads, 1)
+  assert.equal(calls.groups.length, 0)
+  assert.equal(calls.single.length, 2)
+})
+
 test('comparison includes device-only trees and resuming an upload only revisits branches with local targets', async () => {
   const vfs = memoryVfs(), files = [localFile('hero.bin')]
   for (let i = 0; i < 55; i++) {

@@ -1,0 +1,5 @@
+RAM-only PackedFS capacity simulator for LCD DE4.3-b2 / App683.
+The six storage-engine files are copied unchanged from the exact firmware source.
+The storage format and constants are unchanged. Source binding, engine identity, and compiler hashes are in the adjacent JSON files.
+Use web/scripts/build-capacity-de43b2.py with the pinned official WASI SDK 34.
+Runtime SDK/GC instrumentation is omitted from the RAM-only simulator; this is not a firmware timing or physical device-memory measurement.

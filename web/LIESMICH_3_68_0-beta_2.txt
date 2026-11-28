@@ -1,0 +1,13 @@
+Allmiibo Dateimanager 3.68.0-beta.2 · öffentliche Testversion / public prerelease
+
+ZIP entpacken und Start-Dateimanager.cmd öffnen. Auf dem Rechner muss Python 3 installiert sein.
+Unter „Update“ stehen LCD DE4.3-b2 / App683 als Handy-ZIP und Web-DFU bereit. Das signierte Paket enthält nur die LCD-App und setzt Z21 sowie S112 7.3.0 voraus. Die Geräteabnahme für App683 ist offen. Der Testbrowser erkennt die eingebettete SourceID und die neue Speicher-Engine. Zum Prüfen der Kapazität „App683“ als Ziel wählen.
+
+Extract the ZIP and open Start-Dateimanager.cmd on a computer with Python 3 installed.
+Under Update, LCD DE4.3-b2 / App683 is available as a phone ZIP and for Web DFU. This signed application-only test targets LCD with Z21 and S112 7.3.0. Hardware acceptance is pending. The browser checks the reported SourceID and storage engine. Select App683 for a capacity simulation.
+
+LCD DE4.2 / App680 bleibt die freigegebene Firmware. LCD DE4.2 / App680 remains the stable firmware.
+
+Beim direkten Upload in einen bestehenden Ordner bündelt App683 bis zu vier neue kleine Dateien (je höchstens 572 Byte). Das Gerät prüft die Namen und Schreibrechte vor dem Speichern. Bei einer Unterbrechung dieselbe Auswahl erneut öffnen und den Vergleich fortsetzen. Der Diagnoseexport zählt die vom Gerät bestätigten Gruppen und Dateien sowie die Rückfälle auf den Einzelpfad. Ein Firmwareupdate im Browser startet über „Update“ vom verbundenen LCD mit aktuellen Bootdaten.
+
+When uploading directly into an existing folder, App683 groups up to four new files of up to 572 bytes each. The device checks names and write permissions before committing them. After an interruption, reopen the same selection and resume the comparison. The diagnostics export counts confirmed groups, files, and deferred groups. For a browser firmware update, open Update from the connected LCD with a recent boot reading.

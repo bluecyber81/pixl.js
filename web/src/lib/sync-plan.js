@@ -2,7 +2,7 @@ import { assertPortableEntryName, assertDevicePath, assertWritableDevicePath, jo
 import { snapshotFile, sha256Bytes, deviceFileSha256, checkedDirectory, targetEntry, copyMetadata, metadataKey, directoryPathAccess, writableDirectoryPath as writableRoot, UPLOAD_LIMITS } from './safe-upload.js'
 import { decodeRawMetadata } from './raw-metadata.js'
 import { commonVersion, folderBinding, isHistoryConflict } from './sync-history.js'
-import { smallFileReadGroup } from './small-file-read-group.js'
+import { readSmallFileDigests } from './small-file-read-group.js'
 
 export const SYNC_LIMITS = Object.freeze({ maxEntries: 4096, maxDepth: 32, maxBytes: 16 * 1024 * 1024 })
 export class SyncError extends Error {
@@ -105,7 +105,8 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
     }
   }
   const canRemember = includeDeviceOnly && Number.isSafeInteger(syncSession)
-  const revision = sources.files.size > 1 && root.startsWith('E:/') && readCreateRevision && (canRemember || readFileDigestsBatch)
+  check()
+  const revision = root.startsWith('E:/') && typeof readCreateRevision === 'function'
     ? await probeComparisonRevision(readCreateRevision) : null
   check()
   const rootAccess = await directoryPathAccess(root, readDirectory, check)
@@ -119,7 +120,7 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
   })
   const blockedDirectories = directories.filter(directory => directory.status === 'blocked')
   // Prepare only existing, unambiguous files which the comparison will hash.
-  const batched = new Map()
+  let batched = new Map()
   if (validRevision(revision) && readFileDigestsBatch) {
     const candidates = []
     for (const path of sources.files.keys()) {
@@ -128,23 +129,8 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
       try { copyMetadata(actual.meta) } catch (error) { if (error.code === 'UPLOAD_METADATA') continue; throw error }
       candidates.push({path, size:actual.size})
     }
-    for (let index = 0; index < candidates.length;) {
-      check()
-      const group = smallFileReadGroup(candidates, index, item => item.path, maxRequestPayload)
-      index += Math.max(1, group.length)
-      if (group.length < 2) continue
-      progress('checking', group[0].path, index-group.length, candidates.length)
-      const result = await readFileDigestsBatch(group, {revision})
-      check()
-      if (result === null) break
-      if (!Array.isArray(result) || result.length !== group.length) fail('SYNC_CHANGED', 'Incomplete grouped digest response.')
-      for (const [i, expected] of group.entries()) {
-        const item = result[i]
-        if (item?.path !== expected.path || item.size !== expected.size || typeof item.sha256 !== 'string' ||
-            !/^[a-f0-9]{64}$/u.test(item.sha256)) fail('SYNC_CHANGED', 'Invalid grouped digest response.')
-        batched.set(expected.path, item.sha256)
-      }
-    }
+    batched = await readSmallFileDigests(candidates, {revision, readFileDigestsBatch, maxRequestPayload, check,
+      invalidReply:message => fail('SYNC_CHANGED', message), onGroup:(...args) => progress('checking', ...args)})
   }
   const entries = []
   for (const source of sources.files.values()) {
@@ -211,8 +197,11 @@ export async function createSyncPlan({ rootPath, deviceKey, files, readDirectory
   entries.forEach(entry => ++summary[entry.status])
   const plan = { schema: 1, deviceKey: identity, rootPath: root, entries, directories, deviceOnly, summary }
   plan.fingerprint = await fingerprint(plan); check()
-  if (canRemember && validRevision(revision) && await probeComparisonRevision(readCreateRevision) === revision) {
-    previewRevisions.set(plan, {revision, session:syncSession})
+  if (validRevision(revision)) {
+    const endRevision = await probeComparisonRevision(readCreateRevision)
+    check()
+    if (endRevision !== revision) fail('SYNC_CHANGED', 'The device changed during comparison. Compare again.')
+    previewRevisions.set(plan, {revision, reusable:canRemember, session:syncSession})
   }
   check()
   return frozen(plan)
@@ -269,7 +258,7 @@ export async function executeSyncJob(options) {
     // resumed transfers and intervening changes all require a fresh inventory.
     const revision = () => options.readCreateRevision?.()
     const preview = previewRevisions.get(plan)
-    const matchedPreview = preview && previousState === 'ready' && !job.completed.length && preview.session === options.syncSession &&
+    const matchedPreview = preview?.reusable === true && previousState === 'ready' && !job.completed.length && preview.session === options.syncSession &&
       await probeComparisonRevision(revision) === preview.revision
     check()
     let fresh = plan
@@ -311,12 +300,45 @@ export async function executeSyncJob(options) {
     const knownDirectories = new Set(fresh.directories.filter(dir => dir.status === 'existing').map(dir => dir.path))
     const leaves = options.prepareLeafUploads && typeof writeNewPackedFile === 'function'
       ? await options.prepareLeafUploads({options, fresh, wanted, sources, check}) : new Map()
+    // An uncertain guarded COMMIT is reconciled before any new write on resume.
+    if (job.pendingGuarded) {
+      const pending = job.pendingGuarded
+      if (!Array.isArray(pending) || pending.length < 1 || pending.length > 4 ||
+          new Set(pending).size !== pending.length || !pending.every(path => selected.has(path))) {
+        fail('SYNC_STALE', 'Resume with the original grouped selection.')
+      }
+      const captured = previewRevisions.get(fresh)?.revision
+      if (!validRevision(captured)) fail('SYNC_STALE', 'The grouped comparison could not observe a storage revision.')
+      const present = pending.filter(path => currentByPath.get(path)?.expected)
+      if (present.length && present.length !== pending.length) fail('SYNC_STALE', 'Only some grouped files are present.')
+      for (const path of present) {
+        const expected = plan.entries.find(entry => entry.targetPath === path)
+        if (expected?.expected || !desiredPresent(expected,currentByPath.get(path)) || typeof options.readRawMetadata !== 'function')
+          fail('SYNC_STALE', 'Unconfirmed grouped contents differ from the comparison.')
+        const raw = await options.readRawMetadata(path)
+        check()
+        if (!(raw instanceof Uint8Array) || raw.length !== 128 || !raw.every(byte => byte === 255))
+          fail('SYNC_STALE', 'Unexpected metadata on an unconfirmed grouped file.')
+      }
+      const afterMetadata = await probeComparisonRevision(revision)
+      check()
+      if (afterMetadata !== captured) fail('SYNC_STALE', 'Storage changed during grouped recovery verification.')
+      delete job.pendingGuarded
+    }
     const pendingLeaf = job.leafUpload?.targetPath
     if (job.leafUpload && (!leaves.has(pendingLeaf) || leaves.get(pendingLeaf).entries.some(entry => job.completed.includes(entry.targetPath)))) fail('SYNC_STALE', 'The pending folder publication requires the original selection and device capability.')
     // Reconcile an interrupted or unacknowledged rename before starting another group.
     const order = pendingLeaf ? [...leaves.get(pendingLeaf).entries, ...wanted.filter(entry => splitDevicePath(entry.targetPath).parent !== pendingLeaf)] : wanted
     const publishedLeaves = new Set()
-    for (const entry of order) {
+    let guarded = quick && typeof options.guardedCreate === 'function' && typeof options.readRawMetadata === 'function' &&
+      typeof options.canGuardedCreate === 'function' && await options.canGuardedCreate()
+    check()
+    const deferredParents = new Set()
+    let guardedRevision = startRevision
+    const canGroup = entry => entry && !entry.expected && !currentByPath.get(entry.targetPath)?.expected &&
+      entry.size <= 572 && /^[\x20-\x7e]+$/u.test(entry.targetPath) && !job.completed.includes(entry.targetPath)
+    for (let index = 0; index < order.length; index++) {
+      const entry = order[index]
       check()
       const leafPath = splitDevicePath(entry.targetPath).parent
       if (publishedLeaves.has(leafPath)) continue
@@ -343,11 +365,13 @@ export async function executeSyncJob(options) {
         if (!aliases.length) {
           if (!await writableRoot(parent, readDirectory, check)) fail('SYNC_STALE', 'The selected folder or an ancestor is no longer writable.')
           await createDirectory(directory.path); check()
+          guardedRevision = null
         }
         knownDirectories.add(directory.path)
       }
       check()
       if (leaf) {
+        guardedRevision = null
         const result = await leaf.run(update => observe(onProgress, {...update,
           filesDone:completed + skipped + (update.filesDone || 0), filesTotal:wanted.length}))
         // Child checkpoints refer to private staging. Only a verified publication
@@ -363,6 +387,51 @@ export async function executeSyncJob(options) {
         observe(onProgress, {phase:'syncing',path:leafPath,done:completed+skipped,total:wanted.length,filesDone:completed+skipped,filesTotal:wanted.length})
         continue
       }
+      if (guarded && !deferredParents.has(leafPath) && canGroup(entry)) {
+        const siblings = [entry]
+        for (let next = index+1; next < order.length && siblings.length < 4; next++) {
+          const item = order[next]
+          if (!canGroup(item) || splitDevicePath(item.targetPath).parent !== leafPath) break
+          siblings.push(item)
+        }
+        if (!guardedRevision) guardedRevision = await probeComparisonRevision(revision)
+        check()
+        if (validRevision(guardedRevision)) {
+          const parts = []
+          for (const item of siblings) {
+            const bytes = await snapshotFile(sources.files.get(item.targetPath).file)
+            check()
+            if (await sha256Bytes(bytes) !== item.sha256) fail('SYNC_LOCAL_CHANGED', 'A grouped local file changed before upload.')
+            check()
+            parts.push({name:splitDevicePath(item.targetPath).name,bytes})
+          }
+          check()
+          job.pendingGuarded = siblings.map(item => item.targetPath)
+          const next = await options.guardedCreate(leafPath,parts,guardedRevision)
+          check()
+          if (next === null) {
+            // Only an authenticated, same-transaction DEFER can request the ordinary locked path.
+            delete job.pendingGuarded
+            deferredParents.add(leafPath)
+          } else {
+            if (!validRevision(next) || next.slice(0,8) !== guardedRevision.slice(0,8) ||
+                parseInt(next.slice(8),16) !== parseInt(guardedRevision.slice(8),16)+1)
+              fail('SYNC_STALE','Unconfirmed guarded group revision.')
+            guardedRevision = next
+            for (const item of siblings) {
+              job.completed.push(item.targetPath)
+              acknowledgedOnly.add(item.targetPath)
+              uploadedBytes += item.size
+            }
+            completed += siblings.length
+            delete job.pendingGuarded
+            index += siblings.length-1
+            observe(onProgress,{phase:'syncing',path:entry.targetPath,done:completed+skipped,total:wanted.length,filesDone:completed+skipped,filesTotal:wanted.length})
+            continue
+          }
+        } else guarded = false
+      }
+      guardedRevision = null
       // Pin an immutable byte snapshot immediately before handing it to the
       // writer; an adapter must not re-read a changed host file after approval.
       const uploadBytes = await snapshotFile(sources.files.get(entry.targetPath).file); check()

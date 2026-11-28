@@ -74,6 +74,9 @@ export function createDiagnostics({ firmwareVersion, connected, browser, transpo
       reportedGattValueCapacity: capacity(transport.reportedGattValueCapacity),
       effectiveGattValueCapacity: capacity(transport.effectiveGattValueCapacity),
       maxRequestPayload: number(transport.maxRequestPayload),
+      ...(transport.guardedCreateReceipts ? {guardedCreateReceipts:{
+        groups:number(transport.guardedCreateReceipts.groups), files:number(transport.guardedCreateReceipts.files),
+        deferred:number(transport.guardedCreateReceipts.deferred)}} : {}),
       txFrames: number(transport.txFrames), txBytes: number(transport.txBytes),
       rxFrames: number(transport.rxFrames), rxBytes: number(transport.rxBytes),
       activeCommand: Number.isInteger(transport.activeCommand) && transport.activeCommand >= 0 && transport.activeCommand <= 255 ? transport.activeCommand : null,

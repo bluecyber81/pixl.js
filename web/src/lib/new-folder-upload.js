@@ -2,6 +2,7 @@ import { assertWritableDevicePath, devicePathSpace, joinDevicePath, portableName
 import { checkedDirectory, deviceFileSha256, metadataKey, sha256Bytes, snapshotFile, targetEntry, writableDirectoryPath } from './safe-upload.js'
 import { decodeRawMetadata } from './raw-metadata.js'
 import { createSyncJob, SyncError, syncPlanFingerprint, syncSourcesOf } from './sync-plan.js'
+import { readSmallFileDigests } from './small-file-read-group.js'
 
 const emptyMetadata = new Uint8Array(128).fill(255)
 const emptyKey = metadataKey(decodeRawMetadata(emptyMetadata))
@@ -105,7 +106,8 @@ export function pendingFolderUpload(job) {
  * PackedFS writer may supply RAW128 writes with disconnect-abort semantics.
  * job.completed tracks acknowledged writes. Short checks record ordinary CLOSE separately from a digest. */
 export async function executeNewFolderUpload({ plan, job, files, selectedPaths, deviceKey, assertSession, signal, onProgress,
-  createDirectory, writeFile, readDirectory, readFile, readFileDigest, readRawMetadata, readCreateRevision, createSmall, canGroupCreate, createGroup, publishSmallFolder,
+  createDirectory, writeFile, readDirectory, readFile, readFileDigest, readFileDigestsBatch, maxRequestPayload,
+  readRawMetadata, readCreateRevision, createSmall, canGroupCreate, createGroup, publishSmallFolder,
   rename, getFreeBytes, requireSmallCreate = false, quickPacked = false, [siblingSnapshot]:parentSample, [leafSpace]:boundSpace, randomToken = randomHex }) {
   const check = () => {
     assertSession()
@@ -182,8 +184,20 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
     }
     // Traverse only selected directories. A foreign, aliased, missing, or
     // modified item blocks publication and is never removed from the device.
-    async function inventory(base, partial = false, verify = true) {
+    async function inventory(base, partial = false, verify = true, auditRevision = null) {
       const found = new Set(), seenDirs = new Set()
+      const pending = verify && validRevision(auditRevision) && typeof readFileDigestsBatch === 'function' ? [] : null
+      async function verifyFile(path, entry, hash) {
+        check()
+        if (hash === undefined) await digest(path, entry)
+        else if (hash !== entry.sha256) stale()
+        if (state.groupReceipts) {
+          check()
+          const meta = await readRawMetadata(path)
+          check()
+          if (!(meta instanceof Uint8Array) || meta.length !== 128 || !meta.every(byte => byte === 255)) stale()
+        }
+      }
       async function visit(path) {
         const planned = children.get(path)
         const entries = await list(staged(base, path))
@@ -199,11 +213,8 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
             if (actual.size !== item.entry.size || partial && !completed.has(item.path) && state.inFlight !== item.path && !state.inFlightGroup?.includes(item.path)) stale()
             if (verify) {
               const actualPath = staged(base,item.path)
-              await digest(actualPath, item.entry)
-              if (state.groupReceipts) {
-                const meta = await readRawMetadata(actualPath)
-                if (!(meta instanceof Uint8Array) || meta.length !== 128 || !meta.every(byte => byte === 255)) stale()
-              }
+              if (pending) pending.push({path:actualPath, size:item.entry.size, entry:item.entry})
+              else await verifyFile(actualPath, item.entry)
             }
             found.add(item.path)
           }
@@ -211,6 +222,10 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       }
       await visit(targetPath)
       if (partial && (job.completed.some(path => !found.has(path)) || state.dirs.some(path => !seenDirs.has(path)))) stale()
+      if (pending) {
+        const hashes = await readSmallFileDigests(pending, {revision:auditRevision, readFileDigestsBatch, maxRequestPayload, check, invalidReply:stale})
+        for (const {path, entry} of pending) await verifyFile(path, entry, hashes.get(path))
+      }
       return found
     }
     let fromCheckpoint = 0
@@ -241,7 +256,7 @@ export async function executeNewFolderUpload({ plan, job, files, selectedPaths, 
       const entries = await ownerListing()
       if (base === targetPath) { if (!isPublished(entries)) stale() }
       else checkWorkingFolder(entries)
-      const found = await inventory(base, partial)
+      const found = await inventory(base, partial, true, before)
       if (await revision() !== before) stale()
       return {found, revision:before}
     }

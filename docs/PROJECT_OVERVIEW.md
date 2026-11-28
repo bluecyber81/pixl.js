@@ -1,6 +1,6 @@
 # Allmiibo since DE3.10
 
-Highlights through LCD DE4.2 / App680 and File Manager 3.67.1. [Deutsch](PROJEKTUEBERBLICK.md)
+Highlights through LCD DE4.2 / App680 and File Manager 3.68.0-beta.2. [Deutsch](PROJEKTUEBERBLICK.md)
 
 - **Faster transfers.** Small figure files are read in batches. App680 stores up to four small files together when uploading to newly created subfolders. Reading the same 26 small BIN files took 10.29 seconds, down from 20.85 seconds.
 - **Bluetooth remote control.** Operate the device menu from a phone or PC. Capture the screen, rotate the image and save it as a PNG.

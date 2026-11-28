@@ -321,6 +321,9 @@
       <CurrentLcdDownloads :connected="connected" :version="firmwareVersion" :boot="bootInfo" :locale="language" />
       <div class="tool-section">
         <p>{{ language.startsWith('de') ? 'DE4.2 / App680 ist die finale LCD-Version. Das Gerät meldet 2.22.0-DE4.2-b2. Wenn diese Version bereits installiert ist, ist kein weiteres Flashen erforderlich.' : 'DE4.2 / App680 is the final LCD release. The device reports 2.22.0-DE4.2-b2. If this version is already installed, there is no need to flash it again.' }}</p>
+        <h3>LCD DE4.3-b2 / App683 · {{ language.startsWith('de') ? 'Öffentliche Testversion' : 'Public test release' }}</h3>
+        <p>{{ language.startsWith('de') ? 'Signierte App für LCD mit Z21 und S112 7.3.0. Hardwareabnahme offen.' : 'Signed LCD application for Z21 and S112 7.3.0. Hardware acceptance is pending.' }}</p>
+        <p><a href="firmware/Allmiibo_LCD_DE4_3_b2_App683_NUR_APP_TEST.zip" download>{{ language.startsWith('de') ? 'App683 fürs Handy herunterladen (ZIP)' : 'Download App683 for your phone (ZIP)' }}</a> · <a :href="'dfu/web.html?package=de4.3-b2-lcd-app-test' + (connected ? lastDfuReference || '' : '')">{{ language.startsWith('de') ? 'App683 im Web-DFU öffnen' : 'Open App683 in Web DFU' }}</a></p>
         <h3>LCD DE4.2-b1 / App679 · Beta</h3>
         <p>{{ language.startsWith('de') ? 'App679 unterstützt den Gruppen-Upload kleiner Dateien ebenfalls. Das App-Update setzt Z21 und S112 7.3.0 voraus.' : 'App679 also supports grouped small-file uploads. The app update requires Z21 and S112 7.3.0.' }}</p>
         <p><a :href="archiveLinks.transferBeta" download>{{ language.startsWith('de') ? 'App679 fürs Handy herunterladen (ZIP)' : 'Download App679 for your phone (ZIP)' }}</a> · <a :href="'dfu/web.html?package=de4.2-b1-lcd-app-test' + (connected ? lastDfuReference || '' : '')">{{ language.startsWith('de') ? 'App679 im Web-DFU öffnen' : 'Open App679 in Web DFU' }}</a></p>
@@ -616,9 +619,9 @@
     </el-dialog>
 
   <footer class="source-footer">
-    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.67.1" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.67.1' : '3.67.1 source code' }}</a>
-    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.67.1 (ZIP)' : 'Windows 3.67.1 (ZIP)' }}</a>
-    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.67.1 (ZIP)' : '3.67.1 source code (ZIP)' }}</a>
+    <a href="https://github.com/bluecyber81/pixl.js/tree/web3.68.0-beta.2" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.68.0-beta.2' : '3.68.0-beta.2 source code' }}</a>
+    <a :href="archiveLinks.portable" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Windows 3.68.0-beta.2 (ZIP)' : 'Windows 3.68.0-beta.2 (ZIP)' }}</a>
+    <a :href="archiveLinks.source" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellcode 3.68.0-beta.2 (ZIP)' : '3.68.0-beta.2 source code (ZIP)' }}</a>
     <a :href="archiveLinks.lcdKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)' : 'Archive: LCD DE3.89 / App662 · test kit (ZIP)' }}</a>
     <a :href="archiveLinks.testKit" download target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'OLED DE3.87 / App86 · Prüfpaket (ZIP)' : 'OLED DE3.87 / App86 · test kit (ZIP)' }}</a>
     <a :href="licensesUrl" target="_blank" rel="noopener noreferrer">{{ language.startsWith('de') ? 'Quellen & Lizenzen' : 'Source & licenses' }}</a>
@@ -1215,7 +1218,7 @@ export default {
       return {...this.transfer_adapters(generation),deviceKey,firmwareVersion:this.firmwareVersion,exporterVersion:webVersion,
         readStorageInfo:async()=>{this.assert_session(generation);const response=await proto.vfs_storage_info_extended('E');this.assert_session(generation);if(response?.status===255)throw Object.assign(new Error('Raw128 storage capabilities were not confirmed.'),{code:'MIGRATION_PREPARATION_REQUIRED'});return this.checked(response);},
         readStorageLayout:async()=>{this.assert_session(generation);const value=this.checked(await proto.vfs_storage_layout('E'));this.assert_session(generation);return value;},
-        readApplicationIdentity:async()=>{this.assert_session(generation);const version=this.checked(await proto.get_version());this.assert_session(generation);const boot=normalizeBootDiagnostics(await proto.get_boot_diagnostics());this.assert_session(generation);if(!boot)throw Object.assign(new Error('Current application counter is unavailable.'),{code:'MIGRATION_IDENTITY'});return {...boot,firmwareVersion:version.ver};},
+        readApplicationIdentity:async()=>{this.assert_session(generation);const version=this.checked(await proto.get_version());this.assert_session(generation);const boot=normalizeBootDiagnostics(await proto.get_boot_diagnostics());this.assert_session(generation);if(!boot || (version.ver === '2.22.0-DE4.3-b2' && !await proto.trusted_storage_session(version.ver)))throw Object.assign(new Error('Current application identity is unavailable.'),{code:'MIGRATION_IDENTITY'});return {...boot,firmwareVersion:version.ver};},
         readImportState:async()=>{this.assert_session(generation);const state=this.checked(await proto.vfs_import_state('E',0));this.assert_session(generation);return state;},
         bindImport:async hash=>{this.assert_session(generation);const state=this.checked(await proto.vfs_import_state('E',3,hash));this.assert_session(generation);return state;},
         finishImport:async()=>{this.assert_session(generation);const state=this.checked(await proto.vfs_import_state('E',1));this.assert_session(generation);return state;},
@@ -1509,7 +1512,9 @@ export default {
         readFileDigest:(path,size) => current(() => proto.vfs_backup_digest(path,size,this.firmwareVersion)),
         readFileDigestsBatch:(files,{revision}) => current(() => proto.vfs_digest_small_batch(files,revision,this.firmwareVersion)),
         readCreateRevision:() => current(() => proto.vfs_small_create_revision(this.firmwareVersion)),
-        canGroupCreate:() => ['2.22.0-DE4.2-b1', '2.22.0-DE4.2-b2'].includes(this.firmwareVersion) && current(() => proto.vfs_probe_group_create(this.firmwareVersion)),
+        canGuardedCreate:() => this.firmwareVersion === '2.22.0-DE4.3-b2' && current(() => proto.vfs_probe_guarded_create(this.firmwareVersion)),
+        guardedCreate:(parent,entries,revision) => current(() => proto.vfs_guarded_create(parent,entries,revision)),
+        canGroupCreate:() => ['2.22.0-DE4.2-b1', '2.22.0-DE4.2-b2', '2.22.0-DE4.3-b2'].includes(this.firmwareVersion) && current(() => proto.vfs_probe_group_create(this.firmwareVersion)),
         readRawMetadata:path => current(async () => this.checked(await proto.vfs_read_raw_meta(path))),
         createGroup:(parent,entries,revision) => current(() => proto.vfs_group_create(parent,entries,revision)),
         createSmall:(path,bytes,sha,revision) => current(() => proto.vfs_small_create(path,bytes,sha,revision)),
@@ -1530,7 +1535,9 @@ export default {
       if ([1, 255].includes(response.status)) return false;
       const layout = this.checked(response);
       // This PackedFS engine refuses an occupied rename target and publishes a whole subtree in one transaction.
-      return layout.mounted && supportsFolderPublication(this.firmwareVersion, layout.engineSha256);
+      const privateDevice = this.firmwareVersion === '2.22.0-DE4.3-b2' && await proto.trusted_storage_session(this.firmwareVersion);
+      this.assert_session(generation);
+      return layout.mounted && supportsFolderPublication(this.firmwareVersion, layout.engineSha256, privateDevice);
     },
     forget_sync() {
       const stage = this.syncWorkingFolder?.stagePath;
@@ -2206,7 +2213,7 @@ export default {
     sort_table_row_size(a, b) { return (a.sizeBytes || 0) - (b.sizeBytes || 0); },
     show_transfer_error(error) {
       if (error === 'cancel' || error === 'close') return;
-      const known = { SYNC_STALE:'syncStale', SYNC_LOCAL_CHANGED:'syncLocalChanged', SYNC_COLLISION:'syncCollision', NAME_PORTABLE:'namePortable', NAME_NORMALIZATION:'nameNormalization', NAME_LIMIT:'nameLimit', PATH_LIMIT:'pathLimit', PATH_RESERVED:'pathReserved', UPLOAD_PARENT:'uploadParent', UPLOAD_READONLY:'READONLY', BACKUP_CHECKPOINT_IDENTITY:'checkpointIdentity', BACKUP_CHECKPOINT_BUSY:'checkpointBusy', ZIP_STALE:'zipStale', ZIP_CHANGED:'zipStale', ZIP_LIMIT:'zipLimit', ZIP_CRC:'zipIntegrity', ZIP_HASH:'zipIntegrity', ZIP_STRUCTURE:'zipIntegrity', ZIP_FORMAT:'zipIntegrity', ZIP_MANIFEST:'zipIntegrity', ZIP_PATH:'zipPath', ZIP_COLLISION:'zipPath' };
+      const known = { SYNC_STALE:'syncStale', SYNC_CHANGED:'syncStale', SYNC_LOCAL_CHANGED:'syncLocalChanged', SYNC_COLLISION:'syncCollision', NAME_PORTABLE:'namePortable', NAME_NORMALIZATION:'nameNormalization', NAME_LIMIT:'nameLimit', PATH_LIMIT:'pathLimit', PATH_RESERVED:'pathReserved', UPLOAD_PARENT:'uploadParent', UPLOAD_READONLY:'READONLY', BACKUP_CHECKPOINT_IDENTITY:'checkpointIdentity', BACKUP_CHECKPOINT_BUSY:'checkpointBusy', ZIP_STALE:'zipStale', ZIP_CHANGED:'zipStale', ZIP_LIMIT:'zipLimit', ZIP_CRC:'zipIntegrity', ZIP_HASH:'zipIntegrity', ZIP_STRUCTURE:'zipIntegrity', ZIP_FORMAT:'zipIntegrity', ZIP_MANIFEST:'zipIntegrity', ZIP_PATH:'zipPath', ZIP_COLLISION:'zipPath' };
       const message = Object.hasOwn(known, error?.code) ? this.$t('workflow.' + known[error.code], error.details || {}) : error?.message || String(error);
       this.$message({ type: 'error', message });
     },
@@ -3029,7 +3036,7 @@ export default {
       this.language = locale;
       this.$i18n.locale = locale;
       document.documentElement.lang = locale.replace('_', '-');
-      document.title = 'Allmiibo ' + this.$t('workflow.appTitle') + ' ' + webVersion + this.archiveLinks.labelSuffix;
+      document.title = 'Allmiibo ' + this.$t('workflow.appTitle') + ' ' + webVersion;
       this.refresh_listing_language();
       this.connBtnText = this.$t(this.disconnecting ? 'info.disconnecting' : this.connected ? 'conn.disconnect' : this.connecting ? 'conn.connecting' : 'conn.connect');
       this.version = this.firmwareVersion ? this.$t('status.connected') + this.firmwareVersion : '';

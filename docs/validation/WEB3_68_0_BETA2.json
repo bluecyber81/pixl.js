@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "version": "3.68.0-beta.2",
+  "releaseTag": "web3.68.0-beta.2",
+  "channel": "prerelease",
+  "defaultLcd": {
+    "releaseTag": "de4.2",
+    "applicationCounter": 680
+  },
+  "optionalLcd": {
+    "counter": 683,
+    "firmware": "2.22.0-DE4.3-b2",
+    "releaseTag": "de4.3-b2-lcd-test1",
+    "url": "https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b2-lcd-test1/Allmiibo_LCD_DE4_3_b2_App683_NUR_APP_TEST.zip",
+    "otaBytes": 255217,
+    "otaSha256": "6ca4c5c7184ebe303812185026969f69b704b88171e320fb2ac08c19f6e6a36b"
+  },
+  "tests": {
+    "web": {
+      "localTotal": 2465,
+      "scope": "Node tests with optional historic DFU packages present"
+    },
+    "productionRoot": 59,
+    "productionPages": 59,
+    "chromeDesktopMobilePerBuild": 63,
+    "syntheticDirectUpload": {
+      "files": 1081,
+      "payloadBytes": 658806,
+      "withoutGrouping": {
+        "directoryReads": 5097,
+        "individualFileOpens": 1081
+      },
+      "withGrouping": {
+        "directoryReads": 280,
+        "individualFileOpens": 28,
+        "groups": 281,
+        "groupedFiles": 1053
+      },
+      "checks": "File payload and 128-byte metadata matched after creation."
+    },
+    "interruptedConfirmation": "Full or absent set is reconciled by content and metadata under the same storage revision. Partial sets and changed metadata block the next write."
+  },
+  "portable": {
+    "bytes": 14824607,
+    "sha256": "de8736ceea2041f47e25328481aa6828b02c0b3c06c16be886012ae9901a2a17"
+  },
+  "limits": [
+    "Browser viewport tests ran on Windows.",
+    "Directory-read counts describe the host model. They are not Bluetooth timings."
+  ]
+}

@@ -9,7 +9,7 @@ const ByteBuffer = require('bytebuffer');
 ByteBuffer.DEFAULT_ENDIAN = ByteBuffer.LITTLE_ENDIAN;
 
 exports.readDigestWire = async function readDigestWire(vfs, { digestReply, batch = false,
-  revision = '0000000000000001', batchReply, linkReply, groupWire } = {}) {
+  revision = '0000000000000001', batchReply, linkReply, groupWire, identityPackets } = {}) {
   const bus = new EventEmitter(), requests = [], replies = [], errors = [], timers = new Map();
   let timer = 0, openPath = null;
   const root = process.env.PIXL_SOURCE_DIR || path.join(__dirname, '../../src/lib');
@@ -31,6 +31,7 @@ exports.readDigestWire = async function readDigestWire(vfs, { digestReply, batch
     return [...value];
   };
   async function response(cmd, bytes) {
+    if (identityPackets && Object.hasOwn(identityPackets, cmd)) return {payload:identityPackets[cmd]};
     if (cmd === 0x03) return { payload: [80, 88, 68, 70, 1, 3, 243, 0, 247, 0] };
     if (cmd === 0x22) return { payload: [80, 88, 83, 67, 1, 7, 60, 2, ...revisionBytes()] };
     if (cmd === 0x25) return batch ? { payload: [80, 88, 66, 82, 1, 4, 60, 2, ...revisionBytes()] }
@@ -89,7 +90,7 @@ exports.readDigestWire = async function readDigestWire(vfs, { digestReply, batch
       const wire = Buffer.from(value);
       if (wire.length > 247 || wire.readUInt16LE(2) !== 0) throw new Error('Unexpected fragmented mock request');
       requests.push(wire);
-      if (groupWire && [0x27,0x28].includes(wire[0])) {
+      if (groupWire && [0x27,0x28,0x29,0x2a].includes(wire[0])) {
         const result = await groupWire(wire[0],wire.subarray(4),withoutResponse);
         if (result) notify(wire[0],result);
         return;
@@ -102,6 +103,7 @@ exports.readDigestWire = async function readDigestWire(vfs, { digestReply, batch
     disconnect: () => bus.emit('ble_disconnected'),
   };
   const context = { module: { exports: {} }, ...require(path.join(root, 'hardware-profile.js')),
+    ...require(path.join(root,'boot-diagnostics.js')), ...require(path.join(root,'lcd-build-diagnostics.js')),
     ...require(path.join(root, 'device-extra-diagnostics.js')), ...require(path.join(root, 'group-create-wire.js')),
     ByteBuffer, Promise, Error, ArrayBuffer, Uint8Array, DataView, TextEncoder, TextDecoder,
     console, pixl, i18n: { global: { t: value => value } }, sharedEventDispatcher: () => bus,

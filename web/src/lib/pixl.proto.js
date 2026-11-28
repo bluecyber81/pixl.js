@@ -7,7 +7,7 @@ import { parseBootDiagnostics } from "./boot-diagnostics.js"
 import { captureDisplayPhoto, parseDisplayPage, supportsDisplayPhoto } from "./display-photo.js"
 import { parsePowerDiagnostics } from "./power-diagnostics.js"
 import { buildDiagnosticBoard, parseBuildDiagnostics } from "./lcd-build-diagnostics.js"
-import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, LCD_Z21_COUNTERS, supportsLegacyLcdFeature } from "./hardware-profile.js"
+import { lacksOledSystemDiagnostics, hasOledSystemDiagnostics, privateStorageVersion, matchesPrivateStorageIdentity, LCD_Z21_COUNTERS, supportsLegacyLcdFeature } from "./hardware-profile.js"
 import { parseStartupDiagnostics } from "./startup-diagnostics.js"
 import { parseMenuDiagnostics, parseMtuDiagnostics, parseUiDiagnostics, parseStorageGcDiagnostics, supportsMenuDiagnostics, supportsBleTestDiagnostics, supportsLinkDiagnostics, supportsStorageGcDiagnostics } from "./device-extra-diagnostics.js"
 import { metadataNoteInfo } from "./metadata-note.js"
@@ -39,10 +39,12 @@ var small_read_probe = null
 var small_batch_capability = null
 var small_batch_probe = null
 var small_create_tx = 0
+var guarded_create_probe = null
 var group_create_probe = null
 const groupFramesOption = Symbol('grouped file create')
 var storage_info_cache = new Map()
 var storage_info_queries = new Map()
+var guarded_receipts = {groups:0, files:0, deferred:0};
 var transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0, completedCommands: 0 }
 var transport_last_error = null
 
@@ -66,6 +68,7 @@ export function get_transport_diagnostics() {
         effectiveGattValueCapacity: profile?.chunkedRequests ? profile.gattValueCapacity : null,
         maxRequestPayload: profile?.maxRequestPayload ?? null,
         ...transport_stats,
+        ...(guarded_create_probe?.available ? {guardedCreateReceipts:{...guarded_receipts}} : {}),
         activeCommand: Number.isInteger(active_op?.cmd) && active_op.cmd >= 0 && active_op.cmd <= 255 ? active_op.cmd : null,
         queuedCommands: op_queue.length,
         fileTransferActive: file_write_ongoing,
@@ -75,6 +78,7 @@ export function get_transport_diagnostics() {
 }
 
 function reset_transport_stats() {
+    guarded_receipts = {groups:0, files:0, deferred:0};
     transport_stats = { txFrames: 0, txBytes: 0, rxFrames: 0, rxBytes: 0, completedCommands: 0 };
 }
 
@@ -642,7 +646,37 @@ function read_revision(b) {
     return hi.toString(16).padStart(8, '0') + lo.toString(16).padStart(8, '0');
 }
 
+let privateIdentityProbe = null;
+function privateIdentityReady() {
+    return privateIdentityProbe?.generation === transport_generation && privateIdentityProbe.confirmed === true;
+}
+export async function trusted_storage_session(firmwareVersion) {
+    if (firmwareVersion !== privateStorageVersion) return true;
+    const generation = transport_generation;
+    if (!privateIdentityProbe || privateIdentityProbe.generation !== generation) {
+        const readIdentity = async () => {
+            const boot = await get_boot_diagnostics();
+            const build = await get_lcd_build_diagnostics(firmwareVersion);
+            const response = await vfs_storage_layout('E');
+            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+            return response.status === 0 && matchesPrivateStorageIdentity(boot, build, response.data);
+        };
+        const probe = {generation, confirmed:false};
+        probe.result = readIdentity().then(matches => {
+            if (generation !== transport_generation) throw new Error('Bluetooth session changed');
+            return probe.confirmed = matches;
+        }).catch(error => {
+            if (privateIdentityProbe === probe) privateIdentityProbe = null;
+            throw error;
+        });
+        privateIdentityProbe = probe;
+    }
+    return privateIdentityProbe.result;
+}
+
 export function vfs_small_create_revision(firmwareVersion) {
+    if (firmwareVersion === privateStorageVersion && !privateIdentityReady())
+        return trusted_storage_session(firmwareVersion).then(ok => ok && privateIdentityReady() ? vfs_small_create_revision(firmwareVersion) : null);
     if (!(LCD_Z21_COUNTERS[firmwareVersion] >= 661)) return Promise.resolve(null);
     const generation = transport_generation;
     small_create_generation = -1;
@@ -665,7 +699,9 @@ export function vfs_small_create_revision(firmwareVersion) {
 // Version and connection capabilities gate the probe. The folder publisher also
 // verifies the mounted engine before granting access to private staging writes.
 export function vfs_probe_group_create(firmwareVersion) {
-    if (!['2.22.0-DE4.2-b1', '2.22.0-DE4.2-b2'].includes(firmwareVersion) || !transport_capabilities?.chunkedRequests ||
+    if (firmwareVersion === privateStorageVersion && !privateIdentityReady())
+        return trusted_storage_session(firmwareVersion).then(ok => ok && privateIdentityReady() ? vfs_probe_group_create(firmwareVersion) : false);
+    if (!['2.22.0-DE4.2-b1', '2.22.0-DE4.2-b2', privateStorageVersion].includes(firmwareVersion) || !transport_capabilities?.chunkedRequests ||
         transport_capabilities.gattValueCapacity - DF_HEADER_SIZE < 196) return Promise.resolve(false);
     const generation = transport_generation;
     if (group_create_probe?.generation === generation) return group_create_probe.promise;
@@ -687,17 +723,51 @@ export function vfs_probe_group_create(firmwareVersion) {
     return probe.promise;
 }
 
-export async function vfs_group_create(parent, entries, revision) {
+export async function vfs_probe_guarded_create(version) {
+    if (version !== privateStorageVersion || !transport_capabilities?.chunkedRequests ||
+        transport_capabilities.gattValueCapacity - DF_HEADER_SIZE < 196) return false;
     const generation = transport_generation;
-    if (group_create_probe?.generation !== generation || !group_create_probe.available) throw new Error('Group create unavailable.');
+    if (!await trusted_storage_session(version) || transport_generation !== generation) return false;
+    if (guarded_create_probe?.generation === generation) return guarded_create_probe.result;
+    const probe = {generation, available:false};
+    probe.result = op_queue_push(0x29, () => {}, b => {
+        if (b.remaining() !== 16 || b.readUint32() !== 0x41475850 || b.readUint8() !== 1 ||
+            b.readUint8() !== 4 || b.readUint16() !== 572) throw new Error('Invalid guarded-create capability.');
+        return read_revision(b);
+    }, {max_bytes:16, optional_probe:true}).then(reply => {
+        if (transport_generation !== generation) throw new Error('Bluetooth session changed');
+        if (reply.status === 255) return false;
+        checked_response(reply);
+        return probe.available = true;
+    }).catch(error => {
+        if (guarded_create_probe === probe) guarded_create_probe = null;
+        throw error;
+    });
+    guarded_create_probe = probe;
+    return probe.result;
+}
+
+export function vfs_group_create(parent, entries, revision) {
+    return send_group_create(parent, entries, revision, false);
+}
+export function vfs_guarded_create(parent, entries, revision) {
+    return send_group_create(parent, entries, revision, true);
+}
+async function send_group_create(parent, entries, revision, guarded) {
+    const generation = transport_generation;
+    const capability = guarded ? guarded_create_probe : group_create_probe;
+    if (capability?.generation !== generation || !capability.available) throw new Error('Group create unavailable.');
     const count = entries.length, id = small_create_tx = (small_create_tx + 1) >>> 0 || 1;
     const limit = Math.min(transport_capabilities.maxRequestPayload, transport_capabilities.gattValueCapacity - DF_HEADER_SIZE, DF_MAX_DATA_SIZE);
-    const frames = await groupCreateFrames(parent,entries,revision,id,limit);
+    const frames = await groupCreateFrames(parent,entries,revision,id,limit,guarded);
     if (transport_generation !== generation) throw new Error('Bluetooth session changed');
     // The queue owns the group until both the final write and its application receipt
     // finish. BEGIN and DATA use individual ATT responses for backpressure.
-    const reply = await op_queue_push(0x28, () => {}, b => {
-        if (b.remaining() !== 14 || b.readUint8() !== 1 || b.readUint8() !== count || b.readUint32() !== id)
+    const reply = await op_queue_push(guarded ? 0x2a : 0x28, () => {}, b => {
+        if (b.remaining() !== 14) throw new Error('Invalid grouped create receipt length.');
+        const kind = b.readUint8(), applied = b.readUint8(), receiptId = b.readUint32();
+        if (guarded && kind === 2 && applied === 0 && receiptId === id && read_revision(b) === revision) return null;
+        if (kind !== 1 || applied !== count || receiptId !== id)
             throw new Error('Unrelated grouped create receipt.');
         const next = read_revision(b);
         if (next.slice(0,8) !== revision.slice(0,8) || parseInt(next.slice(8),16) !== parseInt(revision.slice(8),16) + 1)
@@ -705,7 +775,12 @@ export async function vfs_group_create(parent, entries, revision) {
         return next;
     }, {max_bytes:14, [groupFramesOption]:frames});
     if (transport_generation !== generation) throw new Error('Bluetooth session changed');
-    return checked_response(reply);
+    const result = checked_response(reply);
+    if (guarded) {
+        if (result === null) ++guarded_receipts.deferred;
+        else { ++guarded_receipts.groups; guarded_receipts.files += count; }
+    }
+    return result;
 }
 
 export function vfs_small_read_capable() {
@@ -731,6 +806,8 @@ export function vfs_probe_small_read(firmwareVersion) {
 // App670 and later known LCD builds advertise the bounded READ/DIGEST contract separately. Keep PXSC
 // unchanged so older file managers retain their strict existing parser.
 export function vfs_probe_small_batch(firmwareVersion) {
+    if (firmwareVersion === privateStorageVersion && !privateIdentityReady())
+        return trusted_storage_session(firmwareVersion).then(ok => ok && privateIdentityReady() ? vfs_probe_small_batch(firmwareVersion) : null);
     if (!(LCD_Z21_COUNTERS[firmwareVersion] >= 670)) return Promise.resolve(null);
     if (small_batch_capability?.generation === transport_generation && small_batch_capability.version === firmwareVersion)
         return Promise.resolve(small_batch_capability.value);
@@ -1461,8 +1538,9 @@ async function tx_data_frame(cmd, status, chunk, data) {
     const useProtocolReply = chunked && payload.length <= capacity && (
         readQueriesWithReply.has(cmd) || (cmd === 0x05 && payload.length <= 1) ||
         // COMMIT carries only the transaction ID and has a correlated durable receipt.
-        (cmd === 0x28 && payload.length === 5 && payload[0] === 2 &&
-            group_create_probe?.generation === generation && group_create_probe.available) ||
+        (payload.length === 5 && payload[0] === 2 && (
+            cmd === 0x28 && group_create_probe?.generation === generation && group_create_probe.available ||
+            cmd === 0x2a && guarded_create_probe?.generation === generation && guarded_create_probe.available)) ||
         ((cmd === 0x22 || cmd === 0x25) && payload.length === 0) ||
         cmd === 0x15 || (cmd === 0x23 && payload[0] <= 1) ||
         (cmd === 0x24 && vfs_small_read_capable()) ||
@@ -1567,6 +1645,8 @@ function on_ble_disconnected(reason) {
     reset_transport_stats();
     if (!transport_last_error) transport_last_error = 'DISCONNECTED';
     ++transport_generation;
+    privateIdentityProbe = null;
+    guarded_create_probe = null;
     transport_capabilities = null;
     file_digest_unsupported = false;
     small_batch_capability = null;
