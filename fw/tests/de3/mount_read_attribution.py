@@ -55,7 +55,7 @@ def classification(stack, record_source):
     if "flash_read" not in functions or "pfs_mount" not in functions:
         raise ValueError("Observer captured an unexpected call path")
     if "read_verified_record" in functions:
-        site = functions["read_verified_record"].split(" (", 1)[0]
+        site = functions.get("read_record_prefix", functions["read_verified_record"]).split(" (", 1)[0]
         filename, line = site.rsplit(":", 1)
         if Path(filename).resolve() != CORE / "packed_fs.c":
             raise ValueError("Unexpected record verifier source")
@@ -132,12 +132,16 @@ def profile():
             if (sum(total.values()) != sample["uncachedReads"] or
                     total["eligibleMiss"] + total["bypass"] != sample["physicalReads"]):
                 raise ValueError("Attribution totals differ from independent NOR counters")
-        for key in ("ctzLink", "fileDataPage", "littlefsMetadataCRC"):
+        # Some small images satisfy metadata CRC reads entirely from LittleFS's
+        # cache. No NOR callback is observable on that route in those samples.
+        for key in ("ctzLink", "fileDataPage"):
             if key not in sample["littlefsRoute"]:
                 raise ValueError("Missing observed LittleFS route " + key)
         for key in ("recordHeader", "recordPath", "recordMetadataAndPayloadForCRC", "recordStoredCRC"):
             if key not in sample["packedStage"]:
                 raise ValueError("Missing observed PackedFS stage " + key)
+    if not any("littlefsMetadataCRC" in sample["littlefsRoute"] for sample in samples):
+        raise ValueError("Missing observed LittleFS route littlefsMetadataCRC across all sizes")
     identities = {p.relative_to(FW).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in (CORE / "packed_fs.c", CORE / "vfs_driver_packed.c", LFS / "lfs.c",
                             HERE / "packed_vfs_persistence_de344.c",

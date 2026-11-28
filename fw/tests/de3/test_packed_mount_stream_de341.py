@@ -12,7 +12,7 @@ from packed_crc_source import crc_declarations, run_harness
 
 def harness(mutant=None):
     source = (SRC / 'mod/vfs/packed_fs.c').read_text()
-    reader = function(source, 'read_verified_record')
+    reader = '\n'.join(function(source, name) for name in ('read_record_prefix', 'read_verified_record'))
     mutations = {
         'record_crc': ('u32(stored) == ~sum ? 0 : LFS_ERR_CORRUPT', '0'),
         'header_crc': ('u32(b + 12) != ~crc(~0u, b, 12)', 'false'),

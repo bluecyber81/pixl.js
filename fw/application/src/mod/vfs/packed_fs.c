@@ -325,10 +325,14 @@ static int emit(pfs_t *fs, io_t *io, const void *data, uint32_t n, uint32_t *rc,
   lfs_ssize_t r = lfs_file_write(&fs->lfs, &io->f, data, n);
   if (r != (lfs_ssize_t)n)
     return r < 0 ? (int)r : LFS_ERR_IO;
-  if (rc)
-    *rc = crc(*rc, data, n);
-  if (sc)
-    *sc = crc(*sc, data, n);
+  if (rc && sc && rc != sc) {
+    *rc = crc_pair(*rc, sc, data, n);
+  } else {
+    if (rc)
+      *rc = crc(*rc, data, n);
+    if (sc)
+      *sc = crc(*sc, data, n);
+  }
   return 0;
 }
 static int shard_header(pfs_t *fs, io_t *io, uint32_t id, uint32_t *count,
@@ -353,8 +357,9 @@ static int shard_header(pfs_t *fs, io_t *io, uint32_t id, uint32_t *count,
 static uint32_t record_size(const pfs_info_t *info) {
   return RH + (uint32_t)strlen(info->path) + PFS_META_SIZE + info->size + 4;
 }
-static int read_record(pfs_t *fs, io_t *io, uint32_t offset, uint32_t limit,
-                       pfs_info_t *info, location_t *loc, bool want_meta) {
+static int read_record_prefix(pfs_t *fs, io_t *io, uint32_t offset, uint32_t limit,
+                              pfs_info_t *info, location_t *loc, bool want_meta,
+                              uint32_t *record_crc, uint32_t *body_crc) {
   uint8_t b[RH];
   if (offset > limit || RH > limit - offset)
     return LFS_ERR_CORRUPT;
@@ -369,6 +374,8 @@ static int read_record(pfs_t *fs, io_t *io, uint32_t offset, uint32_t limit,
       RH + n + PFS_META_SIZE + 4 > limit - offset ||
       size > limit - offset - (RH + n + PFS_META_SIZE + 4))
     return LFS_ERR_CORRUPT;
+  if (record_crc)
+    *record_crc = crc_pair(~0u, body_crc, b, sizeof(b));
   memset(info, 0, sizeof(*info));
   info->size = size;
   info->type = b[10];
@@ -377,6 +384,8 @@ static int read_record(pfs_t *fs, io_t *io, uint32_t offset, uint32_t limit,
     return r;
   if (memchr(info->path, 0, n) || valid_path(info->path, false))
     return LFS_ERR_CORRUPT;
+  if (record_crc)
+    *record_crc = crc_pair(*record_crc, body_crc, info->path, n);
   if (want_meta) {
     r = read_at(fs, io, offset + RH + n, info->meta, PFS_META_SIZE);
     if (r)
@@ -386,6 +395,10 @@ static int read_record(pfs_t *fs, io_t *io, uint32_t offset, uint32_t limit,
   loc->data = offset + RH + n + PFS_META_SIZE;
   loc->size = RH + n + PFS_META_SIZE + size + 4;
   return 0;
+}
+static int read_record(pfs_t *fs, io_t *io, uint32_t offset, uint32_t limit,
+                       pfs_info_t *info, location_t *loc, bool want_meta) {
+  return read_record_prefix(fs, io, offset, limit, info, loc, want_meta, NULL, NULL);
 }
 static int verify_record(pfs_t *fs, io_t *io, const location_t *loc,
                          uint32_t *body_crc) {
@@ -414,34 +427,11 @@ static int verify_record(pfs_t *fs, io_t *io, const location_t *loc,
 static int read_verified_record(pfs_t *fs, io_t *io, uint32_t offset,
                                 uint32_t limit, pfs_info_t *info,
                                 location_t *loc, uint32_t *body_crc) {
-  uint8_t b[RH];
-  if (offset > limit || RH > limit - offset)
-    return LFS_ERR_CORRUPT;
-  int r = read_at(fs, io, offset, b, sizeof(b));
+  uint32_t sum;
+  int r = read_record_prefix(fs, io, offset, limit, info, loc, false, &sum, body_crc);
   if (r)
     return r;
-  unsigned n = (unsigned)b[8] | ((unsigned)b[9] << 8);
-  uint32_t size = u32(b + 4);
-  if (u32(b) != R_MAGIC || b[11] || u32(b + 12) != ~crc(~0u, b, 12) || !n ||
-      n >= PFS_PATH_MAX || (b[10] != PFS_FILE && b[10] != PFS_DIR) ||
-      size > DISK || (b[10] == PFS_DIR && size) ||
-      RH + n + PFS_META_SIZE + 4 > limit - offset ||
-      size > limit - offset - (RH + n + PFS_META_SIZE + 4))
-    return LFS_ERR_CORRUPT;
-  uint32_t sum = crc_pair(~0u, body_crc, b, sizeof(b));
-  memset(info, 0, sizeof(*info));
-  info->size = size;
-  info->type = b[10];
-  r = read_at(fs, io, offset + RH, info->path, n);
-  if (r)
-    return r;
-  if (memchr(info->path, 0, n) || valid_path(info->path, false))
-    return LFS_ERR_CORRUPT;
-  sum = crc_pair(sum, body_crc, info->path, n);
-  loc->offset = offset;
-  loc->data = offset + RH + n + PFS_META_SIZE;
-  loc->size = RH + n + PFS_META_SIZE + size + 4;
-  uint32_t pos = offset + RH + n;
+  uint32_t pos = loc->data - PFS_META_SIZE;
   uint32_t end = offset + loc->size - 4;
   while (pos < end) {
     uint32_t length = end - pos;
