@@ -268,6 +268,9 @@ int32_t vfs_packed_create_small(char *path, uint64_t expected, const uint8_t *da
 
 #ifdef PIXL_GROUP_CREATE_ENABLE
 #include "pfs_guard_new.h"
+#ifdef PIXL_SAVE_PHASES
+#include "../runtime_diag.h"
+#endif
 static int32_t no_pending_writer(const char *marker) {
   pfs_info_t info;
   int r = pfs_guard_read_result(store, pfs_stat(store, marker, &info));
@@ -275,6 +278,9 @@ static int32_t no_pending_writer(const char *marker) {
 }
 int32_t vfs_packed_guarded_create(uint64_t expected, const pfs_small_item_t *items,
                                   unsigned count, uint64_t *after) {
+#ifdef PIXL_SAVE_PHASES
+  runtime_diag_save_mark(0);
+#endif
   if (!expected || !after || vfs_packed_revision() != expected || !pfs_mounted(store) ||
       vfs_packed_import_pending() || !vfs_packed_handles_idle()) return VFS_ERR_FAIL;
   int32_t result = vfs_persist_writer_begin_clean(&vfs_driver_fs, no_pending_writer);
@@ -284,7 +290,13 @@ int32_t vfs_packed_guarded_create(uint64_t expected, const pfs_small_item_t *ite
   else if (policy == PFS_GUARD_DEFER) result = VFS_GUARD_DEFER;
   else if (policy != 0) result = VFS_ERR_FAIL;
   else {
+#ifdef PIXL_SAVE_PHASES
+    runtime_diag_save_mark(1);
+#endif
     result = map_error(pfs_create_small_group(store, (uint32_t)expected, items, count));
+#ifdef PIXL_SAVE_PHASES
+    if (result == VFS_OK) runtime_diag_save_finish(0, count);
+#endif
     if (result == VFS_OK) *after = vfs_packed_revision();
   }
   vfs_persist_writer_end(&vfs_driver_fs);

@@ -204,6 +204,9 @@ static void df_proto_handler_info_startup_diagnostic(df_event_t *evt) {
                 case 1: ready = runtime_diag_startup_snapshot(out.data, sizeof(out.data), true); break;
                 case 2: ready = runtime_diag_startup_mount_snapshot(out.data, sizeof(out.data)); break;
                 case 3: ready = runtime_diag_startup_cache_snapshot(out.data, sizeof(out.data)); break;
+#ifdef PIXL_SAVE_PHASES
+                case 5: ready = runtime_diag_save_snapshot(out.data, sizeof(out.data)); break;
+#endif
 #if defined(PIXL_TEST_DIAGNOSTICS)
                 case 4: ready = runtime_diag_startup_profile_snapshot(out.data, sizeof(out.data)); break;
 #endif

@@ -3,6 +3,9 @@
 #include "app_util_platform.h"
 #include "mui_mem.h"
 #include <string.h>
+#ifdef PIXL_SAVE_PHASES
+#include "app_timer.h"
+#endif
 #if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
 #include "app_timer.h"
 #endif
@@ -266,6 +269,31 @@ static void put16(uint8_t *out, uint16_t value) {
 static void put32(uint8_t *out, uint32_t value) {
     for (unsigned i = 0; i < 4; ++i) out[i] = (uint8_t)(value >> (8 * i));
 }
+#ifdef PIXL_SAVE_PHASES
+/* Only the cooperative filesystem worker updates these values. The information
+ * command also runs on that worker. Failed operations never accumulate. */
+static uint32_t save_stamp[4], save_row[2][6];
+void runtime_diag_save_mark(unsigned phase) {
+    save_stamp[phase] = app_timer_cnt_get();
+}
+void runtime_diag_save_finish(unsigned kind, uint32_t units) {
+    uint32_t *row = save_row[kind];
+    row[0]++;
+    row[1] += units;
+    row[2] += app_timer_cnt_diff_compute(app_timer_cnt_get(), save_stamp[0]);
+    for (unsigned i = 1; i < 4; ++i)
+        row[2+i] += app_timer_cnt_diff_compute(save_stamp[i], save_stamp[i-1]);
+}
+bool runtime_diag_save_snapshot(uint8_t *out, size_t capacity) {
+    if (!out || capacity < 60) return false;
+    memcpy(out, "PXSP\x01\x3c\0\0", 8);
+    put32(out + 8, APP_TIMER_CLOCK_FREQ / (APP_TIMER_CONFIG_RTC_FREQUENCY + 1u));
+    /* nRF52832 is little endian. memcpy allows an unaligned output frame. */
+    memcpy(out + 12, save_row, sizeof(save_row));
+    return true;
+}
+#endif
+
 bool runtime_diag_startup_snapshot(uint8_t *out, size_t capacity, bool detail) {
     if (!out || capacity < (detail ? STARTUP_STORAGE_DIAG_SIZE : STARTUP_DIAG_SIZE)) return false;
     memset(out, 0, STARTUP_DIAG_SIZE);

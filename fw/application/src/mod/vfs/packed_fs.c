@@ -3,7 +3,7 @@
  * All publication is through one atomic replacement of the small manifest.
  */
 #include "packed_fs.h"
-#if defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)
+#if (defined(BOARD_LCD) && defined(PIXL_TEST_DIAGNOSTICS)) || defined(PIXL_SAVE_PHASES)
 #include "../runtime_diag.h"
 #endif
 #include <limits.h>
@@ -1556,8 +1556,14 @@ static int transact(pfs_t *fs, const change_t *c) {
    * Early refusal therefore retains its old no-maintenance error path. */
   if (!fs->transaction)
     return r;
+#ifdef PIXL_SAVE_PHASES
+  if (c->stage) runtime_diag_save_mark(2);
+#endif
   if (!r)
     r = publish(fs, &m);
+#ifdef PIXL_SAVE_PHASES
+  if (c->stage) runtime_diag_save_mark(3);
+#endif
   fs->transaction = false;
   r = io_error(fs, r);
   /* A staged writer owns its scratch file until close/abort. */
@@ -1908,7 +1914,13 @@ int pfs_close(pfs_file_t *file) {
   }
   if (fs->poisoned)
     return LFS_ERR_IO;
+#ifdef PIXL_SAVE_PHASES
+  runtime_diag_save_mark(0);
+#endif
   int r = lfs_file_sync(&fs->lfs, &file->io.f);
+#ifdef PIXL_SAVE_PHASES
+  runtime_diag_save_mark(1);
+#endif
   if (r)
     return io_error(fs, r);
   lfs_soff_t size = lfs_file_size(&fs->lfs, &file->io.f);
@@ -1928,6 +1940,9 @@ int pfs_close(pfs_file_t *file) {
   r = io_close(fs, &file->io, 0);
   if (r)
     fs->poisoned = true;
+#ifdef PIXL_SAVE_PHASES
+  runtime_diag_save_finish(1, (uint32_t)size);
+#endif
   fs->writer = NULL;
   detach(&file->h, true);
   return 0;
@@ -2117,7 +2132,13 @@ int pfs_create_small_group(pfs_t *fs, uint32_t expected, const pfs_small_item_t 
             else m.ids[m.count++] = id;
         }
     }
+#ifdef PIXL_SAVE_PHASES
+    runtime_diag_save_mark(2);
+#endif
     if (!r) r = publish(fs, &m);
+#ifdef PIXL_SAVE_PHASES
+    runtime_diag_save_mark(3);
+#endif
     if (!r) {
         for (unsigned i = first; i <= slot; ++i) {
             const unsigned published_slot = m.count - 1 - (slot - i);
