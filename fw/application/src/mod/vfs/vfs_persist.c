@@ -291,17 +291,11 @@ int32_t vfs_persist_writer_begin(const vfs_driver_t *driver, const char *path) {
     return result;
 }
 #ifdef PIXL_GROUP_CREATE_ENABLE
-int32_t vfs_persist_writer_begin_clean(const vfs_driver_t *driver) {
+int32_t vfs_persist_writer_begin_clean(const vfs_driver_t *driver, int32_t (*absent)(const char *)) {
     if (driver != public_fs || !raw_fs || busy || external_writers) return VFS_ERR_FAIL;
     busy = true;
-    pending_t pending;
-    int32_t result = read_pending(&pending);
-    if (result == VFS_ERR_NOOBJ) {
-        ++external_writers;
-        result = VFS_OK;
-    } else if (result == VFS_OK) {
-        result = VFS_ERR_FAIL;
-    }
+    int32_t result = absent(PENDING_FILE);
+    if (result == VFS_OK) ++external_writers;
     busy = false;
     return result;
 }

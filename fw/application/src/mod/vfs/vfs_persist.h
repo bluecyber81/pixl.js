@@ -25,7 +25,7 @@ int32_t vfs_persist_before_mutation(const vfs_driver_t *driver, const char *path
 int32_t vfs_persist_writer_begin(const vfs_driver_t *driver, const char *path);
 /* Reserve a direct add only while no recovery marker or active writer exists.
  * This path must never replay a journal or otherwise mutate ahead of the policy check. */
-int32_t vfs_persist_writer_begin_clean(const vfs_driver_t *driver);
+int32_t vfs_persist_writer_begin_clean(const vfs_driver_t *driver, int32_t (*absent)(const char *));
 void vfs_persist_writer_end(const vfs_driver_t *driver);
 bool vfs_persist_active(const vfs_driver_t *driver);
 /* Only after a real unmount, or after a fresh successful mount. */

@@ -285,6 +285,9 @@ static int io_error(pfs_t *fs, int result) {
     fs->poisoned = true;
   return result;
 }
+int pfs_guard_read_result(pfs_t *fs, int result) {
+  return io_error(fs, result);
+}
 static int io_open(pfs_t *fs, io_t *io, const char *path, int flags) {
   memset(io, 0, sizeof(*io));
   io->cfg.buffer = io->cache;
@@ -474,6 +477,14 @@ static int mount_index_contains(pfs_t *fs, io_t *io, uint32_t count,
 static int cursor_close(pfs_t *fs, cursor_t *c, int r) {
   return io_close(fs, &c->io, r);
 }
+/* Every ID selected from a published manifest names an immutable shard.
+ * A missing backing file is corruption, distinct from an absent logical path. */
+static int open_manifest_shard(pfs_t *fs, io_t *io, uint32_t id) {
+  char name[16];
+  shard_name(id, name);
+  int r = io_open(fs, io, name, LFS_O_RDONLY);
+  return r == LFS_ERR_NOENT ? LFS_ERR_CORRUPT : r;
+}
 static int next_record(pfs_t *fs, const manifest_t *m, cursor_t *c,
                        pfs_info_t *info, location_t *loc, unsigned parent_bit) {
   while (c->shard < m->count) {
@@ -490,9 +501,7 @@ static int next_record(pfs_t *fs, const manifest_t *m, cursor_t *c,
         c->index = 0;
         continue;
       }
-      char name[16];
-      shard_name(id, name);
-      r = io_open(fs, &c->io, name, LFS_O_RDONLY);
+      r = open_manifest_shard(fs, &c->io, id);
       if (r)
         return r;
       r = shard_header(fs, &c->io, id, &c->count, &c->body);
@@ -522,14 +531,6 @@ static int next_record(pfs_t *fs, const manifest_t *m, cursor_t *c,
     c->offset = 0;
   }
   return 0;
-}
-/* Every ID selected from a published manifest names an immutable shard.
- * A missing backing file is corruption, distinct from an absent logical path. */
-static int open_manifest_shard(pfs_t *fs, io_t *io, uint32_t id) {
-  char name[16];
-  shard_name(id, name);
-  int r = io_open(fs, io, name, LFS_O_RDONLY);
-  return r == LFS_ERR_NOENT ? LFS_ERR_CORRUPT : r;
 }
 static int get_catalog(pfs_t *fs, unsigned slot, catalog_t **out) {
   catalog_t *c = &fs->catalog[slot % CATALOG_SLOTS];

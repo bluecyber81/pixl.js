@@ -42,6 +42,9 @@ int pfs_format(
     pfs_t *fs); /* explicit destructive format + empty packed store */
 bool pfs_mounted(const pfs_t *fs);
 bool pfs_poisoned(const pfs_t *fs);
+/* A pre-mutation check which observes failed I/O must retain the same
+ * write lockout as a failed transaction. Logical lookup misses pass through. */
+int pfs_guard_read_result(pfs_t *fs, int result);
 bool pfs_idle(const pfs_t *fs);
 /* Explicit format starts pending; only a verified client restore should finish.
  * Binding an archive digest is required before any logical mutation.
