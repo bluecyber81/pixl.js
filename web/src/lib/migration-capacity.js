@@ -1,3 +1,5 @@
+import { lcdTest683 } from '../../public/dfu/lcd-app683-reference.mjs';
+
 // Exact reviewed simulation engine. This alone never authorizes formatting.
 const legacy={
   "approved": true,
@@ -274,6 +276,12 @@ const de42 = {
   approvedApplications: [{firmwareVersion: '2.22.0-DE4.2-b2', applicationCounter: 680}],
   layout: {...de41.layout, engineSha256: '15db90c7d572bfc3043664a90ed077125a9645bca46055ae2fe0dafe0cb055c0'},
 }
+const de43b2 = {
+  ...de42, url:'/lfs-capacity-de43b2.wasm', wasmSha256:lcdTest683.wasmSha256,
+  firmwareVersion:lcdTest683.firmwareVersion, applicationCounter:lcdTest683.applicationCounter,
+  approvedApplications:[{firmwareVersion:lcdTest683.firmwareVersion, applicationCounter:lcdTest683.applicationCounter}],
+  layout:{...de42.layout, engineSha256:lcdTest683.engineSha256}
+}
 function freezeTarget(target){
   Object.freeze(target.layout);Object.freeze(target.geometry)
   target.approvedApplications.forEach(Object.freeze);Object.freeze(target.approvedApplications)
@@ -298,10 +306,12 @@ export const DE398_MIGRATION_CAPACITY_TARGET=freezeTarget(de398)
 export const DE399_MIGRATION_CAPACITY_TARGET=freezeTarget(de399)
 export const DE3100_MIGRATION_CAPACITY_TARGET=freezeTarget(de3100)
 export const DE3101_MIGRATION_CAPACITY_TARGET=freezeTarget(de3101)
+export const DE43B2_MIGRATION_CAPACITY_TARGET=freezeTarget(de43b2)
 export const DE42_MIGRATION_CAPACITY_TARGET=freezeTarget(de42)
 export const DE41_MIGRATION_CAPACITY_TARGET=freezeTarget(de41)
 export const DE3102_MIGRATION_CAPACITY_TARGET=freezeTarget(de3102)
 export function getMigrationCapacityTarget(profile='current'){
+  if(profile==='de43b2')return DE43B2_MIGRATION_CAPACITY_TARGET
   if(profile==='de42')return DE42_MIGRATION_CAPACITY_TARGET
   if(profile==='de41')return DE41_MIGRATION_CAPACITY_TARGET
   if(profile==='de3102')return DE3102_MIGRATION_CAPACITY_TARGET

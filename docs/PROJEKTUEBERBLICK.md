@@ -1,6 +1,6 @@
 # Allmiibo seit DE3.10
 
-Die wichtigsten Verbesserungen bis zur LCD-Finalversion DE4.2 / App680 und Dateimanager 3.67.1. [English](PROJECT_OVERVIEW.md)
+Die wichtigsten Verbesserungen bis zur LCD-Finalversion DE4.2 / App680 und Dateimanager 3.68.0-beta.2. [English](PROJECT_OVERVIEW.md)
 
 - **Übertragung beschleunigt.** Kleine Figurendateien werden beim Lesen gebündelt. Beim Hochladen in neue Unterordner speichert App680 bis zu vier kleine Dateien zusammen. Im selben Ordner sank die Lesezeit für 26 kleine BINs von 20,85 auf 10,29 Sekunden.
 - **Bluetooth-Fernbedienung eingebaut.** Das Gerätemenü lässt sich am Handy oder PC bedienen. Das Displayfoto kann man direkt ansehen, drehen und als PNG speichern.

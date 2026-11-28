@@ -1,5 +1,11 @@
 # Versionsverlauf des Allmiibo-Dateimanagers
 
+## 3.68.0-beta.2 · 28.11.2026
+
+Der Dateimanager prüft die Speicherrevision jetzt auch beim Vergleich einer einzelnen Datei. Bei LCD DE4.3-b2 / App683 lassen sich neue kleine Dateien direkt in vorhandenen Ordnern gemeinsam anlegen. Für bis zu vier Dateien prüft die Firmware Namen und Schreibrechte direkt auf dem Gerät. Nach einer unklaren Bestätigung vergleicht der Browser alle Dateien und Metadaten erneut. App680 bleibt die finale LCD-Firmware.
+
+[App683 fürs Handy (ZIP)](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b2-lcd-test1/Allmiibo_LCD_DE4_3_b2_App683_NUR_APP_TEST.zip)
+
 ## Dateimanager 3.67.1 · 26. November 2026
 
 Bei Noah und Mio nennt der Figurenkatalog jetzt die deutschen Spielnamen der Kostüme und die Varianten ohne Jacke. Für Xenoblade Chronicles 3 – Nintendo Switch 2 Edition führt er Nintendos Termin am 3. Dezember 2026 und die bestätigte amiibo-Unterstützung auf. [GitHub](https://github.com/bluecyber81/pixl.js/releases/tag/web3.67.1)

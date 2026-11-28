@@ -72,7 +72,7 @@ function harness(overrides = {}) {
   Object.defineProperty(context, 'showSaveFilePicker', { get: () => window.showSaveFilePicker });
   context.lcdPreviews = require('../public/dfu/lcd-private-reference.mjs').lcdPreviews;
   context.lcdTest676 = require('../public/dfu/lcd-app676-reference.mjs').lcdTest676;
-  Object.assign(context, require('../public/dfu/lcd-app679-reference.mjs'), require('../public/dfu/lcd-app680-reference.mjs'));
+  Object.assign(context, require('../public/dfu/lcd-app683-reference.mjs'), require('../public/dfu/lcd-app679-reference.mjs'), require('../public/dfu/lcd-app680-reference.mjs'));
   context.lcdTest677 = require('../public/dfu/lcd-app677-reference.mjs').lcdTest677;
   context.lcdRelease = require('../public/dfu/lcd-release-reference.mjs').lcdRelease;
   context.app675 = require('../public/dfu/lcd-app675-reference.mjs').lcdRelease;
@@ -364,6 +364,33 @@ test('unknown transfer codes preserve the supplied message and dismissals stay s
   assert.equal(h.messages.length, 0);
   h.instance.show_transfer_error({ code:'toString', message:'Unknown operation' });
   assert.equal(h.messages[0].message, 'Unknown operation');
+});
+
+test('a changing PackedFS revision clears the displayed preview and tells the user to compare again in both languages', async () => {
+  const sync = await import('../src/lib/sync-plan.js');
+  const { memoryVfs, localFile } = await import('./helpers/memory-vfs.mjs');
+  const { workflowGerman, workflowEnglish } = await import('../src/i18n/workflow.js');
+  const { createI18n } = await import('vue-i18n');
+  for (const [locale, workflow] of [['de_DE',workflowGerman], ['en',workflowEnglish]]) {
+    const h = harness(sync), app = connected(h), vfs = memoryVfs();
+    const i18n = createI18n({legacy:false,locale,messages:{[locale]:{workflow}}});
+    app.$t = key => key.startsWith('workflow.') ? i18n.global.t(key) : key;
+    let revisionReads = 0;
+    app.folder_upload_adapters = () => ({...vfs.api, syncSession:app.sessionGeneration,
+      readCreateRevision:async () => ++revisionReads === 4 ? '0000000100000032' : '0000000100000031'});
+    app.open_sync();
+    app.on_sync_files({target:{files:[localFile('a'),localFile('b')]}});
+    await app.build_sync_plan();
+    assert.equal(app.syncPlan.summary.add,2);
+    await app.build_sync_plan();
+    assert.equal(revisionReads,4);
+    assert.equal(app.syncPlan,null);
+    assert.equal(app.syncSelected.length,0);
+    assert.equal(app.syncHistoryReady,null);
+    assert.equal(app.syncing,false);
+    assert.equal(h.messages.at(-1).message,workflow.syncStale);
+    assert(!vfs.log.some(row => ['write','rename','remove','mkdir','meta'].includes(row.op)));
+  }
 });
 
 test('sync compares local and target contents again and explains the abort in both languages', async () => {
@@ -801,7 +828,7 @@ test('3.30.1 diagnostic export first opens a local whitelisted preview with no d
   app.save_diagnostics();
   assert.equal(app.diagnosticsDialog, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticReady');
   const report = JSON.parse(app.diagnosticsJson);
-  assert.equal(report.applicationVersion, '3.67.1'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
+  assert.equal(report.applicationVersion, '3.68.0-beta.2'); assert.equal(report.firmwareVersion, '2.22.0-DE3.36');
   assert.equal(report.drives[0].freeBytes, 123456); assert.doesNotMatch(app.diagnosticsJson, /PRIVATE-/);
   assert.deepEqual([reads,pickers,copies,downloads.length,h.disconnects()], [0,0,0,0,0]);
 });
@@ -813,7 +840,7 @@ test('3.30.1 explicit save opens picker synchronously and confirms success only 
   app.save_diagnostics(); const snapshot = app.diagnosticsJson;
   const save = app.save_diagnostic_file();
   assert.equal(pickerCount, 1, 'picker called before the click handler returns its promise');
-  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.67.1.json');
+  assert.equal(pickerOptions.suggestedName, 'Allmiibo-Diagnose-3.68.0-beta.2.json');
   assert.equal(pickerOptions.types[0].accept['application/json'][0], '.json');
   assert.equal(app.diagnosticsBusy, true); assert.equal(app.diagnosticsStatus, 'info.diagnosticSaving');
   // Other export actions cannot replace this report or start a second writer.
@@ -900,7 +927,7 @@ test('3.30.1 production export dialog renders selectable JSON, manual fallbacks 
   const render = new Function('Vue', compile(source, {mode:'function',prefixIdentifiers:true}).code)(Vue);
   const renderDialog = (native, busy) => {
     const app = Vue.createSSRApp({render, data: () => ({diagnosticsDialog:true,diagnosticsBusy:busy,
-      diagnosticsFilename:'Allmiibo-Diagnose-3.67.1.json',diagnosticsJson:'{"safe":"<text>"}',
+      diagnosticsFilename:'Allmiibo-Diagnose-3.68.0-beta.2.json',diagnosticsJson:'{"safe":"<text>"}',
       nativeDiagnosticSaveAvailable:native,diagnosticsStatus:'info.diagnosticReady'}),
       methods:{save_diagnostic_file(){},copy_diagnostics(){},select_diagnostics(){},download_diagnostics(){}}});
     app.config.globalProperties.$t = key => labels[key.replace(/^info\./,'')];
@@ -2132,10 +2159,10 @@ test('3.28 startup report opens the reusable local export preview and generic ex
   const h=harness(), app=connected(h), downloads=diagnosticDownloadProbe(h);
   const report={reportSchema:1,observedAt:'2026-10-27T12:00:00.000Z',startup:{phaseMask:1}};
   app.open_startup_report(report);
-  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.67.1.json');
+  assert.equal(app.diagnosticsFilename,'Allmiibo-Startdiagnose-3.68.0-beta.2.json');
   assert.equal(app.diagnosticsDialog,true);assert.equal(downloads.length,0);
   assert.equal(JSON.parse(app.diagnosticsJson).observedAt,report.observedAt);
-  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.67.1.json');
+  app.save_diagnostics();assert.equal(app.diagnosticsFilename,'Allmiibo-Diagnose-3.68.0-beta.2.json');
   const previous=app.diagnosticsJson;app.connected=false;app.open_startup_report(report);
   assert.equal(app.diagnosticsJson,previous);
 });
@@ -3051,7 +3078,7 @@ test('3.35 combined diagnostic reads serialize eight sections, export startup an
  await pending;assert.deepEqual(order,['runtime','boot','power','startup','drives','storage','mtu','ui']);assert.equal(app.busy,false);
  assert.equal(app.fullDiagnosticSnapshot.sections.startup.data.elapsedMilliseconds[5],2576);
  assert.equal(app.fullDiagnosticSnapshot.sections.boot.state,'unavailable');assert.equal(app.runtimeState,'available');
- app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.67.1');
+ app.save_diagnostics();const exported=JSON.parse(app.diagnosticsJson);assert.equal(exported.applicationVersion,'3.68.0-beta.2');
  assert.equal(exported.startup.elapsedMilliseconds[1],2473);assert.equal(exported.runtime.heapFreeBytes,10668);
  assert.equal(exported.diagnosticSnapshot.sections.storage.state,'unavailable');assert.equal(order.length,8);
 });

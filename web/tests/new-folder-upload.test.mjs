@@ -759,11 +759,11 @@ test('quick existing-folder upload has one final status read and rejects a chang
     let revisionReads=0
     const r=s.run({quickPacked:true,readCreateRevision:async()=>{
       revisionReads++
-      return revisionReads===1 ? '0000000100000010' : badEpoch?'0000000200000012':'0000000100000012'
+      return !s.nodes.has(root+'/first.bin') ? '0000000100000010' : badEpoch?'0000000200000012':'0000000100000012'
     }})
     if (badEpoch) await assert.rejects(r,{code:'SYNC_STALE'})
     else assert.equal((await r).job.acknowledgedOnly.length,2)
-    assert.equal(revisionReads,2)
+    assert.equal(revisionReads,4)
     assert.equal(s.actions.filter(e=>e.kind==='hash').length,0)
   }
 })
@@ -841,6 +841,93 @@ test('grouped completion cannot reuse another device checkpoint; absence of capa
   const f=await groupFixture(),single=groupedApi(f)
   const done=await f.run({...single,canGroupCreate:async()=>false})
   assert.equal(done.total,9);assert.equal(single.calls.length,0);assert.equal(single.actions.length,9)
+})
+
+test('resuming a lost COMMIT batches the staged digests and still checks every RAW128 record', async t => {
+  for (const mode of ['batch', 'unsupported', 'small MTU']) await t.test(mode, async () => {
+    const s = await groupFixture(), api = groupedApi(s, 'commit')
+    await assert.rejects(s.run(api), /Lost COMMIT/)
+    const {stagePath, inFlightGroup} = s.job.newFolderUpload
+    const paths = inFlightGroup.map(path => stagePath + path.slice(target.length))
+    const requests = []
+    const result = await s.run({...api, maxRequestPayload:mode === 'small MTU' ? 31 : 243,
+      async readFileDigestsBatch(group, {revision}) {
+        assert.equal(revision, await api.readCreateRevision())
+        requests.push(group.map(file => file.path))
+        if (mode === 'unsupported') return null
+        return Promise.all(group.map(async file => ({...file, sha256:await sha256Bytes(s.nodes.get(file.path).bytes)})))
+      }})
+    assert.equal(result.total, 9)
+    assert.deepEqual(requests, mode === 'small MTU' ? [] : [paths])
+    assert.deepEqual(s.actions.filter(e => e.kind === 'hash').map(e => e.path), mode === 'batch' ? [] : paths)
+    assert.deepEqual(api.rawReads, paths)
+    assert.equal(api.calls.flat().length, 9)
+  })
+})
+
+test('uncertain groups are never published after a failed inventory or a late device change', async t => {
+  for (const issue of ['short', 'order', 'size', 'hash', 'malformed', 'foreign', 'duplicate', 'partial',
+    'file changed', 'raw metadata', 'generation', 'disconnect', 'cancelled']) await t.test(issue, async () => {
+    const s = await groupFixture(), api = groupedApi(s, 'commit'), controller = new AbortController()
+    await assert.rejects(s.run(api), /Lost COMMIT/)
+    const {stagePath, inFlightGroup} = s.job.newFolderUpload
+    const path = stagePath + inFlightGroup[0].slice(target.length)
+    if (issue === 'file changed') s.nodes.get(path).bytes[0] ^= 1
+    if (issue === 'raw metadata') s.nodes.get(path).raw[127] = 0
+    if (issue === 'foreign') s.nodes.set(stagePath+'/extra', {type:0,bytes:Uint8Array.of(42),meta:newMetadata()})
+    if (issue === 'partial') s.nodes.delete(path)
+    const mutations = s.actions.filter(mutation).length
+    let batchCalls = 0
+    const upload = s.run({...api, signal:controller.signal,
+      async readDirectory(dir) {
+        const rows = await s.api.readDirectory(dir)
+        return issue === 'duplicate' && dir === stagePath ? [...rows, rows[0]] : rows
+      },
+      async readFileDigestsBatch(group) {
+        ++batchCalls
+        const reply = await Promise.all(group.map(async file => ({...file, sha256:await sha256Bytes(s.nodes.get(file.path).bytes)})))
+        if (issue === 'short') return reply.slice(1)
+        if (issue === 'order') return reply.reverse()
+        if (issue === 'size') ++reply[0].size
+        if (issue === 'hash') reply[0].sha256 = '0'.repeat(64)
+        if (issue === 'malformed') return undefined
+        if (issue === 'disconnect') s.disconnect()
+        if (issue === 'cancelled') controller.abort()
+        if (issue === 'generation') api.bump()
+        return reply
+      }})
+    const code = {disconnect:'DISCONNECTED', cancelled:'SYNC_CANCELLED', duplicate:'UPLOAD_LIST'}[issue] || 'SYNC_STALE'
+    await assert.rejects(upload, {code})
+    if (issue === 'foreign' || issue === 'duplicate') assert.equal(batchCalls, 0)
+    assert.equal(s.actions.filter(e => e.kind === 'hash').length, 0)
+    assert.equal(s.actions.filter(mutation).length, mutations)
+    assert.equal(api.calls.length, 1)
+    assert(!s.nodes.has(target))
+  })
+})
+
+test('lost RENAME audits the final paths and falls back only for files without a group reply', async () => {
+  const s = await groupFixture(), api = groupedApi(s)
+  await assert.rejects(s.run({...api, async publishSmallFolder(...args) {
+    await api.publishSmallFolder(...args)
+    s.disconnect()
+    s.api.assertSession()
+  }}), {code:'DISCONNECTED'})
+  s.reconnect()
+  assert(s.nodes.has(target))
+  const paths = s.selectedPaths
+  const requests = []
+  const result = await s.run({...api, async readFileDigestsBatch(group, {revision}) {
+    assert.equal(revision, await api.readCreateRevision())
+    requests.push(group.map(row => row.path))
+    if (requests.length === 2) return null
+    return Promise.all(group.map(async file => ({...file, sha256:await sha256Bytes(s.nodes.get(file.path).bytes)})))
+  }})
+  assert.equal(result.total, 9)
+  assert.deepEqual(requests, [paths.slice(0,4), paths.slice(4,8)])
+  assert.deepEqual(s.actions.filter(e => e.kind === 'hash').map(e => e.path), paths.slice(4))
+  assert.deepEqual(api.rawReads, paths)
+  assert.equal(s.actions.filter(e => e.kind === 'rename' && e.phase === 'after').length, 1)
 })
 
 test('a fresh small leaf validates MKDIR in the first group instead of querying its revision again', async () => {
@@ -932,4 +1019,78 @@ test('after a first-group revision conflict, the next leaf observes independentl
   assert(s.nodes.has(root+'/Group/first/a.bin'))
   assert.deepEqual(s.nodes.get(other+'/keep').bytes,Uint8Array.of(71))
   assert(!s.nodes.has(other+'/z.bin'))
+})
+test('guarded existing-folder adds commit at most four neutral siblings and leave Unicode to RAW128', async () => {
+  const files=['a','b','c','d','e','é'].map((n,i)=>local(n+'.bin',i))
+  const s=await setupExisting(files), groups=[]
+  const result=await s.run({...s.native,quickPacked:true,canGuardedCreate:async()=>true,
+    readRawMetadata:async()=>new Uint8Array(128).fill(255),
+    guardedCreate:async(parent,members,revision)=>{
+      assert.equal(parent,root);assert.equal(revision,await s.native.readCreateRevision())
+      groups.push(members.map(m=>m.name))
+      for(const member of members) s.nodes.set(parent+'/'+member.name,{type:0,meta:newMetadata(),bytes:member.bytes.slice()})
+      s.native.bump();return s.native.readCreateRevision()
+    }})
+  assert.equal(result.completed,6);assert.deepEqual(groups,[['a.bin','b.bin','c.bin','d.bin'],['e.bin']])
+  assert.deepEqual(s.actions.filter(a=>a.kind==='open').map(a=>a.path),[root+'/é.bin'])
+})
+test('only an explicit guarded DEFER permits ordinary write guards, once per parent',async()=>{
+  const s=await setupExisting(['a','b','c','d','e'].map((n,i)=>local(n+'.bin',i)));let groups=0
+  const r=await s.run({quickPacked:true,canGuardedCreate:async()=>true,readRawMetadata:async()=>new Uint8Array(128).fill(255),
+    guardedCreate:async()=>{groups++;return null}})
+  assert.equal(groups,1);assert.equal(r.completed,5);assert.equal(s.actions.filter(a=>a.kind==='open').length,5)
+})
+test('uncertain guarded commit is reconciled by digest and RAW128 before retry',async()=>{
+ for(const mode of ['lost-after','lost-before','wrong-metadata','changed-during-metadata','partial','malformed']) {
+  const s=await setupExisting(['a','b','c','d'].map((n,i)=>local(n+'.bin',i)))
+  let attempts=0,rawReads=0
+  const opts={quickPacked:true,canGuardedCreate:async()=>true,readRawMetadata:async()=>{
+       rawReads++;if(mode==='changed-during-metadata' && rawReads===1)s.native.bump();return new Uint8Array(128).fill(mode==='wrong-metadata'?0:255)
+     },guardedCreate:async(parent,members)=>{
+       attempts++
+       for(const member of members) {
+         if(attempts===1 && mode==='lost-before')break
+         s.nodes.set(parent+'/'+member.name,{type:0,meta:newMetadata(),bytes:member.bytes.slice()})
+         if(mode==='partial')break
+       }
+       s.native.bump()
+       if(attempts===1) {if(mode==='malformed')return '1234';throw Error('lost acknowledgement')}
+       return s.native.readCreateRevision()
+     }}
+  await assert.rejects(s.run(opts));assert.equal(attempts,1);assert.equal(s.job.pendingGuarded.length,4)
+  assert.equal(s.actions.filter(a=>a.kind==='open').length,0)
+  if(['partial','wrong-metadata','changed-during-metadata'].includes(mode)){await assert.rejects(s.run(opts),{code:'SYNC_STALE'});assert.equal(attempts,1);assert.equal(s.job.pendingGuarded.length,4);continue}
+  const done=await s.run(opts)
+  assert.equal(done.job.state,'complete');assert.equal(done.job.pendingGuarded,undefined)
+  assert.equal(attempts,mode==='lost-before'?2:1);assert.equal(rawReads,mode==='lost-before'?0:4)
+ }
+})
+
+test('direct existing-folder push compares guarded groups and RAW128 on all 1081 files',async t=>{
+ const files=smallFileWorkload(), results=[]
+ for(const enabled of [false,true]) {
+  const s=await setupExisting(files),groups=[]
+  s.actions.length=0
+  const r=await s.run({quickPacked:true,prepareLeafUploads:undefined,
+   canGuardedCreate:async()=>enabled,readRawMetadata:async()=>new Uint8Array(128).fill(255),
+   guardedCreate:async(parent,entries,revision)=>{
+    assert.equal(revision,await s.native.readCreateRevision()); groups.push(entries.length)
+    for(const {name,bytes} of entries){
+     const path=parent+'/'+name;assert.equal(s.nodes.has(path),false)
+     s.nodes.set(path,{type:0,meta:newMetadata(),raw:new Uint8Array(128).fill(255),bytes:bytes.slice()})
+    }
+    s.native.bump();return s.native.readCreateRevision()
+   }})
+  assert.equal(r.completed,1081);assert.equal(r.uploadedBytes,658806)
+  assert.equal([...s.nodes.values()].filter(n=>n.type===0).length,1081)
+  for(const f of files){
+   const n=s.nodes.get(root+'/'+f.relativePath);assert.deepEqual(n.bytes,new Uint8Array(await f.file.arrayBuffer()))
+   assert.deepEqual(n.meta,newMetadata())
+  }
+  results.push({guarded:enabled,groups:groups.length,groupedFiles:groups.reduce((a,b)=>a+b,0),
+   opens:s.actions.filter(a=>a.kind==='open').length,lists:s.actions.filter(a=>a.kind==='list').length})
+ }
+ t.diagnostic(JSON.stringify(results))
+ assert.equal(results[1].groupedFiles,1053);assert.equal(results[1].opens,28)
+ assert(results[1].lists < results[0].lists/3)
 })

@@ -1,13 +1,14 @@
 /* Allmiibo DFU page binding. MIT license; see LICENSE.txt. */
 import { lcdTest676 } from './lcd-app676-reference.mjs';
 import { lcdTest677 } from './lcd-app677-reference.mjs';
-import { lcdFinal680, lcdFinal680Package } from './lcd-app680-reference.mjs?v=3.67.1';
+import { lcdFinal680, lcdFinal680Package } from './lcd-app680-reference.mjs?v=3.68.0-beta.2';
+import { lcdTest683Package } from './lcd-app683-reference.mjs';
 import { lcdTest679, lcdTest679Package } from './lcd-app679-reference.mjs';
 import { createScreenAwake } from './screen-awake.mjs';
-import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.67.1';
+import { nrfDfuLink } from './nrf-dfu-link.mjs?v=3.68.0-beta.2';
 import { bluetoothAccessIssue } from './bluetooth-access.mjs';
-import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.67.1';
-import { lcdRelease } from './lcd-release-reference.mjs?v=3.67.1';
+import { lcdPreviews, lcdPreviewPackages } from './lcd-private-reference.mjs?v=3.68.0-beta.2';
+import { lcdRelease } from './lcd-release-reference.mjs?v=3.68.0-beta.2';
 
 const fileInput = document.getElementById('file'), selectButton = document.getElementById('button');
 const statusText = document.getElementById('status'), transferText = document.getElementById('transfer');
@@ -66,17 +67,18 @@ function targetDescription(target) {
         `Selected application · counter ${target.counter} · hardware field ${target.hardware} · accepted SoftDevice FWIDs ${target.softDevices.map(hexId).join(', ')}.`)];
     if (target.counter === lcdFinal680Package.counter && !latestState.previewVersion) lines.unshift(choose('Finale LCD-Ausgabe DE4.2 / App680', 'Final LCD release DE4.2 / App680') + ' · ' + lcdFinal680.firmwareVersion);
     if (latestState.previewVersion) {
-        const published = AllmiiboFirmwareReleases.packages.some(entry => entry.board === 'LCD' &&
+        const published = latestState.previewVersion === lcdTest683Package.version || AllmiiboFirmwareReleases.packages.some(entry => entry.board === 'LCD' &&
             entry.version === latestState.previewVersion && entry.channel === 'prerelease');
         const label = published ? choose('LCD-Testversion', 'LCD test release') : choose('Privates LCD-Prüfpaket', 'Private LCD test package');
         lines.unshift(label + ' · ' + latestState.previewVersion);
     }
     const ref = recentBootReference();
+    if (target.counter === lcdTest683Package.counter && (!ref || handoffBoard !== 'LCD')) lines.push(choose('Verbinde dein LCD zuerst im Dateimanager und öffne App683 von dort mit aktuellen Bootdaten.', 'Connect your LCD in the file manager first, then open App683 there with current boot details.'));
     if (ref) {
         const {app, bl, sd} = ref;
         lines.push(choose(`Zuletzt im Dateimanager gelesen · App-Zähler ${app} · Bootloader-Zähler ${bl} · SoftDevice ${hexId(sd)}.`,
             `Last read in the file manager · application counter ${app} · bootloader counter ${bl} · SoftDevice ${hexId(sd)}.`));
-        if ([679, 680].includes(target.counter) && (bl !== 21 || sd !== 0x0126 || app > target.counter)) {
+        if ([679, 680, 683].includes(target.counter) && (bl !== 21 || sd !== 0x0126 || app > target.counter)) {
             lines.push(choose(`App${target.counter} erfordert ein LCD mit Z21, S112 7.3.0 und App-Zähler bis ${target.counter}.`, `App${target.counter} requires an LCD with Z21, S112 7.3.0 and an application counter of ${target.counter} or lower.`));
         } else if (app > target.counter) lines.push(boardSelect.value === 'OLED'
             ? choose('Die ausgewählte OLED-Anwendung ist älter als der ausgelesene Stand. Wähle ein aktuelleres OLED-Paket.', 'The selected OLED application is older than the version read from the device. Choose a newer OLED package.')
@@ -98,7 +100,7 @@ function showSource(board, selectedVersion) {
     const oled = board === 'OLED';
     const preview = !oled && [lcdFinal680, lcdRelease, lcdTest679, lcdTest677, lcdTest676, ...lcdPreviews].find(item => item.firmwareVersion === selectedVersion);
     const previous = !oled && selectedVersion === '2.22.0-DE3.102';
-    const revision = oled ? 'de3.87-oled-t6' : [lcdTest679, lcdFinal680, lcdRelease].includes(preview) ? preview.releaseTag : preview ? preview.sourceCommit : previous ? 'release/lcd-de3102-app675' : 'de4.2';
+    const revision = oled ? 'de3.87-oled-t6' : [lcdTest679, lcdFinal680, lcdRelease].includes(preview) ? preview.releaseTag : preview ? preview.releaseTag || preview.sourceCommit : previous ? 'release/lcd-de3102-app675' : 'de4.2';
     const sourceLink = document.getElementById('profile-source');
     const name = oled ? 'OLED DE3.87 Test 6' : preview ? 'LCD ' + preview.firmwareVersion.replace('2.22.0-', '') + ' / App' + preview.applicationCounter : previous ? 'LCD DE3.102 / App675' : 'LCD DE4.2 / App680';
     sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + revision);
@@ -113,8 +115,9 @@ function controls() {
     const boardConflict = boardHints.length > 1 || handoffBoard && handoffBoard !== boardSelect.value;
     const ref = recentBootReference();
     const target = latestState.target;
-    const transferCandidate = [lcdTest679Package, lcdFinal680Package].find(entry => target?.counter === entry.counter);
-    const candidateConflict = transferCandidate && ref && (selectedProfileMismatch(transferCandidate) || ref.app > target.counter);
+    const transferCandidate = [lcdTest683Package, lcdTest679Package, lcdFinal680Package].find(entry => target?.counter === entry.counter);
+    const unknownTestDevice = target?.counter === lcdTest683Package.counter && (!ref || handoffBoard !== 'LCD');
+    const candidateConflict = unknownTestDevice || transferCandidate && ref && (selectedProfileMismatch(transferCandidate) || ref.app > target.counter);
     const targetConflict = candidateConflict || target && ref && (!target.softDevices.includes(ref.sd) ||
         boardSelect.value === 'OLED' && ref.app > target.counter);
     boardSelect.disabled = latestState.busy || latestState.loading || loading;

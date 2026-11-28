@@ -8,7 +8,7 @@ RELEASES = "https://github.com/bluecyber81/pixl.js/releases/"
 ROUTES = {
     "LCD app": r"download/[^/]+/Allmiibo_LCD_[^/]+_NUR_APP\.zip",
     "LCD review package": r"download/[^/]+/Allmiibo_LCD_[^/]+_Pruefpaket\.zip",
-    "web portable ZIP": r"download/web[0-9]+\.[0-9]+\.[0-9]+/Allmiibo_Dateimanager_[0-9_]+_Portable\.zip",
+    "web portable ZIP": r"download/web[0-9]+\.[0-9]+\.[0-9]+(?:-beta\.[0-9]+)?/Allmiibo_Dateimanager_[0-9_]+(?:-beta_[0-9]+)?_Portable\.zip",
 }
 
 

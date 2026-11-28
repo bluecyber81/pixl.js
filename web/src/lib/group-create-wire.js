@@ -1,4 +1,4 @@
-import {assertWritableDevicePath, portableNameKey, splitDevicePath} from './portable-names.js'
+import {assertWritableDevicePath, assertPortableEntryName, joinDevicePath, portableNameKey, splitDevicePath} from './portable-names.js'
 
 const encoder = new TextEncoder()
 const maxMembers = 4
@@ -8,18 +8,20 @@ const privateFolder = /^~u[a-f0-9]{8,12}$/u
 
 // The digest covers the command's names, sizes and bytes together. PackedFS
 // creates all siblings in one transaction, with 128 neutral metadata bytes each.
-export async function groupCreateFrames(parent, entries, revision, id, limit) {
+export async function groupCreateFrames(parent, entries, revision, id, limit, guarded = false) {
   if (!Number.isInteger(id) || id < 1 || id > 0xffffffff || !/^[a-f0-9]{16}$/u.test(revision) ||
       revision === '0000000000000000' || !Number.isInteger(limit) || limit < 16 || limit > 243 ||
       !Array.isArray(entries) || !entries.length || entries.length > maxMembers ||
-      !parent.startsWith('E:/') || !parent.split('/').some(name => privateFolder.test(name))) {
+      !parent.startsWith('E:/') || (guarded ? !/^[\x20-\x7e]+$/u.test(parent) : !parent.split('/').some(name => privateFolder.test(name)))) {
     throw new Error('Invalid grouped create request.')
   }
   const prefix = encoder.encode(assertWritableDevicePath(parent).slice(2))
   const names = new Set()
   const parts = [Uint8Array.of(entries.length, prefix.length), prefix]
   for (const {name, bytes} of entries) {
-    const path = assertWritableDevicePath(parent + '/' + name), key = portableNameKey(name)
+    if (guarded && !/^[\x20-\x7e]+$/u.test(name)) throw new Error('Invalid guarded name.')
+    if (guarded) assertPortableEntryName(name)
+    const path = joinDevicePath(parent,name), key = portableNameKey(name)
     if (splitDevicePath(path).parent !== parent || names.has(key) || !(bytes instanceof Uint8Array) || bytes.length > maxBytes) {
       throw new Error('Invalid grouped file.')
     }

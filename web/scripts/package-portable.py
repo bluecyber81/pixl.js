@@ -23,7 +23,7 @@ def package(output, verify=False):
     release = json.loads((dist / 'release.json').read_text(encoding='utf-8'))
     package_bytes = (WEB / 'package.json').read_bytes()
     if release.get('application') != 'allmiibo-dateimanager' or release.get('version') != version or \
-            release.get('base') != '/' or release.get('channel') != 'normal' or \
+            release.get('base') != '/' or release.get('channel') != 'prerelease' or \
             release.get('packageManifestSha256') != sha(package_bytes):
         raise ValueError('The normal root build does not match package.json; build and qualify it first.')
     names = ['LICENSE', 'package.json', 'release_version.py', 'dateimanager_launcher.py', 'serve_local.py',

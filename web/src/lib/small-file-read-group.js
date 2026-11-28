@@ -18,3 +18,31 @@ export function smallFileReadGroup(records, start, pathFor, requestLimit) {
   }
   return group;
 }
+
+// Collect SHA-256 replies for one revision. A missing hash still needs an
+// individual read. Only an explicit capability/budget decline permits fallback.
+export async function readSmallFileDigests(files, { revision, readFileDigestsBatch, maxRequestPayload, check, invalidReply, onGroup }) {
+  const hashes = new Map();
+  const eligible = files.filter(file => file.path.startsWith('E:/') && file.size <= 572);
+  for (let index = 0; index < eligible.length;) {
+    check();
+    const group = smallFileReadGroup(eligible, index, file => file.path, maxRequestPayload);
+    const start = index;
+    index += Math.max(1, group.length);
+    if (group.length < 2) continue;
+    onGroup?.(group[0].path, start, eligible.length);
+    check();
+    const descriptors = group.map(({path, size}) => ({path, size}));
+    const reply = await readFileDigestsBatch(descriptors, {revision});
+    check();
+    if (reply === null) break;
+    if (!Array.isArray(reply) || reply.length !== group.length) invalidReply('Incomplete grouped digest response.');
+    for (const [i, expected] of group.entries()) {
+      const item = reply[i];
+      if (item?.path !== expected.path || item.size !== expected.size || typeof item.sha256 !== 'string' ||
+          !/^[a-f0-9]{64}$/u.test(item.sha256)) invalidReply('Invalid grouped digest response.');
+      hashes.set(expected.path, item.sha256);
+    }
+  }
+  return hashes;
+}
