@@ -69,8 +69,8 @@ test('the rendered DE/EN footer offers the matching Web and LCD release assets o
   const version = JSON.parse(read('package.json')).version
   const footer = read('src/App.vue').match(/<footer class="source-footer">[\s\S]*?<\/footer>/)[0]
   const expected = [
-    ['https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.4/Allmiibo_Dateimanager_3_68_0-beta_4_Portable.zip', 'Windows 3.68.0-beta.4 (ZIP)', 'Windows 3.68.0-beta.4 (ZIP)'],
-    ['https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.4.zip', 'Quellcode 3.68.0-beta.4 (ZIP)', '3.68.0-beta.4 source code (ZIP)'],
+    ['https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b4-lcd-test1/Allmiibo_Dateimanager_3_68_0-beta_5_Portable.zip', 'Windows 3.68.0-beta.5 (ZIP)', 'Windows 3.68.0-beta.5 (ZIP)'],
+    ['https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.5.zip', 'Quellcode 3.68.0-beta.5 (ZIP)', '3.68.0-beta.5 source code (ZIP)'],
     ['de3.89/Allmiibo_LCD_DE3_89_App662_Pruefpaket.zip', 'Archiv: LCD DE3.89 / App662 · Prüfpaket (ZIP)', 'Archive: LCD DE3.89 / App662 · test kit (ZIP)'],
     ['de3.87-oled-t6/Allmiibo_OLED_DE3_87_Test6_Pruefpaket.zip', 'OLED DE3.87 / App86 · Prüfpaket (ZIP)', 'OLED DE3.87 / App86 · test kit (ZIP)']
   ]
@@ -81,7 +81,7 @@ test('the rendered DE/EN footer offers the matching Web and LCD release assets o
   for (const file of ['../README.md', '../README.de.md', 'README.md']) {
     assert.ok(read(file).includes(delivery.portable), file)
     assert.ok(read(file).includes(delivery.source), file)
-    assert.ok(!read(file).includes('releases/tag/web3.68.0-beta.4'), file)
+    assert.ok(!read(file).includes('releases/tag/web3.68.0-beta.5'), file)
   }
   for (const language of ['de_DE', 'en']) {
     for (const base of ['/', '/pixl.js/']) {
@@ -90,7 +90,7 @@ test('the rendered DE/EN footer offers the matching Web and LCD release assets o
       }) })
       const html = await renderToString(app)
       const links = [...html.matchAll(/<a href="([^"]+)"[^>]*>([^<]*)<\/a>/g)].map(match => match.slice(1))
-      assert.deepEqual(links[0], ['https://github.com/bluecyber81/pixl.js/tree/web3.68.0-beta.4', language === 'en' ? '3.68.0-beta.4 source code' : 'Quellcode 3.68.0-beta.4'])
+      assert.deepEqual(links[0], ['https://github.com/bluecyber81/pixl.js/tree/web3.68.0-beta.5', language === 'en' ? '3.68.0-beta.5 source code' : 'Quellcode 3.68.0-beta.5'])
       assert.deepEqual(links.slice(1, expected.length + 1), expected.map(([file, de, en]) => [
         file.startsWith('https://') ? file : 'https://github.com/bluecyber81/pixl.js/releases/download/' + file, language === 'en' ? en : de
       ]))

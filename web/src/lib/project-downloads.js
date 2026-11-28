@@ -2,7 +2,8 @@ import release from '../../package.json' with { type: 'json' };
 
 export function projectDownloads(buildVersion) {
   const version = release.version;
-  const directory = 'https://github.com/bluecyber81/pixl.js/releases/download/web' + version + '/';
+  const releaseTag = version === '3.68.0-beta.5' ? 'de4.3-b4-lcd-test1' : 'web' + version;
+  const directory = 'https://github.com/bluecyber81/pixl.js/releases/download/' + releaseTag + '/';
   const fileVersion = version.replaceAll('.', '_');
   return {
     version,

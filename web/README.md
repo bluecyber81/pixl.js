@@ -1,5 +1,7 @@
 # Allmiibo Dateimanager
 
+LCD DE4.3-b4 / App685 steht mit Dateimanager 3.68.0-beta.5 bereit. Die portable Version enthält die signierte Handy-ZIP, Web-DFU und das passende Speichermodell. Finale Voreinstellung ist LCD App680. [Windows-Portable](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b4-lcd-test1/Allmiibo_Dateimanager_3_68_0-beta_5_Portable.zip) · [Webquellen](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.5.zip).
+
 ## Normale Ausgabe 3.68.0-beta.4 und LCD DE4.2 / App680
 
 Beim Fortsetzen eines Ordneruploads prüft der Dateimanager, ob sich der Gerätespeicher seit dem Vergleich geändert hat. Bei durchgehend bestätigten Schreibgruppen genügt am Ende eine einzige Abfrage der Speicherrevision. Erkennt der Dateimanager eine zwischenzeitliche Änderung, fordert er einen neuen Vergleich an.

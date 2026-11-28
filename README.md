@@ -1,5 +1,7 @@
 # Allmiibo LCD and Pixl.js OLED
 
+LCD DE4.3-b4 / App685 is available with file manager 3.68.0-beta.5. The portable build includes the signed phone ZIP, Web DFU and the matching storage simulator. The default is stable LCD App680. [Windows portable](https://github.com/bluecyber81/pixl.js/releases/download/de4.3-b4-lcd-test1/Allmiibo_Dateimanager_3_68_0-beta_5_Portable.zip) · [Web source](https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.5.zip).
+
 ## LCD DE4.2 / App680 and file manager 3.68.0-beta.4 · web prerelease
 
 When resuming a folder upload, the file manager checks whether device storage has changed since the comparison. If the device confirms every write group with a storage revision, a single revision check suffices at the end. If it detects an intervening change, the file manager asks you to compare the folder again. The fix requires no firmware update.

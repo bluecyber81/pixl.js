@@ -1,0 +1,9 @@
+Allmiibo Dateimanager 3.68.0-beta.5 · LCD App685
+
+Deutsch
+
+Entpacke die ZIP und öffne unter Windows Start-Dateimanager.cmd. Der Starter benötigt Python 3. Für dein LCD wählst du unter Update die Testversion DE4.3-b4 / App685. Dort kannst du die signierte ZIP fürs Handy speichern oder nach dem Verbinden direkt das Web-DFU öffnen. App685 setzt LCD, Packed LittleFS, Bootloader Z21 und S112 7.3.0 voraus. Die App berechnet beide Schreibprüfsummen in einem Durchgang und prüft weiterhin den gesamten Ordnerpfad. Der Dateimanager erkennt den neuen Quellstand und nutzt sein passendes Speichermodell. Auf einem LCD betrug die Uploadzeit für 13 Dateien mit 8.528 Nutzbytes 10,310 Sekunden. Der separate Abgleich der Dateiinhalte und Raw128-Metadaten dauerte 2,683 Sekunden. Die Gerätediagnose meldete danach mindestens 3.376 freie Stackbytes von 8.192. Die finale LCD-Ausgabe DE4.2 ist weiterhin vorausgewählt.
+
+English
+
+Extract the ZIP and run Start-Dateimanager.cmd on Windows. The launcher requires Python 3. For your LCD, choose test release DE4.3-b4 / App685 under Update. Save the signed ZIP for your phone there, or connect your device and open Web DFU. App685 requires LCD, Packed LittleFS, bootloader Z21 and S112 7.3.0. It calculates both write checksums in one pass and checks the entire directory path. The file manager recognises the new build and uses its matching storage model. On one LCD, uploading 13 files containing 8,528 payload bytes took 10.310 seconds. The separate content and Raw128 metadata check took 2.683 seconds. Diagnostics reported a stack low-water mark of 3,376 free bytes out of 8,192. The default LCD release is DE4.2.

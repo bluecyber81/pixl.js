@@ -1,5 +1,9 @@
 # LCD- und OLED-Firmware, Bootloader und SoftDevice
 
+## LCD DE4.3-b4 / App685 · Testversion · 28. November 2026
+
+Die signierte App-ZIP enthält nur die LCD-Anwendung. Sie setzt Packed LittleFS, Z21 und S112 7.3.0 voraus. Die App bündelt die CRC-Berechnung beim Schreiben, behält die vollständige Ordnerprüfung bei und schafft 128 Byte zusätzlichen Programmplatz gegenüber App684. Die Geräte-Diagnose lässt sich im Dateimanager 3.68.0-beta.5 mit dem signierten Quellstand vergleichen. [Testrelease und Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/tag/de4.3-b4-lcd-test1)
+
 ## LCD DE4.2 / App680 · Final · 25. November 2026
 
 Der Besitzer hat App680 auf seinem LCD getestet und als final bestätigt. Das Paket enthält dieselbe signierte App wie DE4.2-b2. Unter **Gerät & Diagnose** erscheint daher **2.22.0-DE4.2-b2**, App-Zähler **680**. Wer diesen Stand bereits nutzt, braucht kein weiteres Update. Die App ist für ST7567-LCD mit PFS1, Z21 und S112 7.3.0 vorgesehen. PFS1 grenzt die Dateisuche nach dem übergeordneten Ordner ein. Eine vorhandene Manifestdatei wird in einer LittleFS-Transaktion aktualisiert. Bei Platzmangel prüft die Firmware vor einem neuen Versuch, welche Fassung bereits gespeichert wurde. [Handy-ZIP](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_NUR_APP.zip) · [Prüfpaket](https://github.com/bluecyber81/pixl.js/releases/download/de4.2/Allmiibo_LCD_DE4_2_App680_Pruefpaket.zip)
