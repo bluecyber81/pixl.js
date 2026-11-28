@@ -100,7 +100,7 @@ function showSource(board, selectedVersion) {
     const oled = board === 'OLED';
     const preview = !oled && [lcdFinal680, lcdRelease, lcdTest679, lcdTest677, lcdTest676, ...lcdPreviews].find(item => item.firmwareVersion === selectedVersion);
     const previous = !oled && selectedVersion === '2.22.0-DE3.102';
-    const revision = oled ? 'de3.87-oled-t6' : [lcdTest679, lcdFinal680, lcdRelease].includes(preview) ? preview.releaseTag : preview ? preview.releaseTag || preview.sourceCommit : previous ? 'release/lcd-de3102-app675' : 'de4.2';
+    const revision = oled ? 'de3.87-oled-t6' : ([lcdTest679, lcdFinal680, lcdRelease].includes(preview) || preview?.applicationCounter === 683) ? preview.releaseTag : preview ? preview.sourceCommit : previous ? 'release/lcd-de3102-app675' : 'de4.2';
     const sourceLink = document.getElementById('profile-source');
     const name = oled ? 'OLED DE3.87 Test 6' : preview ? 'LCD ' + preview.firmwareVersion.replace('2.22.0-', '') + ' / App' + preview.applicationCounter : previous ? 'LCD DE3.102 / App675' : 'LCD DE4.2 / App680';
     sourceLink.setAttribute('href', 'https://github.com/bluecyber81/pixl.js/tree/' + revision);

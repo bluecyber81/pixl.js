@@ -41,8 +41,8 @@
     "interruptedConfirmation": "Full or absent set is reconciled by content and metadata under the same storage revision. Partial sets and changed metadata block the next write."
   },
   "portable": {
-    "bytes": 14824598,
-    "sha256": "8414f7d9d680bb427383279d9f8bd5a39892727effc6e40654974b8a8c4875f3"
+    "bytes": 14824607,
+    "sha256": "de8736ceea2041f47e25328481aa6828b02c0b3c06c16be886012ae9901a2a17"
   },
   "limits": [
     "Browser viewport tests ran on Windows.",

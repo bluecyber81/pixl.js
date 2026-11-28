@@ -1404,8 +1404,8 @@
   "web_downloads": {
     "portable": "https://github.com/bluecyber81/pixl.js/releases/download/web3.68.0-beta.2/Allmiibo_Dateimanager_3_68_0-beta_2_Portable.zip",
     "source": "https://github.com/bluecyber81/pixl.js/archive/refs/tags/web3.68.0-beta.2.zip",
-    "portableBytes": 14824598,
-    "portableSha256": "8414f7d9d680bb427383279d9f8bd5a39892727effc6e40654974b8a8c4875f3"
+    "portableBytes": 14824607,
+    "portableSha256": "de8736ceea2041f47e25328481aa6828b02c0b3c06c16be886012ae9901a2a17"
   },
   "web_upload_evidence": "docs/validation/WEB3_67_0.json",
   "web_release": "https://github.com/bluecyber81/pixl.js/releases/tag/web3.68.0-beta.2",
