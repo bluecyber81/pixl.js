@@ -344,6 +344,7 @@ int main(void) {
 #ifdef PIXL_GROUP_CREATE_ENABLE
     group_contract();
     guarded_contract();
+    guarded_storage_faults();
 #endif
     success_cases(); invalid_requests(); exact_request_and_path_bounds(); error_cases(); busy_ownership(); capability_and_lifecycle();
     df_proto_vfs_cleanup(); drop(); REQUIRE(live == 0);

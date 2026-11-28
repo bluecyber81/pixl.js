@@ -77,3 +77,38 @@ static void guarded_contract(void) {
     puts("PASS 12 guarded BLE transactions: add, fallback, denial, stale, mode crossover, journal and lost receipt");
 }
 
+
+static void guarded_storage_faults(void) {
+    const pfs_small_item_t missing[]={{"/absent/h.bin",new_data,4}};
+    const pfs_small_item_t valid[]={{"/new-guard.bin",new_data,4}};
+    static uint8_t before[NOR_BYTES];
+    read_fail_at=0;reset_baseline();
+    uint64_t after=0,revision=vfs_packed_revision();
+    unsigned start=read_calls;
+    REQUIRE(vfs_packed_guarded_create(revision,missing,1,&after)!=VFS_OK);
+    unsigned range=read_calls-start;
+    REQUIRE(range && !pfs_poisoned(store) && !after);
+    for(unsigned nth=1;nth<=range;nth++) {
+        reset_baseline();
+        revision=vfs_packed_revision();
+        memcpy(before,media.disk,sizeof(before));
+        read_fail_at=read_calls+nth;
+        REQUIRE(vfs_packed_guarded_create(revision,missing,1,&after)!=VFS_OK);
+        REQUIRE(read_calls>=read_fail_at && !after && pfs_poisoned(store));
+        read_fail_at=0;
+        REQUIRE(vfs_packed_guarded_create(revision,valid,1,&after)!=VFS_OK);
+        REQUIRE(pfs_create_small(store,"/another.bin",new_data,4)==LFS_ERR_IO);
+        REQUIRE(!memcmp(before,media.disk,sizeof(before)));
+        REQUIRE(!pfs_unmount(store) && !pfs_mount(store) && !pfs_poisoned(store));
+    }
+    reset_baseline();
+    revision=vfs_packed_revision();
+    char shard[16];shard_name(store->current.ids[0],shard);
+    REQUIRE(!lfs_remove(&store->lfs,shard));memcpy(before,media.disk,sizeof(before));
+    REQUIRE(vfs_packed_guarded_create(revision,valid,1,&after)!=VFS_OK);
+    REQUIRE(pfs_poisoned(store) && !memcmp(before,media.disk,sizeof(before)) && !after);
+    reset_baseline();
+    REQUIRE(vfs_packed_guarded_create(vfs_packed_revision(),valid,1,&after)==VFS_OK && after);
+    printf("PASS guarded journal/traversal: %u independent NOR read failures plus missing shard, unchanged disk, write lockout and clean recovery\n",range);
+}
+

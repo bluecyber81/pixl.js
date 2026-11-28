@@ -48,6 +48,8 @@ def verify(folder, expected_counter=670):
     assert registry[0x22] == registry[0x25] == s["df_small_create_capability"]
     assert registry[0x24] == s["df_proto_handler_vfs_small_read"]
     assert registry[0x26] == s["df_proto_handler_vfs_batch_read"]
+    if expected_counter == 683:
+        assert registry[0x29] == registry[0x22] and registry[0x2a] == registry[0x28] == s["df_group_request"]
     cpu = Uc(UC_ARCH_ARM, UC_MODE_MCLASS | UC_MODE_THUMB)
     cpu.ctl_set_cpu_model(UC_CPU_ARM_CORTEX_M4)
     cpu.mem_map(0, 0x80000)
