@@ -1,10 +1,11 @@
 {
   "schema": 1,
   "application": "allmiibo-dateimanager",
-  "version": "3.67.1",
+  "version": "3.68.0-beta.2",
   "base": "/pixl.js/",
-  "channel": "normal",
-  "packageManifestSha256": "e7e6502a7dbb7142b46aef3e2214b1d5ba583ea835f81e58450c9cd506ecc965",
+  "sourceTag": "web3.68.0-beta.2",
+  "channel": "prerelease",
+  "packageManifestSha256": "776756c18cfe37689b63868c1cc75ac334cfee3a45c7d9da2cb0882127ef008c",
   "firmware": {
     "id": "de4.2-lcd-app",
     "version": "2.22.0-DE4.2-b2",
@@ -32,6 +33,22 @@
       "bytes": 257000,
       "sha256": "1e508061e86d75addb1345d5d8c9b0eac94ebf02081c519517461e952a7f5f17",
       "sourceTag": "de4.2-b1-lcd-transfer-test"
+    },
+    {
+      "id": "de4.3-b2-lcd-app-test",
+      "version": "2.22.0-DE4.3-b2",
+      "counter": 683,
+      "channel": "prerelease",
+      "path": "firmware/Allmiibo_LCD_DE4_3_b2_App683_NUR_APP_TEST.zip",
+      "bytes": 255217,
+      "sha256": "6ca4c5c7184ebe303812185026969f69b704b88171e320fb2ac08c19f6e6a36b",
+      "sourceTag": "de4.3-b2-lcd-test1",
+      "distribution": "prerelease",
+      "sourceCommit": "177b95773f2379eb0af2deac57d6b3fee5ac224e",
+      "sourceId": "c84218c83bd51f0b7683e81e62e438067b0ede49f512441db24a6d6a803838f5",
+      "engineSha256": "9eef0104dc2603b0933e0174b8a12443bafc7353f884cc9f84cca23c90a595b1",
+      "simulatorSha256": "0ef1d368a648f325d70001a079e733250445777be29d1e470237b8762c96cf3b",
+      "deviceAcceptance": "pending"
     }
   ]
 }
