@@ -290,6 +290,22 @@ int32_t vfs_persist_writer_begin(const vfs_driver_t *driver, const char *path) {
     }
     return result;
 }
+#ifdef PIXL_GROUP_CREATE_ENABLE
+int32_t vfs_persist_writer_begin_clean(const vfs_driver_t *driver) {
+    if (driver != public_fs || !raw_fs || busy || external_writers) return VFS_ERR_FAIL;
+    busy = true;
+    pending_t pending;
+    int32_t result = read_pending(&pending);
+    if (result == VFS_ERR_NOOBJ) {
+        ++external_writers;
+        result = VFS_OK;
+    } else if (result == VFS_OK) {
+        result = VFS_ERR_FAIL;
+    }
+    busy = false;
+    return result;
+}
+#endif
 void vfs_persist_writer_end(const vfs_driver_t *driver) {
     if (driver == public_fs && external_writers) --external_writers;
 }

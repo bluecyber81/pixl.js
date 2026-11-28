@@ -687,7 +687,7 @@ ifeq ($(BOARD),LCD)
 # Mount and file buffers are explicitly owned by the bounded application pool.
 CFLAGS += -DLFS_NO_MALLOC
 CFLAGS += -DPIXL_SMALL_CREATE_ENABLE=1 -DPIXL_GROUP_CREATE_ENABLE=1
-SRC_FILES += $(PROJ_DIR)/mod/df/bulk_wire.c
+SRC_FILES += $(PROJ_DIR)/mod/df/bulk_wire.c $(PROJ_DIR)/mod/vfs/pfs_guard_new.c
 CFLAGS += -DLFS_NO_ASSERT -DLFS_NO_DEBUG -DLFS_NO_WARN -DLFS_NO_ERROR
 ifeq ($(FILESYSTEM),SPIFFS_PREP)
 CFLAGS += -DPIXL_FS_SPIFFS_PREP
@@ -811,7 +811,7 @@ $(OWN_C_OBJECTS): CFLAGS += -Werror=implicit-function-declaration -Werror=incomp
 
 
 ifeq ($(BOARD),LCD)
-LCD_BULK_SIZE_OBJECTS := lfs.c lfs_util.c packed_fs.c vfs_driver_packed.c vfs_packed_runtime.c vfs_persist.c vfs_meta.c vfs.c df_proto_info.c df_small_create.c bulk_wire.c df_core.c df_proto_vfs.c
+LCD_BULK_SIZE_OBJECTS := pfs_guard_new.c lfs.c lfs_util.c packed_fs.c vfs_driver_packed.c vfs_packed_runtime.c vfs_persist.c vfs_meta.c vfs.c df_proto_info.c df_small_create.c bulk_wire.c df_core.c df_proto_vfs.c
 $(addprefix $(OUTPUT_DIRECTORY)/pixljs/,$(addsuffix .o,$(LCD_BULK_SIZE_OBJECTS))): CFLAGS += -Os -flto -ffat-lto-objects
 LCD_UI_SIZE_SOURCES := $(filter-out %/u8g2_d_memory.c %/u8g2_d_setup.c,$(filter $(PROJ_DIR)/app/amiibo/% $(PROJ_DIR)/app/amiidb/% $(PROJ_DIR)/app/chameleon/% $(PROJ_DIR)/app/amiibolink/% $(PROJ_DIR)/app/ble/% $(PROJ_DIR)/app/player/% $(PROJ_DIR)/mui/view/% $(U8G2_ROOT)/% $(PROJ_DIR)/amiidb/% $(COMP_DIR)/amiitool/src/% $(COMP_DIR)/qrcode/c/% $(PROJ_DIR)/i18n/% $(PROJ_DIR)/core/% $(CHAMELEON_ROOT)/application/src/rfid/nfctag/tag_persistence.c $(CHAMELEON_ROOT)/application/src/rfid/nfctag/tag_emulation.c $(CHAMELEON_ROOT)/application/src/rfid/hex_utils.c $(CHAMELEON_ROOT)/application/src/rfid/crc_utils.c $(CHAMELEON_ROOT)/application/src/rfid/parity.c,$(SRC_FILES)))
 LCD_UI_SIZE_OBJECTS := $(addprefix $(OUTPUT_DIRECTORY)/pixljs/,$(addsuffix .o,$(notdir $(LCD_UI_SIZE_SOURCES))))

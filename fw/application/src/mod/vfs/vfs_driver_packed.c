@@ -267,6 +267,24 @@ int32_t vfs_packed_create_small(char *path, uint64_t expected, const uint8_t *da
 }
 
 #ifdef PIXL_GROUP_CREATE_ENABLE
+#include "pfs_guard_new.h"
+int32_t vfs_packed_guarded_create(uint64_t expected, const pfs_small_item_t *items,
+                                  unsigned count, uint64_t *after) {
+  if (!expected || !after || vfs_packed_revision() != expected || !pfs_mounted(store) ||
+      vfs_packed_import_pending() || !vfs_packed_handles_idle()) return VFS_ERR_FAIL;
+  int32_t result = vfs_persist_writer_begin_clean(&vfs_driver_fs);
+  if (result != VFS_OK) return result;
+  int policy = pfs_guard_new_files(store, items, count);
+  if (vfs_packed_revision() != expected) result = VFS_ERR_FAIL;
+  else if (policy == PFS_GUARD_DEFER) result = VFS_GUARD_DEFER;
+  else if (policy != 0) result = VFS_ERR_FAIL;
+  else {
+    result = map_error(pfs_create_small_group(store, (uint32_t)expected, items, count));
+    if (result == VFS_OK) *after = vfs_packed_revision();
+  }
+  vfs_persist_writer_end(&vfs_driver_fs);
+  return result;
+}
 int32_t vfs_packed_create_group(uint64_t expected, const pfs_small_item_t *items,
                                unsigned count, uint64_t *after) {
   if (!items || !count || count > PFS_BULK_LIMIT || !expected || !after ||

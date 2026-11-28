@@ -157,6 +157,9 @@ void df_small_create_capability(df_event_t *evt) {
     }
 #endif
 #ifdef PIXL_GROUP_CREATE_ENABLE
+    if (in->cmd == DF_PROTO_CMD_VFS_GUARD_CAP) {
+        out.data[2] = 'G'; out.data[3] = 'A'; out.data[5] = PFS_BULK_LIMIT;
+    }
     if (in->cmd == DF_PROTO_CMD_VFS_GROUP_CAP) {
         out.data[2] = 'B'; out.data[3] = 'G'; out.data[5] = PFS_BULK_LIMIT;
     }
@@ -177,6 +180,11 @@ static int commit_group(uint64_t expected, const pfs_small_item_t *items, unsign
     if (df_small_available_revision() != expected) return VFS_ERR_FAIL;
     return (int)vfs_packed_create_group(expected, items, count, after);
 }
+static int commit_guarded(uint64_t expected, const pfs_small_item_t *items, unsigned count, uint64_t *after) {
+    if (df_small_available_revision() != expected) return VFS_ERR_FAIL;
+    int32_t result = vfs_packed_guarded_create(expected, items, count, after);
+    return result == VFS_GUARD_DEFER ? BULK_POLICY_DEFER : result;
+}
 void df_group_request(df_event_t *evt) {
     if (evt->type != DF_EVENT_DATA_RECEVIED) return;
     df_frame_t *in = evt->df;
@@ -191,12 +199,14 @@ void df_group_request(df_event_t *evt) {
     }
     if (!bulk) goto invalid;
     bulk_receipt_t receipt;
-    const int state = bulk_frame(bulk, in->data, in->length, group_sha, commit_group, &receipt);
+    const bool guarded = in->cmd == DF_PROTO_CMD_VFS_GUARD_CREATE;
+    const int state = bulk_frame(bulk, guarded, in->data, in->length, group_sha,
+                                 guarded ? commit_guarded : commit_group, &receipt);
     if (state == BULK_MORE) return;
-    if (state != BULK_COMMITTED) goto invalid;
+    if (state != BULK_COMMITTED && state != BULK_DEFERRED) goto invalid;
     df_small_create_cancel();
     df_frame_t reply = {.cmd = in->cmd, .length = 14};
-    reply.data[0] = 1; reply.data[1] = receipt.files;
+    reply.data[0] = (uint8_t)state; reply.data[1] = receipt.files;
     for (unsigned i=0; i<4; ++i) reply.data[2+i] = (uint8_t)(receipt.id >> (8*i));
     put64(reply.data+6, receipt.revision);
     df_core_send_frame(&reply);

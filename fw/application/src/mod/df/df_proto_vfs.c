@@ -1202,6 +1202,8 @@ const df_cmd_entry_t df_proto_handler_vfs_entries[] = {
     {DF_PROTO_CMD_VFS_PACKED_LAYOUT, df_proto_handler_vfs_packed_layout},
 #ifdef PIXL_SMALL_CREATE_ENABLE
 #ifdef PIXL_GROUP_CREATE_ENABLE
+    {DF_PROTO_CMD_VFS_GUARD_CAP, df_small_create_capability},
+    {DF_PROTO_CMD_VFS_GUARD_CREATE, df_group_request},
     {DF_PROTO_CMD_VFS_GROUP_CAP, df_small_create_capability},
     {DF_PROTO_CMD_VFS_GROUP_CREATE, df_group_request},
 #endif

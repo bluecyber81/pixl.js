@@ -63,8 +63,9 @@ static void df_core_on_event(df_event_t *evt) {
     } else if (evt->type == DF_EVENT_DATA_RECEVIED) {
 #if defined(PIXL_SMALL_CREATE_ENABLE) && defined(VFS_PACKED_LFS_ENABLE)
 #ifdef PIXL_GROUP_CREATE_ENABLE
-        if (m_df_ctx.cmd && m_df_ctx.cmd->cmd == DF_PROTO_CMD_VFS_GROUP_CREATE &&
-            evt->df->cmd != DF_PROTO_CMD_VFS_GROUP_CREATE) df_proto_vfs_cancel_group();
+        if (m_df_ctx.cmd &&
+            (m_df_ctx.cmd->cmd == DF_PROTO_CMD_VFS_GROUP_CREATE || m_df_ctx.cmd->cmd == DF_PROTO_CMD_VFS_GUARD_CREATE) &&
+            evt->df->cmd != m_df_ctx.cmd->cmd) df_proto_vfs_cancel_group();
 #endif
         if (m_df_ctx.cmd && (m_df_ctx.cmd->cmd == DF_PROTO_CMD_VFS_SMALL_READ ||
                             m_df_ctx.cmd->cmd == DF_PROTO_CMD_VFS_BATCH_READ))

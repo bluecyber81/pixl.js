@@ -15,6 +15,9 @@ uint64_t vfs_packed_revision(void);
 #define VFS_SMALL_CREATE_MAX 572u
 #ifdef PIXL_GROUP_CREATE_ENABLE
 #include "packed_fs.h"
+enum { VFS_GUARD_DEFER = 1 }; /* Explicit pre-mutation fallback. */
+int32_t vfs_packed_guarded_create(uint64_t expected, const pfs_small_item_t *items,
+                                  unsigned count, uint64_t *after);
 int32_t vfs_packed_create_group(uint64_t expected, const pfs_small_item_t *items,
                                unsigned count, uint64_t *after);
 #endif
