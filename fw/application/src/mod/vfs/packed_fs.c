@@ -710,6 +710,17 @@ static int manifest_load(pfs_t *fs, manifest_t *m) {
   }
   return 0;
 }
+#ifdef PIXL_SAVE_PHASES
+#include "app_timer.h"
+static int save_sync(lfs_t *lfs, lfs_file_t *file, unsigned which) {
+  uint32_t start = app_timer_cnt_get();
+  int result = lfs_file_sync(lfs, file);
+  runtime_diag_sync_end(which, start);
+  return result;
+}
+#else
+#define save_sync(lfs, file, which) lfs_file_sync(lfs, file)
+#endif
 static int publish(pfs_t *fs, const manifest_t *m) {
   union {
     uint8_t bytes[MH + PFS_MAX_SHARDS * 4 + 4];
@@ -743,7 +754,7 @@ static int publish(pfs_t *fs, const manifest_t *m) {
     return io_error(fs, r);
   r = emit(fs, &io, b, n + 4, NULL, NULL);
   if (!r)
-    r = lfs_file_sync(&fs->lfs, &io.f);
+    r = save_sync(&fs->lfs, &io.f, 1);
   r = io_close(fs, &io, r);
   if (replace && r == LFS_ERR_NOSPC) {
     /* A full device may report failure before or after publication. Reuse the
@@ -1355,7 +1366,7 @@ static int rebuild(pfs_t *fs, const change_t *c, uint32_t oldid, uint32_t newid,
   if (!r)
     r = emit(fs, &output, h, 4, NULL, NULL);
   if (!r)
-    r = lfs_file_sync(&fs->lfs, &output.f);
+    r = save_sync(&fs->lfs, &output.f, 0);
   return io_close(fs, &output, r);
 }
 /* Planning needs only record count and body length, not a complete Bloom

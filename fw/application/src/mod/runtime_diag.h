@@ -8,6 +8,7 @@
 #ifdef PIXL_SAVE_PHASES
 /* Last completed successful writes summed since application restart (mod 2^32). */
 void runtime_diag_save_mark(unsigned phase);
+void runtime_diag_sync_end(unsigned which, uint32_t start);
 void runtime_diag_save_finish(unsigned kind, uint32_t units);
 bool runtime_diag_save_snapshot(uint8_t *out, size_t capacity);
 #endif

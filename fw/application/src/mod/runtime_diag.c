@@ -272,11 +272,16 @@ static void put32(uint8_t *out, uint32_t value) {
 #ifdef PIXL_SAVE_PHASES
 /* Only the cooperative filesystem worker updates these values. The information
  * command also runs on that worker. Failed operations never accumulate. */
-static uint32_t save_stamp[4], save_row[2][6];
+static uint32_t save_stamp[4], save_row[2][6], sync_sum[2][2], sync_work[2];
 void runtime_diag_save_mark(unsigned phase) {
+    if (phase == 0) memset(sync_work, 0, sizeof(sync_work));
     save_stamp[phase] = app_timer_cnt_get();
 }
+void runtime_diag_sync_end(unsigned which, uint32_t start) {
+    sync_work[which] += app_timer_cnt_diff_compute(app_timer_cnt_get(), start);
+}
 void runtime_diag_save_finish(unsigned kind, uint32_t units) {
+    for (unsigned i = 0; i < 2; ++i) sync_sum[kind][i] += sync_work[i];
     uint32_t *row = save_row[kind];
     row[0]++;
     row[1] += units;
@@ -285,11 +290,12 @@ void runtime_diag_save_finish(unsigned kind, uint32_t units) {
         row[2+i] += app_timer_cnt_diff_compute(save_stamp[i], save_stamp[i-1]);
 }
 bool runtime_diag_save_snapshot(uint8_t *out, size_t capacity) {
-    if (!out || capacity < 60) return false;
-    memcpy(out, "PXSP\x01\x3c\0\0", 8);
+    if (!out || capacity < 76) return false;
+    memcpy(out, "PXSP\x01\x4c\0\0", 8);
     put32(out + 8, APP_TIMER_CLOCK_FREQ / (APP_TIMER_CONFIG_RTC_FREQUENCY + 1u));
     /* nRF52832 is little endian. memcpy allows an unaligned output frame. */
     memcpy(out + 12, save_row, sizeof(save_row));
+    memcpy(out + 60, sync_sum, sizeof(sync_sum));
     return true;
 }
 #endif
